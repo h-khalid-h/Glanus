@@ -30,7 +30,8 @@ async function main() {
             serialNumber: 'SIMPLE-001',
             status: AssetStatus.AVAILABLE,
             assignedToId: admin.id,
-        },
+            workspaceId: '', // Will be set after workspace creation
+        } as any, // eslint-disable-line @typescript-eslint/no-explicit-any -- seed script
     });
 
     console.log('✅ Created sample laptop asset');
@@ -44,7 +45,8 @@ async function main() {
             serialNumber: 'SIMPLE-002',
             status: AssetStatus.AVAILABLE,
             assignedToId: admin.id,
-        },
+            workspaceId: '', // Will be set after workspace creation
+        } as any, // eslint-disable-line @typescript-eslint/no-explicit-any -- seed script
     });
 
     console.log('✅ Created sample SaaS asset');

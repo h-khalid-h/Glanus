@@ -1,4 +1,5 @@
 'use client';
+import { csrfFetch } from '@/lib/api/csrfFetch';
 
 import { useState, useRef, useEffect } from 'react';
 import { useWorkspaceStore } from '@/lib/stores/workspaceStore';
@@ -40,7 +41,7 @@ export default function InviteForm({ workspaceId }: { workspaceId: string }) {
         setMessage(null);
 
         try {
-            const response = await fetch(`/api/workspaces/${workspaceId}/invitations`, {
+            const response = await csrfFetch(`/api/workspaces/${workspaceId}/invitations`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, role: role.id }),
@@ -61,7 +62,7 @@ export default function InviteForm({ workspaceId }: { workspaceId: string }) {
             // Clear success message after 3s
             setTimeout(() => setMessage(null), 3000);
 
-        } catch (error) {
+        } catch (error: unknown) {
             setMessage({ type: 'error', text: error instanceof Error ? error.message : 'Something went wrong' });
         } finally {
             setIsLoading(false);

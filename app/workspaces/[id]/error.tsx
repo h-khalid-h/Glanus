@@ -19,7 +19,7 @@ export default function WorkspaceError({
                 </p>
                 <button
                     onClick={reset}
-                    className="rounded-lg bg-indigo-600 px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-indigo-500"
+                    className="rounded-lg bg-nerve px-6 py-2.5 text-sm font-medium text-white transition-all hover:brightness-110 hover:shadow-lg hover:shadow-nerve/20"
                 >
                     Try again
                 </button>

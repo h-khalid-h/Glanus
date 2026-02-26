@@ -39,7 +39,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     const { page, limit, sortBy, sortOrder, search, category, status, assignedToId, assetType, location } = params;
     const skip = ((page ?? 1) - 1) * (limit ?? 20);
 
-    const where: any = {
+    const where: any = { // eslint-disable-line @typescript-eslint/no-explicit-any -- Prisma dynamic where
         workspaceId,
         deletedAt: null,
     };
@@ -103,21 +103,22 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
         }
     }
 
-    const workspaceId = (data as any).workspaceId as string | undefined;
+    const workspaceId = (data as Record<string, unknown>).workspaceId as string | undefined;
     if (workspaceId) {
         await enforceQuota(workspaceId, 'assets');
     }
 
     const asset = await prisma.asset.create({
         data: {
+            workspaceId: workspaceId || '',
             assetType: data.assetType || 'PHYSICAL',
             name: data.name,
             manufacturer: data.manufacturer || null,
             model: data.model || null,
             serialNumber: data.serialNumber || null,
-            status: (data.status || 'AVAILABLE') as any,
+            status: (data.status || 'AVAILABLE') as any, // Prisma enum
             purchaseDate: data.purchaseDate ? new Date(data.purchaseDate) : null,
-            purchaseCost: data.purchaseCost ? parseFloat(data.purchaseCost as any) : null,
+            purchaseCost: data.purchaseCost ? parseFloat(String(data.purchaseCost)) : null,
             warrantyUntil: data.warrantyUntil ? new Date(data.warrantyUntil) : null,
             location: data.location || null,
             description: data.description || null,
@@ -137,13 +138,13 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
         await prisma.physicalAsset.create({
             data: {
                 assetId: asset.id,
-                category: data.category as any,
+                category: data.category as any, // Prisma enum
                 manufacturer: data.manufacturer || null,
                 model: data.model || null,
                 serialNumber: data.serialNumber || null,
                 processor: data.processor || null,
-                ram: data.ram ? parseInt(data.ram as any) : null,
-                storage: data.storage ? parseInt(data.storage as any) : null,
+                ram: data.ram ? parseInt(String(data.ram)) : null,
+                storage: data.storage ? parseInt(String(data.storage)) : null,
                 osVersion: data.osVersion || null,
                 macAddress: data.macAddress || null,
                 ipAddress: data.ipAddress || null,
@@ -153,23 +154,23 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
         await prisma.digitalAsset.create({
             data: {
                 assetId: asset.id,
-                category: data.category as any,
+                category: data.category as any, // Prisma enum
                 version: data.version || null,
                 vendor: data.vendor || null,
                 licenseKey: data.licenseKey || null,
-                licenseType: data.licenseType as any || null,
-                seatCount: data.seatCount ? parseInt(data.seatCount as any) : null,
-                seatsUsed: data.seatsUsed ? parseInt(data.seatsUsed as any) : 0,
+                licenseType: data.licenseType as any || null, // Prisma enum
+                seatCount: data.seatCount ? parseInt(String(data.seatCount)) : null,
+                seatsUsed: data.seatsUsed ? parseInt(String(data.seatsUsed)) : 0,
                 subscriptionTier: data.subscriptionTier || null,
-                monthlyRecurringCost: data.monthlyRecurringCost ? parseFloat(data.monthlyRecurringCost as any) : null,
+                monthlyRecurringCost: data.monthlyRecurringCost ? parseFloat(String(data.monthlyRecurringCost)) : null,
                 renewalDate: data.renewalDate ? new Date(data.renewalDate) : null,
                 autoRenew: data.autoRenew || false,
                 host: data.host || null,
-                hostType: data.hostType as any || null,
+                hostType: data.hostType as any || null, // Prisma enum
                 url: data.url || null,
                 sslExpiry: data.sslExpiry ? new Date(data.sslExpiry) : null,
                 connectionString: data.connectionString || null,
-                databaseSize: data.databaseSize ? parseInt(data.databaseSize as any) : null,
+                databaseSize: data.databaseSize ? parseInt(String(data.databaseSize)) : null,
                 installedOn: data.installedOn || [],
             },
         });

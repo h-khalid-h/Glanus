@@ -176,6 +176,7 @@ export async function createTestAsset(
             name: overrides.name || `Test Asset ${Date.now()}`,
             assetType: overrides.assetType || 'PHYSICAL',
             categoryId,
+            workspaceId: (overrides as any).workspaceId || 'test-workspace', // eslint-disable-line @typescript-eslint/no-explicit-any
             assignedToId: userId,
             status: overrides.status || 'AVAILABLE',
             location: overrides.location || null,

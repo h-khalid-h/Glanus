@@ -30,8 +30,8 @@ export default function LoginPage() {
                 router.push('/dashboard');
                 router.refresh();
             }
-        } catch (error: any) {
-            setError(error?.message || 'An error occurred. Please try again.');
+        } catch (error: unknown) {
+            setError(error instanceof Error ? error.message : 'An error occurred. Please try again.');
         } finally {
             setIsLoading(false);
         }
@@ -95,6 +95,7 @@ export default function LoginPage() {
                                     onChange={(e) => setEmail(e.target.value)}
                                     placeholder="you@company.com"
                                     required
+                                    autoComplete="email"
                                     className="w-full rounded-xl border border-slate-700/80 bg-slate-800/50 px-4 py-3 text-sm text-white
                                                placeholder:text-slate-500 transition-all duration-200
                                                focus:border-nerve/50 focus:outline-none focus:ring-2 focus:ring-nerve/20"
@@ -113,6 +114,7 @@ export default function LoginPage() {
                                     onChange={(e) => setPassword(e.target.value)}
                                     placeholder="••••••••"
                                     required
+                                    autoComplete="current-password"
                                     className="w-full rounded-xl border border-slate-700/80 bg-slate-800/50 px-4 py-3 text-sm text-white
                                                placeholder:text-slate-500 transition-all duration-200
                                                focus:border-nerve/50 focus:outline-none focus:ring-2 focus:ring-nerve/20"

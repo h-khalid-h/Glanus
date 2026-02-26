@@ -224,7 +224,7 @@ export function getPlanLimits(plan: string) {
 export async function verifyWorkspaceAccess(
     userId: string,
     workspaceId: string
-): Promise<{ hasAccess: boolean; workspace?: any }> {
+): Promise<{ hasAccess: boolean; workspace?: Awaited<ReturnType<typeof prisma.workspace.findUnique>> }> {
     const workspace = await prisma.workspace.findUnique({
         where: { id: workspaceId },
         include: {

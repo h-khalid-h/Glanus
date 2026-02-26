@@ -1,4 +1,5 @@
 'use client';
+import { csrfFetch } from '@/lib/api/csrfFetch';
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -53,7 +54,7 @@ export default function AssetDetailPage({ params }: { params: Promise<{ id: stri
 
     // Action execution state
     const [executingAction, setExecutingAction] = useState<string | null>(null);
-    const [executionResult, setExecutionResult] = useState<any>(null);
+    const [executionResult, setExecutionResult] = useState<{ status: string; output?: React.ReactNode; error?: string } | null>(null);
     const [showExecutionDialog, setShowExecutionDialog] = useState(false);
 
     useEffect(() => {
@@ -69,7 +70,7 @@ export default function AssetDetailPage({ params }: { params: Promise<{ id: stri
     const fetchAsset = async (id: string) => {
         try {
             setLoading(true);
-            const response = await fetch(`/api/assets/${id}`);
+            const response = await csrfFetch(`/api/assets/${id}`);
             if (!response.ok) throw new Error('Failed to fetch asset');
             const data = await response.json();
             setAsset(data);
@@ -82,7 +83,7 @@ export default function AssetDetailPage({ params }: { params: Promise<{ id: stri
 
     const fetchActions = async (id: string) => {
         try {
-            const response = await fetch(`/api/assets/${id}/actions`);
+            const response = await csrfFetch(`/api/assets/${id}/actions`);
             if (!response.ok) return; // No actions available
             const data = await response.json();
             setActions(data);
@@ -121,7 +122,7 @@ export default function AssetDetailPage({ params }: { params: Promise<{ id: stri
             setShowExecutionDialog(true);
             setExecutionResult(null);
 
-            const response = await fetch(`/api/assets/${assetId}/actions/${action.slug}`, {
+            const response = await csrfFetch(`/api/assets/${assetId}/actions/${action.slug}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ parameters: {} }),
@@ -159,7 +160,7 @@ export default function AssetDetailPage({ params }: { params: Promise<{ id: stri
     const performDeleteAsset = async () => {
 
         try {
-            const response = await fetch(`/api/dynamic-assets/${assetId}`, {
+            const response = await csrfFetch(`/api/dynamic-assets/${assetId}`, {
                 method: 'DELETE',
             });
 

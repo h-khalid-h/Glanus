@@ -1,4 +1,5 @@
 'use client';
+import { csrfFetch } from '@/lib/api/csrfFetch';
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -21,6 +22,29 @@ interface Exam {
     questionCount: number;
 }
 
+interface BreakdownItem {
+    question: string;
+    isCorrect: boolean;
+    userAnswer: number;
+    correctAnswer: number;
+    explanation?: string;
+}
+
+interface ExamResult {
+    results: {
+        passed: boolean;
+        score: number;
+        passingScore: number;
+        correctCount: number;
+        totalQuestions: number;
+    };
+    partner?: {
+        certificationLevel: string;
+        maxWorkspaces: number;
+    };
+    breakdown?: BreakdownItem[];
+}
+
 export default function CertificationCenterPage() {
     const { error: showError, success: showSuccess } = useToast();
     const router = useRouter();
@@ -35,7 +59,7 @@ export default function CertificationCenterPage() {
     const [submitting, setSubmitting] = useState(false);
 
     // Results state
-    const [result, setResult] = useState<any>(null);
+    const [result, setResult] = useState<ExamResult | null>(null);
 
     // Timer
     useEffect(() => {
@@ -57,7 +81,7 @@ export default function CertificationCenterPage() {
 
     const startExam = async (level: string) => {
         try {
-            const res = await fetch('/api/partners/exam/start', {
+            const res = await csrfFetch('/api/partners/exam/start', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ level }),
@@ -81,7 +105,7 @@ export default function CertificationCenterPage() {
         setSubmitting(true);
 
         try {
-            const res = await fetch('/api/partners/exam/submit', {
+            const res = await csrfFetch('/api/partners/exam/submit', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -351,7 +375,7 @@ export default function CertificationCenterPage() {
                         <div className="rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm p-6">
                             <h2 className="text-xl font-semibold mb-4">Detailed Results</h2>
                             <div className="space-y-4">
-                                {result.breakdown.map((item: any, index: number) => (
+                                {result.breakdown.map((item: BreakdownItem, index: number) => (
                                     <div
                                         key={index}
                                         className={`border-l-4 p-4 ${item.isCorrect ? 'border-health-good bg-health-good/10' : 'border-health-critical bg-health-critical/10'

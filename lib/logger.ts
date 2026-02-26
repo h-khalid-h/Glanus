@@ -134,8 +134,9 @@ const logger = winston.createLogger({
 })
 
 // Helper functions for easier logging
-export const logError = (message: string, error?: any, meta?: object) => {
-    logger.error(message, { error: error?.message || error, stack: error?.stack, ...meta })
+export const logError = (message: string, error?: unknown, meta?: object) => {
+    const errorObj = error instanceof Error ? error : null;
+    logger.error(message, { error: errorObj?.message || String(error), stack: errorObj?.stack, ...meta })
 }
 
 export const logWarn = (message: string, meta?: object) => {

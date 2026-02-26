@@ -4,13 +4,35 @@ import { prisma } from '@/lib/db';
 import { requireAuth, withErrorHandler } from '@/lib/api/withAuth';
 import { updateAssetSchema } from '@/lib/schemas/asset.schemas';
 
+/**
+ * Verify the calling user has access to the asset's workspace.
+ * Returns the asset if access is granted, or null.
+ */
+async function verifyAssetAccess(assetId: string, userId: string) {
+    return prisma.asset.findFirst({
+        where: {
+            id: assetId,
+            deletedAt: null,
+            workspace: {
+                members: { some: { userId } },
+            },
+        },
+    });
+}
+
 // GET /api/assets/[id] - Get single asset
 export const GET = withErrorHandler(async (
     _request: NextRequest,
     context: { params: Promise<{ id: string }> }
 ) => {
     const { id } = await context.params;
-    await requireAuth();
+    const user = await requireAuth();
+
+    // Verify workspace membership
+    const accessCheck = await verifyAssetAccess(id, user.id);
+    if (!accessCheck) {
+        return apiError(404, 'Asset not found');
+    }
 
     const asset = await prisma.asset.findFirst({
         where: { id, deletedAt: null },
@@ -62,17 +84,28 @@ export const PUT = withErrorHandler(async (
     }
     const data = parsed.data;
 
+    // Verify workspace membership
     const existingAsset = await prisma.asset.findFirst({
-        where: { id, deletedAt: null },
+        where: {
+            id,
+            deletedAt: null,
+            workspace: {
+                members: { some: { userId: user.id } },
+            },
+        },
     });
     if (!existingAsset) {
         return apiError(404, 'Asset not found');
     }
 
-    // Check for duplicate serial number
+    // Check for duplicate serial number (workspace-scoped)
     if (data.serialNumber && data.serialNumber !== existingAsset.serialNumber) {
         const duplicate = await prisma.asset.findFirst({
-            where: { serialNumber: data.serialNumber, id: { not: id } },
+            where: {
+                serialNumber: data.serialNumber,
+                workspaceId: existingAsset.workspaceId,
+                id: { not: id },
+            },
         });
         if (duplicate) {
             return apiError(409, 'An asset with this serial number already exists');
@@ -122,8 +155,15 @@ export const DELETE = withErrorHandler(async (
     const { id } = await context.params;
     const user = await requireAuth();
 
+    // Verify workspace membership
     const existingAsset = await prisma.asset.findFirst({
-        where: { id, deletedAt: null },
+        where: {
+            id,
+            deletedAt: null,
+            workspace: {
+                members: { some: { userId: user.id } },
+            },
+        },
     });
     if (!existingAsset) {
         return apiError(404, 'Asset not found');
@@ -147,3 +187,4 @@ export const DELETE = withErrorHandler(async (
 
     return apiSuccess({ message: 'Asset deleted successfully', asset });
 });
+

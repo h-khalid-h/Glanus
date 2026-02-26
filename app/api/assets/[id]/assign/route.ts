@@ -20,7 +20,13 @@ export const POST = withErrorHandler(async (
     const { userId, notes } = parsed.data;
 
     const asset = await prisma.asset.findFirst({
-        where: { id, deletedAt: null },
+        where: {
+            id,
+            deletedAt: null,
+            workspace: {
+                members: { some: { userId: user.id } },
+            },
+        },
     });
     if (!asset) {
         return apiError(404, 'Asset not found');

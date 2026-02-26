@@ -24,7 +24,9 @@ export const GET = withErrorHandler(async () => {
         },
     });
 
-    const byLevel = exams.reduce((acc: any, exam) => {
+    type ExamSummary = (typeof exams)[number];
+
+    const byLevel = exams.reduce((acc: Record<string, ExamSummary[]>, exam: ExamSummary) => {
         if (!acc[exam.level]) acc[exam.level] = [];
         acc[exam.level].push(exam);
         return acc;
@@ -35,9 +37,9 @@ export const GET = withErrorHandler(async () => {
         byLevel,
         summary: {
             totalAttempts: exams.length,
-            passed: exams.filter(e => e.status === 'PASSED').length,
-            failed: exams.filter(e => e.status === 'FAILED').length,
-            inProgress: exams.filter(e => e.status === 'STARTED').length,
+            passed: exams.filter((e: ExamSummary) => e.status === 'PASSED').length,
+            failed: exams.filter((e: ExamSummary) => e.status === 'FAILED').length,
+            inProgress: exams.filter((e: ExamSummary) => e.status === 'STARTED').length,
         },
     });
 });

@@ -6,6 +6,7 @@
  */
 
 import { prisma } from '@/lib/db';
+import { Prisma } from '@prisma/client';
 import { logInfo } from '@/lib/logger';
 
 export type AuditAction =
@@ -38,7 +39,7 @@ interface AuditLogEntry {
     action: AuditAction;
     resourceType?: string;
     resourceId?: string;
-    details?: Record<string, any>;
+    details?: Record<string, unknown>;
     ipAddress?: string;
 }
 
@@ -67,7 +68,7 @@ export async function auditLog(entry: AuditLogEntry): Promise<void> {
             resourceType: entry.resourceType,
             resourceId: entry.resourceId,
         });
-    } catch (error) {
+    } catch (error: unknown) {
         // Never fail the main operation due to audit logging
         logInfo('[AUDIT] Failed to write audit log (table may not exist yet)', {
             action: entry.action,
@@ -99,7 +100,7 @@ export async function getAuditLogs(
         endDate,
     } = options;
 
-    const where: any = {
+    const where: Record<string, unknown> = {
         workspaceId,
         ...(action && { action }),
         ...(userId && { userId }),

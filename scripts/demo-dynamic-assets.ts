@@ -42,8 +42,8 @@ async function apiCall(method: string, endpoint: string, body?: any) {
         console.log(`✅ Success (${response.status})`);
         console.log('Response:', JSON.stringify(data, null, 2));
         return { error: false, status: response.status, data };
-    } catch (error: any) {
-        console.log(`❌ Network Error:`, error.message);
+    } catch (error: unknown) {
+        console.log(`❌ Network Error:`, error instanceof Error ? error.message : error);
         return { error: true, data: null };
     }
 }

@@ -21,10 +21,16 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     }
 
     const assets = await prisma.asset.findMany({
-        where: { id: { in: assetIds }, deletedAt: null },
+        where: {
+            id: { in: assetIds },
+            deletedAt: null,
+            workspace: {
+                members: { some: { userId: user.id } },
+            },
+        },
     });
     if (assets.length !== assetIds.length) {
-        return apiError(400, 'One or more assets not found or already deleted');
+        return apiError(400, 'One or more assets not found or access denied');
     }
 
     await prisma.asset.updateMany({

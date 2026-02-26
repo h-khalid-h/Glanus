@@ -1,4 +1,5 @@
 'use client';
+import { csrfFetch } from '@/lib/api/csrfFetch';
 
 import { useState } from 'react';
 import { useWorkspaceStore, Workspace } from '@/lib/stores/workspaceStore';
@@ -23,7 +24,7 @@ export default function GeneralSettings({ workspace }: { workspace: Workspace })
         setMessage(null);
 
         try {
-            const response = await fetch(`/api/workspaces/${workspace.id}`, {
+            const response = await csrfFetch(`/api/workspaces/${workspace.id}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formData),
@@ -40,7 +41,7 @@ export default function GeneralSettings({ workspace }: { workspace: Workspace })
             await fetchWorkspaces(); // Refresh list
 
             setMessage({ type: 'success', text: 'Workspace settings updated successfully.' });
-        } catch (err) {
+        } catch (err: unknown) {
             setMessage({ type: 'error', text: err instanceof Error ? err.message : 'Something went wrong' });
         } finally {
             setIsLoading(false);
@@ -133,7 +134,7 @@ export default function GeneralSettings({ workspace }: { workspace: Workspace })
 
                             setIsLoading(true);
                             try {
-                                const res = await fetch(`/api/workspaces/${workspace.id}/storage/upload`, {
+                                const res = await csrfFetch(`/api/workspaces/${workspace.id}/storage/upload`, {
                                     method: 'POST',
                                     body: uploadData
                                 });
@@ -143,7 +144,7 @@ export default function GeneralSettings({ workspace }: { workspace: Workspace })
                                     return;
                                 }
                                 setMessage({ type: 'success', text: `Uploaded ${file.name} successfully.` });
-                            } catch (err) {
+                            } catch (err: unknown) {
                                 setMessage({ type: 'error', text: 'Upload failed due to network error' });
                             } finally {
                                 setIsLoading(false);

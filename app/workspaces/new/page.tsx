@@ -7,12 +7,12 @@ const WorkspaceWizard = lazy(() => import('@/components/WorkspaceWizard'));
 
 export default function NewWorkspacePage() {
     return (
-        <div className="min-h-screen bg-slate-950 py-12 px-4 sm:px-6 lg:px-8 flex flex-col items-center justify-center">
+        <div className="min-h-screen bg-gradient-midnight py-12 px-4 sm:px-6 lg:px-8 flex flex-col items-center justify-center">
             <div className="mb-10 text-center">
-                <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">
+                <h1 className="text-4xl font-extrabold text-gradient">
                     Glanus
                 </h1>
-                <p className="mt-2 text-lg text-slate-600">
+                <p className="mt-2 text-lg text-slate-400">
                     Create your workspace to get started
                 </p>
             </div>
@@ -34,8 +34,8 @@ export default function NewWorkspacePage() {
                 </p>
                 <p className="text-xs text-slate-400">
                     By creating a workspace, you agree to our{' '}
-                    <a href="#" className="hover:text-slate-600">Terms of Service</a> and{' '}
-                    <a href="#" className="hover:text-slate-600">Privacy Policy</a>
+                    <a href="/terms" className="hover:text-slate-300 transition-colors">Terms of Service</a> and{' '}
+                    <a href="/privacy" className="hover:text-slate-300 transition-colors">Privacy Policy</a>
                 </p>
             </div>
         </div>

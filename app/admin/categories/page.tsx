@@ -1,4 +1,5 @@
 'use client';
+import { csrfFetch } from '@/lib/api/csrfFetch';
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -25,7 +26,7 @@ export default function CategoriesPage() {
         try {
             setLoading(true);
             setError(null);
-            const response = await fetch('/api/admin/categories');
+            const response = await csrfFetch('/api/admin/categories');
             if (!response.ok) throw new Error('Failed to fetch categories');
             const data = await response.json();
             setCategories(data.categories || []);
@@ -47,7 +48,7 @@ export default function CategoriesPage() {
         setConfirmState(null);
 
         try {
-            const response = await fetch(`/api/admin/categories/${id}`, {
+            const response = await csrfFetch(`/api/admin/categories/${id}`, {
                 method: 'DELETE',
             });
 

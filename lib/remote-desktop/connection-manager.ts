@@ -85,7 +85,7 @@ export class RemoteDesktopManager {
             // Connect WebSocket for signaling
             await this.connectSignaling();
 
-        } catch (err) {
+        } catch (err: unknown) {
             this.setState('error');
             this.events.onError?.(err instanceof Error ? err : new Error(String(err)));
         }
@@ -223,13 +223,13 @@ export class RemoteDesktopManager {
         });
     }
 
-    private handleSignalingMessage(message: { type: string; signal?: any }): void {
+    private handleSignalingMessage(message: { type: string; signal?: unknown }): void {
         if (!this.webrtcClient) return;
 
         switch (message.type) {
             case 'signal':
                 if (message.signal) {
-                    this.webrtcClient.signal(message.signal);
+                    this.webrtcClient.signal(message.signal as Parameters<typeof this.webrtcClient.signal>[0]);
                 }
                 break;
             case 'session:ended':

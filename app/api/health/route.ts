@@ -9,7 +9,7 @@ import { apiSuccess, apiError } from '@/lib/api/response';
 import { prisma } from '@/lib/db';
 
 export async function GET() {
-    const checks: Record<string, any> = {
+    const checks: { status: string; timestamp: string; version: string; uptime: number; environment: string; services: Record<string, { status: string; error?: string }> } = {
         status: 'healthy',
         timestamp: new Date().toISOString(),
         version: process.env.npm_package_version || '0.1.0',
@@ -24,7 +24,7 @@ export async function GET() {
     try {
         await prisma.$queryRaw`SELECT 1`;
         checks.services.database = { status: 'connected' };
-    } catch (error) {
+    } catch (error: unknown) {
         checks.services.database = { status: 'disconnected', error: 'Connection failed' };
         checks.status = 'degraded';
         httpStatus = 503;

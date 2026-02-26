@@ -1,4 +1,5 @@
 'use client';
+import { csrfFetch } from '@/lib/api/csrfFetch';
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -40,12 +41,12 @@ export default function AdminPartnersPage() {
     const fetchPartners = async () => {
         try {
             const url = filter ? `/api/admin/partners?status=${filter}` : '/api/admin/partners';
-            const res = await fetch(url);
+            const res = await csrfFetch(url);
             const data = await res.json();
 
             setPartners(data.partners);
             setStats(data.stats);
-        } catch (err) {
+        } catch (err: unknown) {
             toastError('Failed to Load', err instanceof Error ? err.message : 'Could not load partners');
         } finally {
             setLoading(false);
@@ -56,7 +57,7 @@ export default function AdminPartnersPage() {
         const reason = prompt(`Enter reason for ${action}:`) || '';
 
         try {
-            const res = await fetch(`/api/admin/partners/${partnerId}`, {
+            const res = await csrfFetch(`/api/admin/partners/${partnerId}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ action, reason }),
@@ -74,8 +75,8 @@ export default function AdminPartnersPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-slate-950">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <div className="min-h-screen flex items-center justify-center bg-gradient-midnight">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-nerve"></div>
             </div>
         );
     }

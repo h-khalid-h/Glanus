@@ -67,15 +67,15 @@ export default function PublicPartnerProfilePage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-slate-950">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <div className="min-h-screen flex items-center justify-center bg-gradient-midnight">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-nerve"></div>
             </div>
         );
     }
 
     if (error || !partner) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-slate-950">
+            <div className="min-h-screen flex items-center justify-center bg-gradient-midnight">
                 <div className="text-center">
                     <p className="text-xl text-white mb-2">Partner Not Found</p>
                     <p className="text-slate-400 mb-4">{error}</p>
@@ -90,7 +90,7 @@ export default function PublicPartnerProfilePage() {
     return (
         <div className="min-h-screen bg-slate-900/30">
             {/* Hero Section */}
-            <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white py-16 px-4 sm:px-6 lg:px-8">
+            <div className="bg-gradient-to-r from-nerve to-nerve/70 text-white py-16 px-4 sm:px-6 lg:px-8">
                 <div className="max-w-7xl mx-auto">
                     <div className="flex items-start space-x-6">
                         {partner.logo && (

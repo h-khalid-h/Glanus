@@ -108,7 +108,7 @@ export async function POST(request: NextRequest) {
             agentId: agent.id,
             commands,
         });
-    } catch (error: any) {
+    } catch (error: unknown) {
         if (error instanceof z.ZodError) {
             return apiError(400, 'Validation failed', error.errors);
         }

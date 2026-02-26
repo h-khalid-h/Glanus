@@ -73,8 +73,8 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
                 alerts: ninetyDaysAgo.toISOString(),
             },
         });
-    } catch (error: any) {
+    } catch (error: unknown) {
         logError('[CRON] Data cleanup failed', error);
-        return apiError(500, 'Cleanup failed', error.message);
+        return apiError(500, 'Cleanup failed', error instanceof Error ? error.message : 'Unknown error');
     }
 });

@@ -88,8 +88,8 @@ export class NotificationOrchestrator {
                                 result.errors.push(`Email failed: ${emailResult.error}`);
                             }
                         }
-                    } catch (error: any) {
-                        result.errors.push(`Email error: ${error.message}`);
+                    } catch (error: unknown) {
+                        result.errors.push(`Email error: ${error instanceof Error ? error.message : 'Unknown error'}`);
                     }
                 }
 
@@ -121,15 +121,15 @@ export class NotificationOrchestrator {
                                 result.errors.push(`Webhook failed: ${webhookResult.error}`);
                             }
                         }
-                    } catch (error: any) {
-                        result.errors.push(`Webhook error: ${error.message}`);
+                    } catch (error: unknown) {
+                        result.errors.push(`Webhook error: ${error instanceof Error ? error.message : 'Unknown error'}`);
                     }
                 }
             }
 
             return result;
-        } catch (error: any) {
-            result.errors.push(`Processing error: ${error.message}`);
+        } catch (error: unknown) {
+            result.errors.push(`Processing error: ${error instanceof Error ? error.message : 'Unknown error'}`);
             return result;
         }
     }

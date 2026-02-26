@@ -5,6 +5,7 @@ import { logError, logInfo } from '@/lib/logger';
  */
 
 import { Prisma } from '@prisma/client';
+import type { prisma as PrismaInstance } from '@/lib/db';
 
 export interface SampleDataOptions {
     workspaceId: string;
@@ -105,7 +106,7 @@ export function generateSampleAlertRules(options: SampleDataOptions): Prisma.Ale
  * Create all sample data for a workspace
  */
 export async function createSampleWorkspaceData(
-    prisma: any,
+    prisma: typeof PrismaInstance,
     options: SampleDataOptions
 ): Promise<void> {
     const { workspaceId, userId } = options;
@@ -124,7 +125,7 @@ export async function createSampleWorkspaceData(
         await prisma.alertRule.createMany({ data: alertRules });
 
         logInfo(`✓ Created sample data for workspace ${workspaceId}`);
-    } catch (error) {
+    } catch (error: unknown) {
         logError('Failed to create sample data', error);
         throw error;
     }

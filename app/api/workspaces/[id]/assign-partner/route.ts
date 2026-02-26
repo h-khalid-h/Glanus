@@ -54,7 +54,7 @@ export const POST = withErrorHandler(async (
         return apiError(404, 'No partners available at this time. Please try again later.');
     }
 
-    const bestMatch = await findBestPartner(workspace as any, eligiblePartners);
+    const bestMatch = await findBestPartner(workspace as unknown as Parameters<typeof findBestPartner>[0], eligiblePartners);
     if (!bestMatch) {
         return apiError(404, 'No suitable partner found for your workspace.');
     }

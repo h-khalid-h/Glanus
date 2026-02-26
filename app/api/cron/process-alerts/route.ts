@@ -52,11 +52,11 @@ export async function POST(request: NextRequest) {
             results,
             timestamp: new Date().toISOString(),
         });
-    } catch (error: any) {
+    } catch (error: unknown) {
         logError('[CRON] Alert processing error', error);
         return apiSuccess({
             success: false,
-            error: error.message,
+            error: error instanceof Error ? error.message : 'Unknown error',
             timestamp: new Date().toISOString(),
         }, undefined, 500);
     }
@@ -112,7 +112,7 @@ export async function GET(request: NextRequest) {
             },
             timestamp: new Date().toISOString(),
         });
-    } catch (error: any) {
-        return apiSuccess({ error: error.message }, undefined, 500);
+    } catch (error: unknown) {
+        return apiSuccess({ error: error instanceof Error ? error.message : 'Unknown error' }, undefined, 500);
     }
 }

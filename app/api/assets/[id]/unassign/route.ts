@@ -12,7 +12,13 @@ export const POST = withErrorHandler(async (
     const user = await requireAuth();
 
     const asset = await prisma.asset.findFirst({
-        where: { id, deletedAt: null },
+        where: {
+            id,
+            deletedAt: null,
+            workspace: {
+                members: { some: { userId: user.id } },
+            },
+        },
         include: { assignedTo: true },
     });
 

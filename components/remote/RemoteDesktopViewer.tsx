@@ -41,10 +41,10 @@ export function RemoteDesktopViewer({
         webrtcClient.onSignal = async (signal) => {
             console.debug('[Viewer] Sending signal to backend:', signal.type || 'candidate');
             try {
-                const payload: any = {};
+                const payload: Record<string, unknown> = {};
                 if (signal.type === 'offer') payload.offer = signal;
                 else if (signal.type === 'answer') payload.answer = signal;
-                else if ((signal as any).candidate) payload.iceCandidates = [signal];
+                else if ('candidate' in signal) payload.iceCandidates = [signal];
 
                 if (Object.keys(payload).length > 0) {
                     await fetch(`/api/remote/sessions/${sessionId}`, {
@@ -53,7 +53,7 @@ export function RemoteDesktopViewer({
                         body: JSON.stringify(payload),
                     });
                 }
-            } catch (err) {
+            } catch (err: unknown) {
                 console.error('[Viewer] Failed to send WebRTC signal', err);
             }
         };
@@ -123,14 +123,14 @@ export function RemoteDesktopViewer({
                 const remoteCandidates = session.data?.iceCandidates || [];
                 if (remoteCandidates.length > lastSeenIceCandidates) {
                     const newCandidates = remoteCandidates.slice(lastSeenIceCandidates);
-                    newCandidates.forEach((candidate: any) => {
+                    newCandidates.forEach((candidate: SimplePeer.SignalData) => {
                         console.debug('[Viewer] Applying remote ICE candidate');
                         webrtcClient.signal(candidate);
                     });
                     lastSeenIceCandidates = remoteCandidates.length;
                 }
 
-            } catch (error) {
+            } catch (error: unknown) {
                 console.error('[Viewer] Polling error:', error);
             }
         }, 2000);

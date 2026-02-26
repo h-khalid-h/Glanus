@@ -1,4 +1,5 @@
 'use client';
+import { csrfFetch } from '@/lib/api/csrfFetch';
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
@@ -93,9 +94,9 @@ export default function AssetAgentPage() {
 
     const fetchAgentData = async () => {
         try {
-            const res = await fetch(`/api/assets/${assetId}/agent`);
+            const res = await csrfFetch(`/api/assets/${assetId}/agent`);
             if (res.ok) setAgent(await res.json());
-        } catch (err) {
+        } catch (err: unknown) {
             toastError('Failed to load agent', err instanceof Error ? err.message : 'Unknown error');
         } finally {
             setLoading(false);
@@ -104,12 +105,12 @@ export default function AssetAgentPage() {
 
     const fetchExecutions = async () => {
         try {
-            const res = await fetch(`/api/assets/${assetId}/execute-script`);
+            const res = await csrfFetch(`/api/assets/${assetId}/execute-script`);
             if (res.ok) {
                 const data = await res.json();
                 setExecutions(data.executions);
             }
-        } catch (err) {
+        } catch (err: unknown) {
             toastError('Failed to load executions', err instanceof Error ? err.message : 'Unknown error');
         }
     };
@@ -117,9 +118,9 @@ export default function AssetAgentPage() {
     const fetchMetrics = async () => {
         setLoadingMetrics(true);
         try {
-            const res = await fetch(`/api/assets/${assetId}/metrics?timeRange=${timeRange}`);
+            const res = await csrfFetch(`/api/assets/${assetId}/metrics?timeRange=${timeRange}`);
             if (res.ok) setMetrics((await res.json()).metrics);
-        } catch (err) {
+        } catch (err: unknown) {
             toastError('Failed to load metrics', err instanceof Error ? err.message : 'Unknown error');
         } finally {
             setLoadingMetrics(false);
@@ -130,7 +131,7 @@ export default function AssetAgentPage() {
         e.preventDefault();
         setExecuting(true);
         try {
-            const res = await fetch(`/api/assets/${assetId}/execute-script`, {
+            const res = await csrfFetch(`/api/assets/${assetId}/execute-script`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ scriptName, scriptBody, language }),
@@ -144,7 +145,7 @@ export default function AssetAgentPage() {
             } else {
                 toastError('Error', data.error);
             }
-        } catch (err) {
+        } catch (err: unknown) {
             toastError('Script Failed', err instanceof Error ? err.message : 'Unknown error');
         } finally {
             setExecuting(false);
@@ -315,7 +316,7 @@ export default function AssetAgentPage() {
                                         <label className="block text-xs font-medium text-slate-400 mb-1.5">Language</label>
                                         <select
                                             value={language}
-                                            onChange={(e) => setLanguage(e.target.value as any)}
+                                            onChange={(e) => setLanguage(e.target.value as 'powershell' | 'bash' | 'python')}
                                             className="w-full rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-2 text-sm text-white
                                                        focus:outline-none focus:ring-1 focus:ring-nerve/50 focus:border-nerve/50"
                                         >

@@ -1,4 +1,5 @@
 'use client';
+import { csrfFetch } from '@/lib/api/csrfFetch';
 
 import { Suspense, useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
@@ -67,20 +68,20 @@ function PartnerDashboardContent() {
     const fetchDashboardData = async () => {
         try {
             // Fetch partner profile
-            const profileRes = await fetch('/api/partners/me');
+            const profileRes = await csrfFetch('/api/partners/me');
             if (!profileRes.ok) throw new Error('Failed to load partner profile');
             const profileData = await profileRes.json();
             setPartner(profileData.partner);
 
             // Fetch assignments
-            const assignmentsRes = await fetch('/api/partners/assignments');
+            const assignmentsRes = await csrfFetch('/api/partners/assignments');
             if (assignmentsRes.ok) {
                 const assignData = await assignmentsRes.json();
                 setAssignments(assignData.assignments);
             }
 
             // Fetch exam history
-            const examsRes = await fetch('/api/partners/exam/history');
+            const examsRes = await csrfFetch('/api/partners/exam/history');
             if (examsRes.ok) {
                 const examsData = await examsRes.json();
                 setExams(examsData.exams);
@@ -94,7 +95,7 @@ function PartnerDashboardContent() {
 
     const handleAssignmentAction = async (assignmentId: string, action: 'accept' | 'reject') => {
         try {
-            const res = await fetch(`/api/partners/assignments/${assignmentId}/${action}`, {
+            const res = await csrfFetch(`/api/partners/assignments/${assignmentId}/${action}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(
@@ -113,9 +114,9 @@ function PartnerDashboardContent() {
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-slate-950">
+            <div className="min-h-screen flex items-center justify-center bg-gradient-midnight">
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-nerve mx-auto mb-4"></div>
                     <p className="text-slate-400">Loading dashboard...</p>
                 </div>
             </div>
@@ -124,7 +125,7 @@ function PartnerDashboardContent() {
 
     if (error || !partner) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-slate-950">
+            <div className="min-h-screen flex items-center justify-center bg-gradient-midnight">
                 <div className="text-center">
                     <p className="text-health-critical mb-4">{error || 'No partner profile found'}</p>
                     <Link href="/partners/signup" className="text-nerve hover:underline">
@@ -365,9 +366,9 @@ function PartnerDashboardContent() {
 export default function PartnerDashboardPage() {
     return (
         <Suspense fallback={
-            <div className="min-h-screen flex items-center justify-center bg-slate-950">
+            <div className="min-h-screen flex items-center justify-center bg-gradient-midnight">
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-nerve mx-auto mb-4"></div>
                     <p className="text-slate-400">Loading dashboard...</p>
                 </div>
             </div>

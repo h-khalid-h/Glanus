@@ -50,7 +50,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     });
 
     let correctCount = 0;
-    const results: any[] = [];
+    const results: { index: number; question: string; userAnswer: number; correctAnswer: number; isCorrect: boolean; explanation: string | null }[] = [];
 
     questions.forEach((question, index) => {
         const userAnswer = answers[index.toString()];
@@ -69,7 +69,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     const updatedExam = await prisma.partnerExam.update({
         where: { id: examId },
         data: {
-            answers: answers as any,
+            answers: answers as any, // Prisma JSON field
             score,
             status: passed ? 'PASSED' : 'FAILED',
             completedAt: new Date(),

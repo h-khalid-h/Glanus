@@ -31,8 +31,8 @@ export class WebhookService {
             try {
                 const result = await this.sendAttempt(url, payload, secret);
                 return { success: true };
-            } catch (error: any) {
-                lastError = error.message;
+            } catch (error: unknown) {
+                lastError = error instanceof Error ? error.message : 'Unknown error';
 
                 // Don't retry on final attempt
                 if (attempt < this.maxRetries) {

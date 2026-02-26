@@ -20,6 +20,32 @@ interface AlertTrigger {
     workspaceId: string;
 }
 
+interface AlertRule {
+    id: string;
+    name: string;
+    metric: string;
+    threshold: number;
+    duration: number;
+    severity: string;
+    enabled: boolean;
+    workspaceId: string;
+}
+
+interface AgentWithAsset {
+    id: string;
+    assetId: string;
+    workspaceId: string;
+    status: string;
+    lastSeen: Date;
+    cpuUsage: number | null;
+    ramUsage: number | null;
+    diskUsage: number | null;
+    asset: {
+        id: string;
+        name: string;
+    };
+}
+
 export class AlertEvaluator {
     /**
      * Evaluate all enabled alert rules for a workspace
@@ -69,8 +95,8 @@ export class AlertEvaluator {
      * Evaluate a single rule against an agent
      */
     private async evaluateRule(
-        rule: any,
-        agent: any
+        rule: AlertRule,
+        agent: AgentWithAsset
     ): Promise<AlertTrigger | null> {
         const { metric, threshold, duration } = rule;
 
@@ -176,7 +202,10 @@ export class AlertEvaluator {
 
         // Check if ALL readings in this period exceeded threshold
         const field = metric === 'CPU' ? 'cpuUsage' : metric === 'RAM' ? 'ramUsage' : 'diskUsage';
-        return metrics.every((m: any) => m[field] > threshold);
+        return metrics.every((m) => {
+            const val = m[field as keyof typeof m];
+            return typeof val === 'number' && val > threshold;
+        });
     }
 
     /**

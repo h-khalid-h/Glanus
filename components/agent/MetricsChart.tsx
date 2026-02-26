@@ -68,7 +68,7 @@ export default function MetricsChart({ data, timeRange }: MetricsChartProps) {
                                 borderRadius: '8px',
                                 padding: '12px'
                             }}
-                            formatter={(value: any) => `${Number(value).toFixed(1)}%`}
+                            formatter={((value: string | number | undefined) => `${Number(value ?? 0).toFixed(1)}%`) as never}
                         />
                         <Legend />
                         <Line
@@ -126,7 +126,7 @@ export default function MetricsChart({ data, timeRange }: MetricsChartProps) {
                                 borderRadius: '8px',
                                 padding: '12px'
                             }}
-                            formatter={(value: any) => `${Number(value).toFixed(1)} KB/s`}
+                            formatter={((value: string | number | undefined) => `${Number(value ?? 0).toFixed(1)} KB/s`) as never}
                         />
                         <Legend />
                         <Line

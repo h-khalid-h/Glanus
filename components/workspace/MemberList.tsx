@@ -1,4 +1,5 @@
 'use client';
+import { csrfFetch } from '@/lib/api/csrfFetch';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useWorkspaceStore } from '@/lib/stores/workspaceStore';
@@ -53,7 +54,7 @@ export default function MemberList({ workspaceId }: { workspaceId: string }) {
 
     const fetchMembers = useCallback(async () => {
         try {
-            const response = await fetch(`/api/workspaces/${workspaceId}/members`);
+            const response = await csrfFetch(`/api/workspaces/${workspaceId}/members`);
             if (response.ok) {
                 const result = await response.json();
                 setMembers(result.data?.members || []);
@@ -73,7 +74,7 @@ export default function MemberList({ workspaceId }: { workspaceId: string }) {
         setOpenMenuId(null);
         setActionLoading(memberId);
         try {
-            await fetch(`/api/workspaces/${workspaceId}/members/${memberId}`, {
+            await csrfFetch(`/api/workspaces/${workspaceId}/members/${memberId}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ role: newRole }),
@@ -98,7 +99,7 @@ export default function MemberList({ workspaceId }: { workspaceId: string }) {
 
         setActionLoading(memberId);
         try {
-            await fetch(`/api/workspaces/${workspaceId}/members/${memberId}`, {
+            await csrfFetch(`/api/workspaces/${workspaceId}/members/${memberId}`, {
                 method: 'DELETE',
             });
             await fetchMembers();

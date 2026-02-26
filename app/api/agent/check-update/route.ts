@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
             release_notes: latestVersion.releaseNotes || '',
             required: latestVersion.required || false,
         });
-    } catch (error) {
+    } catch (error: unknown) {
         logError('Agent check update failed', error);
         return apiError(500, 'Internal server error');
     }

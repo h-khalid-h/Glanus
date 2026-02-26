@@ -132,7 +132,7 @@ export const POST = withErrorHandler(async (
     // Execute action asynchronously
     // In production, this should be queued to a background job system
     executeAction(
-        actionDefinition,
+        actionDefinition as any, // eslint-disable-line @typescript-eslint/no-explicit-any -- Prisma type mismatch
         asset,
         data.parameters || {},
         execution.id
@@ -147,6 +147,17 @@ export const POST = withErrorHandler(async (
                 completedAt: result.status === 'COMPLETED' ? new Date() : null,
             },
         });
+    }).catch(async (error: unknown) => {
+        // Ensure failed executions are recorded — prevents unhandled rejection
+        const message = error instanceof Error ? error.message : 'Unknown execution error';
+        await prisma.assetActionExecution.update({
+            where: { id: execution.id },
+            data: {
+                status: 'FAILED',
+                errorMessage: message,
+                completedAt: new Date(),
+            },
+        }).catch(() => { /* best-effort update */ });
     });
 
     // Return execution record for polling

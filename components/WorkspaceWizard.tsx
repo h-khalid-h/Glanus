@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { csrfFetch } from '@/lib/api/csrfFetch';
 import { useRouter } from 'next/navigation';
 import { useWorkspaceStore } from '@/lib/stores/workspaceStore';
 import { Button } from '@/components/ui/Button';
@@ -70,7 +71,7 @@ export default function WorkspaceWizard({ onComplete, showSampleDataOption = fal
         setError(null);
 
         try {
-            const response = await fetch('/api/workspaces', {
+            const response = await csrfFetch('/api/workspaces', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ ...formData, createSampleData }),
@@ -95,8 +96,7 @@ export default function WorkspaceWizard({ onComplete, showSampleDataOption = fal
                 router.push(`/workspaces/${newWorkspace.id}/dashboard`);
                 router.refresh();
             }
-        } catch (err) {
-            console.error('Failed to create workspace:', err);
+        } catch (err: unknown) {
             setError(err instanceof Error ? err.message : 'Something went wrong');
         } finally {
             setIsLoading(false);

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { csrfFetch } from '@/lib/api/csrfFetch';
 import { useRouter } from 'next/navigation';
 import { useWorkspaceStore, Workspace } from '@/lib/stores/workspaceStore';
 import { Button } from '@/components/ui/Button';
@@ -21,7 +22,7 @@ export default function DangerZone({ workspace }: { workspace: Workspace }) {
 
         setIsDeleting(true);
         try {
-            const response = await fetch(`/api/workspaces/${workspace.id}`, {
+            const response = await csrfFetch(`/api/workspaces/${workspace.id}`, {
                 method: 'DELETE',
             });
 
@@ -32,8 +33,7 @@ export default function DangerZone({ workspace }: { workspace: Workspace }) {
             await fetchWorkspaces();
             setCurrentWorkspace(null);
             router.push('/workspaces/new');
-        } catch (error) {
-            console.error('Delete failed:', error);
+        } catch (error: unknown) {
             showError('Delete Failed', 'Could not delete workspace. Please try again.');
             setIsDeleting(false);
         }

@@ -17,16 +17,21 @@ export const PATCH = withErrorHandler(async (
     request: NextRequest,
     context: { params: Promise<{ id: string }> }
 ) => {
-    await requireAuth();
+    const user = await requireAuth();
     const { id } = await context.params;
     const body = await request.json();
 
     // Validate input
     const data = updateDynamicAssetSchema.parse(body);
 
-    // Get existing asset
-    const existingAsset = await prisma.asset.findUnique({
-        where: { id },
+    // Get existing asset — verify workspace access
+    const existingAsset = await prisma.asset.findFirst({
+        where: {
+            id,
+            workspace: {
+                members: { some: { userId: user.id } },
+            },
+        },
         select: {
             id: true,
             categoryId: true,
@@ -68,8 +73,8 @@ export const PATCH = withErrorHandler(async (
     }
 
     // Validate field updates if provided
-    const validationErrors: any[] = [];
-    const fieldUpdates: any[] = [];
+    const validationErrors: any[] = []; // eslint-disable-line @typescript-eslint/no-explicit-any
+    const fieldUpdates: any[] = []; // eslint-disable-line @typescript-eslint/no-explicit-any
 
     if (data.fields) {
         // Build map of existing field values
@@ -79,7 +84,7 @@ export const PATCH = withErrorHandler(async (
         }
 
         for (const [fieldSlug, fieldValue] of Object.entries(data.fields)) {
-            const fieldDef: any = fieldDefsMap.get(fieldSlug);
+            const fieldDef = fieldDefsMap.get(fieldSlug);
 
             if (!fieldDef) {
                 validationErrors.push({
@@ -130,7 +135,7 @@ export const PATCH = withErrorHandler(async (
                 ...(data.status && { status: data.status }),
                 ...(data.assignedToId !== undefined && { assignedToId: data.assignedToId }),
                 ...(data.tags && { tags: data.tags }),
-                ...(data.metadata && { metadata: data.metadata as any }),
+                ...(data.metadata && { metadata: data.metadata as any }), // Prisma JSON field
             },
         });
 

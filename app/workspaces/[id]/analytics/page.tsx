@@ -102,7 +102,7 @@ export default function AnalyticsPage() {
                     const oracleResult = await oracleRes.json();
                     setIntelligence(oracleResult.data?.summary || null);
                 }
-            } catch (err) {
+            } catch (err: unknown) {
                 setError(err instanceof Error ? err.message : 'Something went wrong');
             } finally {
                 setIsLoading(false);
@@ -240,12 +240,12 @@ function IntelligenceBar({ summary }: { summary: IntelligenceSummary }) {
                         </p>
                     </div>
                 </div>
-                <a
-                    href="#"
+                <button
+                    onClick={() => { /* future: navigate to ORACLE details */ }}
                     className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
                 >
                     View Details →
-                </a>
+                </button>
             </div>
         </div>
     );
@@ -283,7 +283,7 @@ function EmptyWorkspaceGuide({ workspaceId }: { workspaceId: string }) {
             step: 4,
             label: 'Create Automations',
             description: 'Let REFLEX handle routine operations',
-            href: '#',
+            href: `/workspaces/${workspaceId}/actions`,
             icon: '⚡',
             accent: 'bg-reflex/10 text-reflex border-reflex/20',
         },

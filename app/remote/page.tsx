@@ -52,7 +52,7 @@ export default function RemoteSessionsPage() {
 
             const data = await response.json();
             setSessions(data.sessions || []);
-        } catch (error) {
+        } catch (error: unknown) {
             showError('Error fetching sessions:', error instanceof Error ? error.message : 'An unexpected error occurred');
         } finally {
             setLoading(false);

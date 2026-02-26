@@ -1,5 +1,6 @@
 'use client';
 import { useToast } from '@/lib/toast';
+import { csrfFetch } from '@/lib/api/csrfFetch';
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -20,13 +21,13 @@ export default function OnboardingPage() {
     const handleCompleteOnboarding = async (workspaceId?: string) => {
         setIsLoading(true);
         try {
-            await fetch('/api/onboarding/complete', { method: 'POST' });
+            await csrfFetch('/api/onboarding/complete', { method: 'POST' });
             if (workspaceId) {
                 router.push(`/workspaces/${workspaceId}/dashboard`);
             } else {
                 router.push('/dashboard');
             }
-        } catch (error) {
+        } catch (error: unknown) {
             showError('Failed to complete onboarding:', error instanceof Error ? error.message : 'An unexpected error occurred');
         } finally {
             setIsLoading(false);
@@ -147,7 +148,7 @@ function FeatureCard({
     description,
     color,
 }: {
-    icon: any;
+    icon: React.ComponentType<{ className?: string }>;
     title: string;
     description: string;
     color: string;

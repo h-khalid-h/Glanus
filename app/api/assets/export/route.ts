@@ -1,13 +1,34 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { requireAuth, withErrorHandler } from '@/lib/api/withAuth';
+import { apiError } from '@/lib/api/response';
+import { verifyWorkspaceAccess } from '@/lib/workspace/utils';
 
-// GET /api/assets/export - Export assets to CSV
-export const GET = withErrorHandler(async (_request: NextRequest) => {
-    await requireAuth();
+// GET /api/assets/export - Export workspace assets to CSV
+export const GET = withErrorHandler(async (request: NextRequest) => {
+    const user = await requireAuth();
+
+    const { searchParams } = new URL(request.url);
+    const workspaceId = searchParams.get('workspaceId');
+
+    if (!workspaceId) {
+        return apiError(400, 'Workspace ID is required');
+    }
+
+    const dbUser = await prisma.user.findUnique({
+        where: { email: user.email! },
+    });
+    if (!dbUser) {
+        return apiError(404, 'User not found');
+    }
+
+    const { hasAccess } = await verifyWorkspaceAccess(dbUser.id, workspaceId);
+    if (!hasAccess) {
+        return apiError(403, 'Access denied to workspace');
+    }
 
     const assets = await prisma.asset.findMany({
-        where: { deletedAt: null },
+        where: { workspaceId, deletedAt: null },
         include: {
             assignedTo: { select: { name: true, email: true } },
             category: { select: { name: true } },

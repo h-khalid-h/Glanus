@@ -1,4 +1,5 @@
 'use client';
+import { csrfFetch } from '@/lib/api/csrfFetch';
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -38,10 +39,10 @@ export default function EditFieldPage({ params }: { params: Promise<{ id: string
 
     const fetchField = async (catId: string, fldId: string) => {
         try {
-            const response = await fetch(`/api/admin/categories/${catId}/fields`);
+            const response = await csrfFetch(`/api/admin/categories/${catId}/fields`);
             if (!response.ok) throw new Error('Failed to fetch fields');
             const fields = await response.json();
-            const field = fields.find((f: any) => f.id === fldId);
+            const field = fields.find((f: { id: string }) => f.id === fldId);
             if (!field) throw new Error('Field not found');
             setForm({
                 name: field.name || '',
@@ -70,7 +71,7 @@ export default function EditFieldPage({ params }: { params: Promise<{ id: string
             setSaving(true);
             setError(null);
 
-            const response = await fetch(`/api/admin/fields/${fieldId}`, {
+            const response = await csrfFetch(`/api/admin/fields/${fieldId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(form),

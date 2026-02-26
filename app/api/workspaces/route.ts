@@ -135,7 +135,7 @@ export const POST = withErrorHandler(async (request: Request) => {
                 workspaceId: workspace.id,
                 userId: user.id,
             });
-        } catch (error) {
+        } catch (error: unknown) {
             logError('Failed to create sample data', error);
         }
     }

@@ -120,7 +120,7 @@ export function sanitizeSSHCommand(command: string): string | null {
 /**
  * Sanitize JSON object (deep sanitization)
  */
-export function sanitizeJSON(obj: any): any {
+export function sanitizeJSON(obj: unknown): unknown {
     if (typeof obj === 'string') {
         return sanitizeText(obj);
     }
@@ -133,7 +133,7 @@ export function sanitizeJSON(obj: any): any {
         return obj.map(item => sanitizeJSON(item));
     }
 
-    const sanitized: any = {};
+    const sanitized: Record<string, unknown> = {};
     for (const [key, value] of Object.entries(obj)) {
         // Sanitize key
         const cleanKey = sanitizeText(key);
@@ -190,8 +190,8 @@ export function validatePassword(password: string): PasswordValidation {
 /**
  * Sanitize user input object (for API requests)
  */
-export function sanitizeInput(input: Record<string, any>): Record<string, any> {
-    const sanitized: Record<string, any> = {};
+export function sanitizeInput(input: Record<string, unknown>): Record<string, unknown> {
+    const sanitized: Record<string, unknown> = {};
 
     for (const [key, value] of Object.entries(input)) {
         if (typeof value === 'string') {

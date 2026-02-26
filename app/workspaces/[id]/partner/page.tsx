@@ -1,4 +1,5 @@
 'use client';
+import { csrfFetch } from '@/lib/api/csrfFetch';
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
@@ -47,12 +48,12 @@ export default function WorkspacePartnerPage() {
 
     const fetchAssignment = async () => {
         try {
-            const res = await fetch(`/api/workspaces/${workspaceId}/partner`);
+            const res = await csrfFetch(`/api/workspaces/${workspaceId}/partner`);
             if (res.ok) {
                 const data = await res.json();
                 setAssignment(data);
             }
-        } catch (err) {
+        } catch (err: unknown) {
             toastError('Failed to Load', err instanceof Error ? err.message : 'Could not load partner assignment');
         } finally {
             setLoading(false);
@@ -62,7 +63,7 @@ export default function WorkspacePartnerPage() {
     const assignPartner = async () => {
         try {
             setLoading(true);
-            const res = await fetch(`/api/workspaces/${workspaceId}/assign-partner`, {
+            const res = await csrfFetch(`/api/workspaces/${workspaceId}/assign-partner`, {
                 method: 'POST',
             });
 
@@ -71,7 +72,7 @@ export default function WorkspacePartnerPage() {
 
             toastSuccess('Partner Assigned', `Match score: ${data.matchScore}/100`);
             fetchAssignment();
-        } catch (err) {
+        } catch (err: unknown) {
             toastError('Error', err instanceof Error ? err.message : 'Something went wrong');
         } finally {
             setLoading(false);
@@ -82,7 +83,7 @@ export default function WorkspacePartnerPage() {
         setShowRemoveConfirm(false);
 
         try {
-            const res = await fetch(`/api/workspaces/${workspaceId}/partner`, {
+            const res = await csrfFetch(`/api/workspaces/${workspaceId}/partner`, {
                 method: 'DELETE',
             });
 
@@ -90,7 +91,7 @@ export default function WorkspacePartnerPage() {
 
             toastSuccess('Partner Removed', 'Partner has been removed from this workspace.');
             setAssignment(null);
-        } catch (err) {
+        } catch (err: unknown) {
             toastError('Error', err instanceof Error ? err.message : 'Something went wrong');
         }
     };
@@ -100,7 +101,7 @@ export default function WorkspacePartnerPage() {
         setSubmitting(true);
 
         try {
-            const res = await fetch(`/api/workspaces/${workspaceId}/partner/review`, {
+            const res = await csrfFetch(`/api/workspaces/${workspaceId}/partner/review`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ rating, review }),
@@ -112,7 +113,7 @@ export default function WorkspacePartnerPage() {
             toastSuccess('Review Submitted', 'Your review has been recorded.');
             setShowReviewForm(false);
             fetchAssignment();
-        } catch (err) {
+        } catch (err: unknown) {
             toastError('Error', err instanceof Error ? err.message : 'Something went wrong');
         } finally {
             setSubmitting(false);
@@ -121,8 +122,8 @@ export default function WorkspacePartnerPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-slate-950">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <div className="min-h-screen flex items-center justify-center bg-gradient-midnight">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-nerve"></div>
             </div>
         );
     }
@@ -174,7 +175,7 @@ export default function WorkspacePartnerPage() {
                         <button
                             onClick={assignPartner}
                             disabled={loading}
-                            className="px-8 py-3 bg-nerve text-white rounded-md font-semibold hover:brightness-110 transition disabled:opacity-50"
+                            className="px-8 py-3 bg-nerve text-white rounded-md font-semibold hover:brightness-110 transition disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {loading ? 'Finding best match...' : 'Assign Partner Now'}
                         </button>
@@ -308,7 +309,7 @@ export default function WorkspacePartnerPage() {
                                         <button
                                             type="submit"
                                             disabled={review.length < 20 || submitting}
-                                            className="px-6 py-2 bg-health-good text-white rounded-md hover:bg-health-good/80 transition disabled:opacity-50"
+                                            className="px-6 py-2 bg-health-good text-white rounded-md hover:bg-health-good/80 transition disabled:opacity-50 disabled:cursor-not-allowed"
                                         >
                                             {submitting ? 'Submitting...' : 'Submit Review'}
                                         </button>

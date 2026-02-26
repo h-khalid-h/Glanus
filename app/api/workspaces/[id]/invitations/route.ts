@@ -109,7 +109,7 @@ export const POST = withErrorHandler(async (
             subject: `You've been invited to join ${workspace.name} on Glanus`,
             html: getInvitationEmailTemplate(inviterName, workspace.name, inviteUrl),
         });
-    } catch (error) {
+    } catch (error: unknown) {
         logError('Failed to send invitation email', error);
     }
 

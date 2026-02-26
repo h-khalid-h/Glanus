@@ -10,10 +10,17 @@ export const GET = withErrorHandler(async (
     context: { params: Promise<{ id: string }> }
 ) => {
     const { id } = await context.params;
-    await requireAuth();
+    const user = await requireAuth();
 
-    const remoteSession = await prisma.remoteSession.findUnique({
-        where: { id },
+    const remoteSession = await prisma.remoteSession.findFirst({
+        where: {
+            id,
+            asset: {
+                workspace: {
+                    members: { some: { userId: user.id } },
+                },
+            },
+        },
         include: {
             asset: { select: { id: true, name: true, category: true, status: true, location: true } },
             user: { select: { id: true, name: true, email: true, role: true } },
@@ -40,7 +47,7 @@ export const PUT = withErrorHandler(async (
     }
     const { quality, notes, status, metadata, averageLatency, averageFPS, offer, answer, iceCandidates } = parsed.data;
 
-    const updateData: any = {};
+    const updateData: any = {}; // eslint-disable-line @typescript-eslint/no-explicit-any -- Prisma dynamic update
     if (quality !== undefined) updateData.quality = quality;
     if (notes !== undefined) updateData.notes = notes;
     if (status !== undefined) updateData.status = status;
@@ -53,7 +60,7 @@ export const PUT = withErrorHandler(async (
     // Append ICE candidates rather than overwrite
     if (iceCandidates !== undefined && iceCandidates.length > 0) {
         const existingSession = await prisma.remoteSession.findUnique({ where: { id }, select: { iceCandidates: true } });
-        const existingCandidates = (existingSession?.iceCandidates as any[]) || [];
+        const existingCandidates = (existingSession?.iceCandidates as any[]) || []; // Prisma JSON array
         updateData.iceCandidates = [...existingCandidates, ...iceCandidates];
     }
 

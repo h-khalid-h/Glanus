@@ -88,7 +88,14 @@ class SSHConnectionPool {
     private async createConnection(sshConfig: SSHConfig): Promise<NodeSSH> {
         const ssh = new NodeSSH();
 
-        const connectConfig: any = {
+        const connectConfig: {
+            host: string;
+            port: number;
+            username: string;
+            password?: string;
+            privateKey?: string;
+            passphrase?: string;
+        } = {
             host: sshConfig.host,
             port: sshConfig.port,
             username: sshConfig.username,
@@ -221,7 +228,7 @@ export function substituteCommandParameters(
     context: {
         assetId: string;
         assetName?: string;
-        parameters: Record<string, any>;
+        parameters: Record<string, unknown>;
     }
 ): string {
     let result = command;

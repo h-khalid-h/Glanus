@@ -16,7 +16,13 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     const { assetIds } = parsed.data;
 
     const result = await prisma.asset.updateMany({
-        where: { id: { in: assetIds }, deletedAt: null },
+        where: {
+            id: { in: assetIds },
+            deletedAt: null,
+            workspace: {
+                members: { some: { userId: user.id } },
+            },
+        },
         data: { deletedAt: new Date(), status: 'RETIRED' },
     });
 

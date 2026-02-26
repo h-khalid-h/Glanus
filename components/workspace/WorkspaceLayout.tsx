@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useWorkspace } from '@/lib/workspace/context';
@@ -18,6 +19,12 @@ interface NavItem {
 export function WorkspaceLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
     const { workspace } = useWorkspace();
+    const [mobileOpen, setMobileOpen] = useState(false);
+
+    // Close mobile sidebar on navigation
+    useEffect(() => {
+        setMobileOpen(false);
+    }, [pathname]);
 
     if (!workspace) return <>{children}</>;
 
@@ -122,59 +129,98 @@ export function WorkspaceLayout({ children }: { children: React.ReactNode }) {
         return pathname.startsWith(href);
     };
 
-    return (
-        <div className="flex min-h-screen">
-            {/* Sidebar */}
-            <aside className="hidden w-56 shrink-0 border-r border-border bg-surface-1 lg:block">
-                <div className="flex h-full flex-col">
-                    {/* Workspace header */}
-                    <div className="border-b border-border px-4 py-4">
-                        <div className="flex items-center gap-2">
-                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-nerve/10 text-sm font-bold text-nerve">
-                                {workspace.name?.charAt(0)?.toUpperCase() || 'W'}
-                            </div>
-                            <div className="min-w-0">
-                                <p className="truncate text-sm font-semibold">{workspace.name}</p>
-                                <p className="text-2xs text-muted-foreground capitalize">
-                                    {workspace.subscription?.plan?.toLowerCase() || 'free'} plan
-                                </p>
-                            </div>
-                        </div>
+    const sidebarContent = (
+        <div className="flex h-full flex-col">
+            {/* Workspace header */}
+            <div className="border-b border-border px-4 py-4">
+                <div className="flex items-center gap-2">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-nerve/10 text-sm font-bold text-nerve">
+                        {workspace.name?.charAt(0)?.toUpperCase() || 'W'}
                     </div>
-
-                    {/* Navigation */}
-                    <nav className="flex-1 overflow-y-auto px-3 py-4">
-                        {Object.entries(sections).map(([section, items]) => (
-                            <div key={section} className="mb-4">
-                                <p className="mb-1.5 px-2 text-2xs font-medium uppercase tracking-wider text-muted-foreground/60">
-                                    {section}
-                                </p>
-                                <div className="space-y-0.5">
-                                    {items.map(item => (
-                                        <Link
-                                            key={item.href}
-                                            href={item.href}
-                                            className={`flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm transition-colors ${isActive(item.href)
-                                                ? 'bg-nerve/10 font-medium text-nerve'
-                                                : 'text-muted-foreground hover:bg-surface-2 hover:text-foreground'
-                                                }`}
-                                        >
-                                            {item.icon}
-                                            {item.label}
-                                        </Link>
-                                    ))}
-                                </div>
-                            </div>
-                        ))}
-                    </nav>
-
-                    {/* Footer */}
-                    <div className="border-t border-border px-4 py-3">
-                        <p className="text-2xs text-muted-foreground/40">
-                            Glanus v2.0 · PRISM
+                    <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold">{workspace.name}</p>
+                        <p className="text-2xs text-muted-foreground capitalize">
+                            {workspace.subscription?.plan?.toLowerCase() || 'free'} plan
                         </p>
                     </div>
                 </div>
+            </div>
+
+            {/* Navigation */}
+            <nav className="flex-1 overflow-y-auto px-3 py-4">
+                {Object.entries(sections).map(([section, items]) => (
+                    <div key={section} className="mb-4">
+                        <p className="mb-1.5 px-2 text-2xs font-medium uppercase tracking-wider text-muted-foreground/60">
+                            {section}
+                        </p>
+                        <div className="space-y-0.5">
+                            {items.map(item => (
+                                <Link
+                                    key={item.href}
+                                    href={item.href}
+                                    className={`flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm transition-colors ${isActive(item.href)
+                                        ? 'bg-nerve/10 font-medium text-nerve'
+                                        : 'text-muted-foreground hover:bg-surface-2 hover:text-foreground'
+                                        }`}
+                                >
+                                    {item.icon}
+                                    {item.label}
+                                </Link>
+                            ))}
+                        </div>
+                    </div>
+                ))}
+            </nav>
+
+            {/* Footer */}
+            <div className="border-t border-border px-4 py-3">
+                <p className="text-2xs text-muted-foreground/40">
+                    Glanus v2.0 · PRISM
+                </p>
+            </div>
+        </div>
+    );
+
+    return (
+        <div className="flex min-h-screen">
+            {/* Mobile hamburger button */}
+            <button
+                onClick={() => setMobileOpen(true)}
+                className="fixed left-4 top-4 z-40 flex h-10 w-10 items-center justify-center rounded-lg border border-border bg-surface-1 text-muted-foreground transition-colors hover:bg-surface-2 hover:text-foreground lg:hidden"
+                aria-label="Open navigation"
+            >
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+                </svg>
+            </button>
+
+            {/* Mobile sidebar overlay */}
+            {mobileOpen && (
+                <div className="fixed inset-0 z-50 lg:hidden">
+                    {/* Backdrop */}
+                    <div
+                        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+                        onClick={() => setMobileOpen(false)}
+                    />
+                    {/* Sidebar */}
+                    <aside className="relative z-10 h-full w-64 bg-surface-1 shadow-xl animate-slide-in">
+                        <button
+                            onClick={() => setMobileOpen(false)}
+                            className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-surface-2 hover:text-foreground"
+                            aria-label="Close navigation"
+                        >
+                            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                        {sidebarContent}
+                    </aside>
+                </div>
+            )}
+
+            {/* Desktop Sidebar */}
+            <aside className="hidden w-56 shrink-0 border-r border-border bg-surface-1 lg:block">
+                {sidebarContent}
             </aside>
 
             {/* Main content */}
@@ -186,3 +232,4 @@ export function WorkspaceLayout({ children }: { children: React.ReactNode }) {
         </div>
     );
 }
+

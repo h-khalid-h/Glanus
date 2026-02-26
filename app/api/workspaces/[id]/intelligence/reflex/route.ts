@@ -56,7 +56,7 @@ export const POST = withErrorHandler(async (
         ...parsed.data,
         workspaceId,
         createdBy: user.id,
-    } as any);
+    } as Parameters<typeof saveRule>[1]);
 
     await auditLog({
         workspaceId,

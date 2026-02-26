@@ -20,10 +20,15 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     const { operation, assetIds, data } = parsed.data;
 
     const assets = await prisma.asset.findMany({
-        where: { id: { in: assetIds } },
+        where: {
+            id: { in: assetIds },
+            workspace: {
+                members: { some: { userId: user.id } },
+            },
+        },
     });
     if (assets.length !== assetIds.length) {
-        return apiError(404, 'One or more assets not found');
+        return apiError(404, 'One or more assets not found or access denied');
     }
 
     let result;
@@ -42,13 +47,13 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
             if (!data) {
                 return apiError(400, 'Update operation requires data');
             }
-            const updateData: any = {};
+            const updateData: { status?: string; location?: string } = {};
             if (data.status) updateData.status = data.status;
             if (data.location) updateData.location = data.location;
 
             result = await prisma.asset.updateMany({
                 where: { id: { in: assetIds } },
-                data: updateData,
+                data: updateData as any, // eslint-disable-line @typescript-eslint/no-explicit-any -- Prisma Exact type
             });
             return apiSuccess({
                 message: `${result.count} asset(s) updated successfully`,
@@ -67,7 +72,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
                 return apiError(404, 'Assignee not found');
             }
 
-            await prisma.$transaction(async (tx) => {
+            await prisma.$transaction(async (tx: any) => { // Prisma transaction client
                 await tx.asset.updateMany({
                     where: { id: { in: assetIds } },
                     data: { status: 'ASSIGNED' },

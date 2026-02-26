@@ -23,7 +23,7 @@ export async function generateQRCode(
         });
 
         return qrCodeDataURL;
-    } catch (error) {
+    } catch (error: unknown) {
         logError('QR code generation failed', error);
         throw new Error('Failed to generate QR code');
     }

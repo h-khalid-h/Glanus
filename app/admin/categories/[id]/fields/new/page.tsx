@@ -1,4 +1,5 @@
 'use client';
+import { csrfFetch } from '@/lib/api/csrfFetch';
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -82,7 +83,7 @@ export default function NewFieldPage({ params }: { params: Promise<{ id: string 
                 }
             }
 
-            const response = await fetch(`/api/admin/categories/${categoryId}/fields`, {
+            const response = await csrfFetch(`/api/admin/categories/${categoryId}/fields`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(parsedData),

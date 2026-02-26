@@ -15,50 +15,91 @@ interface EmailPayload {
 export class EmailService {
   /**
    * Send alert notification email
+   * Primary: SendGrid, Failover: Brevo
    */
   async sendAlert(payload: EmailPayload): Promise<{ success: boolean; error?: string }> {
     try {
       const emailHtml = this.generateAlertEmail(payload);
+      const hasSendGrid = !!process.env.SENDGRID_API_KEY;
+      const hasBrevo = !!process.env.BREVO_API_KEY;
 
-      // Use SendGrid if configured, otherwise log for development
-      if (process.env.SENDGRID_API_KEY) {
-        const response = await fetch('https://api.sendgrid.com/v3/mail/send', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${process.env.SENDGRID_API_KEY}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            personalizations: [{
-              to: payload.to.map(email => ({ email })),
-            }],
-            from: { email: process.env.ALERT_FROM_EMAIL || 'alerts@glanus.com', name: 'Glanus Alerts' },
-            subject: payload.subject,
-            content: [{
-              type: 'text/html',
-              value: emailHtml,
-            }],
-          }),
-        });
-
-        if (!response.ok) {
-          throw new Error(`SendGrid error: ${response.status} ${response.statusText}`);
-        }
-      } else {
+      if (!hasSendGrid && !hasBrevo) {
         // Development fallback: log instead of sending
         logInfo('[EMAIL] Would send alert email (dev mode)', {
           to: payload.to,
           subject: payload.subject,
           preview: `${payload.alert}: ${payload.asset} ${payload.metric} is ${payload.value}% (threshold: ${payload.threshold}%)`,
         });
+        return { success: true };
+      }
+
+      // Try SendGrid first (primary)
+      if (hasSendGrid) {
+        try {
+          const response = await fetch('https://api.sendgrid.com/v3/mail/send', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${process.env.SENDGRID_API_KEY}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              personalizations: [{
+                to: payload.to.map(email => ({ email })),
+              }],
+              from: { email: process.env.ALERT_FROM_EMAIL || 'alerts@glanus.com', name: 'Glanus Alerts' },
+              subject: payload.subject,
+              content: [{
+                type: 'text/html',
+                value: emailHtml,
+              }],
+            }),
+          });
+
+          if (!response.ok) {
+            throw new Error(`SendGrid error: ${response.status} ${response.statusText}`);
+          }
+          return { success: true };
+        } catch (sgError) {
+          logError('SendGrid alert email failed', sgError);
+          if (!hasBrevo) throw sgError;
+          // Fall through to Brevo
+        }
+      }
+
+      // Brevo failover for alerts
+      if (hasBrevo) {
+        const brevoBody = {
+          sender: {
+            name: 'Glanus Alerts',
+            email: process.env.ALERT_FROM_EMAIL || process.env.BREVO_FROM_EMAIL || 'alerts@glanus.com',
+          },
+          to: payload.to.map(email => ({ email })),
+          subject: payload.subject,
+          htmlContent: emailHtml,
+        };
+
+        const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+          method: 'POST',
+          headers: {
+            'api-key': process.env.BREVO_API_KEY!,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+          body: JSON.stringify(brevoBody),
+        });
+
+        if (!response.ok) {
+          const errorBody = await response.text();
+          throw new Error(`Brevo alert error: ${response.status} — ${errorBody}`);
+        }
       }
 
       return { success: true };
-    } catch (error: any) {
-      logError('Email send failed', error);
+    } catch (error: unknown) {
+      logError('Email send failed (all providers)', error);
       return {
         success: false,
-        error: error.message,
+        error: error instanceof Error ? error.message : 'Unknown error',
       };
     }
   }

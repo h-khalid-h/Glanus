@@ -1,4 +1,5 @@
 'use client';
+import { csrfFetch } from '@/lib/api/csrfFetch';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -72,7 +73,7 @@ export default function PartnerSignupPage() {
         languages: ['en'],
     });
 
-    const updateField = (field: keyof PartnerSignupFormData, value: any) => {
+    const updateField = (field: keyof PartnerSignupFormData, value: PartnerSignupFormData[typeof field]) => {
         setFormData((prev) => ({ ...prev, [field]: value }));
     };
 
@@ -91,7 +92,7 @@ export default function PartnerSignupPage() {
         setError('');
 
         try {
-            const res = await fetch('/api/partners/signup', {
+            const res = await csrfFetch('/api/partners/signup', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formData),
@@ -398,7 +399,7 @@ export default function PartnerSignupPage() {
                                 <button
                                     type="submit"
                                     disabled={loading}
-                                    className="ml-auto px-6 py-2 bg-health-good text-white rounded-md hover:bg-health-good/80 transition disabled:opacity-50"
+                                    className="ml-auto px-6 py-2 bg-health-good text-white rounded-md hover:bg-health-good/80 transition disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     {loading ? 'Submitting...' : 'Submit Application'}
                                 </button>

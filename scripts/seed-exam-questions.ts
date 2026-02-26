@@ -394,7 +394,7 @@ async function main() {
         }
 
         console.log('\n✨ Exam question seeding complete!\n');
-    } catch (error) {
+    } catch (error: unknown) {
         console.error('❌ Error seeding questions:', error);
         throw error;
     } finally {

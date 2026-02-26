@@ -29,8 +29,8 @@ export function CSRFToken({ onTokenLoaded }: CSRFTokenProps = {}) {
                     onTokenLoaded?.(data.token);
                 }
             })
-            .catch(error => {
-                console.error('Failed to load CSRF token:', error);
+            .catch(() => {
+                // Token loading failures handled silently — UI degrades gracefully
             });
     }, [onTokenLoaded]);
 
@@ -62,8 +62,8 @@ export function useCSRFToken() {
                 setToken(data.token || null);
                 setLoading(false);
             })
-            .catch(error => {
-                console.error('Failed to load CSRF token:', error);
+            .catch(() => {
+                // Token loading failures handled silently
                 setLoading(false);
             });
     }, []);

@@ -25,7 +25,7 @@ export async function POST(request: Request) {
 
     try {
         event = stripe.webhooks.constructEvent(body, sig, webhookSecret);
-    } catch (err) {
+    } catch (err: unknown) {
         logError('[STRIPE_WEBHOOK] Signature verification failed', err);
         return apiError(400, 'Webhook signature verification failed');
     }
@@ -87,7 +87,7 @@ export async function POST(request: Request) {
         });
 
         return apiSuccess({ received: true });
-    } catch (error) {
+    } catch (error: unknown) {
         logError('[STRIPE_WEBHOOK] Error processing event', error, { eventId: event.id, type: event.type });
         return apiError(500, 'Webhook processing failed');
     }
@@ -131,10 +131,10 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
     await prisma.subscription.update({
         where: { workspaceId },
         data: {
-            plan: plan as any,
-            status: (statusMap[subscription.status] || 'ACTIVE') as any,
+            plan: plan as any, // Prisma enum
+            status: (statusMap[subscription.status] || 'ACTIVE') as any, // Prisma enum
             stripeSubscriptionId: subscription.id,
-            currentPeriodEnd: new Date((subscription as any).current_period_end * 1000),
+            currentPeriodEnd: new Date((subscription as any).current_period_end * 1000), // Stripe SDK gap
         },
     });
 
@@ -152,7 +152,7 @@ async function handleSubscriptionCanceled(subscription: Stripe.Subscription) {
             plan: 'FREE',
             status: 'CANCELED',
             stripeSubscriptionId: null,
-            currentPeriodEnd: new Date((subscription as any).current_period_end * 1000),
+            currentPeriodEnd: new Date((subscription as any).current_period_end * 1000), // Stripe SDK gap
             maxAssets: 5,
             maxAICreditsPerMonth: 100,
             maxStorageMB: 1024,
@@ -163,7 +163,7 @@ async function handleSubscriptionCanceled(subscription: Stripe.Subscription) {
 }
 
 async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
-    const subscriptionId = (invoice as any).subscription as string;
+    const subscriptionId = (invoice as any).subscription as string; // Stripe SDK gap
     if (!subscriptionId) return;
 
     // Find workspace by stripe subscription ID
@@ -186,7 +186,7 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
 }
 
 async function handlePaymentFailed(invoice: Stripe.Invoice) {
-    const subscriptionId = (invoice as any).subscription as string;
+    const subscriptionId = (invoice as any).subscription as string; // Stripe SDK gap
     if (!subscriptionId) return;
 
     const sub = await prisma.subscription.findFirst({

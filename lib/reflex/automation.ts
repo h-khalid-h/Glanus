@@ -103,7 +103,7 @@ async function saveRulesToDB(workspaceId: string, rules: AutomationRule[]): Prom
             settings: {
                 ...settings,
                 reflexRules: rules,
-            } as any,
+            } as any, // Prisma JSON field — no typed alternative
         },
     });
 }
@@ -227,7 +227,7 @@ export async function getActionQueue(workspaceId: string): Promise<ActionQueueIt
         id: item.id,
         rule: item.ruleSnapshot as unknown as AutomationRule,
         consequence: item.consequence as unknown as ConsequenceAssessment,
-        status: item.status as any,
+        status: item.status as ActionQueueItem['status'],
         triggeredAt: item.triggeredAt,
         executedAt: item.executedAt || undefined,
         result: item.result || undefined,
@@ -280,8 +280,8 @@ export async function processRecommendation(
             workspaceId,
             ruleId: matchingRule.id,
             ruleName: matchingRule.name,
-            ruleSnapshot: matchingRule as any,
-            consequence: consequence as any,
+            ruleSnapshot: matchingRule as any, // Prisma JSON field
+            consequence: consequence as any, // Prisma JSON field
             status,
         }
     });
@@ -290,7 +290,7 @@ export async function processRecommendation(
         id: dbItem.id,
         rule: matchingRule,
         consequence,
-        status: status as any,
+        status: status as ActionQueueItem['status'],
         triggeredAt: dbItem.triggeredAt,
     };
 
@@ -351,7 +351,7 @@ export async function executeAction(
             }
         });
 
-    } catch (error) {
+    } catch (error: unknown) {
         await prisma.actionQueueItem.update({
             where: { id: item.id },
             data: {
@@ -380,7 +380,7 @@ export async function approveAction(
         id: dbItem.id,
         rule: dbItem.ruleSnapshot as unknown as AutomationRule,
         consequence: dbItem.consequence as unknown as ConsequenceAssessment,
-        status: dbItem.status as any,
+        status: dbItem.status as ActionQueueItem['status'],
         triggeredAt: dbItem.triggeredAt,
     };
 
@@ -412,7 +412,7 @@ export async function rejectAction(
         id: dbItem.id,
         rule: dbItem.ruleSnapshot as unknown as AutomationRule,
         consequence: dbItem.consequence as unknown as ConsequenceAssessment,
-        status: dbItem.status as any,
+        status: dbItem.status as ActionQueueItem['status'],
         triggeredAt: dbItem.triggeredAt,
         executedAt: dbItem.executedAt || undefined,
         result: dbItem.result || undefined,

@@ -165,7 +165,7 @@ export function withErrorHandler<T extends any[]>(
     return async (...args: T): Promise<Response> => {
         try {
             return await handler(...args);
-        } catch (error) {
+        } catch (error: unknown) {
             if (error instanceof ApiError) {
                 return apiError(error.statusCode, error.message);
             }

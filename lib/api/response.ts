@@ -13,7 +13,7 @@ import { NextResponse } from 'next/server';
  */
 export function apiSuccess<T>(
     data: T,
-    meta?: Record<string, any>,
+    meta?: Record<string, unknown>,
     status: number = 200
 ) {
     return NextResponse.json(
@@ -35,7 +35,7 @@ export function apiSuccess<T>(
 export function apiError(
     code: number,
     message: string,
-    details?: any
+    details?: unknown
 ) {
     return NextResponse.json(
         {
@@ -53,7 +53,7 @@ export function apiError(
 /**
  * Return a 201 Created response.
  */
-export function apiCreated<T>(data: T, meta?: Record<string, any>) {
+export function apiCreated<T>(data: T, meta?: Record<string, unknown>) {
     return apiSuccess(data, meta, 201);
 }
 

@@ -1,4 +1,5 @@
 'use client';
+import { csrfFetch } from '@/lib/api/csrfFetch';
 import { useToast } from '@/lib/toast';
 
 import { useEffect, useState } from 'react';
@@ -29,7 +30,7 @@ export default function ActionsPage({ params }: { params: Promise<{ id: string }
 
     const fetchCategory = async (id: string) => {
         try {
-            const response = await fetch(`/api/admin/categories/${id}`);
+            const response = await csrfFetch(`/api/admin/categories/${id}`);
             if (!response.ok) throw new Error('Failed to fetch category');
             const data = await response.json();
             setCategoryName(data.name);
@@ -41,7 +42,7 @@ export default function ActionsPage({ params }: { params: Promise<{ id: string }
     const fetchActions = async (id: string) => {
         try {
             setLoading(true);
-            const response = await fetch(`/api/admin/categories/${id}/actions`);
+            const response = await csrfFetch(`/api/admin/categories/${id}/actions`);
             if (!response.ok) throw new Error('Failed to fetch actions');
             const data = await response.json();
             setActions(data.sort((a: AssetActionDefinition, b: AssetActionDefinition) => a.sortOrder - b.sortOrder));
@@ -62,7 +63,7 @@ export default function ActionsPage({ params }: { params: Promise<{ id: string }
         if (!actionId) return;
 
         try {
-            const response = await fetch(`/api/admin/actions/${actionId}`, {
+            const response = await csrfFetch(`/api/admin/actions/${actionId}`, {
                 method: 'DELETE',
             });
 

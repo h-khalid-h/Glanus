@@ -1,4 +1,5 @@
 'use client';
+import { csrfFetch } from '@/lib/api/csrfFetch';
 import { useToast } from '@/lib/toast';
 
 import { useEffect, useState } from 'react';
@@ -33,11 +34,11 @@ export default function WorkspaceAlertsPage() {
             try {
                 setIsLoading(true);
                 setError(null);
-                const res = await fetch(`/api/workspaces/${workspaceId}/alerts`);
+                const res = await csrfFetch(`/api/workspaces/${workspaceId}/alerts`);
                 if (!res.ok) throw new Error('Failed to fetch alert rules');
                 const data = await res.json();
                 setRules(data.data?.rules || data.rules || []);
-            } catch (err) {
+            } catch (err: unknown) {
                 setError(err instanceof Error ? err.message : 'Something went wrong');
             } finally {
                 setIsLoading(false);
@@ -67,12 +68,12 @@ export default function WorkspaceAlertsPage() {
             r.id === ruleId ? { ...r, enabled: !r.enabled } : r
         ));
         try {
-            await fetch(`/api/workspaces/${workspaceId}/alerts/${ruleId}`, {
+            await csrfFetch(`/api/workspaces/${workspaceId}/alerts/${ruleId}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ enabled: !rule.enabled }),
             });
-        } catch (err) {
+        } catch (err: unknown) {
             showError('Failed to toggle rule:', err instanceof Error ? err.message : 'An unexpected error occurred');
             setRules(prev => prev.map(r =>
                 r.id === ruleId ? { ...r, enabled: rule.enabled } : r
@@ -85,7 +86,7 @@ export default function WorkspaceAlertsPage() {
 
         setSaving(true);
         try {
-            await fetch(`/api/workspaces/${workspaceId}/alerts/${editingRule.id}`, {
+            await csrfFetch(`/api/workspaces/${workspaceId}/alerts/${editingRule.id}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(editingRule),
@@ -94,7 +95,7 @@ export default function WorkspaceAlertsPage() {
                 r.id === editingRule.id ? editingRule : r
             ));
             setEditingRule(null);
-        } catch (err) {
+        } catch (err: unknown) {
             showError('Failed to save rule:', err instanceof Error ? err.message : 'An unexpected error occurred');
         } finally {
             setSaving(false);
@@ -253,7 +254,7 @@ export default function WorkspaceAlertsPage() {
                                     </label>
                                     <select
                                         value={editingRule.metric}
-                                        onChange={(e) => setEditingRule({ ...editingRule, metric: e.target.value as any })}
+                                        onChange={(e) => setEditingRule({ ...editingRule, metric: e.target.value as AlertRule['metric'] })}
                                         className="w-full px-4 py-2 border border-slate-700 rounded-md focus:ring-2 focus:ring-nerve/50 focus:border-transparent"
                                     >
                                         <option value="cpu">CPU Usage</option>
@@ -327,7 +328,7 @@ export default function WorkspaceAlertsPage() {
                                 <button
                                     onClick={saveRule}
                                     disabled={saving}
-                                    className="px-4 py-2 text-sm bg-nerve text-white rounded-md hover:brightness-110 transition disabled:opacity-50"
+                                    className="px-4 py-2 text-sm bg-nerve text-white rounded-md hover:brightness-110 transition disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     {saving ? 'Saving...' : 'Save Changes'}
                                 </button>

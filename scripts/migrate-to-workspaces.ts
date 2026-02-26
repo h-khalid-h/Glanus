@@ -104,7 +104,7 @@ async function main() {
         console.log(`\n📦 Migrating ${assetCount} assets to workspace...`);
 
         const updateResult = await prisma.asset.updateMany({
-            where: { workspaceId: null },
+            where: { workspaceId: null as any }, // eslint-disable-line @typescript-eslint/no-explicit-any -- pre-required field migration
             data: { workspaceId: workspace.id },
         });
 
@@ -159,7 +159,7 @@ async function main() {
 
         // Step 9: Check for orphaned assets
         const orphanedAssets = await prisma.asset.count({
-            where: { workspaceId: null },
+            where: { workspaceId: null as any }, // eslint-disable-line @typescript-eslint/no-explicit-any -- pre-required field migration
         });
 
         if (orphanedAssets > 0) {
@@ -175,7 +175,7 @@ async function main() {
         console.log('3. Test team member invitations');
         console.log('4. Make workspaceId required in schema (future migration)\n');
 
-    } catch (error) {
+    } catch (error: unknown) {
         console.error('\n❌ Migration failed:', error);
         throw error;
     } finally {

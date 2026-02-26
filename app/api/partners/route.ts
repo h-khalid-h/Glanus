@@ -21,7 +21,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     const skip = (page - 1) * limit;
 
     // Build where clause
-    const where: any = {
+    const where: any = { // eslint-disable-line @typescript-eslint/no-explicit-any -- Prisma dynamic where
         status: 'ACTIVE',
         acceptingNew: true,
     };

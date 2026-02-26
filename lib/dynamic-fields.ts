@@ -1,4 +1,5 @@
-import { FieldType, Prisma } from '@prisma/client';
+// FieldType enum values matching Prisma schema
+type FieldType = 'STRING' | 'TEXT' | 'NUMBER' | 'DECIMAL' | 'BOOLEAN' | 'DATE' | 'DATETIME' | 'TIME' | 'EMAIL' | 'URL' | 'IP_ADDRESS' | 'MAC_ADDRESS' | 'SELECT' | 'MULTI_SELECT' | 'ASSET_REF' | 'USER_REF' | 'JSON' | 'ARRAY' | 'COLOR' | 'PHONE' | 'FILE' | 'IMAGE' | 'VIDEO' | 'CURRENCY' | 'PERCENTAGE' | 'DURATION' | 'UUID' | 'REGEX' | 'CODE';
 import { prisma } from './db';
 
 /**
@@ -10,7 +11,7 @@ export async function validateFieldValue(
         fieldType: FieldType;
         isRequired: boolean;
         isUnique: boolean;
-        validationRules?: any;
+        validationRules?: Record<string, unknown> | null;
     },
     assetId?: string
 ): Promise<{ valid: boolean; error?: string }> {
@@ -24,7 +25,7 @@ export async function validateFieldValue(
         return { valid: true };
     }
 
-    const rules = fieldDefinition.validationRules || {};
+    const rules = (fieldDefinition.validationRules || {}) as Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any -- dynamic validation rules
 
     // Type-specific validation
     switch (fieldDefinition.fieldType) {
@@ -221,14 +222,11 @@ export async function validateFieldValue(
  * Resolve all field definitions for a category (including inherited from parents)
  */
 export async function resolveInheritedFields(categoryId: string) {
-    const fields: any[] = [];
+    const fields: any[] = []; // eslint-disable-line @typescript-eslint/no-explicit-any -- dynamic field definitions
     let currentCategoryId: string | null = categoryId;
 
     while (currentCategoryId) {
-        const category: {
-            fieldDefinitions: any[];
-            parent: { id: string } | null;
-        } | null = await prisma.assetCategory.findUnique({
+        const category: { fieldDefinitions: { id: string; fieldType: string; isRequired: boolean; isUnique: boolean; validationRules: unknown; slug: string; name: string; label: string; description: string | null; defaultValue: string | null; isInherited: boolean; sortOrder: number; categoryId: string }[]; parent: { id: string } | null } | null = await prisma.assetCategory.findUnique({
             where: { id: currentCategoryId },
             include: {
                 fieldDefinitions: {
@@ -332,7 +330,7 @@ export function serializeFieldValue(value: unknown, fieldType: FieldType) {
                 valueNumber: null,
                 valueBoolean: null,
                 valueDate: null,
-                valueJson: value as Prisma.InputJsonValue,
+                valueJson: value as any, // eslint-disable-line @typescript-eslint/no-explicit-any -- Prisma JSON
             };
 
         default:
@@ -355,7 +353,7 @@ export function deserializeFieldValue(fieldValue: {
     valueNumber: number | null;
     valueBoolean: boolean | null;
     valueDate: Date | null;
-    valueJson: any;
+    valueJson: unknown;
 }): unknown {
     const { fieldType } = fieldValue.fieldDefinition;
 

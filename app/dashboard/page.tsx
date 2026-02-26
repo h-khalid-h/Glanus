@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import { DashboardNav } from '@/components/DashboardNav';
 import { formatDateTime } from '@/lib/utils';
+import { useWorkspace } from '@/lib/workspace/context';
+import { csrfFetch } from '@/lib/api/csrfFetch';
 import Link from 'next/link';
 
 interface DashboardData {
@@ -12,8 +14,24 @@ interface DashboardData {
         activeSessions: number;
         pendingInsights: number;
     };
-    recentAssets: any[];
-    activeSessions: any[];
+    recentAssets: Array<{
+        id: string;
+        name: string;
+        status: string;
+        assetType: string;
+        category?: string;
+        assignedTo?: { name: string } | null;
+        updatedAt: string;
+    }>;
+    activeSessionsList: Array<{
+        id: string;
+        agentId: string;
+        status: string;
+        lastSeen: string;
+        startedAt?: string;
+        asset: { id: string; name: string };
+        user?: { name: string };
+    }>;
 }
 
 const statCards = [
@@ -70,9 +88,13 @@ export default function DashboardPage() {
     const [data, setData] = useState<DashboardData | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const { workspace } = useWorkspace();
 
     useEffect(() => {
-        fetch('/api/dashboard')
+        if (!workspace?.id) return;
+
+        setLoading(true);
+        csrfFetch(`/api/dashboard?workspaceId=${workspace.id}`)
             .then((res) => {
                 if (!res.ok) throw new Error(`${res.status}`);
                 return res.json();
@@ -85,7 +107,7 @@ export default function DashboardPage() {
                 setError(err instanceof Error ? err.message : 'An unexpected error occurred');
                 setLoading(false);
             });
-    }, []);
+    }, [workspace?.id]);
 
     /* ───── Loading ───── */
     if (loading) {
@@ -124,13 +146,22 @@ export default function DashboardPage() {
                         <p className="mb-6 text-sm text-slate-400">
                             {error === '401' ? 'Your session has expired. Please sign in again.' : 'Something went wrong. Please try again.'}
                         </p>
-                        <Link
-                            href="/login"
-                            className="inline-flex items-center gap-2 rounded-xl bg-nerve px-6 py-2.5 text-sm font-medium text-white
-                                       transition-all hover:brightness-110 hover:shadow-lg hover:shadow-nerve/20"
-                        >
-                            Sign In
-                        </Link>
+                        <div className="flex gap-3 justify-center">
+                            <button
+                                onClick={() => window.location.reload()}
+                                className="inline-flex items-center gap-2 rounded-xl bg-nerve px-6 py-2.5 text-sm font-medium text-white
+                                           transition-all hover:brightness-110 hover:shadow-lg hover:shadow-nerve/20"
+                            >
+                                Try Again
+                            </button>
+                            <Link
+                                href="/login"
+                                className="inline-flex items-center gap-2 rounded-xl border border-slate-700 px-6 py-2.5 text-sm font-medium text-slate-300
+                                           transition-all hover:border-slate-500 hover:text-white"
+                            >
+                                Sign In
+                            </Link>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -224,14 +255,14 @@ export default function DashboardPage() {
                                 <p className="text-xs text-slate-500">Currently active remote desktop connections</p>
                             </div>
                             <div className="p-5">
-                                {data && data.activeSessions.length > 0 ? (
+                                {data && data.activeSessionsList.length > 0 ? (
                                     <div className="space-y-3">
-                                        {data.activeSessions.map((session) => (
+                                        {data.activeSessionsList.map((session) => (
                                             <div key={session.id} className="flex items-center justify-between border-b border-slate-800/50 pb-3 last:border-0 last:pb-0">
                                                 <div>
                                                     <p className="text-sm font-medium text-slate-200">{session.asset.name}</p>
                                                     <p className="text-xs text-slate-500">
-                                                        {session.user.name} • {formatDateTime(session.startedAt)}
+                                                        {session.user?.name || 'Unknown'} • {formatDateTime(session.startedAt || session.lastSeen)}
                                                     </p>
                                                 </div>
                                                 <div className="flex items-center gap-1.5">
@@ -250,7 +281,12 @@ export default function DashboardPage() {
 
                     {/* Footer */}
                     <div className="mt-10 text-center text-xs text-slate-600">
-                        <p>Glanus — AI-Native IT Operations Platform</p>
+                        <div className="flex items-center justify-center gap-4">
+                            <p>Glanus — AI-Native IT Operations Platform</p>
+                            <span className="text-slate-800">·</span>
+                            <Link href="/privacy" className="hover:text-slate-400 transition-colors">Privacy</Link>
+                            <Link href="/terms" className="hover:text-slate-400 transition-colors">Terms</Link>
+                        </div>
                     </div>
                 </div>
             </div>

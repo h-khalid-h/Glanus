@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
             status: 'ok',
             message: 'Result recorded successfully',
         });
-    } catch (error: any) {
+    } catch (error: unknown) {
         if (error instanceof z.ZodError) {
             return apiError(400, 'Validation failed', error.errors);
         }

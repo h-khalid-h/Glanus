@@ -79,6 +79,7 @@ const baseAssetSchema = z.object({
  * Create asset request schema
  */
 export const createAssetSchema = baseAssetSchema.extend({
+    workspaceId: z.string().min(1, 'Workspace ID is required'),
     assignedToId: z.string().uuid().optional(),
 });
 

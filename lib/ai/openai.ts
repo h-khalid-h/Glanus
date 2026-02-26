@@ -36,7 +36,7 @@ export const prompts = {
     }
   `,
 
-  healthPrediction: (assetData: any) => `
+  healthPrediction: (assetData: Record<string, unknown>) => `
     Based on this IT asset data, predict potential issues and maintenance needs:
     
     Asset: ${assetData.name}
@@ -53,7 +53,7 @@ export const prompts = {
     Respond in JSON format.
   `,
 
-  anomalyDetection: (sessionData: any[]) => `
+  anomalyDetection: (sessionData: unknown[]) => `
     Analyze these remote access sessions for anomalies or security concerns:
     
     ${JSON.stringify(sessionData, null, 2)}
@@ -76,7 +76,7 @@ export const prompts = {
     If the issue requires escalation, clearly indicate that.
   `,
 
-  lifecycleRecommendations: (assetPortfolio: any) => `
+  lifecycleRecommendations: (assetPortfolio: unknown) => `
     Analyze this IT asset portfolio and provide strategic recommendations:
     
     ${JSON.stringify(assetPortfolio, null, 2)}

@@ -1,26 +1,71 @@
 import { ExecutionStatus, HandlerType } from '@prisma/client';
+import type { SSHConfig } from './ssh-manager';
+
+/** Shared types for action handler dispatch */
+interface ActionDefinition {
+    id: string;
+    name: string;
+    handlerType: HandlerType;
+    handlerConfig: Record<string, unknown> | null;
+}
+
+interface ActionAsset {
+    id: string;
+    name: string;
+}
+
+interface ActionResult {
+    status: ExecutionStatus;
+    output?: unknown;
+    error?: string;
+}
+
+/** Per-handler configuration shapes */
+interface ApiHandlerConfig {
+    url?: string;
+    method?: string;
+    headers?: Record<string, string>;
+}
+
+interface ScriptHandlerConfig {
+    scriptPath?: string;
+    interpreter?: string;
+    args?: string[];
+    workingDirectory?: string;
+    timeout?: number;
+    env?: Record<string, string>;
+}
+
+interface WebhookHandlerConfig {
+    webhookUrl?: string;
+    secret?: string;
+}
+
+interface RemoteCommandConfig {
+    host?: string;
+    port?: number;
+    username?: string;
+    command?: string;
+    authMethod?: 'password' | 'privateKey';
+    password?: string;
+    privateKeyPath?: string;
+    passphrase?: string;
+    timeout?: number;
+}
+
+interface ManualHandlerConfig {
+    instructions?: string;
+}
 
 /**
  * Action handler factory - dispatches action execution to appropriate handler
  */
 export async function executeAction(
-    actionDefinition: {
-        id: string;
-        name: string;
-        handlerType: HandlerType;
-        handlerConfig: any;
-    },
-    asset: {
-        id: string;
-        name: string;
-    },
+    actionDefinition: ActionDefinition,
+    asset: ActionAsset,
     parameters: Record<string, unknown>,
     executionId: string
-): Promise<{
-    status: ExecutionStatus;
-    output?: any;
-    error?: string;
-}> {
+): Promise<ActionResult> {
     try {
         switch (actionDefinition.handlerType) {
             case 'API':
@@ -44,10 +89,10 @@ export async function executeAction(
                     error: `Unknown handler type: ${actionDefinition.handlerType}`,
                 };
         }
-    } catch (error: any) {
+    } catch (error: unknown) {
         return {
             status: 'FAILED',
-            error: error.message || 'Action execution failed',
+            error: error instanceof Error ? error.message : 'Action execution failed',
         };
     }
 }
@@ -56,11 +101,11 @@ export async function executeAction(
  * API Handler - Makes HTTP request to external API
  */
 async function handleApiAction(
-    actionDefinition: any,
-    asset: any,
+    actionDefinition: ActionDefinition,
+    asset: ActionAsset,
     parameters: Record<string, unknown>
-): Promise<{ status: ExecutionStatus; output?: any; error?: string }> {
-    const config = actionDefinition.handlerConfig || {};
+): Promise<ActionResult> {
+    const config = (actionDefinition.handlerConfig || {}) as ApiHandlerConfig;
     const { url, method = 'POST', headers = {} } = config;
 
     if (!url) {
@@ -98,10 +143,10 @@ async function handleApiAction(
             status: 'COMPLETED',
             output: data,
         };
-    } catch (error: any) {
+    } catch (error: unknown) {
         return {
             status: 'FAILED',
-            error: `API request error: ${error.message}`,
+            error: `API request error: ${error instanceof Error ? error.message : 'Unknown error'}`,
         };
     }
 }
@@ -110,11 +155,11 @@ async function handleApiAction(
  * Script Handler - Executes local script
  */
 async function handleScriptAction(
-    actionDefinition: any,
-    asset: any,
+    actionDefinition: ActionDefinition,
+    asset: ActionAsset,
     parameters: Record<string, unknown>
-): Promise<{ status: ExecutionStatus; output?: any; error?: string }> {
-    const config = actionDefinition.handlerConfig || {};
+): Promise<ActionResult> {
+    const config = (actionDefinition.handlerConfig || {}) as ScriptHandlerConfig;
     const {
         scriptPath,
         interpreter,
@@ -166,7 +211,7 @@ async function handleScriptAction(
         const substitutedArgs = substituteParameters(args, {
             assetId: asset.id,
             assetName: asset.name,
-            parameters: parameters as Record<string, any>,
+            parameters: parameters as Record<string, unknown>,
         });
 
         // Prepare environment
@@ -280,10 +325,10 @@ async function handleScriptAction(
                 });
             });
         });
-    } catch (error: any) {
+    } catch (error: unknown) {
         return {
             status: 'FAILED',
-            error: `Script handler error: ${error.message}`,
+            error: `Script handler error: ${error instanceof Error ? error.message : 'Unknown error'}`,
         };
     }
 }
@@ -292,11 +337,11 @@ async function handleScriptAction(
  * Webhook Handler - Sends POST to configured webhook URL
  */
 async function handleWebhookAction(
-    actionDefinition: any,
-    asset: any,
+    actionDefinition: ActionDefinition,
+    asset: ActionAsset,
     parameters: Record<string, unknown>
-): Promise<{ status: ExecutionStatus; output?: any; error?: string }> {
-    const config = actionDefinition.handlerConfig || {};
+): Promise<ActionResult> {
+    const config = (actionDefinition.handlerConfig || {}) as WebhookHandlerConfig;
     const { webhookUrl, secret } = config;
 
     if (!webhookUrl) {
@@ -315,7 +360,7 @@ async function handleWebhookAction(
             timestamp: new Date().toISOString(),
         };
 
-        const headers: any = {
+        const headers: Record<string, string> = {
             'Content-Type': 'application/json',
         };
 
@@ -344,10 +389,10 @@ async function handleWebhookAction(
             status: 'COMPLETED',
             output: { webhookResponse: data },
         };
-    } catch (error: any) {
+    } catch (error: unknown) {
         return {
             status: 'FAILED',
-            error: `Webhook error: ${error.message}`,
+            error: `Webhook error: ${error instanceof Error ? error.message : 'Unknown error'}`,
         };
     }
 }
@@ -356,11 +401,11 @@ async function handleWebhookAction(
  * Remote Command Handler - Executes command on remote server via SSH
  */
 async function handleRemoteCommandAction(
-    actionDefinition: any,
-    asset: any,
+    actionDefinition: ActionDefinition,
+    asset: ActionAsset,
     parameters: Record<string, unknown>
-): Promise<{ status: ExecutionStatus; output?: any; error?: string }> {
-    const config = actionDefinition.handlerConfig || {};
+): Promise<ActionResult> {
+    const config = (actionDefinition.handlerConfig || {}) as RemoteCommandConfig;
     const {
         host,
         port = 22,
@@ -403,11 +448,11 @@ async function handleRemoteCommandAction(
         const substitutedCommand = substituteCommandParameters(command, {
             assetId: asset.id,
             assetName: asset.name,
-            parameters: parameters as Record<string, any>,
+            parameters: parameters as Record<string, unknown>,
         });
 
         // Prepare SSH connection config
-        const connectionConfig: any = {
+        const connectionConfig: SSHConfig = {
             host,
             port,
             username,
@@ -462,10 +507,10 @@ async function handleRemoteCommandAction(
                 },
             };
         }
-    } catch (error: any) {
+    } catch (error: unknown) {
         return {
             status: 'FAILED',
-            error: `Remote command handler error: ${error.message}`,
+            error: `Remote command handler error: ${error instanceof Error ? error.message : 'Unknown error'}`,
         };
     }
 }
@@ -474,11 +519,11 @@ async function handleRemoteCommandAction(
  * Manual Handler -Returns instructions for manual execution
  */
 async function handleManualAction(
-    actionDefinition: any,
-    asset: any,
+    actionDefinition: ActionDefinition,
+    asset: ActionAsset,
     parameters: Record<string, unknown>
-): Promise<{ status: ExecutionStatus; output?: any; error?: string }> {
-    const config = actionDefinition.handlerConfig || {};
+): Promise<ActionResult> {
+    const config = (actionDefinition.handlerConfig || {}) as ManualHandlerConfig;
     const { instructions } = config;
 
     // Manual actions go to PENDING status and require admin to mark complete

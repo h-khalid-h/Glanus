@@ -27,7 +27,7 @@ export class WebRTCClient {
     public onConnect?: () => void;
     public onDisconnect?: () => void;
     public onStream?: (stream: MediaStream) => void;
-    public onData?: (data: any) => void;
+    public onData?: (data: unknown) => void;
     public onError?: (error: Error) => void;
     public onMetrics?: (metrics: ConnectionMetrics) => void;
 
@@ -75,7 +75,7 @@ export class WebRTCClient {
             try {
                 const parsedData = JSON.parse(data.toString());
                 this.onData?.(parsedData);
-            } catch (error) {
+            } catch (error: unknown) {
                 console.error('[WebRTC] Error parsing data:', error);
             }
         });
@@ -98,7 +98,7 @@ export class WebRTCClient {
         }
     }
 
-    public sendData(data: any) {
+    public sendData(data: unknown) {
         if (this.peer && this.peer.connected) {
             this.peer.send(JSON.stringify(data));
         }
@@ -125,7 +125,7 @@ export class WebRTCClient {
             }
 
             return stream;
-        } catch (error) {
+        } catch (error: unknown) {
             console.error('[WebRTC] Error getting display media:', error);
             throw error;
         }
@@ -182,7 +182,7 @@ export class WebRTCClient {
                 bandwidth: Math.round(bandwidth / 1000), // Convert to Kbps
                 packetLoss: Math.round(packetLoss),
             };
-        } catch (error) {
+        } catch (error: unknown) {
             console.error('[WebRTC] Error getting connection metrics:', error);
             return null;
         }

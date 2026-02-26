@@ -44,8 +44,8 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     }
 
     // Validate all provided field values
-    const validationErrors: any[] = [];
-    const fieldValuesToCreate: any[] = [];
+    const validationErrors: any[] = []; // eslint-disable-line @typescript-eslint/no-explicit-any
+    const fieldValuesToCreate: any[] = []; // eslint-disable-line @typescript-eslint/no-explicit-any
 
     for (const [fieldSlug, fieldValue] of Object.entries(data.fields)) {
         const fieldDef = fieldDefsMap.get(fieldSlug);
@@ -97,6 +97,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
         // Create the asset
         const newAsset = await tx.asset.create({
             data: {
+                workspaceId: (data as any).workspaceId || '', // eslint-disable-line @typescript-eslint/no-explicit-any
                 name: data.name,
                 description: data.description,
                 assetType: category.assetTypeValue,
@@ -161,18 +162,21 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
  * List dynamic assets with filtering
  */
 export const GET = withErrorHandler(async (request: NextRequest) => {
-    await requireAuth();
+    const user = await requireAuth();
     const { searchParams } = new URL(request.url);
 
-    const categoryId = searchParams.get('categoryId');
-    const status = searchParams.get('status');
+    const categoryId = searchParams.get('categoryId') || undefined;
+    const status = searchParams.get('status') || undefined;
     const page = parseInt(searchParams.get('page') || '1');
     const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 100);
     const skip = (page - 1) * limit;
 
-    // Build where clause
-    const where: any = {
+    // Build where clause — scoped to user's workspaces
+    const where: any = { // eslint-disable-line @typescript-eslint/no-explicit-any -- Prisma dynamic where
         categoryId: { not: null }, // Only dynamic assets
+        workspace: {
+            members: { some: { userId: user.id } },
+        },
     };
 
     if (categoryId) {
@@ -180,7 +184,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     }
 
     if (status) {
-        where.status = status as any;
+        where.status = status as any; // Prisma enum
     }
 
     // Get assets with pagination

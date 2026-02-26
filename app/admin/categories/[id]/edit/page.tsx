@@ -1,4 +1,5 @@
 'use client';
+import { csrfFetch } from '@/lib/api/csrfFetch';
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -44,7 +45,7 @@ export default function EditCategoryPage({ params }: { params: Promise<{ id: str
                 const resolvedParams = await params;
                 setCategoryId(resolvedParams.id);
 
-                const response = await fetch(`/api/admin/categories/${resolvedParams.id}`);
+                const response = await csrfFetch(`/api/admin/categories/${resolvedParams.id}`);
                 if (!response.ok) throw new Error('Failed to fetch category');
 
                 const data = await response.json();
@@ -76,7 +77,7 @@ export default function EditCategoryPage({ params }: { params: Promise<{ id: str
             setLoading(true);
             setError(null);
 
-            const response = await fetch(`/api/admin/categories/${categoryId}`, {
+            const response = await csrfFetch(`/api/admin/categories/${categoryId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data),

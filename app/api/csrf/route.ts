@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
                 },
             }
         );
-    } catch (error: any) {
+    } catch {
         return createSecureResponse(
             JSON.stringify({ error: 'Failed to generate CSRF token' }),
             {

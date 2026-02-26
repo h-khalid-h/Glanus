@@ -1,7 +1,9 @@
 'use client';
+import { csrfFetch } from '@/lib/api/csrfFetch';
 import { useToast } from '@/lib/toast';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useDebounce } from '@/lib/hooks/useDebounce';
 import { useRouter } from 'next/navigation';
 import { DashboardNav } from '@/components/DashboardNav';
 import Link from 'next/link';
@@ -47,6 +49,7 @@ export default function AssetsPage() {
     const { workspace } = useWorkspace();
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
+    const debouncedSearch = useDebounce(search, 300);
     const [assetType, setAssetType] = useState(''); // NEW
     const [category, setCategory] = useState('');
     const [status, setStatus] = useState('');
@@ -82,13 +85,13 @@ export default function AssetsPage() {
                 workspaceId: workspace.id,
             });
 
-            if (search) params.set('search', search);
+            if (debouncedSearch) params.set('search', debouncedSearch);
             if (assetType) params.set('assetType', assetType); // NEW
             if (category) params.set('category', category);
             if (status) params.set('status', status);
             if (assignmentFilter) params.set('assignedTo', assignmentFilter);
 
-            const response = await fetch(`/api/assets?${params}`);
+            const response = await csrfFetch(`/api/assets?${params}`);
             if (!response.ok) throw new Error('Failed to fetch assets');
 
             const result = await response.json();
@@ -97,12 +100,12 @@ export default function AssetsPage() {
             if (responseData.pagination) {
                 setPagination(responseData.pagination);
             }
-        } catch (error) {
+        } catch (error: unknown) {
             showError('Error fetching assets:', error instanceof Error ? error.message : 'An unexpected error occurred');
         } finally {
             setLoading(false);
         }
-    }, [workspace?.id, search, assetType, category, status, assignmentFilter, pagination.limit]); // NEW dependency
+    }, [workspace?.id, debouncedSearch, assetType, category, status, assignmentFilter, pagination.limit]); // debounced search
 
     useEffect(() => {
         fetchAssets();
@@ -168,7 +171,7 @@ export default function AssetsPage() {
 
         setBulkActionLoading(true);
         try {
-            const response = await fetch('/api/assets/bulk/delete', {
+            const response = await csrfFetch('/api/assets/bulk/delete', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ assetIds: Array.from(selectedAssets) }),
@@ -179,7 +182,7 @@ export default function AssetsPage() {
             setSelectedAssets(new Set());
             setShowBulkActions(false);
             fetchAssets(pagination.page);
-        } catch (error) {
+        } catch (error: unknown) {
             showError('Bulk delete error:', error instanceof Error ? error.message : 'An unexpected error occurred');
         } finally {
             setBulkActionLoading(false);
@@ -187,7 +190,8 @@ export default function AssetsPage() {
     };
 
     const handleBulkExport = async () => {
-        window.open('/api/assets/export', '_blank');
+        if (!workspace?.id) return;
+        window.open(`/api/assets/export?workspaceId=${workspace.id}`, '_blank');
     };
 
     return (
@@ -209,7 +213,7 @@ export default function AssetsPage() {
                     <div>
                         <h1 className="text-3xl font-bold text-foreground">Assets</h1>
                         <p className="text-muted-foreground mt-1">
-                            Manage all your IT assets in one place
+                            {loading ? 'Loading assets...' : `${pagination.total} asset${pagination.total !== 1 ? 's' : ''} found`}
                         </p>
                     </div>
                     <Link

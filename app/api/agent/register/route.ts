@@ -106,7 +106,7 @@ export async function POST(request: NextRequest) {
                 heartbeatInterval: 60, // 1 minute
             },
         });
-    } catch (error: any) {
+    } catch (error: unknown) {
         if (error instanceof z.ZodError) {
             return apiError(400, 'Validation failed', error.errors);
         }

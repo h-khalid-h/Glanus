@@ -1,4 +1,5 @@
 'use client';
+import { csrfFetch } from '@/lib/api/csrfFetch';
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -34,16 +35,16 @@ export default function NewDigitalAssetPage() {
         installedOn: [] as string[],
     });
 
-    const [physicalAssets, setPhysicalAssets] = useState<any[]>([]);
+    const [physicalAssets, setPhysicalAssets] = useState<Array<{ id: string; name: string; physicalAsset?: { category?: string } }>>([]);
 
     // Fetch physical assets for installedOn field
     useEffect(() => {
         const fetchPhysicalAssets = async () => {
             try {
-                const response = await fetch('/api/assets?assetType=PHYSICAL&limit=100');
+                const response = await csrfFetch('/api/assets?assetType=PHYSICAL&limit=100');
                 const data = await response.json();
                 setPhysicalAssets(data.assets || []);
-            } catch (error) {
+            } catch (error: unknown) {
                 showError('Failed to fetch physical assets', error instanceof Error ? error.message : 'Unknown error');
             }
         };
@@ -78,8 +79,8 @@ export default function NewDigitalAssetPage() {
             const asset = await response.json();
             success(`Digital asset "${asset.name}" created successfully`);
             router.push(`/assets/${asset.id}`);
-        } catch (error: any) {
-            showError('Failed to create digital asset', error.message || 'Unknown error');
+        } catch (error: unknown) {
+            showError('Failed to create digital asset', error instanceof Error ? error.message : 'Unknown error');
         } finally {
             setLoading(false);
         }

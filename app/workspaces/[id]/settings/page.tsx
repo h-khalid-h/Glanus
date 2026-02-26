@@ -2,8 +2,9 @@
 
 import { useState, useEffect, use } from 'react';
 import { useWorkspaceStore } from '@/lib/stores/workspaceStore';
-import { Settings, Palette, AlertTriangle, Users } from 'lucide-react';
+import { Settings, Palette, AlertTriangle, Users, CreditCard } from 'lucide-react';
 import { clsx } from 'clsx';
+import Link from 'next/link';
 import GeneralSettings from '@/components/workspace/settings/GeneralSettings';
 import BrandingSettings from '@/components/workspace/settings/BrandingSettings';
 import DangerZone from '@/components/workspace/settings/DangerZone';
@@ -45,12 +46,12 @@ export default function WorkspaceSettingsPage({ params: paramsPromise }: { param
     const tabs = [
         { id: 'general', label: 'General', icon: Settings, component: GeneralSettings },
         { id: 'branding', label: 'Branding', icon: Palette, component: BrandingSettings },
-        // Members is a separate page usually, but can be a tab. 
-        // Plan says "Members - Team members (links to member page)"
-        // So maybe just a link or a summary? 
-        // Let's keep it simple for now and focus check the plan.
-        // Plan says: "Tabs: General, Branding, Members (link), Billing (link), Danger Zone"
         { id: 'danger', label: 'Danger Zone', icon: AlertTriangle, component: DangerZone, variant: 'danger' },
+    ];
+
+    const navLinks = [
+        { label: 'Members', icon: Users, href: `/workspaces/${params.id}/members` },
+        { label: 'Billing', icon: CreditCard, href: `/workspaces/${params.id}/billing` },
     ];
 
     const ActiveComponent = tabs.find(t => t.id === activeTab)?.component || GeneralSettings;
@@ -92,6 +93,26 @@ export default function WorkspaceSettingsPage({ params: paramsPromise }: { param
                             </button>
                         );
                     })}
+
+                    {/* Navigation Links to other pages */}
+                    <div className="mt-4 pt-4 border-t border-slate-800 space-y-1">
+                        {navLinks.map((link) => {
+                            const Icon = link.icon;
+                            return (
+                                <Link
+                                    key={link.label}
+                                    href={link.href}
+                                    className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-800 transition-colors"
+                                >
+                                    <Icon className="w-4 h-4" />
+                                    {link.label}
+                                    <svg className="w-3.5 h-3.5 ml-auto opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                                    </svg>
+                                </Link>
+                            );
+                        })}
+                    </div>
                 </div>
 
                 {/* Content Area */}

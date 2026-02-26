@@ -1,4 +1,5 @@
 'use client';
+import { csrfFetch } from '@/lib/api/csrfFetch';
 
 import { useState } from 'react';
 import { useWorkspaceStore, Workspace } from '@/lib/stores/workspaceStore';
@@ -22,7 +23,7 @@ export default function BrandingSettings({ workspace }: { workspace: Workspace }
         setMessage(null);
 
         try {
-            const response = await fetch(`/api/workspaces/${workspace.id}`, {
+            const response = await csrfFetch(`/api/workspaces/${workspace.id}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formData),
@@ -38,7 +39,7 @@ export default function BrandingSettings({ workspace }: { workspace: Workspace }
             await fetchWorkspaces();
 
             setMessage({ type: 'success', text: 'Branding updated successfully.' });
-        } catch (err) {
+        } catch (err: unknown) {
             setMessage({ type: 'error', text: err instanceof Error ? err.message : 'Something went wrong' });
         } finally {
             setIsLoading(false);
@@ -57,8 +58,8 @@ export default function BrandingSettings({ workspace }: { workspace: Workspace }
             <form onSubmit={handleSubmit} className="space-y-8 max-w-xl">
                 {message && (
                     <div className={`p-4 rounded-lg text-sm ${message.type === 'success'
-                            ? 'bg-health-good/10 text-health-good/20 border border-health-good/20'
-                            : 'bg-health-critical/10 text-health-critical border border-health-critical/20'
+                        ? 'bg-health-good/10 text-health-good/20 border border-health-good/20'
+                        : 'bg-health-critical/10 text-health-critical border border-health-critical/20'
                         }`}>
                         {message.text}
                     </div>

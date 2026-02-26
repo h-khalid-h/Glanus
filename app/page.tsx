@@ -151,7 +151,12 @@ export default function HomePage() {
 
                 {/* Footer */}
                 <footer className="px-6 py-6 text-center text-xs text-slate-600 md:px-12">
-                    <p>Glanus — AI-Native IT Operations Platform</p>
+                    <div className="flex items-center justify-center gap-4">
+                        <p>Glanus — AI-Native IT Operations Platform</p>
+                        <span className="text-slate-800">·</span>
+                        <Link href="/privacy" className="hover:text-slate-400 transition-colors">Privacy</Link>
+                        <Link href="/terms" className="hover:text-slate-400 transition-colors">Terms</Link>
+                    </div>
                 </footer>
             </div>
         </div>

@@ -3,12 +3,17 @@ import { prisma } from '@/lib/db';
 import { stripe } from '@/lib/stripe/client';
 import { requireAuth, requireWorkspaceRole, withErrorHandler } from '@/lib/api/withAuth';
 import { checkoutSchema } from '@/lib/schemas/workspace.schemas';
+import { withRateLimit } from '@/lib/security/rateLimit';
+import { NextRequest } from 'next/server';
 
 // POST /api/workspaces/[id]/checkout - Create Stripe Checkout session
 export const POST = withErrorHandler(async (
-    request: Request,
+    request: NextRequest,
     context: { params: Promise<{ id: string }> }
 ) => {
+    const rateLimitResponse = await withRateLimit(request, 'strict-api');
+    if (rateLimitResponse) return rateLimitResponse;
+
     const { id: workspaceId } = await context.params;
     const user = await requireAuth();
     await requireWorkspaceRole(workspaceId, user.id, 'ADMIN');

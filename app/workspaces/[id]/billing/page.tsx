@@ -1,4 +1,5 @@
 'use client';
+import { csrfFetch } from '@/lib/api/csrfFetch';
 import { useToast } from '@/lib/toast';
 
 import { useEffect, useState } from 'react';
@@ -110,7 +111,7 @@ export default function BillingPage() {
     const handleUpgrade = async (priceId: string) => {
         setIsLoading(true);
         try {
-            const response = await fetch(`/api/workspaces/${workspaceId}/checkout`, {
+            const response = await csrfFetch(`/api/workspaces/${workspaceId}/checkout`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ priceId }),
@@ -126,7 +127,7 @@ export default function BillingPage() {
             if (data.url) {
                 window.location.href = data.url;
             }
-        } catch (error) {
+        } catch (error: unknown) {
             showError('Checkout failed:', error instanceof Error ? error.message : 'An unexpected error occurred');
             setNotification({ type: 'error', message: 'Failed to start checkout. Please try again.' });
         } finally {
@@ -137,7 +138,7 @@ export default function BillingPage() {
     const handleManageBilling = async () => {
         setIsLoading(true);
         try {
-            const response = await fetch(`/api/workspaces/${workspaceId}/customer-portal`, {
+            const response = await csrfFetch(`/api/workspaces/${workspaceId}/customer-portal`, {
                 method: 'POST',
             });
 
@@ -150,7 +151,7 @@ export default function BillingPage() {
             if (data.url) {
                 window.location.href = data.url;
             }
-        } catch (error) {
+        } catch (error: unknown) {
             showError('Portal failed:', error instanceof Error ? error.message : 'An unexpected error occurred');
             setNotification({ type: 'error', message: 'Failed to open billing portal.' });
         } finally {

@@ -2,15 +2,24 @@ import { requireAuth, withErrorHandler } from '@/lib/api/withAuth';
 import { apiSuccess, apiError } from '@/lib/api/response';
 import { NextRequest } from 'next/server';
 import { getOpenAIClient, prompts, defaultModel } from '@/lib/ai/openai';
+import { withRateLimit } from '@/lib/security/rateLimit';
+import { z } from 'zod';
+
+const autoCategorizeSchema = z.object({
+    description: z.string().min(1, 'Description is required').max(5000, 'Description too long'),
+});
 
 export const POST = withErrorHandler(async (request: NextRequest) => {
+    const rateLimitResponse = await withRateLimit(request, 'strict-api');
+    if (rateLimitResponse) return rateLimitResponse;
+
     await requireAuth();
-    const { description } = await request.json();
-
-    if (!description) {
-        return apiError(400, 'Description is required');
+    const body = await request.json();
+    const parsed = autoCategorizeSchema.safeParse(body);
+    if (!parsed.success) {
+        return apiError(400, parsed.error.errors[0].message);
     }
-
+    const { description } = parsed.data;
     // Get OpenAI client (will throw if API key is missing)
     const openai = getOpenAIClient();
 

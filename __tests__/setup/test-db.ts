@@ -64,7 +64,7 @@ export async function withTransaction<T>(
     return await testDb.$transaction(async (tx) => {
         try {
             return await fn(tx as PrismaClient);
-        } catch (error) {
+        } catch (error: unknown) {
             // Transaction will automatically rollback on error
             throw error;
         }

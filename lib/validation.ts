@@ -12,7 +12,7 @@ export async function validateRequest<T>(
     try {
         const body = await request.json();
         return schema.parse(body);
-    } catch (error) {
+    } catch (error: unknown) {
         if (error instanceof z.ZodError) {
             throw new ValidationError(error.errors);
         }
@@ -30,7 +30,7 @@ export function validateQuery<T>(
     const params = Object.fromEntries(searchParams.entries());
     try {
         return schema.parse(params);
-    } catch (error) {
+    } catch (error: unknown) {
         if (error instanceof z.ZodError) {
             throw new ValidationError(error.errors);
         }

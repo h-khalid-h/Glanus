@@ -1,4 +1,5 @@
 'use client';
+import { csrfFetch } from '@/lib/api/csrfFetch';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -57,8 +58,8 @@ export default function NewPhysicalAssetPage() {
             const asset = await response.json();
             success(`Asset "${asset.name}" created successfully`);
             router.push(`/assets/${asset.id}`);
-        } catch (error: any) {
-            showError('Failed to create asset', error.message || 'An unexpected error occurred');
+        } catch (error: unknown) {
+            showError('Failed to create asset', error instanceof Error ? error.message : 'An unexpected error occurred');
         } finally {
             setLoading(false);
         }

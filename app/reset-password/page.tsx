@@ -129,6 +129,7 @@ export default function ResetPasswordPage() {
                                         placeholder="Min. 8 characters"
                                         required
                                         minLength={8}
+                                        autoComplete="new-password"
                                         className="w-full rounded-xl border border-slate-700/80 bg-slate-800/50 px-4 py-3 text-sm text-white
                                                    placeholder:text-slate-500 transition-all duration-200
                                                    focus:border-nerve/50 focus:outline-none focus:ring-2 focus:ring-nerve/20"
@@ -147,6 +148,7 @@ export default function ResetPasswordPage() {
                                         placeholder="Re-enter your password"
                                         required
                                         minLength={8}
+                                        autoComplete="new-password"
                                         className="w-full rounded-xl border border-slate-700/80 bg-slate-800/50 px-4 py-3 text-sm text-white
                                                    placeholder:text-slate-500 transition-all duration-200
                                                    focus:border-nerve/50 focus:outline-none focus:ring-2 focus:ring-nerve/20"

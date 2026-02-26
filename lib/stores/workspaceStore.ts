@@ -63,8 +63,7 @@ export const useWorkspaceStore = create<WorkspaceState>()(
                     if (!currentWorkspace && workspaces.length > 0) {
                         set({ currentWorkspace: workspaces[0] });
                     }
-                } catch (error) {
-                    console.error('Failed to fetch workspaces:', error);
+                } catch (error: unknown) {
                     set({
                         error: error instanceof Error ? error.message : 'Unknown error',
                         isLoading: false

@@ -1,4 +1,5 @@
 'use client';
+import { csrfFetch } from '@/lib/api/csrfFetch';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
@@ -178,7 +179,7 @@ export function CommandSurface() {
         setAiResult(null);
 
         try {
-            const res = await fetch('/api/ai/command', {
+            const res = await csrfFetch('/api/ai/command', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

@@ -57,7 +57,7 @@ export default function WorkspaceAgentsPage() {
                 setAgents(responseData.agents || []);
                 setStats(responseData.stats || { total: 0, online: 0, offline: 0, error: 0 });
             }
-        } catch (err) {
+        } catch (err: unknown) {
             showError('Failed to load agents:', err instanceof Error ? err.message : 'An unexpected error occurred');
         } finally {
             setLoading(false);
@@ -96,8 +96,8 @@ export default function WorkspaceAgentsPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-slate-950">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <div className="min-h-screen flex items-center justify-center bg-gradient-midnight">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-nerve"></div>
             </div>
         );
     }

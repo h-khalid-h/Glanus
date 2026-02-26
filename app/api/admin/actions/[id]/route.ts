@@ -4,6 +4,7 @@ import { logError } from '@/lib/logger';
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/db';
 import { updateActionDefinitionSchema } from '@/lib/schemas/dynamic-asset.schemas';
+import { z } from 'zod';
 
 type RouteParams = {
     params: Promise<{ id: string }>;
@@ -57,8 +58,8 @@ export const PUT = withErrorHandler(async (
         });
 
         return apiSuccess(action);
-    } catch (error: any) {
-        if (error.name === 'ZodError') {
+    } catch (error: unknown) {
+        if (error instanceof z.ZodError) {
             return apiError(400, 'Validation failed', error.errors);
         }
         logError('Failed to update action definition', error);
@@ -114,7 +115,7 @@ export const DELETE = withErrorHandler(async (
             message: 'Action definition deleted successfully',
             deletedAction: action,
         });
-    } catch (error: any) {
+    } catch (error: unknown) {
         logError('Failed to delete action definition', error);
         return apiError(500, 'Failed to delete action definition');
     }

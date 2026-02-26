@@ -60,8 +60,8 @@ async function main() {
         }
 
         console.log('\n🎉 Migration completed successfully!');
-    } catch (error: any) {
-        console.error('\n❌ Migration failed:', error.message);
+    } catch (error: unknown) {
+        console.error('\n❌ Migration failed:', error instanceof Error ? error.message : error);
         console.error(error);
         process.exit(1);
     } finally {
@@ -213,8 +213,8 @@ async function migratePhysicalAssets(categoryId: string, fieldDefinitions: any[]
             });
 
             migrated++;
-        } catch (error: any) {
-            console.error(`Failed to migrate physical asset ${pa.assetId}:`, error.message);
+        } catch (error: unknown) {
+            console.error(`Failed to migrate physical asset ${pa.assetId}:`, error instanceof Error ? error.message : error);
             errors++;
         }
     }
@@ -268,8 +268,8 @@ async function migrateDigitalAssets(categoryId: string, fieldDefinitions: any[])
             });
 
             migrated++;
-        } catch (error: any) {
-            console.error(`Failed to migrate digital asset ${da.assetId}:`, error.message);
+        } catch (error: unknown) {
+            console.error(`Failed to migrate digital asset ${da.assetId}:`, error instanceof Error ? error.message : error);
             errors++;
         }
     }

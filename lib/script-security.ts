@@ -81,10 +81,10 @@ export async function validateScriptPath(
             valid: true,
             resolvedPath,
         };
-    } catch (error: any) {
+    } catch (error: unknown) {
         return {
             valid: false,
-            error: `Path validation error: ${error.message}`,
+            error: `Path validation error: ${error instanceof Error ? error.message : 'Unknown error'}`,
         };
     }
 }

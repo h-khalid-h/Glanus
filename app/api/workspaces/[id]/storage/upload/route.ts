@@ -3,6 +3,7 @@ import { requireAuth, requireWorkspaceRole, withErrorHandler } from '@/lib/api/w
 import { apiSuccess, apiError } from '@/lib/api/response';
 import { enforceBodySize } from '@/lib/api/body-size';
 import { enforceQuota, incrementStorageUsage } from '@/lib/workspace/quotas';
+import { withRateLimit } from '@/lib/security/rateLimit';
 import { prisma } from '@/lib/db';
 
 /**
@@ -15,6 +16,9 @@ export const POST = withErrorHandler(async (
     request: NextRequest,
     context: { params: Promise<{ id: string }> }
 ) => {
+    const rateLimitResponse = await withRateLimit(request, 'api');
+    if (rateLimitResponse) return rateLimitResponse;
+
     // Enforce upload size limit (50 MB)
     const sizeError = enforceBodySize(request, 'upload');
     if (sizeError) return sizeError;

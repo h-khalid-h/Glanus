@@ -1,4 +1,5 @@
 'use client';
+import { csrfFetch } from '@/lib/api/csrfFetch';
 
 import { useState } from 'react';
 import { useParams } from 'next/navigation';
@@ -21,7 +22,7 @@ export default function DownloadAgentPage() {
     const generateDownloadLink = async () => {
         setGenerating(true);
         try {
-            const res = await fetch(`/api/workspaces/${workspaceId}/download-agent`, {
+            const res = await csrfFetch(`/api/workspaces/${workspaceId}/download-agent`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ platform }),
@@ -42,7 +43,7 @@ export default function DownloadAgentPage() {
                 a.download = '';
                 a.click();
             }
-        } catch (err) {
+        } catch (err: unknown) {
             const msg = err instanceof Error ? err.message : 'Download generation failed';
             showError('Error', msg);
         } finally {
@@ -70,7 +71,7 @@ export default function DownloadAgentPage() {
                         <button
                             onClick={() => setPlatform('windows')}
                             className={`p-6 border-2 rounded-lg transition ${platform === 'windows'
-                                ? 'border-blue-600 bg-nerve/5'
+                                ? 'border-nerve bg-nerve/5'
                                 : 'border-slate-800 hover:border-slate-700'
                                 }`}
                         >
@@ -82,7 +83,7 @@ export default function DownloadAgentPage() {
                         <button
                             onClick={() => setPlatform('macos')}
                             className={`p-6 border-2 rounded-lg transition ${platform === 'macos'
-                                ? 'border-blue-600 bg-nerve/5'
+                                ? 'border-nerve bg-nerve/5'
                                 : 'border-slate-800 hover:border-slate-700'
                                 }`}
                         >
@@ -94,7 +95,7 @@ export default function DownloadAgentPage() {
                         <button
                             onClick={() => setPlatform('linux')}
                             className={`p-6 border-2 rounded-lg transition ${platform === 'linux'
-                                ? 'border-blue-600 bg-nerve/5'
+                                ? 'border-nerve bg-nerve/5'
                                 : 'border-slate-800 hover:border-slate-700'
                                 }`}
                         >
@@ -107,7 +108,7 @@ export default function DownloadAgentPage() {
                     <button
                         onClick={generateDownloadLink}
                         disabled={generating}
-                        className="w-full py-4 bg-nerve text-white rounded-lg font-semibold text-lg hover:brightness-110 transition disabled:opacity-50"
+                        className="w-full py-4 bg-nerve text-white rounded-lg font-semibold text-lg hover:brightness-110 transition disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         {generating ? 'Preparing Download...' : `Download for ${platform === 'windows' ? 'Windows' : platform === 'macos' ? 'macOS' : 'Linux'}`}
                     </button>

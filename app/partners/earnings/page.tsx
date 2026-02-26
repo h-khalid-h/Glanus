@@ -1,5 +1,6 @@
 'use client';
 import { useToast } from '@/lib/toast';
+import { csrfFetch } from '@/lib/api/csrfFetch';
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -45,7 +46,7 @@ export default function PartnerEarningsPage() {
     const [summary, setSummary] = useState<EarningsSummary | null>(null);
     const [topWorkspaces, setTopWorkspaces] = useState<TopWorkspace[]>([]);
     const [payouts, setPayouts] = useState<Payout[]>([]);
-    const [payoutStats, setPayoutStats] = useState<any>(null);
+    const [payoutStats, setPayoutStats] = useState<{ totalPaid: number; pending: number; failed: number; total: number } | null>(null);
     const [stripeConnected, setStripeConnected] = useState(false);
     const [loading, setLoading] = useState(true);
 
@@ -62,7 +63,7 @@ export default function PartnerEarningsPage() {
             setSummary(data.summary);
             setTopWorkspaces(data.topWorkspaces);
             setStripeConnected(data.stripeConnected);
-        } catch (err) {
+        } catch (err: unknown) {
             showError('Failed to load earnings:', err instanceof Error ? err.message : 'An unexpected error occurred');
         } finally {
             setLoading(false);
@@ -76,14 +77,14 @@ export default function PartnerEarningsPage() {
 
             setPayouts(data.payouts);
             setPayoutStats(data.stats);
-        } catch (err) {
+        } catch (err: unknown) {
             showError('Failed to load payouts:', err instanceof Error ? err.message : 'An unexpected error occurred');
         }
     };
 
     const connectStripe = async () => {
         try {
-            const res = await fetch('/api/partners/stripe/onboard', { method: 'POST' });
+            const res = await csrfFetch('/api/partners/stripe/onboard', { method: 'POST' });
             const data = await res.json();
 
             if (!res.ok) {
@@ -100,15 +101,15 @@ export default function PartnerEarningsPage() {
             if (data.url) {
                 window.location.href = data.url;
             }
-        } catch (err) {
+        } catch (err: unknown) {
             showError('Failed to connect Stripe. Please try again.');
         }
     };
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-slate-950">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <div className="min-h-screen flex items-center justify-center bg-gradient-midnight">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-nerve"></div>
             </div>
         );
     }

@@ -1,4 +1,5 @@
 'use client';
+import { csrfFetch } from '@/lib/api/csrfFetch';
 import { useToast } from '@/lib/toast';
 
 import { useState, useEffect, useRef } from 'react';
@@ -52,7 +53,7 @@ export default function ActiveSessionPage() {
 
     const fetchSession = async () => {
         try {
-            const response = await fetch(`/api/remote/sessions/${params.id}`);
+            const response = await csrfFetch(`/api/remote/sessions/${params.id}`);
             if (!response.ok) {
                 if (response.status === 404) {
                     router.push('/remote');
@@ -61,7 +62,7 @@ export default function ActiveSessionPage() {
             }
             const data = await response.json();
             setSession(data);
-        } catch (error) {
+        } catch (error: unknown) {
             showError('Error fetching session:', error instanceof Error ? error.message : 'An unexpected error occurred');
         } finally {
             setLoading(false);
@@ -101,7 +102,7 @@ export default function ActiveSessionPage() {
             mediaRecorder.start(1000); // Collect data every second
             mediaRecorderRef.current = mediaRecorder;
             setIsRecording(true);
-        } catch (err) {
+        } catch (err: unknown) {
             showError('Failed to start recording');
         }
     };
@@ -129,12 +130,12 @@ export default function ActiveSessionPage() {
 
     const handleQualityChange = async (quality: string) => {
         try {
-            await fetch(`/api/remote/sessions/${params.id}`, {
+            await csrfFetch(`/api/remote/sessions/${params.id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ quality }),
             });
-        } catch (error) {
+        } catch (error: unknown) {
             showError('Error updating quality:', error instanceof Error ? error.message : 'An unexpected error occurred');
         }
     };
@@ -179,7 +180,7 @@ export default function ActiveSessionPage() {
         }
 
         try {
-            await fetch(`/api/remote/sessions/${params.id}`, {
+            await csrfFetch(`/api/remote/sessions/${params.id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -189,7 +190,7 @@ export default function ActiveSessionPage() {
                     },
                 }),
             });
-        } catch (error) {
+        } catch (error: unknown) {
             showError('Error ending session:', error instanceof Error ? error.message : 'An unexpected error occurred');
         }
 

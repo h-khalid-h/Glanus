@@ -1,4 +1,5 @@
 'use client';
+import { csrfFetch } from '@/lib/api/csrfFetch';
 import { useToast } from '@/lib/toast';
 
 import { useEffect, useState, useCallback } from 'react';
@@ -20,7 +21,7 @@ export default function IntelligencePage() {
 
     // CORTEX state
     const [analysis, setAnalysis] = useState<CausalAnalysis | null>(null);
-    const [riskProfile, setRiskProfile] = useState<any>(null);
+    const [riskProfile, setRiskProfile] = useState<Record<string, unknown> | null>(null);
     const [cortexLoading, setCortexLoading] = useState(false);
     const [cortexError, setCortexError] = useState<string | null>(null);
     const [agents, setAgents] = useState<{ id: string; hostname: string; status: string }[]>([]);
@@ -35,8 +36,8 @@ export default function IntelligencePage() {
         const fetchData = async () => {
             try {
                 const [agentsRes, reflexRes] = await Promise.all([
-                    fetch(`/api/workspaces/${workspaceId}/agents`),
-                    fetch(`/api/workspaces/${workspaceId}/intelligence/reflex`),
+                    csrfFetch(`/api/workspaces/${workspaceId}/agents`),
+                    csrfFetch(`/api/workspaces/${workspaceId}/intelligence/reflex`),
                 ]);
 
                 if (agentsRes.ok) {
@@ -50,7 +51,7 @@ export default function IntelligencePage() {
                     setRules(reflexData.data?.rules || []);
                     setQueue(reflexData.data?.queue || []);
                 }
-            } catch (err) {
+            } catch (err: unknown) {
                 showError('Failed to load intelligence data:', err instanceof Error ? err.message : 'An unexpected error occurred');
             } finally {
                 setIsLoading(false);
@@ -68,7 +69,7 @@ export default function IntelligencePage() {
         setAnalysis(null);
 
         try {
-            const res = await fetch(`/api/workspaces/${workspaceId}/intelligence/cortex`, {
+            const res = await csrfFetch(`/api/workspaces/${workspaceId}/intelligence/cortex`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ agentId }),
@@ -81,7 +82,7 @@ export default function IntelligencePage() {
 
             const data = await res.json();
             setAnalysis(data.data?.analysis || data.analysis);
-        } catch (err) {
+        } catch (err: unknown) {
             setCortexError(err instanceof Error ? err.message : 'Failed to run analysis');
         } finally {
             setCortexLoading(false);
@@ -91,7 +92,7 @@ export default function IntelligencePage() {
     // REFLEX callbacks
     const handleCreateRule = useCallback(async (rule: Omit<AutomationRule, 'id' | 'workspaceId' | 'createdBy'>) => {
         try {
-            const res = await fetch(`/api/workspaces/${workspaceId}/intelligence/reflex`, {
+            const res = await csrfFetch(`/api/workspaces/${workspaceId}/intelligence/reflex`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(rule),
@@ -100,7 +101,7 @@ export default function IntelligencePage() {
                 const data = await res.json();
                 setRules(prev => [...prev, data.data?.rule || data.rule]);
             }
-        } catch (err) { showError('Failed to create rule:', err instanceof Error ? err.message : 'An unexpected error occurred'); }
+        } catch (err: unknown) { showError('Failed to create rule:', err instanceof Error ? err.message : 'An unexpected error occurred'); }
     }, [workspaceId]);
 
     const handleToggleRule = useCallback(async (ruleId: string, enabled: boolean) => {
@@ -110,16 +111,16 @@ export default function IntelligencePage() {
 
     const handleDeleteRule = useCallback(async (ruleId: string) => {
         try {
-            await fetch(`/api/workspaces/${workspaceId}/intelligence/reflex?ruleId=${ruleId}`, {
+            await csrfFetch(`/api/workspaces/${workspaceId}/intelligence/reflex?ruleId=${ruleId}`, {
                 method: 'DELETE',
             });
             setRules(prev => prev.filter(r => r.id !== ruleId));
-        } catch (err) { showError('Failed to delete rule:', err instanceof Error ? err.message : 'An unexpected error occurred'); }
+        } catch (err: unknown) { showError('Failed to delete rule:', err instanceof Error ? err.message : 'An unexpected error occurred'); }
     }, [workspaceId]);
 
     const handleApproveAction = useCallback(async (actionId: string) => {
         try {
-            const res = await fetch(`/api/workspaces/${workspaceId}/intelligence/reflex/queue`, {
+            const res = await csrfFetch(`/api/workspaces/${workspaceId}/intelligence/reflex/queue`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ itemId: actionId, action: 'approve' }),
@@ -129,12 +130,12 @@ export default function IntelligencePage() {
                 setQueue(prev => prev.map(q => q.id === actionId ? data.data?.item || data.item : q));
                 showSuccess('Action approved', 'Execution has started.');
             } else { throw new Error(await res.text()); }
-        } catch (err) { showError('Failed to approve action:', err instanceof Error ? err.message : 'An unexpected error occurred'); }
+        } catch (err: unknown) { showError('Failed to approve action:', err instanceof Error ? err.message : 'An unexpected error occurred'); }
     }, [workspaceId]);
 
     const handleRejectAction = useCallback(async (actionId: string) => {
         try {
-            const res = await fetch(`/api/workspaces/${workspaceId}/intelligence/reflex/queue`, {
+            const res = await csrfFetch(`/api/workspaces/${workspaceId}/intelligence/reflex/queue`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ itemId: actionId, action: 'reject' }),
@@ -144,7 +145,7 @@ export default function IntelligencePage() {
                 setQueue(prev => prev.map(q => q.id === actionId ? data.data?.item || data.item : q));
                 showSuccess('Action rejected', 'Action has been dismissed.');
             } else { throw new Error(await res.text()); }
-        } catch (err) { showError('Failed to reject action:', err instanceof Error ? err.message : 'An unexpected error occurred'); }
+        } catch (err: unknown) { showError('Failed to reject action:', err instanceof Error ? err.message : 'An unexpected error occurred'); }
     }, [workspaceId]);
 
     if (isLoading) {

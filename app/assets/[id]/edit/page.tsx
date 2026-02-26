@@ -1,4 +1,5 @@
 'use client';
+import { csrfFetch } from '@/lib/api/csrfFetch';
 
 import { useState, FormEvent, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -41,7 +42,7 @@ export default function EditAssetPage({ params }: { params: Promise<{ id: string
 
     const fetchAsset = async (assetId: string) => {
         try {
-            const response = await fetch(`/api/assets/${assetId}`);
+            const response = await csrfFetch(`/api/assets/${assetId}`);
             if (!response.ok) {
                 throw new Error('Failed to load asset');
             }
@@ -83,7 +84,7 @@ export default function EditAssetPage({ params }: { params: Promise<{ id: string
                 tags: formData.tags ? formData.tags.split(',').map(t => t.trim()).filter(Boolean) : [],
             };
 
-            const response = await fetch(`/api/assets/${id}`, {
+            const response = await csrfFetch(`/api/assets/${id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),

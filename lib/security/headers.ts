@@ -117,7 +117,7 @@ export function applySecurityHeaders(response: Response): Response {
  * Create a new Response with security headers
  */
 export function createSecureResponse(
-    body: any,
+    body: BodyInit | null,
     init?: ResponseInit
 ): Response {
     const headers = new Headers(init?.headers);

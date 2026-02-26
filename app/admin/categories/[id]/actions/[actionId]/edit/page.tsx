@@ -1,4 +1,5 @@
 'use client';
+import { csrfFetch } from '@/lib/api/csrfFetch';
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -38,10 +39,10 @@ export default function EditActionPage({ params }: { params: Promise<{ id: strin
 
     const fetchAction = async (catId: string, actId: string) => {
         try {
-            const response = await fetch(`/api/admin/categories/${catId}/actions`);
+            const response = await csrfFetch(`/api/admin/categories/${catId}/actions`);
             if (!response.ok) throw new Error('Failed to fetch actions');
             const actions = await response.json();
-            const action = actions.find((a: any) => a.id === actId);
+            const action = actions.find((a: { id: string }) => a.id === actId);
             if (!action) throw new Error('Action not found');
             setForm({
                 name: action.name || '',
@@ -70,7 +71,7 @@ export default function EditActionPage({ params }: { params: Promise<{ id: strin
             setSaving(true);
             setError(null);
 
-            const response = await fetch(`/api/admin/actions/${actionId}`, {
+            const response = await csrfFetch(`/api/admin/actions/${actionId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(form),

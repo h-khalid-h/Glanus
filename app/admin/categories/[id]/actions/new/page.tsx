@@ -1,4 +1,5 @@
 'use client';
+import { csrfFetch } from '@/lib/api/csrfFetch';
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -40,7 +41,7 @@ export default function NewActionPage({ params }: { params: Promise<{ id: string
             setLoading(true);
             setError(null);
 
-            const response = await fetch(`/api/admin/categories/${categoryId}/actions`, {
+            const response = await csrfFetch(`/api/admin/categories/${categoryId}/actions`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(form),

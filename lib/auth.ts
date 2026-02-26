@@ -28,7 +28,13 @@ async function getLockoutRedis(): Promise<RedisClientType | null> {
     if (lockoutRedis && lockoutRedisReady) return lockoutRedis;
 
     try {
-        lockoutRedis = createClient({ url: process.env.REDIS_URL }) as RedisClientType;
+        lockoutRedis = createClient({
+            url: process.env.REDIS_URL,
+            socket: {
+                reconnectStrategy: false,
+                connectTimeout: 3000,
+            },
+        }) as RedisClientType;
         lockoutRedis.on('error', () => { lockoutRedisReady = false; });
         lockoutRedis.on('ready', () => { lockoutRedisReady = true; });
         await lockoutRedis.connect();
@@ -258,7 +264,7 @@ export const authOptions: NextAuthOptions = {
                             return `${baseUrl}/onboarding`;
                         }
                     }
-                } catch (error) {
+                } catch (error: unknown) {
                     logError('Redirect callback error', error);
                 }
             }

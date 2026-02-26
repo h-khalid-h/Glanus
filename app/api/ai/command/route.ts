@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { requireAuth, withErrorHandler } from '@/lib/api/withAuth';
 import { apiSuccess, apiError } from '@/lib/api/response';
 import { enforceQuota, incrementAICredits } from '@/lib/workspace/quotas';
+import { withRateLimit } from '@/lib/security/rateLimit';
 import OpenAI from 'openai';
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || '' });
@@ -76,6 +77,9 @@ const COMMAND_FUNCTIONS: OpenAI.Chat.Completions.ChatCompletionTool[] = [
 
 // POST /api/ai/command - Process natural language command
 export const POST = withErrorHandler(async (request: NextRequest) => {
+    const rateLimitResponse = await withRateLimit(request, 'strict-api');
+    if (rateLimitResponse) return rateLimitResponse;
+
     const user = await requireAuth();
 
     const body = await request.json();
@@ -154,7 +158,7 @@ If the request could be destructive, set requiresConfirmation to true.`;
             detail: message?.content || 'I could not process that command.',
             rawInput: input,
         });
-    } catch (err) {
+    } catch (err: unknown) {
         return apiError(500, 'Failed to process command');
     }
 });

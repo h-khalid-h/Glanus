@@ -91,23 +91,8 @@ export const GET = withErrorHandler(async (
         // Recent audit log activity (real data)
         prisma.auditLog.findMany({
             where: { workspaceId },
-            orderBy: { timestamp: 'desc' },
+            orderBy: { createdAt: 'desc' },
             take: 20,
-            include: {
-                user: {
-                    select: {
-                        id: true,
-                        name: true,
-                        email: true,
-                    },
-                },
-                asset: {
-                    select: {
-                        id: true,
-                        name: true,
-                    },
-                },
-            },
         }),
     ]);
 
@@ -176,9 +161,9 @@ export const GET = withErrorHandler(async (
             resourceType: event.resourceType,
             resourceId: event.resourceId,
             details: event.details,
-            user: event.user,
-            asset: event.asset,
-            createdAt: event.timestamp.toISOString(),
+            userId: event.userId,
+            assetId: event.assetId,
+            createdAt: event.createdAt.toISOString(),
         })),
     };
 

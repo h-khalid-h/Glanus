@@ -21,7 +21,7 @@ async function main() {
     console.log('🔍 Finding assets with NULL workspaceId...');
 
     const orphanedAssets = await prisma.asset.findMany({
-        where: { workspaceId: null },
+        where: { workspaceId: null as any }, // eslint-disable-line @typescript-eslint/no-explicit-any -- migration script for pre-required field
         include: {
             assignedTo: {
                 include: {
@@ -59,10 +59,10 @@ async function main() {
         let targetWorkspaceId: string;
 
         // Try to find a workspace through the assigned user
-        if (asset.assignedTo) {
+        if ((asset as any).assignedTo) {
             const userWorkspace =
-                asset.assignedTo.ownedWorkspaces[0] ||
-                asset.assignedTo.workspaceMemberships[0]?.workspace;
+                (asset as any).assignedTo.ownedWorkspaces[0] ||
+                (asset as any).assignedTo.workspaceMemberships[0]?.workspace;
 
             if (userWorkspace) {
                 targetWorkspaceId = userWorkspace.id;

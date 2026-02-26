@@ -20,7 +20,7 @@ interface WorkspaceWithLocation {
 }
 
 interface PartnerWithDetails extends Partner {
-    assignments: any[];
+    assignments: { id: string }[];
 }
 
 interface PartnerScore {
@@ -146,7 +146,7 @@ export async function findBestPartner(
 // Get partners eligible for assignment
 export function getPartnerEligibilityCriteria() {
     return {
-        status: 'ACTIVE' as any,
+        status: 'ACTIVE' as const,
         acceptingNew: true,
         availableSlots: { gt: 0 },
     };

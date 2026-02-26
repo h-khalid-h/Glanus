@@ -12,16 +12,22 @@ export const PATCH = withErrorHandler(async (
     request: NextRequest,
     context: { params: Promise<{ id: string }> }
 ) => {
-    await requireAuth();
+    const user = await requireAuth();
     const { id } = await context.params;
     const body = await request.json();
 
     // Validate input
     const data = updateRelationshipSchema.parse(body);
 
-    // Check if relationship exists
-    const existingRelationship = await prisma.assetRelationship.findUnique({
-        where: { id },
+    // Check if relationship exists AND user has workspace access via either asset
+    const existingRelationship = await prisma.assetRelationship.findFirst({
+        where: {
+            id,
+            OR: [
+                { parentAsset: { workspace: { members: { some: { userId: user.id } } } } },
+                { childAsset: { workspace: { members: { some: { userId: user.id } } } } },
+            ],
+        },
         select: { id: true },
     });
 
@@ -36,7 +42,7 @@ export const PATCH = withErrorHandler(async (
             ...(data.relationshipType && { relationshipType: data.relationshipType }),
             ...(data.quantity !== undefined && { quantity: data.quantity }),
             ...(data.position !== undefined && { position: data.position }),
-            ...(data.metadata && { metadata: data.metadata as any }),
+            ...(data.metadata && { metadata: data.metadata as any }), // Prisma JSON field
         },
         include: {
             parentAsset: {
@@ -74,9 +80,15 @@ export const DELETE = withErrorHandler(async (
     const user = await requireAuth();
     const { id } = await context.params;
 
-    // Check if relationship exists
-    const relationship = await prisma.assetRelationship.findUnique({
-        where: { id },
+    // Check if relationship exists AND user has workspace access
+    const relationship = await prisma.assetRelationship.findFirst({
+        where: {
+            id,
+            OR: [
+                { parentAsset: { workspace: { members: { some: { userId: user.id } } } } },
+                { childAsset: { workspace: { members: { some: { userId: user.id } } } } },
+            ],
+        },
         select: {
             id: true,
             relationshipType: true,
@@ -117,3 +129,4 @@ export const DELETE = withErrorHandler(async (
         deletedRelationship: relationship,
     });
 });
+

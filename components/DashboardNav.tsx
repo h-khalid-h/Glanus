@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { signOut, useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -15,6 +16,7 @@ const NAV_ITEMS = [
 export function DashboardNav() {
     const { data: session } = useSession();
     const pathname = usePathname();
+    const [mobileOpen, setMobileOpen] = useState(false);
 
     const isActive = (href: string) => {
         if (href === '/dashboard') return pathname === '/dashboard';
@@ -41,8 +43,8 @@ export function DashboardNav() {
                             key={href}
                             href={href}
                             className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 ${isActive(href)
-                                    ? 'bg-nerve/10 text-nerve'
-                                    : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-200'
+                                ? 'bg-nerve/10 text-nerve'
+                                : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-200'
                                 }`}
                         >
                             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -52,12 +54,27 @@ export function DashboardNav() {
                         </Link>
                     ))}
                 </div>
+
+                {/* Mobile hamburger */}
+                <button
+                    onClick={() => setMobileOpen(!mobileOpen)}
+                    className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-700/50 text-slate-400 transition-colors hover:bg-slate-800/60 hover:text-slate-200 md:hidden"
+                    aria-label="Toggle navigation"
+                >
+                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                        {mobileOpen ? (
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        ) : (
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+                        )}
+                    </svg>
+                </button>
             </div>
 
             <div className="flex items-center gap-3">
                 {session?.user && (
                     <div className="flex items-center gap-3">
-                        <div className="text-right">
+                        <div className="hidden text-right sm:block">
                             <p className="text-sm font-medium text-slate-200">{session.user.name}</p>
                             <p className="text-xs text-slate-500">{session.user.role.replace('_', ' ')}</p>
                         </div>
@@ -71,6 +88,31 @@ export function DashboardNav() {
                     </div>
                 )}
             </div>
+
+            {/* Mobile dropdown */}
+            {mobileOpen && (
+                <div className="absolute left-0 right-0 top-full z-40 border-b border-slate-800 bg-slate-900/95 backdrop-blur-xl p-4 md:hidden">
+                    <div className="flex flex-col gap-1">
+                        {NAV_ITEMS.map(({ href, label, icon }) => (
+                            <Link
+                                key={href}
+                                href={href}
+                                onClick={() => setMobileOpen(false)}
+                                className={`flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 ${isActive(href)
+                                    ? 'bg-nerve/10 text-nerve'
+                                    : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-200'
+                                    }`}
+                            >
+                                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d={icon} />
+                                </svg>
+                                {label}
+                            </Link>
+                        ))}
+                    </div>
+                </div>
+            )}
         </nav>
     );
 }
+

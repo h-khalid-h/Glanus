@@ -1,4 +1,5 @@
 'use client';
+import { csrfFetch } from '@/lib/api/csrfFetch';
 import { useToast } from '@/lib/toast';
 
 import { useEffect, useState } from 'react';
@@ -29,7 +30,7 @@ export default function FieldsPage({ params }: { params: Promise<{ id: string }>
 
     const fetchCategory = async (id: string) => {
         try {
-            const response = await fetch(`/api/admin/categories/${id}`);
+            const response = await csrfFetch(`/api/admin/categories/${id}`);
             if (!response.ok) throw new Error('Failed to fetch category');
             const data = await response.json();
             setCategoryName(data.name);
@@ -41,7 +42,7 @@ export default function FieldsPage({ params }: { params: Promise<{ id: string }>
     const fetchFields = async (id: string) => {
         try {
             setLoading(true);
-            const response = await fetch(`/api/admin/categories/${id}/fields`);
+            const response = await csrfFetch(`/api/admin/categories/${id}/fields`);
             if (!response.ok) throw new Error('Failed to fetch fields');
             const data = await response.json();
             const fieldsList = data.fields || [];
@@ -63,7 +64,7 @@ export default function FieldsPage({ params }: { params: Promise<{ id: string }>
         if (!fieldId) return;
 
         try {
-            const response = await fetch(`/api/admin/categories/${categoryId}/fields/${fieldId}`, {
+            const response = await csrfFetch(`/api/admin/categories/${categoryId}/fields/${fieldId}`, {
                 method: 'DELETE',
             });
 

@@ -23,7 +23,8 @@ export default function GlobalError({
 
     return (
         <html>
-            <body className="bg-slate-950 text-white flex items-center justify-center min-h-screen">
+            <body className="bg-slate-950 text-white flex items-center justify-center min-h-screen"
+                style={{ background: 'linear-gradient(135deg, hsl(228 44% 5%), hsl(228 36% 12%))' }}>
                 <div className="text-center max-w-md px-6">
                     {/* Icon */}
                     <div className="mb-6 inline-flex h-16 w-16 items-center justify-center rounded-full bg-health-critical/10 text-health-critical">
@@ -40,13 +41,13 @@ export default function GlobalError({
                     <div className="flex gap-3 justify-center">
                         <button
                             onClick={() => reset()}
-                            className="px-6 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-white font-medium rounded-lg transition-colors"
+                            className="px-6 py-2.5 bg-nerve text-white font-medium rounded-lg transition-all hover:brightness-110 hover:shadow-lg hover:shadow-nerve/20"
                         >
                             Try again
                         </button>
                         <a
                             href="/"
-                            className="px-6 py-2.5 border border-slate-700 hover:border-slate-600 text-slate-300 font-medium rounded-lg transition-colors"
+                            className="px-6 py-2.5 border border-slate-700 hover:border-slate-500 text-slate-300 hover:text-white font-medium rounded-lg transition-colors"
                         >
                             Go home
                         </a>

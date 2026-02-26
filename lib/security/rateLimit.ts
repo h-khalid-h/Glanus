@@ -22,10 +22,18 @@ async function getRedisClient(): Promise<RedisClientType | null> {
     if (redisClient && redisReady) return redisClient;
 
     try {
-        redisClient = createClient({ url: process.env.REDIS_URL }) as RedisClientType;
+        redisClient = createClient({
+            url: process.env.REDIS_URL,
+            socket: {
+                reconnectStrategy: false,  // Don't auto-reconnect — use in-memory fallback instead
+                connectTimeout: 3000,    // Fail fast if Redis is unreachable
+            },
+        }) as RedisClientType;
 
         redisClient.on('error', (err) => {
-            logError('Redis client error, falling back to in-memory rate limiting', err);
+            if (redisReady) {
+                logError('Redis client error, falling back to in-memory rate limiting', err);
+            }
             redisReady = false;
         });
 
@@ -36,7 +44,7 @@ async function getRedisClient(): Promise<RedisClientType | null> {
 
         await redisClient.connect();
         return redisClient;
-    } catch (error) {
+    } catch (error: unknown) {
         logWarn('Redis unavailable, using in-memory rate limiting', { error });
         return null;
     }
@@ -160,12 +168,15 @@ export async function checkRateLimit(
             remaining: result.remainingPoints,
             resetAt: new Date(Date.now() + result.msBeforeNext),
         };
-    } catch (rejRes: any) {
+    } catch (rejRes: unknown) {
+        const msBeforeNext = rejRes !== null && typeof rejRes === 'object' && 'msBeforeNext' in rejRes
+            ? (rejRes as { msBeforeNext: number }).msBeforeNext
+            : 60000;
         return {
             allowed: false,
             remaining: 0,
-            resetAt: new Date(Date.now() + rejRes.msBeforeNext),
-            retryAfter: Math.ceil(rejRes.msBeforeNext / 1000),
+            resetAt: new Date(Date.now() + msBeforeNext),
+            retryAfter: Math.ceil(msBeforeNext / 1000),
         };
     }
 }

@@ -12,7 +12,7 @@ export const POST = withErrorHandler(async (
     context: { params: Promise<{ token: string }> }
 ) => {
     // Rate limit to prevent brute-force token enumeration
-    const rateLimitResponse = await withRateLimit(request as any, 'strict-api');
+    const rateLimitResponse = await withRateLimit(request as unknown as import('next/server').NextRequest, 'strict-api');
     if (rateLimitResponse) return rateLimitResponse;
 
     const session = await getServerSession(authOptions);

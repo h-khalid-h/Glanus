@@ -1,4 +1,5 @@
 'use client';
+import { csrfFetch } from '@/lib/api/csrfFetch';
 
 import { use, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -14,7 +15,7 @@ export default function InvitationPage({ params: paramsPromise }: { params: Prom
     const [inviteState, setInviteState] = useState<{
         loading: boolean;
         error: string | null;
-        invite: any | null;
+        invite: { inviter: { name: string }; workspace: { name: string }; role: string } | null;
     }>({
         loading: true,
         error: null,
@@ -25,14 +26,14 @@ export default function InvitationPage({ params: paramsPromise }: { params: Prom
         // 1. Verify token
         const verifyToken = async () => {
             try {
-                const res = await fetch(`/api/invitations/${params.token}`);
+                const res = await csrfFetch(`/api/invitations/${params.token}`);
                 if (!res.ok) {
                     const data = await res.json();
                     throw new Error(data.error || 'Invalid or expired invitation');
                 }
                 const data = await res.json();
                 setInviteState({ loading: false, error: null, invite: data.invitation });
-            } catch (err) {
+            } catch (err: unknown) {
                 setInviteState({
                     loading: false,
                     error: err instanceof Error ? err.message : 'Invalid invitation',
@@ -47,7 +48,7 @@ export default function InvitationPage({ params: paramsPromise }: { params: Prom
     const handleAccept = async () => {
         setInviteState(prev => ({ ...prev, loading: true }));
         try {
-            const res = await fetch(`/api/invitations/${params.token}/accept`, {
+            const res = await csrfFetch(`/api/invitations/${params.token}/accept`, {
                 method: 'POST',
             });
 
@@ -59,7 +60,7 @@ export default function InvitationPage({ params: paramsPromise }: { params: Prom
 
             // Success
             router.push(`/workspaces/${data.workspaceId}/dashboard`);
-        } catch (err) {
+        } catch (err: unknown) {
             setInviteState(prev => ({
                 ...prev,
                 loading: false,
@@ -94,6 +95,10 @@ export default function InvitationPage({ params: paramsPromise }: { params: Prom
     }
 
     const { invite } = inviteState;
+
+    if (!invite) {
+        return null;
+    }
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">

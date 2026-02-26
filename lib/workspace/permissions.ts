@@ -96,7 +96,7 @@ export async function verifyWorkspaceAccess(
         }
 
         return { allowed: true, role: membership.role };
-    } catch (error) {
+    } catch (error: unknown) {
         logError('Workspace access verification failed', error);
         return { allowed: false, error: 'Internal error' };
     }

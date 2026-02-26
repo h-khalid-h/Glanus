@@ -77,8 +77,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
                 setWorkspace(fetchedWorkspaces[0]);
                 localStorage.setItem('currentWorkspaceId', fetchedWorkspaces[0].id);
             }
-        } catch (err) {
-            console.error('Failed to fetch workspaces:', err);
+        } catch (err: unknown) {
             setError(err instanceof Error ? err.message : 'Failed to load workspaces');
         } finally {
             setIsLoading(false);

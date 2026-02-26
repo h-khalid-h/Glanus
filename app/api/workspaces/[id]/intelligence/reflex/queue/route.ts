@@ -42,7 +42,7 @@ export const PUT = withErrorHandler(async (
         }
 
         return apiSuccess({ item: updatedItem });
-    } catch (error) {
+    } catch (error: unknown) {
         return apiError(404, 'Action not found or not in pending state');
     }
 });

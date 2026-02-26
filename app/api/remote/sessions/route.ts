@@ -6,7 +6,7 @@ import { createRemoteSessionSchema } from '@/lib/schemas/remote-session.schemas'
 
 // GET /api/remote/sessions - List remote sessions with filtering
 export const GET = withErrorHandler(async (request: NextRequest) => {
-    await requireAuth();
+    const user = await requireAuth();
 
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status') || undefined;
@@ -16,7 +16,14 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 50);
     const skip = (page - 1) * limit;
 
-    const where: any = {};
+    const where: any = { // eslint-disable-line @typescript-eslint/no-explicit-any -- Prisma dynamic where
+        // Scope to assets in user's workspaces
+        asset: {
+            workspace: {
+                members: { some: { userId: user.id } },
+            },
+        },
+    };
     if (status) where.status = status;
     if (assetId) where.assetId = assetId;
     if (userId) where.userId = userId;
@@ -56,9 +63,16 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     }
     const { assetId, notes, offer } = parsed.data;
 
-
-    const asset = await prisma.asset.findUnique({ where: { id: assetId } });
-    if (!asset) return apiError(404, 'Asset not found');
+    // Verify asset exists AND user has workspace access
+    const asset = await prisma.asset.findFirst({
+        where: {
+            id: assetId,
+            workspace: {
+                members: { some: { userId: user.id } },
+            },
+        },
+    });
+    if (!asset) return apiError(404, 'Asset not found or access denied');
 
     const activeSession = await prisma.remoteSession.findFirst({
         where: { assetId, status: 'ACTIVE' },
@@ -71,7 +85,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
             assetId,
             status: 'ACTIVE',
             notes,
-            offer: offer ? (offer as any) : undefined,
+            offer: offer ? (offer as any) : undefined,  // Prisma JSON field
         },
         include: {
             asset: { select: { id: true, name: true, category: true, status: true } },

@@ -1,4 +1,5 @@
 'use client';
+import { csrfFetch } from '@/lib/api/csrfFetch';
 
 import { useState, useEffect, useCallback } from 'react';
 import { useWorkspaceStore } from '@/lib/stores/workspaceStore';
@@ -33,7 +34,7 @@ export default function PendingInvites({ workspaceId }: { workspaceId: string })
 
     const fetchInvitations = useCallback(async () => {
         try {
-            const response = await fetch(`/api/workspaces/${workspaceId}/invitations`);
+            const response = await csrfFetch(`/api/workspaces/${workspaceId}/invitations`);
             if (response.ok) {
                 const data = await response.json();
                 setInvitations(data.invitations);
@@ -65,7 +66,7 @@ export default function PendingInvites({ workspaceId }: { workspaceId: string })
 
         setActionLoading(inviteId);
         try {
-            await fetch(`/api/workspaces/${workspaceId}/invitations/${inviteId}`, {
+            await csrfFetch(`/api/workspaces/${workspaceId}/invitations/${inviteId}`, {
                 method: 'DELETE',
             });
             await fetchInvitations();
@@ -80,12 +81,12 @@ export default function PendingInvites({ workspaceId }: { workspaceId: string })
         setActionLoading(invite.id);
         try {
             // Revoke the existing invitation
-            await fetch(`/api/workspaces/${workspaceId}/invitations/${invite.id}`, {
+            await csrfFetch(`/api/workspaces/${workspaceId}/invitations/${invite.id}`, {
                 method: 'DELETE',
             });
 
             // Re-create with same email and role (sends a fresh email)
-            const res = await fetch(`/api/workspaces/${workspaceId}/invitations`, {
+            const res = await csrfFetch(`/api/workspaces/${workspaceId}/invitations`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email: invite.email, role: invite.role }),

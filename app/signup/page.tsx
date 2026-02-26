@@ -103,6 +103,7 @@ export default function SignupPage() {
                                     placeholder="Jane Smith"
                                     required
                                     minLength={2}
+                                    autoComplete="name"
                                     className="w-full rounded-xl border border-slate-700/80 bg-slate-800/50 px-4 py-3 text-sm text-white
                                                placeholder:text-slate-500 transition-all duration-200
                                                focus:border-nerve/50 focus:outline-none focus:ring-2 focus:ring-nerve/20"
@@ -121,6 +122,7 @@ export default function SignupPage() {
                                     onChange={(e) => setEmail(e.target.value)}
                                     placeholder="you@company.com"
                                     required
+                                    autoComplete="email"
                                     className="w-full rounded-xl border border-slate-700/80 bg-slate-800/50 px-4 py-3 text-sm text-white
                                                placeholder:text-slate-500 transition-all duration-200
                                                focus:border-nerve/50 focus:outline-none focus:ring-2 focus:ring-nerve/20"
@@ -137,13 +139,17 @@ export default function SignupPage() {
                                     type="password"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    placeholder="At least 8 characters"
+                                    placeholder="Min 8 chars, uppercase, number, special"
                                     required
                                     minLength={8}
+                                    autoComplete="new-password"
                                     className="w-full rounded-xl border border-slate-700/80 bg-slate-800/50 px-4 py-3 text-sm text-white
                                                placeholder:text-slate-500 transition-all duration-200
                                                focus:border-nerve/50 focus:outline-none focus:ring-2 focus:ring-nerve/20"
                                 />
+                                <p className="mt-1.5 text-xs text-slate-500">
+                                    Must include uppercase, lowercase, number, and special character
+                                </p>
                             </div>
 
                             {/* Submit */}
@@ -167,7 +173,14 @@ export default function SignupPage() {
                         </form>
 
                         <p className="mt-4 text-center text-xs text-slate-500">
-                            By creating an account, you agree to our Terms of Service
+                            By creating an account, you agree to our{' '}
+                            <Link href="/terms" className="text-nerve hover:text-nerve/80 transition-colors underline">
+                                Terms of Service
+                            </Link>{' '}
+                            and{' '}
+                            <Link href="/privacy" className="text-nerve hover:text-nerve/80 transition-colors underline">
+                                Privacy Policy
+                            </Link>
                         </p>
                     </div>
 

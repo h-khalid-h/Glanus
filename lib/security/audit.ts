@@ -19,7 +19,7 @@ export interface SecurityAuditData {
     success: boolean;
     errorMessage?: string;
     riskLevel?: RiskLevel;
-    metadata?: Record<string, any>;
+    metadata?: Record<string, unknown>;
 }
 
 /**
@@ -44,7 +44,7 @@ export async function logSecurityEvent(data: SecurityAuditData): Promise<void> {
                 },
             },
         });
-    } catch (error) {
+    } catch (error: unknown) {
         // Fail silently - don't break the request if audit logging fails
         logError('Failed to log security event', error);
     }
