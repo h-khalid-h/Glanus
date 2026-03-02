@@ -17,61 +17,6 @@ const nextConfig = {
             bodySizeLimit: '2mb',
         },
     },
-    async headers() {
-        return [
-            {
-                source: '/:path*',
-                headers: [
-                    {
-                        key: 'X-Content-Type-Options',
-                        value: 'nosniff',
-                    },
-                    {
-                        key: 'X-Frame-Options',
-                        value: 'DENY',
-                    },
-                    {
-                        key: 'X-XSS-Protection',
-                        value: '1; mode=block',
-                    },
-                    {
-                        key: 'Strict-Transport-Security',
-                        value: 'max-age=31536000; includeSubDomains',
-                    },
-                    {
-                        key: 'Referrer-Policy',
-                        value: 'strict-origin-when-cross-origin',
-                    },
-                    {
-                        key: 'Permissions-Policy',
-                        value: 'camera=(), microphone=(), geolocation=(), payment=()',
-                    },
-                ],
-            },
-            {
-                // CORS: Restrict API access
-                source: '/api/:path*',
-                headers: [
-                    {
-                        key: 'Access-Control-Allow-Origin',
-                        value: process.env.NEXTAUTH_URL || 'http://localhost:3000',
-                    },
-                    {
-                        key: 'Access-Control-Allow-Methods',
-                        value: 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
-                    },
-                    {
-                        key: 'Access-Control-Allow-Headers',
-                        value: 'Content-Type, Authorization, X-CSRF-Token, X-Request-Id',
-                    },
-                    {
-                        key: 'Access-Control-Allow-Credentials',
-                        value: 'true',
-                    },
-                ],
-            },
-        ];
-    },
 }
 
 export default withSentryConfig(nextConfig, {

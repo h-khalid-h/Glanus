@@ -10,6 +10,9 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { getSecurityHeaders } from './lib/security/headers';
+import { getToken } from 'next-auth/jwt';
+import { timingSafeEqual } from 'crypto';
+import { logWarn } from './lib/logger';
 
 // Routes that don't need CSRF protection
 const CSRF_EXEMPT_PATHS = [
@@ -37,8 +40,17 @@ const PUBLIC_PATHS = [
     '/api/invitations',  // Invitation verification (token-based)
 ];
 
+/**
+ * Timing-safe string comparison
+ */
+function safeCompare(a: string, b: string): boolean {
+    if (a.length !== b.length) return false;
+    return timingSafeEqual(Buffer.from(a), Buffer.from(b));
+}
+
 export async function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl;
+    const requestId = crypto.randomUUID();
 
     // Skip middleware for Next.js internal routes and static files
     if (
@@ -47,6 +59,17 @@ export async function middleware(request: NextRequest) {
         pathname.match(/\.(ico|png|jpg|jpeg|svg|css|js)$/)
     ) {
         return NextResponse.next();
+    }
+
+    // 1. Authentication Check (Defense-in-Depth)
+    const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
+    const isPublicPath = PUBLIC_PATHS.some(path => pathname.startsWith(path) || pathname === '/');
+
+    if (!token && !isPublicPath) {
+        logWarn(`[Auth] Unauthenticated access blocked: ${pathname} [ReqID: ${requestId}]`);
+        const loginUrl = new URL('/login', request.url);
+        loginUrl.searchParams.set('callbackUrl', pathname);
+        return NextResponse.redirect(loginUrl);
     }
 
     // Create response with security headers
@@ -59,10 +82,9 @@ export async function middleware(request: NextRequest) {
     }
 
     // Add request ID for tracing
-    const requestId = crypto.randomUUID();
     response.headers.set('X-Request-Id', requestId);
 
-    // CSRF Protection for state-changing methods
+    // 2. CSRF Protection for state-changing methods
     if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(request.method)) {
         const isExempt = CSRF_EXEMPT_PATHS.some(path => pathname.startsWith(path));
 
@@ -70,17 +92,11 @@ export async function middleware(request: NextRequest) {
             const csrfTokenHeader = request.headers.get('x-csrf-token');
             const csrfTokenCookie = request.cookies.get('csrf-token')?.value;
 
-            // Validate CSRF token presence and match
-            if (!csrfTokenHeader || !csrfTokenCookie) {
+            // Validate CSRF token presence and match (timing-safe)
+            if (!csrfTokenHeader || !csrfTokenCookie || !safeCompare(csrfTokenHeader, csrfTokenCookie)) {
+                logWarn(`[Security] CSRF blockage on ${pathname}: ${!csrfTokenHeader ? 'Header missing' : !csrfTokenCookie ? 'Cookie missing' : 'Token mismatch'} [ReqID: ${requestId}]`);
                 return NextResponse.json(
-                    { error: 'CSRF token missing' },
-                    { status: 403, headers: { 'X-Request-Id': requestId } }
-                );
-            }
-
-            if (csrfTokenHeader !== csrfTokenCookie) {
-                return NextResponse.json(
-                    { error: 'CSRF token mismatch' },
+                    { error: 'Invalid or missing CSRF token' },
                     { status: 403, headers: { 'X-Request-Id': requestId } }
                 );
             }

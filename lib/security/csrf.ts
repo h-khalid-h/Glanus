@@ -112,15 +112,15 @@ export async function validateCSRFFromRequest(
     const headerToken = request.headers.get('x-csrf-token');
     const cookieToken = await getCSRFCookie();
 
-    if (!headerToken) {
-        return { valid: false, error: 'CSRF token missing from request' };
+    if (!headerToken || !cookieToken) {
+        return { valid: false, error: 'CSRF token missing' };
     }
 
-    if (!cookieToken) {
-        return { valid: false, error: 'CSRF token missing from cookie' };
-    }
+    // Use timing-safe comparison for mismatch check
+    const isMatched = headerToken.length === cookieToken.length &&
+        timingSafeEqual(Buffer.from(headerToken), Buffer.from(cookieToken));
 
-    if (headerToken !== cookieToken) {
+    if (!isMatched) {
         return { valid: false, error: 'CSRF token mismatch' };
     }
 
