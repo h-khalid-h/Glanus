@@ -115,11 +115,8 @@ export const DELETE = withErrorHandler(async (
     // Only OWNER can delete
     await requireWorkspaceRole(params.id, user.id, 'OWNER');
 
-    // Delete workspace (cascade will handle related records)
-    await prisma.workspace.delete({
-        where: { id: params.id },
-    });
-
+    // Log the deletion BEFORE cascade-deleting the workspace to avoid
+    // integrity issues (audit log references may fail post-cascade).
     await prisma.auditLog.create({
         data: {
             action: 'WORKSPACE_DELETED',
@@ -128,6 +125,11 @@ export const DELETE = withErrorHandler(async (
             userId: user.id,
             metadata: { deletedAt: new Date().toISOString() },
         },
+    });
+
+    // Delete workspace (cascade will handle related records)
+    await prisma.workspace.delete({
+        where: { id: params.id },
     });
 
     return apiSuccess({ message: 'Workspace deleted' });

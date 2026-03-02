@@ -60,7 +60,7 @@ export default function GeneralSettings({ workspace }: { workspace: Workspace })
             <form onSubmit={handleSubmit} className="space-y-4 max-w-xl">
                 {message && (
                     <div className={`p-4 rounded-lg text-sm ${message.type === 'success'
-                        ? 'bg-health-good/10 text-health-good/20 border border-health-good/20'
+                        ? 'bg-health-good/10 text-health-good border border-health-good/20'
                         : 'bg-health-critical/10 text-health-critical border border-health-critical/20'
                         }`}>
                         {message.text}
@@ -79,14 +79,14 @@ export default function GeneralSettings({ workspace }: { workspace: Workspace })
                         Workspace URL
                     </label>
                     <div className="flex rounded-lg shadow-sm">
-                        <span className="inline-flex items-center px-3 rounded-l-lg border border-r-0 border-slate-300 bg-slate-50 text-slate-500 text-sm">
+                        <span className="inline-flex items-center px-3 rounded-l-lg border border-r-0 border-slate-700 bg-slate-800 text-slate-400 text-sm">
                             glanus.com/
                         </span>
                         <input
                             type="text"
                             value={formData.slug}
                             readOnly
-                            className="flex-1 min-w-0 block w-full px-3 py-2 rounded-none rounded-r-lg border border-slate-300 bg-slate-800 text-slate-500 sm:text-sm focus:ring-nerve/50 focus:border-nerve/50 cursor-not-allowed"
+                            className="flex-1 min-w-0 block w-full px-3 py-2 rounded-none rounded-r-lg border border-slate-700 bg-slate-800 text-slate-500 sm:text-sm focus:ring-nerve/50 focus:border-nerve/50 cursor-not-allowed"
                         />
                     </div>
                     <p className="mt-1 text-xs text-slate-500">

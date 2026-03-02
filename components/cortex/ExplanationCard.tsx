@@ -12,9 +12,11 @@ interface ExplanationCardProps {
  * multi-layered card: summary → technical → business impact.
  */
 export function ExplanationCard({ analysis, compact = false }: ExplanationCardProps) {
-    const riskColor = analysis.riskScore >= 70 ? 'health-critical'
-        : analysis.riskScore >= 40 ? 'oracle'
-            : 'health-good';
+    const riskBadgeClass = analysis.riskScore >= 70
+        ? 'bg-health-critical/10 text-health-critical border-health-critical/20'
+        : analysis.riskScore >= 40
+            ? 'bg-oracle/10 text-oracle border-oracle/20'
+            : 'bg-health-good/10 text-health-good border-health-good/20';
 
     return (
         <div className="card space-y-4">
@@ -34,7 +36,7 @@ export function ExplanationCard({ analysis, compact = false }: ExplanationCardPr
                     </div>
                 </div>
 
-                <span className={`badge bg-${riskColor}/10 text-${riskColor} border-${riskColor}/20`}>
+                <span className={`badge ${riskBadgeClass}`}>
                     Risk: {analysis.riskScore}
                 </span>
             </div>

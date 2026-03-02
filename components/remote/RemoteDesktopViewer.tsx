@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { WebRTCClient, ConnectionMetrics } from '@/lib/webrtc/client';
 import SimplePeer from 'simple-peer';
+import { csrfFetch } from '@/lib/api/csrfFetch';
 
 interface RemoteDesktopViewerProps {
     sessionId: string;
@@ -47,7 +48,7 @@ export function RemoteDesktopViewer({
                 else if ('candidate' in signal) payload.iceCandidates = [signal];
 
                 if (Object.keys(payload).length > 0) {
-                    await fetch(`/api/remote/sessions/${sessionId}`, {
+                    await csrfFetch(`/api/remote/sessions/${sessionId}`, {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(payload),
@@ -101,7 +102,7 @@ export function RemoteDesktopViewer({
             if (webrtcClient.isConnected()) return; // Stop polling once connected
 
             try {
-                const res = await fetch(`/api/remote/sessions/${sessionId}`);
+                const res = await csrfFetch(`/api/remote/sessions/${sessionId}`);
                 if (!res.ok) return;
                 const session = await res.json();
 

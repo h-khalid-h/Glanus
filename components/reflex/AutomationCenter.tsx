@@ -67,8 +67,8 @@ export function AutomationCenter({
                 <button
                     onClick={() => setActiveTab('rules')}
                     className={`flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${activeTab === 'rules'
-                            ? 'bg-card text-foreground shadow-sm'
-                            : 'text-muted-foreground hover:text-foreground'
+                        ? 'bg-card text-foreground shadow-sm'
+                        : 'text-muted-foreground hover:text-foreground'
                         }`}
                 >
                     Rules ({rules.length})
@@ -76,8 +76,8 @@ export function AutomationCenter({
                 <button
                     onClick={() => setActiveTab('queue')}
                     className={`flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${activeTab === 'queue'
-                            ? 'bg-card text-foreground shadow-sm'
-                            : 'text-muted-foreground hover:text-foreground'
+                        ? 'bg-card text-foreground shadow-sm'
+                        : 'text-muted-foreground hover:text-foreground'
                         }`}
                 >
                     Action Queue
@@ -192,7 +192,7 @@ function RuleCard({
                     }`}
             >
                 <span
-                    className={`h-4 w-4 rounded-full bg-slate-900/50 backdrop-blur-sm-sm transition-transform ${rule.enabled ? 'translate-x-4' : 'translate-x-0'
+                    className={`h-4 w-4 rounded-full bg-slate-900/50 backdrop-blur-sm transition-transform ${rule.enabled ? 'translate-x-4' : 'translate-x-0'
                         }`}
                 />
             </button>
@@ -419,8 +419,8 @@ function CreateRuleModal({
                                     key={level}
                                     onClick={() => setAutonomy(level)}
                                     className={`flex-1 rounded-lg border px-3 py-2 text-xs font-medium transition-colors ${autonomy === level
-                                            ? 'border-reflex bg-reflex/10 text-reflex'
-                                            : 'border-border text-muted-foreground hover:border-reflex/40'
+                                        ? 'border-reflex bg-reflex/10 text-reflex'
+                                        : 'border-border text-muted-foreground hover:border-reflex/40'
                                         }`}
                                 >
                                     {level === 'suggest' && '💡 Suggest'}

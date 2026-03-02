@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useToast } from '@/lib/toast';
+import { csrfFetch } from '@/lib/api/csrfFetch';
 
 export default function ForgotPasswordPage() {
     const [email, setEmail] = useState('');
@@ -15,7 +16,7 @@ export default function ForgotPasswordPage() {
         setIsLoading(true);
 
         try {
-            const res = await fetch('/api/auth/forgot-password', {
+            const res = await csrfFetch('/api/auth/forgot-password', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email }),

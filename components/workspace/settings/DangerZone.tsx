@@ -48,13 +48,13 @@ export default function DangerZone({ workspace }: { workspace: Workspace }) {
                 </p>
             </div>
 
-            <div className="border border-health-critical/20/50 rounded-xl bg-health-critical/10 p-6">
+            <div className="border border-health-critical/20 rounded-xl bg-health-critical/10 p-6">
                 <div className="flex items-start gap-4">
                     <div className="p-2 bg-health-critical/10 rounded-lg text-health-critical shrink-0">
                         <AlertCircle className="w-6 h-6" />
                     </div>
                     <div className="flex-1">
-                        <h3 className="text-base font-semibold text-red-900">Delete Workspace</h3>
+                        <h3 className="text-base font-semibold text-health-critical">Delete Workspace</h3>
                         <p className="mt-1 text-sm text-health-critical">
                             Permanently remove this workspace and all of its data. This action is not reversible.
                             All assets, members, and settings will be deleted.
@@ -71,7 +71,7 @@ export default function DangerZone({ workspace }: { workspace: Workspace }) {
                         ) : (
                             <div className="mt-4 space-y-4 animate-in fade-in slide-in-from-top-2">
                                 <div className="max-w-md">
-                                    <label className="block text-sm font-medium text-red-900 mb-2">
+                                    <label className="block text-sm font-medium text-health-critical mb-2">
                                         To confirm, type "<span className="font-bold select-all">{workspace.name}</span>" below:
                                     </label>
                                     <input

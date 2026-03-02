@@ -163,7 +163,7 @@ export default function BillingPage() {
         switch (subscriptionStatus) {
             case 'ACTIVE':
                 return (
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium bg-health-good/15/30 text-health-good">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium bg-health-good/15 text-health-good">
                         <CheckCircle2 className="w-4 h-4" /> Active
                     </span>
                 );

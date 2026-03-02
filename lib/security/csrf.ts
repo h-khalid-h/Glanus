@@ -7,7 +7,7 @@
  * - Validates tokens on state-changing requests
  */
 
-import { randomBytes, createHmac } from 'crypto';
+import { randomBytes, createHmac, timingSafeEqual } from 'crypto';
 import { cookies } from 'next/headers';
 
 const CSRF_TOKEN_LENGTH = 32;
@@ -52,8 +52,15 @@ export function validateCSRFToken(token: string | null): boolean {
         .update(tokenValue)
         .digest('hex');
 
-    // Use timing-safe comparison
-    return signature === expectedSignature;
+    // Use timing-safe comparison to prevent timing side-channel attacks
+    try {
+        return timingSafeEqual(
+            Buffer.from(signature, 'hex'),
+            Buffer.from(expectedSignature, 'hex')
+        );
+    } catch {
+        return false;
+    }
 }
 
 /**
@@ -122,19 +129,4 @@ export async function validateCSRFFromRequest(
     }
 
     return { valid: true };
-}
-
-/**
- * Client-side helper to get CSRF token from cookie
- * Use in fetch requests
- */
-export function getCSRFTokenFromCookie(): string | null {
-    if (typeof document === 'undefined') return null;
-
-    const cookies = document.cookie.split(';');
-    const csrfCookie = cookies.find(c => c.trim().startsWith(`${CSRF_COOKIE_NAME}=`));
-
-    if (!csrfCookie) return null;
-
-    return csrfCookie.split('=')[1];
 }

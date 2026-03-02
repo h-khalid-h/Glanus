@@ -154,7 +154,7 @@ export default function WorkspaceWizard({ onComplete, showSampleDataOption = fal
             {/* Content Area */}
             <div className="p-8 min-h-[400px]">
                 {error && (
-                    <div className="mb-6 bg-health-critical/10 text-health-critical p-4 rounded-lg flex items-center gap-2 border border-health-critical/20/30">
+                    <div className="mb-6 bg-health-critical/10 text-health-critical p-4 rounded-lg flex items-center gap-2 border border-health-critical/20">
                         <span className="font-semibold">Error:</span> {error}
                     </div>
                 )}

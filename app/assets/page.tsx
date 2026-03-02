@@ -463,7 +463,7 @@ export default function AssetsPage() {
                                                                 {asset.name}
                                                             </div>
                                                             <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${asset.assetType === 'PHYSICAL'
-                                                                ? 'bg-nerve/50/10 text-nerve'
+                                                                ? 'bg-nerve/10 text-nerve'
                                                                 : 'bg-purple-500/10 text-purple-500'
                                                                 }`}>
                                                                 {asset.assetType === 'PHYSICAL' ? '💻' : '☁️'}

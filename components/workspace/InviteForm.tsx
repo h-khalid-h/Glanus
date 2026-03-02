@@ -148,7 +148,7 @@ export default function InviteForm({ workspaceId }: { workspaceId: string }) {
                 <div className={clsx(
                     "mt-4 p-3 rounded-lg text-sm flex items-center gap-2 border",
                     message.type === 'success'
-                        ? 'bg-health-good/10 text-health-good border-health-good/20/20'
+                        ? 'bg-health-good/10 text-health-good border-health-good/20'
                         : 'bg-health-critical/10 text-health-critical border-health-critical/20'
                 )}>
                     {message.text}

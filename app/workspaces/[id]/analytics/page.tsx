@@ -6,6 +6,7 @@ import { MissionControl } from '@/components/workspace/MissionControl';
 import { TopologyMap } from '@/components/workspace/TopologyMap';
 import { SkeletonDashboard } from '@/components/ui/Skeleton';
 import type { OperationalGraphData } from '@/lib/nerve/operational-graph';
+import { csrfFetch } from '@/lib/api/csrfFetch';
 
 interface AnalyticsData {
     workspaceName: string;
@@ -82,9 +83,9 @@ export default function AnalyticsPage() {
             try {
                 // Fetch analytics, topology, and oracle in parallel
                 const [analyticsRes, topologyRes, oracleRes] = await Promise.all([
-                    fetch(`/api/workspaces/${workspaceId}/analytics`),
-                    fetch(`/api/workspaces/${workspaceId}/topology`).catch(() => null),
-                    fetch(`/api/workspaces/${workspaceId}/oracle`).catch(() => null),
+                    csrfFetch(`/api/workspaces/${workspaceId}/analytics`),
+                    csrfFetch(`/api/workspaces/${workspaceId}/topology`).catch(() => null),
+                    csrfFetch(`/api/workspaces/${workspaceId}/oracle`).catch(() => null),
                 ]);
 
                 if (!analyticsRes.ok) throw new Error('Failed to fetch analytics');
@@ -116,7 +117,7 @@ export default function AnalyticsPage() {
     const handleNodeSelect = async (nodeId: string) => {
         setFocusNode(nodeId);
         try {
-            const res = await fetch(`/api/workspaces/${workspaceId}/topology?focus=${nodeId}`);
+            const res = await csrfFetch(`/api/workspaces/${workspaceId}/topology?focus=${nodeId}`);
             if (res.ok) {
                 const result = await res.json();
                 setBlastRadius(result.data?.blastRadius || []);

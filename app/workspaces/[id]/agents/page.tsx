@@ -1,5 +1,6 @@
 'use client';
 import { useToast } from '@/lib/toast';
+import { csrfFetch } from '@/lib/api/csrfFetch';
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
@@ -49,7 +50,7 @@ export default function WorkspaceAgentsPage() {
 
     const fetchAgents = async () => {
         try {
-            const res = await fetch(`/api/workspaces/${workspaceId}/agents`);
+            const res = await csrfFetch(`/api/workspaces/${workspaceId}/agents`);
             const data = await res.json();
 
             if (res.ok) {

@@ -49,7 +49,7 @@ export default function MetricsChart({ data, timeRange }: MetricsChartProps) {
                 <h3 className="text-lg font-semibold mb-4">System Resources</h3>
                 <ResponsiveContainer width="100%" height={300}>
                     <LineChart data={chartData}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                        <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
                         <XAxis
                             dataKey="time"
                             stroke="#6b7280"
@@ -63,10 +63,11 @@ export default function MetricsChart({ data, timeRange }: MetricsChartProps) {
                         />
                         <Tooltip
                             contentStyle={{
-                                backgroundColor: '#fff',
-                                border: '1px solid #e5e7eb',
+                                backgroundColor: '#1e293b',
+                                border: '1px solid #334155',
                                 borderRadius: '8px',
-                                padding: '12px'
+                                padding: '12px',
+                                color: '#e2e8f0'
                             }}
                             formatter={((value: string | number | undefined) => `${Number(value ?? 0).toFixed(1)}%`) as never}
                         />
@@ -108,7 +109,7 @@ export default function MetricsChart({ data, timeRange }: MetricsChartProps) {
                         Upload: point.networkUp,
                         Download: point.networkDown,
                     }))}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                        <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
                         <XAxis
                             dataKey="time"
                             stroke="#6b7280"
@@ -121,10 +122,11 @@ export default function MetricsChart({ data, timeRange }: MetricsChartProps) {
                         />
                         <Tooltip
                             contentStyle={{
-                                backgroundColor: '#fff',
-                                border: '1px solid #e5e7eb',
+                                backgroundColor: '#1e293b',
+                                border: '1px solid #334155',
                                 borderRadius: '8px',
-                                padding: '12px'
+                                padding: '12px',
+                                color: '#e2e8f0'
                             }}
                             formatter={((value: string | number | undefined) => `${Number(value ?? 0).toFixed(1)} KB/s`) as never}
                         />

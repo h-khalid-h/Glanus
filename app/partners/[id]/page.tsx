@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
+import { csrfFetch } from '@/lib/api/csrfFetch';
 
 interface Partner {
     id: string;
@@ -52,7 +53,7 @@ export default function PublicPartnerProfilePage() {
 
     const fetchPartner = async () => {
         try {
-            const res = await fetch(`/api/partners/${partnerId}`);
+            const res = await csrfFetch(`/api/partners/${partnerId}`);
             if (!res.ok) throw new Error('Partner not found');
 
             const data = await res.json();

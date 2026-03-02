@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { DashboardNav } from '@/components/DashboardNav';
 import { formatDateTime } from '@/lib/utils';
+import { csrfFetch } from '@/lib/api/csrfFetch';
 
 interface Insight {
     id: string;
@@ -60,14 +61,14 @@ export default function InsightsPage() {
 
     const fetchInsights = async () => {
         try {
-            const res = await fetch('/api/dashboard/insights');
+            const res = await csrfFetch('/api/dashboard/insights');
             const data = await res.json();
             if (data.success) {
                 setInsights(data.data.insights);
                 setSummary(data.data.summary);
             }
-        } catch {
-            // Silently handled — empty state shows
+        } catch (err) {
+            console.error('[Insights] Failed to fetch:', err);
         } finally {
             setLoading(false);
         }

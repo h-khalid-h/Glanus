@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { csrfFetch } from '@/lib/api/csrfFetch';
 
 export default function ResetPasswordPage() {
     const searchParams = useSearchParams();
@@ -31,7 +32,7 @@ export default function ResetPasswordPage() {
 
         setIsLoading(true);
         try {
-            const res = await fetch('/api/auth/reset-password', {
+            const res = await csrfFetch('/api/auth/reset-password', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ token, password }),

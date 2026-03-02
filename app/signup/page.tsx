@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { csrfFetch } from '@/lib/api/csrfFetch';
 
 export default function SignupPage() {
     const router = useRouter();
@@ -19,7 +20,7 @@ export default function SignupPage() {
         setIsLoading(true);
 
         try {
-            const res = await fetch('/api/auth/signup', {
+            const res = await csrfFetch('/api/auth/signup', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name, email, password }),
@@ -147,9 +148,7 @@ export default function SignupPage() {
                                                placeholder:text-slate-500 transition-all duration-200
                                                focus:border-nerve/50 focus:outline-none focus:ring-2 focus:ring-nerve/20"
                                 />
-                                <p className="mt-1.5 text-xs text-slate-500">
-                                    Must include uppercase, lowercase, number, and special character
-                                </p>
+                                <PasswordStrengthMeter password={password} />
                             </div>
 
                             {/* Submit */}
@@ -193,6 +192,57 @@ export default function SignupPage() {
                     </p>
                 </div>
             </main>
+        </div>
+    );
+}
+
+function PasswordStrengthMeter({ password }: { password: string }) {
+    const checks = [
+        { label: '8+ characters', met: password.length >= 8 },
+        { label: 'Uppercase', met: /[A-Z]/.test(password) },
+        { label: 'Lowercase', met: /[a-z]/.test(password) },
+        { label: 'Number', met: /[0-9]/.test(password) },
+        { label: 'Special char', met: /[^A-Za-z0-9]/.test(password) },
+    ];
+
+    const score = checks.filter(c => c.met).length;
+
+    if (!password) {
+        return (
+            <p className="mt-1.5 text-xs text-slate-500">
+                Must include uppercase, lowercase, number, and special character
+            </p>
+        );
+    }
+
+    const strengthLabel = score <= 2 ? 'Weak' : score <= 3 ? 'Fair' : score <= 4 ? 'Good' : 'Strong';
+    const strengthColor = score <= 2 ? 'bg-health-critical' : score <= 3 ? 'bg-health-warn' : score <= 4 ? 'bg-nerve/70' : 'bg-health-good';
+    const textColor = score <= 2 ? 'text-health-critical' : score <= 3 ? 'text-health-warn' : score <= 4 ? 'text-nerve' : 'text-health-good';
+
+    return (
+        <div className="mt-2 space-y-1.5">
+            <div className="flex gap-1">
+                {Array.from({ length: 5 }).map((_, i) => (
+                    <div
+                        key={i}
+                        className={`h-1 flex-1 rounded-full transition-all duration-300 ${i < score ? strengthColor : 'bg-slate-700'
+                            }`}
+                    />
+                ))}
+            </div>
+            <div className="flex items-center justify-between">
+                <span className={`text-xs font-medium ${textColor}`}>{strengthLabel}</span>
+                <div className="flex gap-2">
+                    {checks.map((check) => (
+                        <span
+                            key={check.label}
+                            className={`text-[10px] transition-colors ${check.met ? 'text-slate-400' : 'text-slate-600'}`}
+                        >
+                            {check.met ? '✓' : '○'} {check.label}
+                        </span>
+                    ))}
+                </div>
+            </div>
         </div>
     );
 }

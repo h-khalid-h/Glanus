@@ -1,5 +1,6 @@
 'use client';
 import { useToast } from '@/lib/toast';
+import { csrfFetch } from '@/lib/api/csrfFetch';
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -47,7 +48,7 @@ export default function RemoteSessionsPage() {
                 params.append('status', statusFilter);
             }
 
-            const response = await fetch(`/api/remote/sessions?${params.toString()}`);
+            const response = await csrfFetch(`/api/remote/sessions?${params.toString()}`);
             if (!response.ok) throw new Error('Failed to fetch sessions');
 
             const data = await response.json();

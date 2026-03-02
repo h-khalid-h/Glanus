@@ -50,7 +50,7 @@ export default function MetricCard({
     return (
         <div className="bg-slate-900/50 backdrop-blur-sm rounded-xl p-6 border border-slate-800 shadow-sm hover:shadow-md transition-shadow">
             <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-medium text-slate-600 uppercase tracking-wider">
+                <h3 className="text-sm font-medium text-slate-400 uppercase tracking-wider">
                     {title}
                 </h3>
                 {Icon && (

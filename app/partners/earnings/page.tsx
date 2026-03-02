@@ -57,7 +57,7 @@ export default function PartnerEarningsPage() {
 
     const fetchEarnings = async () => {
         try {
-            const res = await fetch('/api/partners/earnings');
+            const res = await csrfFetch('/api/partners/earnings');
             const data = await res.json();
 
             setSummary(data.summary);
@@ -72,7 +72,7 @@ export default function PartnerEarningsPage() {
 
     const fetchPayouts = async () => {
         try {
-            const res = await fetch('/api/partners/payouts');
+            const res = await csrfFetch('/api/partners/payouts');
             const data = await res.json();
 
             setPayouts(data.payouts);
@@ -133,7 +133,7 @@ export default function PartnerEarningsPage() {
                                 </svg>
                             </div>
                             <div className="ml-3 flex-1">
-                                <h3 className="text-lg font-semibold text-yellow-900 mb-2">Connect Stripe to Receive Payouts</h3>
+                                <h3 className="text-lg font-semibold text-health-warn mb-2">Connect Stripe to Receive Payouts</h3>
                                 <p className="text-health-warn mb-4">
                                     You need to connect your Stripe account to receive payouts. It only takes a few minutes!
                                 </p>
