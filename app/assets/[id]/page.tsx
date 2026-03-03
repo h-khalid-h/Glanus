@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { PageSpinner } from '@/components/ui/Spinner';
 import { ErrorState } from '@/components/ui/EmptyState';
 import { formatDateTime } from '@/lib/utils';
-import { ArrowLeft, Edit, Trash2, Play, Clock, CheckCircle, XCircle } from 'lucide-react';
+import { ArrowLeft, Edit, Trash2, Play, Clock, CheckCircle, XCircle, Monitor } from 'lucide-react';
 import { useToast } from '@/lib/toast';
 import { ConfirmDialog } from '@/components/ui';
 
@@ -59,6 +59,7 @@ export default function AssetDetailPage({ params }: { params: Promise<{ id: stri
     const [executingAction, setExecutingAction] = useState<string | null>(null);
     const [executionResult, setExecutionResult] = useState<{ status: string; output?: React.ReactNode; error?: string } | null>(null);
     const [showExecutionDialog, setShowExecutionDialog] = useState(false);
+    const [connectingRemote, setConnectingRemote] = useState(false);
 
     useEffect(() => {
         const init = async () => {
@@ -243,6 +244,35 @@ export default function AssetDetailPage({ params }: { params: Promise<{ id: stri
                     </div>
 
                     <div className="flex gap-2">
+                        <button
+                            onClick={async () => {
+                                if (!assetId) return;
+                                try {
+                                    setConnectingRemote(true);
+                                    const res = await csrfFetch('/api/remote/sessions', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ assetId }),
+                                    });
+                                    if (!res.ok) {
+                                        const data = await res.json();
+                                        throw new Error(data.error || 'Failed to start session');
+                                    }
+                                    const session = await res.json();
+                                    const sessionId = session.data?.id || session.id;
+                                    router.push(`/remote/${sessionId}`);
+                                } catch (err: unknown) {
+                                    toastError('Remote Connection Failed', err instanceof Error ? err.message : 'Could not start remote session');
+                                } finally {
+                                    setConnectingRemote(false);
+                                }
+                            }}
+                            disabled={connectingRemote}
+                            className="flex items-center gap-2 px-4 py-2 bg-nerve text-white rounded-lg hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                        >
+                            <Monitor size={16} />
+                            {connectingRemote ? 'Connecting…' : 'Connect Remotely'}
+                        </button>
                         <Link
                             href={`/assets/${asset.id}/edit`}
                             className="flex items-center gap-2 px-4 py-2 border border-slate-700 text-slate-300 rounded-lg hover:bg-slate-900/30"

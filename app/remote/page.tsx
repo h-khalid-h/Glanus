@@ -8,6 +8,7 @@ import { csrfFetch } from '@/lib/api/csrfFetch';
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { Monitor, Plus, X } from 'lucide-react';
 
 interface RemoteSession {
     id: string;
@@ -39,6 +40,10 @@ export default function RemoteSessionsPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [statusFilter, setStatusFilter] = useState('ALL');
+    const [showNewSession, setShowNewSession] = useState(false);
+    const [assets, setAssets] = useState<Array<{ id: string; name: string; category: string }>>([]);
+    const [assetsLoading, setAssetsLoading] = useState(false);
+    const [connectingAssetId, setConnectingAssetId] = useState<string | null>(null);
 
     useEffect(() => {
         fetchSessions();
@@ -96,7 +101,85 @@ export default function RemoteSessionsPage() {
                     <h1 className="text-3xl font-bold text-foreground">Remote Sessions</h1>
                     <p className="text-muted-foreground mt-1">Manage and monitor remote desktop sessions</p>
                 </div>
+                <button
+                    onClick={async () => {
+                        setShowNewSession(!showNewSession);
+                        if (!showNewSession && assets.length === 0) {
+                            setAssetsLoading(true);
+                            try {
+                                const res = await csrfFetch('/api/assets?limit=50');
+                                if (res.ok) {
+                                    const data = await res.json();
+                                    const assetsList = data.data?.assets || data.assets || (Array.isArray(data) ? data : []);
+                                    setAssets(assetsList.map((a: any) => ({ id: a.id, name: a.name, category: a.category?.name || a.category || 'Uncategorized' })));
+                                }
+                            } catch { /* ignore */ }
+                            setAssetsLoading(false);
+                        }
+                    }}
+                    className="flex items-center gap-2 px-4 py-2 bg-nerve text-white rounded-lg hover:brightness-110 transition-all"
+                >
+                    <Plus size={16} />
+                    New Session
+                </button>
             </div>
+
+            {/* New Session Panel */}
+            {showNewSession && (
+                <div className="mb-6 rounded-xl border border-nerve/30 bg-nerve/5 p-4 animate-in slide-in-from-top-2 duration-200">
+                    <div className="flex items-center justify-between mb-3">
+                        <h3 className="text-sm font-semibold text-white">Select an asset to connect to</h3>
+                        <button onClick={() => setShowNewSession(false)} className="text-slate-400 hover:text-white">
+                            <X size={16} />
+                        </button>
+                    </div>
+                    {assetsLoading ? (
+                        <p className="text-sm text-slate-400">Loading assets…</p>
+                    ) : assets.length === 0 ? (
+                        <p className="text-sm text-slate-400">No assets found. Make sure assets are added to a workspace.</p>
+                    ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                            {assets.map((asset) => (
+                                <button
+                                    key={asset.id}
+                                    onClick={async () => {
+                                        try {
+                                            setConnectingAssetId(asset.id);
+                                            const res = await csrfFetch('/api/remote/sessions', {
+                                                method: 'POST',
+                                                headers: { 'Content-Type': 'application/json' },
+                                                body: JSON.stringify({ assetId: asset.id }),
+                                            });
+                                            if (!res.ok) {
+                                                const data = await res.json();
+                                                throw new Error(data.error || 'Failed to start session');
+                                            }
+                                            const session = await res.json();
+                                            const sessionId = session.data?.id || session.id;
+                                            router.push(`/remote/${sessionId}`);
+                                        } catch (err: unknown) {
+                                            showError('Connection Failed', err instanceof Error ? err.message : 'Could not start remote session');
+                                        } finally {
+                                            setConnectingAssetId(null);
+                                        }
+                                    }}
+                                    disabled={connectingAssetId === asset.id}
+                                    className="flex items-center gap-2 p-3 rounded-lg border border-slate-700 hover:border-nerve/50 hover:bg-nerve/5 transition-all text-left disabled:opacity-50"
+                                >
+                                    <Monitor size={16} className="text-nerve shrink-0" />
+                                    <div className="min-w-0">
+                                        <p className="text-sm font-medium text-white truncate">{asset.name}</p>
+                                        <p className="text-xs text-slate-400 truncate">{asset.category}</p>
+                                    </div>
+                                    {connectingAssetId === asset.id && (
+                                        <span className="text-xs text-nerve ml-auto">Connecting…</span>
+                                    )}
+                                </button>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            )}
 
             {/* Requirements banner */}
             <div className="mb-6 rounded-xl border border-nerve/20 bg-nerve/5 px-4 py-3">

@@ -4,9 +4,9 @@ import { ErrorState } from '@/components/ui/EmptyState';
 import { csrfFetch } from '@/lib/api/csrfFetch';
 
 import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Server } from 'lucide-react';
+import { Server, Monitor } from 'lucide-react';
 import { PageSpinner } from '@/components/ui/Spinner';
 
 interface Agent {
@@ -38,12 +38,14 @@ interface Stats {
 export default function WorkspaceAgentsPage() {
     const { error: showError } = useToast();
     const params = useParams();
+    const router = useRouter();
     const workspaceId = params?.id as string;
 
     const [agents, setAgents] = useState<Agent[]>([]);
     const [stats, setStats] = useState<Stats>({ total: 0, online: 0, offline: 0, error: 0 });
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [connectingAgentId, setConnectingAgentId] = useState<string | null>(null);
 
     useEffect(() => {
         if (workspaceId) {
@@ -228,12 +230,44 @@ export default function WorkspaceAgentsPage() {
                                             <span className="text-sm text-slate-400">{getTimeSince(agent.lastSeen)}</span>
                                         </td>
                                         <td className="px-6 py-4">
-                                            <Link
-                                                href={`/assets/${agent.asset.id}/agent`}
-                                                className="text-sm text-nerve hover:underline"
-                                            >
-                                                View Details
-                                            </Link>
+                                            <div className="flex items-center gap-3">
+                                                {agent.status === 'ONLINE' && (
+                                                    <button
+                                                        onClick={async () => {
+                                                            try {
+                                                                setConnectingAgentId(agent.id);
+                                                                const res = await csrfFetch('/api/remote/sessions', {
+                                                                    method: 'POST',
+                                                                    headers: { 'Content-Type': 'application/json' },
+                                                                    body: JSON.stringify({ assetId: agent.asset.id }),
+                                                                });
+                                                                if (!res.ok) {
+                                                                    const data = await res.json();
+                                                                    throw new Error(data.error || 'Failed to connect');
+                                                                }
+                                                                const session = await res.json();
+                                                                const sessionId = session.data?.id || session.id;
+                                                                router.push(`/remote/${sessionId}`);
+                                                            } catch (err: unknown) {
+                                                                showError('Connection Failed', err instanceof Error ? err.message : 'Could not start remote session');
+                                                            } finally {
+                                                                setConnectingAgentId(null);
+                                                            }
+                                                        }}
+                                                        disabled={connectingAgentId === agent.id}
+                                                        className="flex items-center gap-1.5 text-sm px-3 py-1.5 bg-nerve text-white rounded-lg hover:brightness-110 disabled:opacity-50 transition-all"
+                                                    >
+                                                        <Monitor size={14} />
+                                                        {connectingAgentId === agent.id ? 'Connecting…' : 'Connect'}
+                                                    </button>
+                                                )}
+                                                <Link
+                                                    href={`/assets/${agent.asset.id}/agent`}
+                                                    className="text-sm text-nerve hover:underline"
+                                                >
+                                                    View Details
+                                                </Link>
+                                            </div>
                                         </td>
                                     </tr>
                                 ))}

@@ -19,7 +19,7 @@ function buildNavItems(workspaceId: string | undefined) {
     return [
         { href: '/dashboard', label: 'Dashboard', icon: ICON_PATHS.dashboard },
         { href: wsPrefix ? `${wsPrefix}/analytics` : '/assets', label: 'Assets', icon: ICON_PATHS.assets },
-        { href: wsPrefix ? `${wsPrefix}/agents` : '/remote', label: 'Remote', icon: ICON_PATHS.remote },
+        { href: '/remote', label: 'Remote', icon: ICON_PATHS.remote },
         { href: wsPrefix ? `${wsPrefix}/intelligence` : '/dashboard', label: 'Insights', icon: ICON_PATHS.insights },
     ];
 }
