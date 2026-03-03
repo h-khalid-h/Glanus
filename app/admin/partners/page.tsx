@@ -5,6 +5,7 @@ import { csrfFetch } from '@/lib/api/csrfFetch';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useToast } from '@/lib/toast';
+import { ErrorState } from '@/components/ui/EmptyState';
 import { PageSpinner } from '@/components/ui/Spinner';
 
 interface Partner {
@@ -35,6 +36,7 @@ export default function AdminPartnersPage() {
     const [stats, setStats] = useState<Record<string, number>>({});
     const [filter, setFilter] = useState<string>('');
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         fetchPartners();
@@ -49,7 +51,9 @@ export default function AdminPartnersPage() {
             setPartners(data.partners);
             setStats(data.stats);
         } catch (err: unknown) {
-            toastError('Failed to Load', err instanceof Error ? err.message : 'Could not load partners');
+            const msg = err instanceof Error ? err.message : 'Could not load partners';
+            toastError('Failed to Load', msg);
+            setError(msg);
         } finally {
             setLoading(false);
         }
@@ -79,6 +83,10 @@ export default function AdminPartnersPage() {
         return (
             <PageSpinner />
         );
+    }
+
+    if (error) {
+        return <ErrorState title="Failed to load partners" description={error} onRetry={() => { setError(null); setLoading(true); fetchPartners(); }} />;
     }
 
     const statuses = ['PENDING', 'VERIFIED', 'ACTIVE', 'SUSPENDED', 'BANNED'];

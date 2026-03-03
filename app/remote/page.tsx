@@ -1,11 +1,13 @@
 'use client';
-import { formatDate, formatDateTime } from '@/lib/utils';
+import Link from 'next/link';
+import { PageSpinner } from '@/components/ui/Spinner';
+import { ErrorState } from '@/components/ui/EmptyState';
+import { formatDateTime } from '@/lib/utils';
 import { useToast } from '@/lib/toast';
 import { csrfFetch } from '@/lib/api/csrfFetch';
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 
 interface RemoteSession {
     id: string;
@@ -35,6 +37,7 @@ export default function RemoteSessionsPage() {
     const router = useRouter();
     const [sessions, setSessions] = useState<RemoteSession[]>([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const [statusFilter, setStatusFilter] = useState('ALL');
 
     useEffect(() => {
@@ -54,7 +57,9 @@ export default function RemoteSessionsPage() {
             const data = await response.json();
             setSessions(data.sessions || []);
         } catch (error: unknown) {
-            showError('Error fetching sessions:', error instanceof Error ? error.message : 'An unexpected error occurred');
+            const msg = error instanceof Error ? error.message : 'An unexpected error occurred';
+            showError('Error fetching sessions:', msg);
+            setError(msg);
         } finally {
             setLoading(false);
         }
@@ -79,6 +84,9 @@ export default function RemoteSessionsPage() {
         const minutes = Math.floor((seconds % 3600) / 60);
         return hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
     };
+
+    if (loading) return <PageSpinner text="Loading sessions…" />;
+    if (error) return <ErrorState title="Failed to load sessions" description={error} onRetry={() => window.location.reload()} />;
 
     return (
         <>

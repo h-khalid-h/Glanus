@@ -9,6 +9,8 @@ import Link from 'next/link';
 import { getCategoryOptions, getStatusOptions, ASSET_CATEGORIES, ASSET_STATUSES } from '@/lib/constants/assetConstants';
 import { ConfirmDialog } from '@/components/ui';
 import { useWorkspace } from '@/lib/workspace/context';
+import { PageSpinner } from '@/components/ui/Spinner';
+import { ErrorState } from '@/components/ui/EmptyState';
 
 interface Asset {
     id: string;
@@ -47,6 +49,7 @@ export default function AssetsPage() {
     });
     const { workspace } = useWorkspace();
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const [search, setSearch] = useState('');
     const debouncedSearch = useDebounce(search, 300);
     const [assetType, setAssetType] = useState(''); // NEW
@@ -100,7 +103,9 @@ export default function AssetsPage() {
                 setPagination(responseData.pagination);
             }
         } catch (error: unknown) {
-            showError('Error fetching assets:', error instanceof Error ? error.message : 'An unexpected error occurred');
+            const msg = error instanceof Error ? error.message : 'An unexpected error occurred';
+            showError('Error fetching assets:', msg);
+            setError(msg);
         } finally {
             setLoading(false);
         }
@@ -192,6 +197,9 @@ export default function AssetsPage() {
         if (!workspace?.id) return;
         window.open(`/api/assets/export?workspaceId=${workspace.id}`, '_blank');
     };
+
+    if (loading && assets.length === 0) return <PageSpinner text="Loading assets…" />;
+    if (error && assets.length === 0) return <ErrorState title="Failed to load assets" description={error} onRetry={() => fetchAssets()} />;
 
     return (
         <>

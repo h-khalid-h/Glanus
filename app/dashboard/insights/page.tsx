@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { formatDateTime } from '@/lib/utils';
+import { PageSpinner } from '@/components/ui/Spinner';
+import { ErrorState } from '@/components/ui/EmptyState';
 import { csrfFetch } from '@/lib/api/csrfFetch';
 
 interface Insight {
@@ -53,6 +55,7 @@ export default function InsightsPage() {
     const [insights, setInsights] = useState<Insight[]>([]);
     const [summary, setSummary] = useState<InsightSummary | null>(null);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         fetchInsights();
@@ -68,10 +71,14 @@ export default function InsightsPage() {
             }
         } catch (err) {
             console.error('[Insights] Failed to fetch:', err);
+            setError(err instanceof Error ? err.message : 'Failed to load insights');
         } finally {
             setLoading(false);
         }
     };
+
+    if (loading) return <PageSpinner text="Loading insights…" />;
+    if (error) return <ErrorState title="Failed to load insights" description={error} onRetry={() => window.location.reload()} />;
 
     return (
         <>
