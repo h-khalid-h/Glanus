@@ -84,7 +84,7 @@ export default function AdminPartnersPage() {
     const statuses = ['PENDING', 'VERIFIED', 'ACTIVE', 'SUSPENDED', 'BANNED'];
 
     return (
-        <div className="min-h-screen bg-slate-900/30 py-8 px-4 sm:px-6 lg:px-8">
+        <>
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
                 <div className="mb-8">
@@ -252,6 +252,6 @@ export default function AdminPartnersPage() {
                     )}
                 </div>
             </div>
-        </div>
+        </>
     );
 }

@@ -155,9 +155,8 @@ export default function AssetAgentPage() {
     /* ───── Loading ───── */
     if (loading) {
         return (
-            <div className="min-h-screen bg-gradient-midnight relative overflow-hidden flex items-center justify-center">
-                <div className="absolute inset-0 bg-grid opacity-15" />
-                <div className="relative z-10 text-center animate-fade-in">
+            <div className="flex items-center justify-center py-32">
+                <div className="text-center animate-fade-in">
                     <div className="h-10 w-10 mx-auto mb-3 animate-spin rounded-full border-2 border-slate-700 border-t-nerve" />
                     <p className="text-sm text-slate-400">Loading agent data…</p>
                 </div>
@@ -168,9 +167,8 @@ export default function AssetAgentPage() {
     /* ───── No Agent ───── */
     if (!agent) {
         return (
-            <div className="min-h-screen bg-gradient-midnight relative overflow-hidden flex items-center justify-center px-4">
-                <div className="absolute inset-0 bg-grid opacity-15" />
-                <div className="relative z-10 max-w-md text-center animate-fade-in">
+            <div className="flex items-center justify-center py-32">
+                <div className="max-w-md text-center animate-fade-in">
                     <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-nerve/10 border border-nerve/20">
                         <svg className="h-8 w-8 text-nerve" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M8.288 15.038a5.25 5.25 0 017.424 0M5.106 11.856c3.807-3.808 9.98-3.808 13.788 0M1.924 8.674c5.565-5.565 14.587-5.565 20.152 0M12.53 18.22l-.53.53-.53-.53a.75.75 0 011.06 0z" />
@@ -214,234 +212,228 @@ export default function AssetAgentPage() {
 
     /* ───── Agent Dashboard ───── */
     return (
-        <div className="min-h-screen bg-gradient-midnight relative overflow-hidden">
-            <div className="absolute inset-0 bg-grid opacity-10" />
+        <>
+            {/* Header */}
+            <div className="mb-8 flex justify-between items-center animate-fade-in">
+                <div>
+                    <h1 className="text-2xl font-bold text-white mb-1">Agent Monitoring</h1>
+                    <p className="text-sm text-slate-400">{agent.hostname} • {agent.platform}</p>
+                </div>
+                <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium ${agentStatusBadge[agent.status] || agentStatusBadge.OFFLINE}`}>
+                    {agent.status === 'ONLINE' && <span className="h-1.5 w-1.5 rounded-full bg-health-good animate-pulse" />}
+                    {agent.status}
+                </span>
+            </div>
 
-            <div className="relative z-10 py-8 px-4 sm:px-6 lg:px-8">
-                <div className="max-w-7xl mx-auto">
-                    {/* Header */}
-                    <div className="mb-8 flex justify-between items-center animate-fade-in">
-                        <div>
-                            <h1 className="text-2xl font-bold text-white mb-1">Agent Monitoring</h1>
-                            <p className="text-sm text-slate-400">{agent.hostname} • {agent.platform}</p>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Main Content */}
+                <div className="lg:col-span-2 space-y-6">
+                    {/* Real-Time Metrics */}
+                    {agent.status === 'ONLINE' && (
+                        <div className="rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm p-6">
+                            <h2 className="text-sm font-semibold text-white mb-5">Real-Time Metrics</h2>
+                            <div className="grid grid-cols-3 gap-6">
+                                <MetricGauge label="CPU Usage" value={agent.cpuUsage} color="nerve" />
+                                <MetricGauge label="RAM Usage" value={agent.ramUsage} color="cortex" />
+                                <MetricGauge label="Disk Usage" value={agent.diskUsage} color="oracle" />
+                            </div>
+
+                            {agent.networkUp !== null && (
+                                <div className="mt-6 pt-5 border-t border-slate-800">
+                                    <p className="text-xs text-slate-500 mb-3">Network Activity</p>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <p className="text-xs text-slate-500">Upload</p>
+                                            <p className="text-xl font-bold text-health-good">{agent.networkUp.toFixed(1)} KB/s</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-xs text-slate-500">Download</p>
+                                            <p className="text-xl font-bold text-nerve">{agent.networkDown?.toFixed(1)} KB/s</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
                         </div>
-                        <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium ${agentStatusBadge[agent.status] || agentStatusBadge.OFFLINE}`}>
-                            {agent.status === 'ONLINE' && <span className="h-1.5 w-1.5 rounded-full bg-health-good animate-pulse" />}
-                            {agent.status}
-                        </span>
-                    </div>
+                    )}
 
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        {/* Main Content */}
-                        <div className="lg:col-span-2 space-y-6">
-                            {/* Real-Time Metrics */}
-                            {agent.status === 'ONLINE' && (
-                                <div className="rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm p-6">
-                                    <h2 className="text-sm font-semibold text-white mb-5">Real-Time Metrics</h2>
-                                    <div className="grid grid-cols-3 gap-6">
-                                        <MetricGauge label="CPU Usage" value={agent.cpuUsage} color="nerve" />
-                                        <MetricGauge label="RAM Usage" value={agent.ramUsage} color="cortex" />
-                                        <MetricGauge label="Disk Usage" value={agent.diskUsage} color="oracle" />
-                                    </div>
-
-                                    {agent.networkUp !== null && (
-                                        <div className="mt-6 pt-5 border-t border-slate-800">
-                                            <p className="text-xs text-slate-500 mb-3">Network Activity</p>
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <div>
-                                                    <p className="text-xs text-slate-500">Upload</p>
-                                                    <p className="text-xl font-bold text-health-good">{agent.networkUp.toFixed(1)} KB/s</p>
-                                                </div>
-                                                <div>
-                                                    <p className="text-xs text-slate-500">Download</p>
-                                                    <p className="text-xl font-bold text-nerve">{agent.networkDown?.toFixed(1)} KB/s</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-
-                            {/* Historical Charts */}
-                            {agent.status === 'ONLINE' && (
-                                <div className="rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm p-6">
-                                    <div className="flex justify-between items-center mb-5">
-                                        <h2 className="text-sm font-semibold text-white">Historical Metrics</h2>
-                                        <div className="flex gap-1">
-                                            {(['1h', '24h', '7d', '30d'] as const).map((range) => (
-                                                <button
-                                                    key={range}
-                                                    onClick={() => setTimeRange(range)}
-                                                    className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${timeRange === range
-                                                        ? 'bg-nerve/10 text-nerve'
-                                                        : 'text-slate-500 hover:bg-slate-800 hover:text-slate-300'
-                                                        }`}
-                                                >
-                                                    {range}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
-
-                                    {loadingMetrics ? (
-                                        <div className="flex items-center justify-center py-12">
-                                            <div className="h-6 w-6 animate-spin rounded-full border-2 border-slate-700 border-t-nerve" />
-                                        </div>
-                                    ) : metrics.length > 0 ? (
-                                        <MetricsChart data={metrics} timeRange={timeRange} />
-                                    ) : (
-                                        <p className="text-center text-sm text-slate-500 py-12">No historical data available</p>
-                                    )}
-                                </div>
-                            )}
-
-                            {/* Script Executor */}
-                            <div className="rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm p-6">
-                                <h2 className="text-sm font-semibold text-white mb-5">Execute Remote Script</h2>
-                                <form onSubmit={executeScript} className="space-y-4">
-                                    <div>
-                                        <label className="block text-xs font-medium text-slate-400 mb-1.5">Script Name</label>
-                                        <input
-                                            type="text"
-                                            value={scriptName}
-                                            onChange={(e) => setScriptName(e.target.value)}
-                                            className="w-full rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-2 text-sm text-white
-                                                       placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-nerve/50 focus:border-nerve/50"
-                                            placeholder="e.g., Check Disk Space"
-                                            required
-                                        />
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-xs font-medium text-slate-400 mb-1.5">Language</label>
-                                        <select
-                                            value={language}
-                                            onChange={(e) => setLanguage(e.target.value as 'powershell' | 'bash' | 'python')}
-                                            className="w-full rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-2 text-sm text-white
-                                                       focus:outline-none focus:ring-1 focus:ring-nerve/50 focus:border-nerve/50"
+                    {/* Historical Charts */}
+                    {agent.status === 'ONLINE' && (
+                        <div className="rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm p-6">
+                            <div className="flex justify-between items-center mb-5">
+                                <h2 className="text-sm font-semibold text-white">Historical Metrics</h2>
+                                <div className="flex gap-1">
+                                    {(['1h', '24h', '7d', '30d'] as const).map((range) => (
+                                        <button
+                                            key={range}
+                                            onClick={() => setTimeRange(range)}
+                                            className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${timeRange === range
+                                                ? 'bg-nerve/10 text-nerve'
+                                                : 'text-slate-500 hover:bg-slate-800 hover:text-slate-300'
+                                                }`}
                                         >
-                                            <option value="powershell">PowerShell (Windows)</option>
-                                            <option value="bash">Bash (macOS/Linux)</option>
-                                            <option value="python">Python</option>
-                                        </select>
-                                    </div>
+                                            {range}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
 
-                                    <div>
-                                        <label className="block text-xs font-medium text-slate-400 mb-1.5">Script</label>
-                                        <textarea
-                                            rows={6}
-                                            value={scriptBody}
-                                            onChange={(e) => setScriptBody(e.target.value)}
-                                            className="w-full rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-2 text-sm text-white font-mono
+                            {loadingMetrics ? (
+                                <div className="flex items-center justify-center py-12">
+                                    <div className="h-6 w-6 animate-spin rounded-full border-2 border-slate-700 border-t-nerve" />
+                                </div>
+                            ) : metrics.length > 0 ? (
+                                <MetricsChart data={metrics} timeRange={timeRange} />
+                            ) : (
+                                <p className="text-center text-sm text-slate-500 py-12">No historical data available</p>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Script Executor */}
+                    <div className="rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm p-6">
+                        <h2 className="text-sm font-semibold text-white mb-5">Execute Remote Script</h2>
+                        <form onSubmit={executeScript} className="space-y-4">
+                            <div>
+                                <label className="block text-xs font-medium text-slate-400 mb-1.5">Script Name</label>
+                                <input
+                                    type="text"
+                                    value={scriptName}
+                                    onChange={(e) => setScriptName(e.target.value)}
+                                    className="w-full rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-2 text-sm text-white
                                                        placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-nerve/50 focus:border-nerve/50"
-                                            placeholder={
-                                                language === 'powershell' ? 'Get-PSDrive -PSProvider FileSystem' :
-                                                    language === 'bash' ? 'df -h' :
-                                                        'import os\nprint(os.listdir())'
-                                            }
-                                            required
-                                        />
-                                    </div>
+                                    placeholder="e.g., Check Disk Space"
+                                    required
+                                />
+                            </div>
 
-                                    <button
-                                        type="submit"
-                                        disabled={executing || agent.status !== 'ONLINE'}
-                                        className="w-full rounded-xl bg-nerve py-2.5 text-sm font-medium text-white
+                            <div>
+                                <label className="block text-xs font-medium text-slate-400 mb-1.5">Language</label>
+                                <select
+                                    value={language}
+                                    onChange={(e) => setLanguage(e.target.value as 'powershell' | 'bash' | 'python')}
+                                    className="w-full rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-2 text-sm text-white
+                                                       focus:outline-none focus:ring-1 focus:ring-nerve/50 focus:border-nerve/50"
+                                >
+                                    <option value="powershell">PowerShell (Windows)</option>
+                                    <option value="bash">Bash (macOS/Linux)</option>
+                                    <option value="python">Python</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-medium text-slate-400 mb-1.5">Script</label>
+                                <textarea
+                                    rows={6}
+                                    value={scriptBody}
+                                    onChange={(e) => setScriptBody(e.target.value)}
+                                    className="w-full rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-2 text-sm text-white font-mono
+                                                       placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-nerve/50 focus:border-nerve/50"
+                                    placeholder={
+                                        language === 'powershell' ? 'Get-PSDrive -PSProvider FileSystem' :
+                                            language === 'bash' ? 'df -h' :
+                                                'import os\nprint(os.listdir())'
+                                    }
+                                    required
+                                />
+                            </div>
+
+                            <button
+                                type="submit"
+                                disabled={executing || agent.status !== 'ONLINE'}
+                                className="w-full rounded-xl bg-nerve py-2.5 text-sm font-medium text-white
                                                    transition-all hover:brightness-110 hover:shadow-lg hover:shadow-nerve/20
                                                    disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:brightness-100 disabled:hover:shadow-none"
-                                    >
-                                        {executing ? 'Queueing…' : 'Execute Script'}
-                                    </button>
+                            >
+                                {executing ? 'Queueing…' : 'Execute Script'}
+                            </button>
 
-                                    {agent.status !== 'ONLINE' && (
-                                        <p className="text-xs text-oracle">
-                                            Agent is offline. Script will be queued and executed when agent comes online.
-                                        </p>
-                                    )}
-                                </form>
-                            </div>
-                        </div>
+                            {agent.status !== 'ONLINE' && (
+                                <p className="text-xs text-oracle">
+                                    Agent is offline. Script will be queued and executed when agent comes online.
+                                </p>
+                            )}
+                        </form>
+                    </div>
+                </div>
 
-                        {/* Sidebar */}
-                        <div className="space-y-6">
-                            {/* Agent Info */}
-                            <div className="rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm p-5">
-                                <h3 className="text-sm font-semibold text-white mb-4">Agent Info</h3>
-                                <div className="space-y-3 text-sm">
-                                    <InfoRow label="Version" value={agent.agentVersion} />
-                                    {agent.ipAddress && <InfoRow label="IP Address" value={agent.ipAddress} />}
-                                    {agent.macAddress && <InfoRow label="MAC Address" value={agent.macAddress} />}
-                                    <InfoRow label="Last Seen" value={new Date(agent.lastSeen).toLocaleString()} />
-                                </div>
-                            </div>
-
-                            {/* Recent Executions */}
-                            <div className="rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm p-5">
-                                <h3 className="text-sm font-semibold text-white mb-4">Recent Executions</h3>
-                                {executions.length === 0 ? (
-                                    <p className="text-xs text-slate-500">No executions yet</p>
-                                ) : (
-                                    <div className="space-y-3">
-                                        {executions.slice(0, 5).map((exec) => (
-                                            <div key={exec.id} className="text-sm">
-                                                <div className="flex justify-between items-start mb-0.5">
-                                                    <p className="font-medium text-slate-200 text-xs">{exec.scriptName}</p>
-                                                    <span className={`rounded-full border px-2 py-0.5 text-[10px] font-medium ${statusBadge[exec.status] || 'bg-slate-700/50 text-slate-400 border-slate-600/30'}`}>
-                                                        {exec.status}
-                                                    </span>
-                                                </div>
-                                                <p className="text-[10px] text-slate-500">
-                                                    {new Date(exec.createdAt).toLocaleTimeString()}
-                                                    {exec.exitCode !== null && ` • exit ${exec.exitCode}`}
-                                                </p>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
+                {/* Sidebar */}
+                <div className="space-y-6">
+                    {/* Agent Info */}
+                    <div className="rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm p-5">
+                        <h3 className="text-sm font-semibold text-white mb-4">Agent Info</h3>
+                        <div className="space-y-3 text-sm">
+                            <InfoRow label="Version" value={agent.agentVersion} />
+                            {agent.ipAddress && <InfoRow label="IP Address" value={agent.ipAddress} />}
+                            {agent.macAddress && <InfoRow label="MAC Address" value={agent.macAddress} />}
+                            <InfoRow label="Last Seen" value={new Date(agent.lastSeen).toLocaleString()} />
                         </div>
                     </div>
 
-                    {/* Execution History */}
-                    {executions.length > 0 && (
-                        <div className="mt-6 rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm overflow-hidden">
-                            <div className="border-b border-slate-800 px-5 py-4">
-                                <h2 className="text-sm font-semibold text-white">Execution History</h2>
-                            </div>
-                            <div className="divide-y divide-slate-800/50">
-                                {executions.map((exec) => (
-                                    <div key={exec.id} className="p-5 hover:bg-slate-800/30 transition-colors">
-                                        <div className="flex justify-between items-start mb-2">
-                                            <div>
-                                                <h3 className="text-sm font-medium text-slate-200">{exec.scriptName}</h3>
-                                                <p className="text-xs text-slate-500">
-                                                    {exec.language} • {new Date(exec.createdAt).toLocaleString()}
-                                                </p>
-                                            </div>
-                                            <span className={`rounded-full border px-2.5 py-0.5 text-[10px] font-medium ${statusBadge[exec.status] || 'bg-slate-700/50 text-slate-400 border-slate-600/30'}`}>
+                    {/* Recent Executions */}
+                    <div className="rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm p-5">
+                        <h3 className="text-sm font-semibold text-white mb-4">Recent Executions</h3>
+                        {executions.length === 0 ? (
+                            <p className="text-xs text-slate-500">No executions yet</p>
+                        ) : (
+                            <div className="space-y-3">
+                                {executions.slice(0, 5).map((exec) => (
+                                    <div key={exec.id} className="text-sm">
+                                        <div className="flex justify-between items-start mb-0.5">
+                                            <p className="font-medium text-slate-200 text-xs">{exec.scriptName}</p>
+                                            <span className={`rounded-full border px-2 py-0.5 text-[10px] font-medium ${statusBadge[exec.status] || 'bg-slate-700/50 text-slate-400 border-slate-600/30'}`}>
                                                 {exec.status}
                                             </span>
                                         </div>
-
-                                        {exec.output && (
-                                            <div className="mt-3 p-3 rounded-lg bg-slate-950 border border-slate-800 font-mono text-xs text-health-good overflow-x-auto">
-                                                <pre>{exec.output}</pre>
-                                            </div>
-                                        )}
-
-                                        {exec.error && (
-                                            <div className="mt-3 p-3 rounded-lg bg-health-critical/5 border border-health-critical/20 font-mono text-xs text-health-critical overflow-x-auto">
-                                                <pre>{exec.error}</pre>
-                                            </div>
-                                        )}
+                                        <p className="text-[10px] text-slate-500">
+                                            {new Date(exec.createdAt).toLocaleTimeString()}
+                                            {exec.exitCode !== null && ` • exit ${exec.exitCode}`}
+                                        </p>
                                     </div>
                                 ))}
                             </div>
-                        </div>
-                    )}
+                        )}
+                    </div>
                 </div>
             </div>
-        </div>
+
+            {/* Execution History */}
+            {executions.length > 0 && (
+                <div className="mt-6 rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm overflow-hidden">
+                    <div className="border-b border-slate-800 px-5 py-4">
+                        <h2 className="text-sm font-semibold text-white">Execution History</h2>
+                    </div>
+                    <div className="divide-y divide-slate-800/50">
+                        {executions.map((exec) => (
+                            <div key={exec.id} className="p-5 hover:bg-slate-800/30 transition-colors">
+                                <div className="flex justify-between items-start mb-2">
+                                    <div>
+                                        <h3 className="text-sm font-medium text-slate-200">{exec.scriptName}</h3>
+                                        <p className="text-xs text-slate-500">
+                                            {exec.language} • {new Date(exec.createdAt).toLocaleString()}
+                                        </p>
+                                    </div>
+                                    <span className={`rounded-full border px-2.5 py-0.5 text-[10px] font-medium ${statusBadge[exec.status] || 'bg-slate-700/50 text-slate-400 border-slate-600/30'}`}>
+                                        {exec.status}
+                                    </span>
+                                </div>
+
+                                {exec.output && (
+                                    <div className="mt-3 p-3 rounded-lg bg-slate-950 border border-slate-800 font-mono text-xs text-health-good overflow-x-auto">
+                                        <pre>{exec.output}</pre>
+                                    </div>
+                                )}
+
+                                {exec.error && (
+                                    <div className="mt-3 p-3 rounded-lg bg-health-critical/5 border border-health-critical/20 font-mono text-xs text-health-critical overflow-x-auto">
+                                        <pre>{exec.error}</pre>
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+        </>
     );
 }
 

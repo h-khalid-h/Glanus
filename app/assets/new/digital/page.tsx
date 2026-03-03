@@ -93,7 +93,7 @@ export default function NewDigitalAssetPage() {
     const showInstalledOnField = formData.category && isInstalledOnRelevant(formData.category);
 
     return (
-        <div className="min-h-screen bg-background">
+        <>
 
             <div className="max-w-4xl mx-auto px-4 py-8">
                 <div className="mb-6">
@@ -441,6 +441,6 @@ export default function NewDigitalAssetPage() {
                     </div>
                 </form>
             </div>
-        </div>
+        </>
     );
 }

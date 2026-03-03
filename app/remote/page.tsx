@@ -80,146 +80,143 @@ export default function RemoteSessionsPage() {
     };
 
     return (
-        <div className="min-h-screen bg-background">
-
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                {/* Header */}
-                <div className="flex items-center justify-between mb-8">
-                    <div>
-                        <h1 className="text-3xl font-bold text-foreground">Remote Sessions</h1>
-                        <p className="text-muted-foreground mt-1">Manage and monitor remote desktop sessions</p>
-                    </div>
+        <>
+            {/* Header */}
+            <div className="flex items-center justify-between mb-8">
+                <div>
+                    <h1 className="text-3xl font-bold text-foreground">Remote Sessions</h1>
+                    <p className="text-muted-foreground mt-1">Manage and monitor remote desktop sessions</p>
                 </div>
-
-                {/* Requirements banner */}
-                <div className="mb-6 rounded-xl border border-nerve/20 bg-nerve/5 px-4 py-3">
-                    <p className="text-xs text-nerve/90">
-                        <span className="font-semibold">Requirements:</span>{' '}
-                        Remote desktop connections require the Glanus Agent installed on target machines
-                        and a WebRTC signaling server. See the{' '}
-                        <Link href="/download-agent" className="underline hover:text-white">agent download page</Link>
-                        {' '}for setup instructions.
-                    </p>
-                </div>
-
-                {/* Filters */}
-                <div className="card mb-6">
-                    <div className="flex items-center gap-4">
-                        <label className="text-sm font-medium text-foreground">Status:</label>
-                        <div className="flex gap-2">
-                            {['ALL', 'ACTIVE', 'ENDED', 'FAILED'].map((status) => (
-                                <button
-                                    key={status}
-                                    onClick={() => setStatusFilter(status)}
-                                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${statusFilter === status
-                                        ? 'bg-nerve text-white'
-                                        : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                                        }`}
-                                >
-                                    {status}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-
-                {/* Sessions Table */}
-                {loading ? (
-                    <div className="flex items-center justify-center py-12">
-                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-nerve" />
-                    </div>
-                ) : sessions.length === 0 ? (
-                    <div className="card text-center py-12">
-                        <p className="text-muted-foreground">No remote sessions found</p>
-                    </div>
-                ) : (
-                    <div className="card overflow-hidden">
-                        <table className="min-w-full divide-y divide-border">
-                            <thead className="bg-muted/50">
-                                <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                                        Asset
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                                        User
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                                        Status
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                                        Started
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                                        Duration
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                                        Quality
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                                        Actions
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody className="bg-background divide-y divide-border">
-                                {sessions.map((session) => (
-                                    <tr key={session.id} className="hover:bg-muted/50">
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <Link
-                                                href={`/assets/${session.asset.id}`}
-                                                className="text-sm font-medium text-nerve hover:underline"
-                                            >
-                                                {session.asset.name}
-                                            </Link>
-                                            <div className="text-sm text-muted-foreground">{session.asset.category}</div>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="text-sm text-foreground">{session.user.name}</div>
-                                            <div className="text-sm text-muted-foreground">{session.user.email}</div>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <span className={`badge ${getStatusColor(session.status)}`}>
-                                                {session.status}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
-                                            {new Date(session.startedAt).toLocaleString()}
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
-                                            {formatDuration(session.duration)}
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            {session.averageLatency && session.averageFPS ? (
-                                                <div className="text-sm">
-                                                    <div className="text-foreground">{session.quality || 'N/A'}</div>
-                                                    <div className="text-muted-foreground">
-                                                        {session.averageLatency}ms · {session.averageFPS}fps
-                                                    </div>
-                                                </div>
-                                            ) : (
-                                                <span className="text-sm text-muted-foreground">N/A</span>
-                                            )}
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm">
-                                            {session.status === 'ACTIVE' ? (
-                                                <Link
-                                                    href={`/remote/${session.id}`}
-                                                    className="btn-primary text-sm px-3 py-1"
-                                                >
-                                                    Join
-                                                </Link>
-                                            ) : (
-                                                <button className="text-muted-foreground hover:text-foreground">
-                                                    View Details
-                                                </button>
-                                            )}
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                )}
             </div>
-        </div>
+
+            {/* Requirements banner */}
+            <div className="mb-6 rounded-xl border border-nerve/20 bg-nerve/5 px-4 py-3">
+                <p className="text-xs text-nerve/90">
+                    <span className="font-semibold">Requirements:</span>{' '}
+                    Remote desktop connections require the Glanus Agent installed on target machines
+                    and a WebRTC signaling server. See the{' '}
+                    <Link href="/download-agent" className="underline hover:text-white">agent download page</Link>
+                    {' '}for setup instructions.
+                </p>
+            </div>
+
+            {/* Filters */}
+            <div className="card mb-6">
+                <div className="flex items-center gap-4">
+                    <label className="text-sm font-medium text-foreground">Status:</label>
+                    <div className="flex gap-2">
+                        {['ALL', 'ACTIVE', 'ENDED', 'FAILED'].map((status) => (
+                            <button
+                                key={status}
+                                onClick={() => setStatusFilter(status)}
+                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${statusFilter === status
+                                    ? 'bg-nerve text-white'
+                                    : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                                    }`}
+                            >
+                                {status}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            </div>
+
+            {/* Sessions Table */}
+            {loading ? (
+                <div className="flex items-center justify-center py-12">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-nerve" />
+                </div>
+            ) : sessions.length === 0 ? (
+                <div className="card text-center py-12">
+                    <p className="text-muted-foreground">No remote sessions found</p>
+                </div>
+            ) : (
+                <div className="card overflow-hidden">
+                    <table className="min-w-full divide-y divide-border">
+                        <thead className="bg-muted/50">
+                            <tr>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                                    Asset
+                                </th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                                    User
+                                </th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                                    Status
+                                </th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                                    Started
+                                </th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                                    Duration
+                                </th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                                    Quality
+                                </th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                                    Actions
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody className="bg-background divide-y divide-border">
+                            {sessions.map((session) => (
+                                <tr key={session.id} className="hover:bg-muted/50">
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        <Link
+                                            href={`/assets/${session.asset.id}`}
+                                            className="text-sm font-medium text-nerve hover:underline"
+                                        >
+                                            {session.asset.name}
+                                        </Link>
+                                        <div className="text-sm text-muted-foreground">{session.asset.category}</div>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        <div className="text-sm text-foreground">{session.user.name}</div>
+                                        <div className="text-sm text-muted-foreground">{session.user.email}</div>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        <span className={`badge ${getStatusColor(session.status)}`}>
+                                            {session.status}
+                                        </span>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
+                                        {new Date(session.startedAt).toLocaleString()}
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
+                                        {formatDuration(session.duration)}
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        {session.averageLatency && session.averageFPS ? (
+                                            <div className="text-sm">
+                                                <div className="text-foreground">{session.quality || 'N/A'}</div>
+                                                <div className="text-muted-foreground">
+                                                    {session.averageLatency}ms · {session.averageFPS}fps
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <span className="text-sm text-muted-foreground">N/A</span>
+                                        )}
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                        {session.status === 'ACTIVE' ? (
+                                            <Link
+                                                href={`/remote/${session.id}`}
+                                                className="btn-primary text-sm px-3 py-1"
+                                            >
+                                                Join
+                                            </Link>
+                                        ) : (
+                                            <button className="text-muted-foreground hover:text-foreground">
+                                                View Details
+                                            </button>
+                                        )}
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            )}
+        </>
     );
 }

@@ -65,7 +65,7 @@ export default function NewPhysicalAssetPage() {
     };
 
     return (
-        <div className="min-h-screen bg-background">
+        <>
 
             <div className="max-w-4xl mx-auto px-4 py-8">
                 <div className="mb-6">
@@ -306,6 +306,6 @@ export default function NewPhysicalAssetPage() {
                     </div>
                 </form>
             </div>
-        </div>
+        </>
     );
 }
