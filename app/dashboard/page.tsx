@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { formatDateTime } from '@/lib/utils';
 import { PageSpinner } from '@/components/ui/Spinner';
+import { ErrorState } from '@/components/ui/EmptyState';
 import { useWorkspace } from '@/lib/workspace/context';
 import { csrfFetch } from '@/lib/api/csrfFetch';
 import Link from 'next/link';
@@ -119,35 +120,11 @@ export default function DashboardPage() {
     /* ───── Error ───── */
     if (error) {
         return (
-            <div className="flex items-center justify-center py-32">
-                <div className="max-w-md text-center animate-fade-in">
-                    <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-health-critical/10 border border-health-critical/20">
-                        <svg className="h-7 w-7 text-health-critical" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
-                        </svg>
-                    </div>
-                    <h2 className="mb-2 text-xl font-semibold text-white">Unable to load dashboard</h2>
-                    <p className="mb-6 text-sm text-slate-400">
-                        {error === '401' ? 'Your session has expired. Please sign in again.' : 'Something went wrong. Please try again.'}
-                    </p>
-                    <div className="flex gap-3 justify-center">
-                        <button
-                            onClick={() => window.location.reload()}
-                            className="inline-flex items-center gap-2 rounded-xl bg-nerve px-6 py-2.5 text-sm font-medium text-white
-                                       transition-all hover:brightness-110 hover:shadow-lg hover:shadow-nerve/20"
-                        >
-                            Try Again
-                        </button>
-                        <Link
-                            href="/login"
-                            className="inline-flex items-center gap-2 rounded-xl border border-slate-700 px-6 py-2.5 text-sm font-medium text-slate-300
-                                       transition-all hover:border-slate-500 hover:text-white"
-                        >
-                            Sign In
-                        </Link>
-                    </div>
-                </div>
-            </div>
+            <ErrorState
+                title="Unable to load dashboard"
+                description={error === '401' ? 'Your session has expired. Please sign in again.' : 'Something went wrong. Please try again.'}
+                onRetry={() => window.location.reload()}
+            />
         );
     }
 

@@ -5,6 +5,7 @@ import { useToast } from '@/lib/toast';
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Bell } from 'lucide-react';
+import { ErrorState } from '@/components/ui/EmptyState';
 
 interface AlertRule {
     id: string;
@@ -167,24 +168,7 @@ export default function WorkspaceAlertsPage() {
     }
 
     if (error) {
-        return (
-            <>
-                <div className="max-w-5xl mx-auto">
-                    <div className="card flex flex-col items-center justify-center min-h-[300px]">
-                        <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
-                            <svg className="h-6 w-6 text-destructive" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
-                            </svg>
-                        </div>
-                        <p className="text-sm font-medium text-destructive mb-1">Unable to load alerts</p>
-                        <p className="text-xs text-muted-foreground mb-4">{error}</p>
-                        <button onClick={() => window.location.reload()} className="btn-primary text-sm">
-                            Try Again
-                        </button>
-                    </div>
-                </div>
-            </>
-        );
+        return <ErrorState title="Unable to load alerts" description={error} onRetry={() => window.location.reload()} />;
     }
 
     return (
