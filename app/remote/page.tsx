@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { PageSpinner } from '@/components/ui/Spinner';
-import { ErrorState } from '@/components/ui/EmptyState';
+import { ErrorState, EmptyState } from '@/components/ui/EmptyState';
 import { formatDateTime } from '@/lib/utils';
 import { useToast } from '@/lib/toast';
 import { csrfFetch } from '@/lib/api/csrfFetch';
@@ -136,9 +136,8 @@ export default function RemoteSessionsPage() {
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-nerve" />
                 </div>
             ) : sessions.length === 0 ? (
-                <div className="card text-center py-12">
-                    <p className="text-muted-foreground">No remote sessions found</p>
-                </div>
+                <EmptyState icon="🖥️" title="No remote sessions" description="Remote sessions will appear here once you connect to agents." />
+
             ) : (
                 <div className="card overflow-hidden">
                     <table className="min-w-full divide-y divide-border">

@@ -5,7 +5,7 @@ import { csrfFetch } from '@/lib/api/csrfFetch';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useToast } from '@/lib/toast';
-import { ErrorState } from '@/components/ui/EmptyState';
+import { ErrorState, EmptyState } from '@/components/ui/EmptyState';
 import { PageSpinner } from '@/components/ui/Spinner';
 
 interface Partner {
@@ -134,9 +134,11 @@ export default function AdminPartnersPage() {
                     </div>
 
                     {partners.length === 0 ? (
-                        <div className="p-8 text-center text-slate-400">
-                            No partners found{filter && ` with status ${filter}`}
-                        </div>
+                        <EmptyState
+                            icon="🤝"
+                            title={filter ? `No partners with status ${filter}` : 'No partners found'}
+                            description={filter ? 'Try adjusting your filter.' : 'Partners will appear here once they sign up.'}
+                        />
                     ) : (
                         <div className="overflow-x-auto">
                             <table className="w-full">
