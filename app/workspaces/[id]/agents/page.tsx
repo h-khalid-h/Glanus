@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { Server } from 'lucide-react';
+import { PageSpinner } from '@/components/ui/Spinner';
 
 interface Agent {
     id: string;
@@ -97,9 +98,7 @@ export default function WorkspaceAgentsPage() {
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center py-32">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-nerve"></div>
-            </div>
+            <PageSpinner />
         );
     }
 

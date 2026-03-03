@@ -4,6 +4,7 @@ import { csrfFetch } from '@/lib/api/csrfFetch';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useToast } from '@/lib/toast';
+import { PageSpinner } from '@/components/ui/Spinner';
 
 interface Partner {
     id: string;
@@ -75,9 +76,7 @@ export default function AdminPartnersPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gradient-midnight">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-nerve"></div>
-            </div>
+            <PageSpinner />
         );
     }
 

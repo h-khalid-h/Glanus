@@ -4,6 +4,7 @@ import { csrfFetch } from '@/lib/api/csrfFetch';
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
+import { PageSpinner } from '@/components/ui/Spinner';
 import MetricsChart from '@/components/agent/MetricsChart';
 import { useToast } from '@/lib/toast';
 
@@ -154,14 +155,7 @@ export default function AssetAgentPage() {
 
     /* ───── Loading ───── */
     if (loading) {
-        return (
-            <div className="flex items-center justify-center py-32">
-                <div className="text-center animate-fade-in">
-                    <div className="h-10 w-10 mx-auto mb-3 animate-spin rounded-full border-2 border-slate-700 border-t-nerve" />
-                    <p className="text-sm text-slate-400">Loading agent data…</p>
-                </div>
-            </div>
-        );
+        return <PageSpinner text="Loading agent data…" />;
     }
 
     /* ───── No Agent ───── */

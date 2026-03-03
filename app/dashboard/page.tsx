@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { formatDateTime } from '@/lib/utils';
+import { PageSpinner } from '@/components/ui/Spinner';
 import { useWorkspace } from '@/lib/workspace/context';
 import { csrfFetch } from '@/lib/api/csrfFetch';
 import Link from 'next/link';
@@ -111,12 +112,7 @@ export default function DashboardPage() {
     /* ───── Loading ───── */
     if (loading) {
         return (
-            <div className="flex items-center justify-center py-32">
-                <div className="text-center animate-fade-in">
-                    <div className="h-10 w-10 mx-auto mb-3 animate-spin rounded-full border-2 border-slate-700 border-t-nerve" />
-                    <p className="text-slate-400 text-sm">Loading dashboard…</p>
-                </div>
-            </div>
+            <PageSpinner text="Loading dashboard…" />
         );
     }
 

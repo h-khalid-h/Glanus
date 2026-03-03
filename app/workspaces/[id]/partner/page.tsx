@@ -4,6 +4,7 @@ import { csrfFetch } from '@/lib/api/csrfFetch';
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useToast } from '@/lib/toast';
+import { PageSpinner } from '@/components/ui/Spinner';
 import { ConfirmDialog } from '@/components/ui';
 
 interface Assignment {
@@ -121,11 +122,7 @@ export default function WorkspacePartnerPage() {
     };
 
     if (loading) {
-        return (
-            <div className="flex items-center justify-center py-32">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-nerve"></div>
-            </div>
-        );
+        return <PageSpinner text="Loading partner data…" />;
     }
 
     return (

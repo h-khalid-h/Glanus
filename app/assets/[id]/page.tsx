@@ -4,6 +4,8 @@ import { csrfFetch } from '@/lib/api/csrfFetch';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { PageSpinner } from '@/components/ui/Spinner';
+import { ErrorState } from '@/components/ui/EmptyState';
 import { ArrowLeft, Edit, Trash2, Play, Clock, CheckCircle, XCircle } from 'lucide-react';
 import { useToast } from '@/lib/toast';
 import { ConfirmDialog } from '@/components/ui';
@@ -199,21 +201,16 @@ export default function AssetDetailPage({ params }: { params: Promise<{ id: stri
     };
 
     if (loading) {
-        return (
-            <div className="container mx-auto px-4 py-8">
-                <p className="text-slate-400">Loading asset...</p>
-            </div>
-        );
+        return <PageSpinner text="Loading asset..." />;
     }
 
     if (error || !asset) {
         return (
-            <div className="container mx-auto px-4 py-8">
-                <p className="text-health-critical">Error: {error || 'Asset not found'}</p>
-                <Link href="/assets" className="text-nerve hover:text-nerve mt-4 inline-block">
-                    ← Back to Assets
-                </Link>
-            </div>
+            <ErrorState
+                title={error ? 'Failed to load asset' : 'Asset not found'}
+                description={error || 'The asset you are looking for does not exist.'}
+                onRetry={() => window.location.reload()}
+            />
         );
     }
 
