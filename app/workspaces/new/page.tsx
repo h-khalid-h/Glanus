@@ -1,6 +1,7 @@
 'use client';
 
 import { Suspense, lazy } from 'react';
+import Link from 'next/link';
 import { Loader2 } from 'lucide-react';
 
 const WorkspaceWizard = lazy(() => import('@/components/WorkspaceWizard'));
@@ -28,14 +29,14 @@ export default function NewWorkspacePage() {
             <div className="mt-8 text-center text-sm text-slate-500 flex flex-col gap-2">
                 <p>
                     Already have a workspace?{' '}
-                    <a href="/login" className="font-medium text-nerve hover:text-nerve hover:underline transition-all">
+                    <Link href="/login" className="font-medium text-nerve hover:text-nerve hover:underline transition-all">
                         Sign in
-                    </a>
+                    </Link>
                 </p>
                 <p className="text-xs text-slate-400">
                     By creating a workspace, you agree to our{' '}
-                    <a href="/terms" className="hover:text-slate-300 transition-colors">Terms of Service</a> and{' '}
-                    <a href="/privacy" className="hover:text-slate-300 transition-colors">Privacy Policy</a>
+                    <Link href="/terms" className="hover:text-slate-300 transition-colors">Terms of Service</Link> and{' '}
+                    <Link href="/privacy" className="hover:text-slate-300 transition-colors">Privacy Policy</Link>
                 </p>
             </div>
         </div>
