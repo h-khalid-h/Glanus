@@ -82,7 +82,7 @@ export default function OnboardingPage() {
                     </div>
 
                     <div className="flex flex-col sm:flex-row gap-3 justify-center animate-slide-up">
-                        <button
+                        <button type="button"
                             onClick={() => setCurrentStep('create-workspace')}
                             className="inline-flex items-center justify-center gap-2 rounded-xl bg-nerve px-8 py-3 text-sm font-semibold text-white
                                        transition-all duration-200 hover:brightness-110 hover:shadow-lg hover:shadow-nerve/20"
@@ -90,7 +90,7 @@ export default function OnboardingPage() {
                             Get Started
                             <ArrowRight className="w-5 h-5" />
                         </button>
-                        <button
+                        <button type="button"
                             onClick={handleSkip}
                             className="rounded-xl border border-slate-700/50 px-8 py-3 text-sm font-medium text-slate-400
                                        transition-all hover:border-slate-600 hover:text-slate-200"
@@ -127,7 +127,7 @@ export default function OnboardingPage() {
                     />
 
                     <div className="mt-6 text-center">
-                        <button
+                        <button type="button"
                             onClick={handleSkip}
                             className="text-sm text-slate-500 hover:text-slate-300 transition-colors"
                         >

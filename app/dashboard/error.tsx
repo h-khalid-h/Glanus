@@ -17,7 +17,7 @@ export default function DashboardError({
                 <p className="mb-6 text-sm text-zinc-400">
                     {error.message || 'An unexpected error occurred while loading the dashboard.'}
                 </p>
-                <button
+                <button type="button"
                     onClick={reset}
                     className="rounded-lg bg-nerve px-6 py-2.5 text-sm font-medium text-white transition-colors hover:brightness-110"
                 >

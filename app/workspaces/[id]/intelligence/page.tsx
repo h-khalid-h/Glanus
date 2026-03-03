@@ -192,7 +192,7 @@ export default function IntelligencePage() {
 
             {/* Tab bar */}
             <div className="flex gap-1 rounded-lg bg-surface-1 p-1">
-                <button
+                <button type="button"
                     onClick={() => setActiveTab('cortex')}
                     className={`flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-all ${activeTab === 'cortex'
                         ? 'bg-cortex/10 text-cortex shadow-sm'
@@ -204,7 +204,7 @@ export default function IntelligencePage() {
                     </svg>
                     CORTEX
                 </button>
-                <button
+                <button type="button"
                     onClick={() => setActiveTab('reflex')}
                     className={`flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-all ${activeTab === 'reflex'
                         ? 'bg-reflex/10 text-reflex shadow-sm'
@@ -237,7 +237,7 @@ export default function IntelligencePage() {
                         ) : (
                             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
                                 {agents.map(agent => (
-                                    <button
+                                    <button type="button"
                                         key={agent.id}
                                         onClick={() => runAnalysis(agent.id)}
                                         disabled={cortexLoading}

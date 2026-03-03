@@ -184,7 +184,7 @@ export function WorkspaceLayout({ children }: { children: React.ReactNode }) {
     return (
         <div className="flex min-h-screen">
             {/* Mobile hamburger button */}
-            <button
+            <button type="button"
                 onClick={() => setMobileOpen(true)}
                 className="fixed left-4 top-4 z-40 flex h-10 w-10 items-center justify-center rounded-lg border border-border bg-surface-1 text-muted-foreground transition-colors hover:bg-surface-2 hover:text-foreground lg:hidden"
                 aria-label="Open navigation"
@@ -204,7 +204,7 @@ export function WorkspaceLayout({ children }: { children: React.ReactNode }) {
                     />
                     {/* Sidebar */}
                     <aside className="relative z-10 h-full w-64 bg-surface-1 shadow-xl animate-slide-in">
-                        <button
+                        <button type="button"
                             onClick={() => setMobileOpen(false)}
                             className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-surface-2 hover:text-foreground"
                             aria-label="Close navigation"

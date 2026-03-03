@@ -317,7 +317,7 @@ export default function AssetsPage() {
                         {search && (
                             <span className="badge-primary flex items-center gap-1">
                                 Search: {search}
-                                <button
+                                <button type="button"
                                     onClick={() => setSearch('')}
                                     className="ml-1 hover:text-white"
                                 >
@@ -328,7 +328,7 @@ export default function AssetsPage() {
                         {category && (
                             <span className="badge-primary flex items-center gap-1">
                                 Category: {category}
-                                <button
+                                <button type="button"
                                     onClick={() => setCategory('')}
                                     className="ml-1 hover:text-white"
                                 >
@@ -339,7 +339,7 @@ export default function AssetsPage() {
                         {status && (
                             <span className="badge-primary flex items-center gap-1">
                                 Status: {status}
-                                <button
+                                <button type="button"
                                     onClick={() => setStatus('')}
                                     className="ml-1 hover:text-white"
                                 >
@@ -359,14 +359,14 @@ export default function AssetsPage() {
                             {selectedAssets.size} asset(s) selected
                         </div>
                         <div className="flex gap-2">
-                            <button
+                            <button type="button"
                                 onClick={handleBulkExport}
                                 disabled={bulkActionLoading}
                                 className="btn-secondary text-sm"
                             >
                                 📄 Export Selected
                             </button>
-                            <button
+                            <button type="button"
                                 onClick={() => setShowBulkDeleteConfirm(true)}
                                 disabled={bulkActionLoading}
                                 className="btn bg-destructive text-white hover:bg-destructive/80 text-sm"
@@ -526,14 +526,14 @@ export default function AssetsPage() {
                                 {pagination.total} assets
                             </div>
                             <div className="flex gap-2">
-                                <button
+                                <button type="button"
                                     onClick={() => fetchAssets(pagination.page - 1)}
                                     disabled={pagination.page === 1}
                                     className="btn-secondary disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     Previous
                                 </button>
-                                <button
+                                <button type="button"
                                     onClick={() => fetchAssets(pagination.page + 1)}
                                     disabled={pagination.page === pagination.totalPages}
                                     className="btn-secondary disabled:opacity-50 disabled:cursor-not-allowed"

@@ -143,7 +143,7 @@ export default function AnalyticsPage() {
                 </div>
                 <p className="text-sm font-medium text-destructive mb-1">Unable to load analytics</p>
                 <p className="text-xs text-muted-foreground mb-4">{error || 'Something went wrong'}</p>
-                <button onClick={() => window.location.reload()} className="btn-primary text-sm">
+                <button type="button" onClick={() => window.location.reload()} className="btn-primary text-sm">
                     Try Again
                 </button>
             </div>
@@ -242,7 +242,7 @@ function IntelligenceBar({ summary }: { summary: IntelligenceSummary }) {
                         </p>
                     </div>
                 </div>
-                <button
+                <button type="button"
                     onClick={() => { /* future: navigate to ORACLE details */ }}
                     className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
                 >

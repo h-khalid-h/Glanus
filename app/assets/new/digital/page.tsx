@@ -97,7 +97,7 @@ export default function NewDigitalAssetPage() {
 
             <div className="max-w-4xl mx-auto px-4 py-8">
                 <div className="mb-6">
-                    <button
+                    <button type="button"
                         onClick={() => router.back()}
                         className="text-muted-foreground hover:text-foreground mb-4"
                     >
@@ -431,8 +431,8 @@ export default function NewDigitalAssetPage() {
                         >
                             {loading ? 'Creating...' : '✓ Create Digital Asset'}
                         </button>
-                        <button
-                            type="button"
+                        <button type="button"
+                            
                             onClick={() => router.back()}
                             className="btn-secondary"
                         >

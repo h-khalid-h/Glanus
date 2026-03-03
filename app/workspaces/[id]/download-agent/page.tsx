@@ -74,7 +74,7 @@ export default function DownloadAgentPage() {
                     <h2 className="text-2xl font-semibold mb-6">Select Your Platform</h2>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                        <button
+                        <button type="button"
                             onClick={() => setPlatform('windows')}
                             className={`p-6 border-2 rounded-lg transition ${platform === 'windows'
                                 ? 'border-nerve bg-nerve/5'
@@ -86,7 +86,7 @@ export default function DownloadAgentPage() {
                             <p className="text-sm text-slate-400">Windows 10/11</p>
                         </button>
 
-                        <button
+                        <button type="button"
                             onClick={() => setPlatform('macos')}
                             className={`p-6 border-2 rounded-lg transition ${platform === 'macos'
                                 ? 'border-nerve bg-nerve/5'
@@ -98,7 +98,7 @@ export default function DownloadAgentPage() {
                             <p className="text-sm text-slate-400">macOS 12+</p>
                         </button>
 
-                        <button
+                        <button type="button"
                             onClick={() => setPlatform('linux')}
                             className={`p-6 border-2 rounded-lg transition ${platform === 'linux'
                                 ? 'border-nerve bg-nerve/5'
@@ -111,7 +111,7 @@ export default function DownloadAgentPage() {
                         </button>
                     </div>
 
-                    <button
+                    <button type="button"
                         onClick={generateDownloadLink}
                         disabled={generating}
                         className="w-full py-4 bg-nerve text-white rounded-lg font-semibold text-lg hover:brightness-110 transition disabled:opacity-50 disabled:cursor-not-allowed"

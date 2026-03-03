@@ -78,7 +78,7 @@ function Toast({ toast, onDismiss }: ToastProps) {
                         </p>
                     )}
                     {toast.action && (
-                        <button
+                        <button type="button"
                             onClick={(e) => {
                                 e.stopPropagation();
                                 toast.action!.onClick();
@@ -91,7 +91,7 @@ function Toast({ toast, onDismiss }: ToastProps) {
                     )}
                 </div>
 
-                <button
+                <button type="button"
                     onClick={handleDismiss}
                     className="flex-shrink-0 text-slate-500 hover:text-slate-400 transition-colors"
                     aria-label="Dismiss"

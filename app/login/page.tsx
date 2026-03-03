@@ -164,9 +164,8 @@ export default function LoginPage() {
                                         { label: 'IT Staff', email: 'staff@glanus.com', password: 'password123', badge: 'Operations' },
                                         { label: 'User', email: 'john@glanus.com', password: 'password123', badge: 'Read only' },
                                     ].map((demo) => (
-                                        <button
+                                        <button type="button"
                                             key={demo.email}
-                                            type="button"
                                             onClick={() => fillDemo(demo.email, demo.password)}
                                             className="w-full group flex items-center justify-between rounded-xl border border-slate-700/50 
                                                bg-slate-800/30 px-4 py-2.5 text-left transition-all duration-200

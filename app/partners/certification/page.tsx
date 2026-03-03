@@ -198,7 +198,7 @@ export default function CertificationCenterPage() {
                                         <p>✓ 60 minutes</p>
                                         <p>✓ 80% to pass</p>
                                     </div>
-                                    <button
+                                    <button type="button"
                                         onClick={() => startExam(level.name)}
                                         className="w-full bg-nerve text-white py-3 rounded-md font-semibold hover:brightness-110 transition"
                                     >
@@ -282,7 +282,7 @@ export default function CertificationCenterPage() {
 
                     {/* Submit Button */}
                     <div className="mt-8 rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm p-6">
-                        <button
+                        <button type="button"
                             onClick={handleSubmit}
                             disabled={answeredCount < questions.length || submitting}
                             className="w-full bg-health-good text-white py-4 rounded-md font-semibold hover:bg-health-good/80 transition disabled:opacity-50 disabled:cursor-not-allowed"
@@ -354,14 +354,14 @@ export default function CertificationCenterPage() {
                         )}
 
                         <div className="flex space-x-4 justify-center">
-                            <button
+                            <button type="button"
                                 onClick={() => router.push('/partners/dashboard')}
                                 className="px-6 py-3 bg-nerve text-white rounded-md font-semibold hover:brightness-110 transition"
                             >
                                 Go to Dashboard
                             </button>
                             {!passed && (
-                                <button
+                                <button type="button"
                                     onClick={() => {
                                         setView('select');
                                         setAnswers({});

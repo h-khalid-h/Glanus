@@ -74,7 +74,7 @@ export default function WorkspaceSettingsPage({ params: paramsPromise }: { param
                         const isDanger = tab.variant === 'danger';
 
                         return (
-                            <button
+                            <button type="button"
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id)}
                                 className={clsx(

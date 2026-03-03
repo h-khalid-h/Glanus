@@ -378,8 +378,8 @@ export default function PartnerSignupPage() {
                         {/* Navigation Buttons */}
                         <div className="mt-8 flex justify-between">
                             {step > 1 && (
-                                <button
-                                    type="button"
+                                <button type="button"
+                                    
                                     onClick={prevStep}
                                     className="px-6 py-2 border border-slate-700 rounded-md text-slate-300 hover:bg-slate-900/30 transition"
                                 >
@@ -388,8 +388,8 @@ export default function PartnerSignupPage() {
                             )}
 
                             {step < 4 ? (
-                                <button
-                                    type="button"
+                                <button type="button"
+                                    
                                     onClick={nextStep}
                                     className="ml-auto px-6 py-2 bg-nerve text-white rounded-md hover:brightness-110 transition"
                                 >

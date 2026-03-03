@@ -69,7 +69,7 @@ export function DashboardNav() {
                 </div>
 
                 {/* Mobile hamburger */}
-                <button
+                <button type="button"
                     onClick={() => setMobileOpen(!mobileOpen)}
                     className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-700/50 text-slate-400 transition-colors hover:bg-slate-800/60 hover:text-slate-200 md:hidden"
                     aria-label="Toggle navigation"
@@ -91,7 +91,7 @@ export function DashboardNav() {
                             <p className="text-sm font-medium text-slate-200">{session.user.name}</p>
                             <p className="text-xs text-slate-500">{session.user.role.replace('_', ' ')}</p>
                         </div>
-                        <button
+                        <button type="button"
                             onClick={() => signOut({ callbackUrl: '/login' })}
                             className="rounded-lg border border-slate-700/50 px-3 py-1.5 text-xs font-medium text-slate-400
                                        transition-all hover:border-slate-600 hover:text-slate-200"

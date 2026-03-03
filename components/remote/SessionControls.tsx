@@ -62,7 +62,7 @@ export function SessionControls({
                 {/* Control Buttons */}
                 <div className="flex items-center gap-2">
                     {/* Recording Toggle */}
-                    <button
+                    <button type="button"
                         onClick={isRecording ? onStopRecording : onStartRecording}
                         className={`btn px-3 py-2 text-sm ${isRecording
                                 ? 'bg-destructive hover:bg-destructive/80 text-white'
@@ -78,7 +78,7 @@ export function SessionControls({
 
                     {/* Quality Selector */}
                     <div className="relative">
-                        <button
+                        <button type="button"
                             onClick={() => setShowQualityMenu(!showQualityMenu)}
                             className="btn bg-slate-800 hover:bg-slate-700 text-white px-3 py-2 text-sm"
                             title="Quality Settings"
@@ -105,7 +105,7 @@ export function SessionControls({
                         {showQualityMenu && (
                             <div className="absolute right-0 mt-2 w-32 bg-slate-800 border border-slate-700 rounded-lg shadow-lg overflow-hidden z-10">
                                 {['AUTO', 'HIGH', 'MEDIUM', 'LOW'].map((q) => (
-                                    <button
+                                    <button type="button"
                                         key={q}
                                         onClick={() => handleQualityChange(q)}
                                         className={`w-full px-4 py-2 text-sm text-left hover:bg-slate-700 ${quality === q ? 'bg-slate-700 text-nerve' : 'text-white'
@@ -119,7 +119,7 @@ export function SessionControls({
                     </div>
 
                     {/* Screenshot */}
-                    <button
+                    <button type="button"
                         onClick={onScreenshot}
                         className="btn bg-slate-800 hover:bg-slate-700 text-white p-2"
                         title="Capture Screenshot"
@@ -141,7 +141,7 @@ export function SessionControls({
                     </button>
 
                     {/* Fullscreen */}
-                    <button
+                    <button type="button"
                         onClick={onFullscreen}
                         className="btn bg-slate-800 hover:bg-slate-700 text-white p-2"
                         title="Toggle Fullscreen"
@@ -157,7 +157,7 @@ export function SessionControls({
                     </button>
 
                     {/* Disconnect */}
-                    <button
+                    <button type="button"
                         onClick={onDisconnect}
                         className="btn bg-destructive hover:bg-destructive/80 text-white px-3 py-2 text-sm"
                         title="End Session"

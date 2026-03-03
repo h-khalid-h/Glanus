@@ -142,7 +142,7 @@ export default function PartnerEarningsPage() {
                                 <p className="text-health-warn mb-4">
                                     You need to connect your Stripe account to receive payouts. It only takes a few minutes!
                                 </p>
-                                <button
+                                <button type="button"
                                     onClick={connectStripe}
                                     className="px-6 py-2 bg-yellow-600 text-white rounded-md font-semibold hover:bg-yellow-700 transition"
                                 >

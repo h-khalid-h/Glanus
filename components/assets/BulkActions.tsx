@@ -65,7 +65,7 @@ export function BulkActions({
                         </select>
 
                         {/* Delete Button */}
-                        <button
+                        <button type="button"
                             onClick={handleDelete}
                             disabled={disabled}
                             className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-health-critical bg-health-critical/10 hover:bg-health-critical/20 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
@@ -76,7 +76,7 @@ export function BulkActions({
                     </div>
                 </div>
 
-                <button
+                <button type="button"
                     onClick={onClearSelection}
                     disabled={disabled}
                     className="text-sm text-slate-400 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"

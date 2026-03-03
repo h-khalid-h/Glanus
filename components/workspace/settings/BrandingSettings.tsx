@@ -104,15 +104,13 @@ export default function BrandingSettings({ workspace }: { workspace: Workspace }
                 <div className="bg-slate-50 p-6 rounded-xl border border-slate-200">
                     <h3 className="text-sm font-medium text-slate-500 uppercase tracking-wider mb-4">Preview</h3>
                     <div className="flex flex-wrap gap-4 items-center">
-                        <button
-                            type="button"
+                        <button type="button"
                             className="px-4 py-2 rounded-lg text-white font-medium shadow-sm transition-opacity hover:opacity-90"
                             style={{ backgroundColor: formData.primaryColor }}
                         >
                             Primary Button
                         </button>
-                        <button
-                            type="button"
+                        <button type="button"
                             className="px-4 py-2 rounded-lg font-medium border bg-slate-900/50 backdrop-blur-sm transition-opacity hover:opacity-90"
                             style={{ color: formData.primaryColor, borderColor: formData.primaryColor }}
                         >

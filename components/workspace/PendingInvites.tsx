@@ -156,7 +156,7 @@ export default function PendingInvites({ workspaceId }: { workspaceId: string })
 
                                 {canManage && (
                                     <>
-                                        <button
+                                        <button type="button"
                                             onClick={() => handleResend(invite)}
                                             disabled={!!actionLoading}
                                             className="p-1.5 rounded-md hover:bg-nerve/10 text-nerve hover:text-nerve transition-colors"
@@ -164,7 +164,7 @@ export default function PendingInvites({ workspaceId }: { workspaceId: string })
                                         >
                                             <RefreshCw className="w-4 h-4" />
                                         </button>
-                                        <button
+                                        <button type="button"
                                             onClick={() => requestRevoke(invite.id)}
                                             disabled={!!actionLoading}
                                             className="p-1.5 rounded-md hover:bg-health-critical/10 text-slate-400 hover:text-health-critical transition-colors"

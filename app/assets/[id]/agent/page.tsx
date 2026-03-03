@@ -258,7 +258,7 @@ export default function AssetAgentPage() {
                                 <h2 className="text-sm font-semibold text-white">Historical Metrics</h2>
                                 <div className="flex gap-1">
                                     {(['1h', '24h', '7d', '30d'] as const).map((range) => (
-                                        <button
+                                        <button type="button"
                                             key={range}
                                             onClick={() => setTimeRange(range)}
                                             className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${timeRange === range

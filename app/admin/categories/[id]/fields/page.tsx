@@ -217,7 +217,7 @@ export default function FieldsPage({ params }: { params: Promise<{ id: string }>
                                             >
                                                 <Edit2 size={16} />
                                             </Link>
-                                            <button
+                                            <button type="button"
                                                 onClick={() => requestDeleteField(field.id)}
                                                 className="p-2 text-health-critical hover:bg-health-critical/10 rounded transition-colors"
                                                 aria-label={`Delete ${field.label}`}

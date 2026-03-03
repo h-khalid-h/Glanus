@@ -159,7 +159,7 @@ export default function MemberList({ workspaceId }: { workspaceId: string }) {
 
                                 {canManage && member.role !== 'OWNER' && (
                                     <div className="relative" ref={openMenuId === member.id ? menuRef : undefined}>
-                                        <button
+                                        <button type="button"
                                             onClick={() => setOpenMenuId(openMenuId === member.id ? null : member.id)}
                                             className="p-1 rounded-md hover:bg-slate-800 text-slate-400 hover:text-slate-600 transition-colors"
                                             aria-expanded={openMenuId === member.id}
@@ -174,7 +174,7 @@ export default function MemberList({ workspaceId }: { workspaceId: string }) {
                                                 role="menu"
                                             >
                                                 <div className="px-1 py-1">
-                                                    <button
+                                                    <button type="button"
                                                         onClick={() => handleUpdateRole(member.id, 'ADMIN')}
                                                         className="group flex w-full items-center rounded-md px-2 py-2 text-sm text-slate-300 hover:bg-nerve/10 hover:text-nerve transition-colors"
                                                         role="menuitem"
@@ -182,7 +182,7 @@ export default function MemberList({ workspaceId }: { workspaceId: string }) {
                                                         <ShieldAlert className="mr-2 h-4 w-4" />
                                                         Make Admin
                                                     </button>
-                                                    <button
+                                                    <button type="button"
                                                         onClick={() => handleUpdateRole(member.id, 'MEMBER')}
                                                         className="group flex w-full items-center rounded-md px-2 py-2 text-sm text-slate-300 hover:bg-nerve/10 hover:text-nerve transition-colors"
                                                         role="menuitem"
@@ -192,7 +192,7 @@ export default function MemberList({ workspaceId }: { workspaceId: string }) {
                                                     </button>
                                                 </div>
                                                 <div className="px-1 py-1">
-                                                    <button
+                                                    <button type="button"
                                                         onClick={() => requestRemove(member.id)}
                                                         className="group flex w-full items-center rounded-md px-2 py-2 text-sm text-health-critical hover:bg-health-critical/10 transition-colors"
                                                         role="menuitem"

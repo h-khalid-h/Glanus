@@ -24,7 +24,7 @@ export default function PartnersError({
                 <p className="text-sm text-slate-400 mb-6">
                     {error.message || 'An unexpected error occurred in the partner portal.'}
                 </p>
-                <button
+                <button type="button"
                     aria-label="Try again"
                     onClick={reset}
                     className="inline-flex items-center gap-2 px-4 py-2 bg-nerve text-white rounded-lg hover:brightness-110 transition-colors"

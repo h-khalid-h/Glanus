@@ -94,8 +94,7 @@ export default function InviteForm({ workspaceId }: { workspaceId: string }) {
                 </div>
 
                 <div className="w-full sm:w-48 relative" ref={roleRef}>
-                    <button
-                        type="button"
+                    <button type="button"
                         onClick={() => setIsRoleOpen(!isRoleOpen)}
                         className="relative w-full cursor-default rounded-lg bg-slate-900/50 backdrop-blur-sm py-2.5 pl-3 pr-10 text-left border border-slate-300 focus:outline-none focus-visible:border-nerve focus-visible:ring-2 focus-visible:ring-white/75 sm:text-sm shadow-sm"
                         aria-expanded={isRoleOpen}

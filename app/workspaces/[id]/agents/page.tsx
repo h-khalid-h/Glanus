@@ -232,7 +232,7 @@ export default function WorkspaceAgentsPage() {
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-3">
                                                 {agent.status === 'ONLINE' && (
-                                                    <button
+                                                    <button type="button"
                                                         onClick={async () => {
                                                             try {
                                                                 setConnectingAgentId(agent.id);

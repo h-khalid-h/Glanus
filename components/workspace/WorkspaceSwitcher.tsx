@@ -45,7 +45,7 @@ export function WorkspaceSwitcher() {
 
     return (
         <div className="relative" ref={menuRef}>
-            <button
+            <button type="button"
                 onClick={() => setIsOpen(!isOpen)}
                 className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-300 bg-slate-900/50 backdrop-blur-sm hover:bg-slate-900/30 border border-slate-700 rounded-lg transition-colors"
                 aria-expanded={isOpen}
@@ -87,7 +87,7 @@ export function WorkspaceSwitcher() {
 
                     <div className="py-1 max-h-64 overflow-y-auto">
                         {workspaces?.map((ws) => (
-                            <button
+                            <button type="button"
                                 key={ws.id}
                                 onClick={() => { switchWorkspace(ws.id); setIsOpen(false); }}
                                 className={`
@@ -131,7 +131,7 @@ export function WorkspaceSwitcher() {
 
                     {/* Create New Workspace */}
                     <div className="border-t border-slate-800 py-1">
-                        <button
+                        <button type="button"
                             onClick={() => { setIsOpen(false); router.push('/workspaces/new'); }}
                             className="w-full flex items-center gap-2 px-3 py-2 text-sm font-medium hover:bg-slate-800/50 text-nerve transition-colors"
                             role="menuitem"

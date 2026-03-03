@@ -244,7 +244,7 @@ export default function AssetDetailPage({ params }: { params: Promise<{ id: stri
                     </div>
 
                     <div className="flex gap-2">
-                        <button
+                        <button type="button"
                             onClick={async () => {
                                 if (!assetId) return;
                                 try {
@@ -280,7 +280,7 @@ export default function AssetDetailPage({ params }: { params: Promise<{ id: stri
                             <Edit size={16} />
                             Edit
                         </Link>
-                        <button
+                        <button type="button"
                             onClick={requestDeleteAsset}
                             className="flex items-center gap-2 px-4 py-2 bg-destructive text-white rounded-lg hover:bg-destructive/80"
                         >
@@ -373,7 +373,7 @@ export default function AssetDetailPage({ params }: { params: Promise<{ id: stri
                         ) : (
                             <div className="space-y-2">
                                 {actions.map((action) => (
-                                    <button
+                                    <button type="button"
                                         key={action.id}
                                         onClick={() => executeAction(action)}
                                         disabled={executingAction === action.id}
@@ -410,7 +410,7 @@ export default function AssetDetailPage({ params }: { params: Promise<{ id: stri
                                 <h3 className="text-xl font-semibold text-white">
                                     Execution Result
                                 </h3>
-                                <button
+                                <button type="button"
                                     onClick={() => setShowExecutionDialog(false)}
                                     className="text-slate-500 hover:text-slate-300"
                                 >
@@ -463,7 +463,7 @@ export default function AssetDetailPage({ params }: { params: Promise<{ id: stri
                             </div>
 
                             <div className="mt-6 flex justify-end">
-                                <button
+                                <button type="button"
                                     onClick={() => setShowExecutionDialog(false)}
                                     className="px-4 py-2 bg-nerve text-white rounded-lg hover:brightness-110"
                                 >

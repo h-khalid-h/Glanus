@@ -24,7 +24,7 @@ export default function WorkspaceError({
                     {error.message || 'An unexpected error occurred while loading the workspace.'}
                 </p>
                 <div className="flex gap-3 justify-center">
-                    <button
+                    <button type="button"
                         onClick={reset}
                         className="rounded-lg bg-nerve px-6 py-2.5 text-sm font-medium text-white transition-all hover:brightness-110 hover:shadow-lg hover:shadow-nerve/20"
                     >

@@ -210,13 +210,13 @@ function PartnerDashboardContent() {
                                                 </div>
                                             </div>
                                             <div className="flex space-x-3">
-                                                <button
+                                                <button type="button"
                                                     onClick={() => handleAssignmentAction(assignment.id, 'accept')}
                                                     className="px-4 py-2 bg-health-good text-white rounded-md hover:bg-health-good/80 transition text-sm"
                                                 >
                                                     Accept
                                                 </button>
-                                                <button
+                                                <button type="button"
                                                     onClick={() => handleAssignmentAction(assignment.id, 'reject')}
                                                     className="px-4 py-2 bg-destructive text-white rounded-md hover:bg-destructive/80 transition text-sm"
                                                 >
@@ -313,7 +313,7 @@ function PartnerDashboardContent() {
                                 >
                                     Edit Profile
                                 </Link>
-                                <button
+                                <button type="button"
                                     onClick={() => setPartner({ ...partner, acceptingNew: !partner.acceptingNew })}
                                     className={`block w-full px-4 py-2 rounded-md text-center transition ${partner.acceptingNew
                                         ? 'bg-slate-700 text-slate-300 hover:bg-slate-600'

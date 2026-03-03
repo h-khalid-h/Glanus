@@ -103,7 +103,7 @@ export default function AdminPartnersPage() {
                 {/* Stats Bar */}
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
                     {statuses.map((status) => (
-                        <button
+                        <button type="button"
                             key={status}
                             onClick={() => setFilter(filter === status ? '' : status)}
                             className={`p-4 rounded-lg transition ${filter === status
@@ -124,7 +124,7 @@ export default function AdminPartnersPage() {
                             {filter ? `${filter} Partners` : 'All Partners'}
                         </h2>
                         {filter && (
-                            <button
+                            <button type="button"
                                 onClick={() => setFilter('')}
                                 className="text-sm text-nerve hover:underline"
                             >
@@ -213,7 +213,7 @@ export default function AdminPartnersPage() {
                                             <td className="px-6 py-4">
                                                 <div className="flex flex-col space-y-1">
                                                     {partner.status === 'PENDING' && (
-                                                        <button
+                                                        <button type="button"
                                                             onClick={() => updatePartnerStatus(partner.id, 'verify')}
                                                             className="text-xs px-3 py-1 bg-nerve text-white rounded hover:brightness-110 transition"
                                                         >
@@ -221,7 +221,7 @@ export default function AdminPartnersPage() {
                                                         </button>
                                                     )}
                                                     {partner.status === 'VERIFIED' && (
-                                                        <button
+                                                        <button type="button"
                                                             onClick={() => updatePartnerStatus(partner.id, 'activate')}
                                                             className="text-xs px-3 py-1 bg-health-good text-white rounded hover:bg-health-good/80 transition"
                                                         >
@@ -229,7 +229,7 @@ export default function AdminPartnersPage() {
                                                         </button>
                                                     )}
                                                     {partner.status === 'ACTIVE' && (
-                                                        <button
+                                                        <button type="button"
                                                             onClick={() => updatePartnerStatus(partner.id, 'suspend')}
                                                             className="text-xs px-3 py-1 bg-orange-600 text-white rounded hover:bg-orange-700 transition"
                                                         >
@@ -237,7 +237,7 @@ export default function AdminPartnersPage() {
                                                         </button>
                                                     )}
                                                     {partner.status === 'SUSPENDED' && (
-                                                        <button
+                                                        <button type="button"
                                                             onClick={() => updatePartnerStatus(partner.id, 'unsuspend')}
                                                             className="text-xs px-3 py-1 bg-health-good text-white rounded hover:bg-health-good/80 transition"
                                                         >
@@ -245,7 +245,7 @@ export default function AdminPartnersPage() {
                                                         </button>
                                                     )}
                                                     {partner.status !== 'BANNED' && (
-                                                        <button
+                                                        <button type="button"
                                                             onClick={() => updatePartnerStatus(partner.id, 'ban')}
                                                             className="text-xs px-3 py-1 bg-destructive text-white rounded hover:bg-destructive/80 transition"
                                                         >

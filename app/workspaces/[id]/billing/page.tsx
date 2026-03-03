@@ -217,7 +217,7 @@ export default function BillingPage() {
                 )}>
                     {notification.type === 'success' ? <CheckCircle2 className="w-5 h-5" /> : <XCircle className="w-5 h-5" />}
                     {notification.message}
-                    <button
+                    <button type="button"
                         onClick={() => setNotification(null)}
                         className="ml-auto text-sm opacity-70 hover:opacity-100"
                     >

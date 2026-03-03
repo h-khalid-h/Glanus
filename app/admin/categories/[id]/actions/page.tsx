@@ -160,7 +160,7 @@ export default function ActionsPage({ params }: { params: Promise<{ id: string }
                                     <Edit2 size={16} className="inline mr-1" />
                                     Edit
                                 </Link>
-                                <button
+                                <button type="button"
                                     onClick={() => requestDeleteAction(action.id)}
                                     className="p-2 text-health-critical hover:bg-health-critical/10 rounded"
                                     aria-label={`Delete ${action.label}`}

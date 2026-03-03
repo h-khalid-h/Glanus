@@ -55,7 +55,7 @@ export default function WorkspaceSwitcher() {
 
     return (
         <div className="relative inline-block text-left w-full max-w-xs" ref={menuRef}>
-            <button
+            <button type="button"
                 onClick={() => setIsOpen(!isOpen)}
                 className="inline-flex w-full items-center justify-between rounded-lg border border-slate-700 bg-slate-900/50 backdrop-blur-sm px-3 py-2 text-sm font-medium text-slate-300 shadow-sm hover:bg-slate-800/40 focus:outline-none focus:ring-2 focus:ring-nerve/50 focus:ring-offset-2 transition-colors"
                 aria-expanded={isOpen}
@@ -87,7 +87,7 @@ export default function WorkspaceSwitcher() {
                             My Workspaces
                         </div>
                         {workspaces.map((workspace) => (
-                            <button
+                            <button type="button"
                                 key={workspace.id}
                                 onClick={() => handleSelect(workspace)}
                                 className="group flex w-full items-center justify-between rounded-md px-2 py-2 text-sm transition-colors hover:bg-nerve/10 hover:text-nerve text-slate-300"
@@ -113,7 +113,7 @@ export default function WorkspaceSwitcher() {
                     </div>
 
                     <div className="px-1 py-1 mt-1 border-t border-slate-100">
-                        <button
+                        <button type="button"
                             onClick={() => { setIsOpen(false); router.push('/workspaces/new'); }}
                             className="group flex w-full items-center gap-2 rounded-md px-2 py-2 text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors"
                             role="menuitem"

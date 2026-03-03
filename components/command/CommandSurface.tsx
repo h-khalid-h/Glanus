@@ -289,13 +289,13 @@ export function CommandSurface() {
                         </p>
                         {aiResult.type === 'execute' && aiResult.requiresConfirmation && (
                             <div className="mt-3 flex gap-2">
-                                <button
+                                <button type="button"
                                     className="rounded-lg bg-reflex/10 px-3 py-1.5 text-xs font-medium text-reflex hover:bg-reflex/20 transition-colors"
                                     onClick={() => setOpen(false)}
                                 >
                                     Confirm
                                 </button>
-                                <button
+                                <button type="button"
                                     className="rounded-lg bg-surface-2 px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
                                     onClick={() => setAiResult(null)}
                                 >

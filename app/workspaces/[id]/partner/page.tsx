@@ -148,7 +148,7 @@ export default function WorkspacePartnerPage() {
             />
             <div className="max-w-4xl mx-auto">
                 <div className="mb-8">
-                    <button
+                    <button type="button"
                         onClick={() => router.back()}
                         className="text-nerve hover:underline mb-4"
                     >
@@ -179,7 +179,7 @@ export default function WorkspacePartnerPage() {
                             </ul>
                         </div>
 
-                        <button
+                        <button type="button"
                             onClick={assignPartner}
                             disabled={loading}
                             className="px-8 py-3 bg-nerve text-white rounded-md font-semibold hover:brightness-110 transition disabled:opacity-50 disabled:cursor-not-allowed"
@@ -256,7 +256,7 @@ export default function WorkspacePartnerPage() {
                                     View Profile
                                 </a>
                                 {assignment.status === 'COMPLETED' && !assignment.rating && (
-                                    <button
+                                    <button type="button"
                                         onClick={() => setShowReviewForm(!showReviewForm)}
                                         className="px-4 py-2 bg-nerve text-white rounded-md hover:brightness-110 transition"
                                     >
@@ -264,7 +264,7 @@ export default function WorkspacePartnerPage() {
                                     </button>
                                 )}
                                 {assignment.status !== 'COMPLETED' && (
-                                    <button
+                                    <button type="button"
                                         onClick={() => setShowRemoveConfirm(true)}
                                         className="px-4 py-2 bg-destructive text-white rounded-md hover:bg-destructive/80 transition"
                                     >
@@ -285,9 +285,8 @@ export default function WorkspacePartnerPage() {
                                         </label>
                                         <div className="flex space-x-2">
                                             {[1, 2, 3, 4, 5].map((star) => (
-                                                <button
+                                                <button type="button"
                                                     key={star}
-                                                    type="button"
                                                     onClick={() => setRating(star)}
                                                     className="text-3xl transition"
                                                 >
@@ -320,8 +319,7 @@ export default function WorkspacePartnerPage() {
                                         >
                                             {submitting ? 'Submitting...' : 'Submit Review'}
                                         </button>
-                                        <button
-                                            type="button"
+                                        <button type="button"
                                             onClick={() => setShowReviewForm(false)}
                                             className="px-6 py-2 border border-slate-700 rounded-md hover:bg-slate-900/30 transition"
                                         >

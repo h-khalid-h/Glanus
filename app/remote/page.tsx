@@ -101,7 +101,7 @@ export default function RemoteSessionsPage() {
                     <h1 className="text-3xl font-bold text-foreground">Remote Sessions</h1>
                     <p className="text-muted-foreground mt-1">Manage and monitor remote desktop sessions</p>
                 </div>
-                <button
+                <button type="button"
                     onClick={async () => {
                         setShowNewSession(!showNewSession);
                         if (!showNewSession && assets.length === 0) {
@@ -129,7 +129,7 @@ export default function RemoteSessionsPage() {
                 <div className="mb-6 rounded-xl border border-nerve/30 bg-nerve/5 p-4 animate-in slide-in-from-top-2 duration-200">
                     <div className="flex items-center justify-between mb-3">
                         <h3 className="text-sm font-semibold text-white">Select an asset to connect to</h3>
-                        <button onClick={() => setShowNewSession(false)} className="text-slate-400 hover:text-white">
+                        <button type="button" onClick={() => setShowNewSession(false)} className="text-slate-400 hover:text-white">
                             <X size={16} />
                         </button>
                     </div>
@@ -140,7 +140,7 @@ export default function RemoteSessionsPage() {
                     ) : (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                             {assets.map((asset) => (
-                                <button
+                                <button type="button"
                                     key={asset.id}
                                     onClick={async () => {
                                         try {
@@ -198,7 +198,7 @@ export default function RemoteSessionsPage() {
                     <label className="text-sm font-medium text-foreground">Status:</label>
                     <div className="flex gap-2">
                         {['ALL', 'ACTIVE', 'ENDED', 'FAILED'].map((status) => (
-                            <button
+                            <button type="button"
                                 key={status}
                                 onClick={() => setStatusFilter(status)}
                                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${statusFilter === status
@@ -297,7 +297,7 @@ export default function RemoteSessionsPage() {
                                                 Join
                                             </Link>
                                         ) : (
-                                            <button className="text-muted-foreground hover:text-foreground">
+                                            <button type="button" className="text-muted-foreground hover:text-foreground">
                                                 View Details
                                             </button>
                                         )}

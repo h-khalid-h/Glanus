@@ -224,7 +224,7 @@ export default function ActiveSessionPage() {
             <div className="min-h-screen bg-slate-950 flex items-center justify-center">
                 <div className="text-center">
                     <p className="text-white text-lg mb-4">Session not found</p>
-                    <button onClick={() => router.push('/remote')} className="btn-primary">
+                    <button type="button" onClick={() => router.push('/remote')} className="btn-primary">
                         Back to Sessions
                     </button>
                 </div>

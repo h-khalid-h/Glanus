@@ -54,7 +54,7 @@ export function AutomationCenter({
                         <p className="text-xs text-muted-foreground">REFLEX — autonomous actions with trust</p>
                     </div>
                 </div>
-                <button
+                <button type="button"
                     onClick={() => setShowCreateForm(true)}
                     className="btn-primary text-sm"
                 >
@@ -64,7 +64,7 @@ export function AutomationCenter({
 
             {/* Tab bar */}
             <div className="flex gap-1 rounded-lg bg-surface-1 p-1">
-                <button
+                <button type="button"
                     onClick={() => setActiveTab('rules')}
                     className={`flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${activeTab === 'rules'
                         ? 'bg-card text-foreground shadow-sm'
@@ -73,7 +73,7 @@ export function AutomationCenter({
                 >
                     Rules ({rules.length})
                 </button>
-                <button
+                <button type="button"
                     onClick={() => setActiveTab('queue')}
                     className={`flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${activeTab === 'queue'
                         ? 'bg-card text-foreground shadow-sm'
@@ -186,7 +186,7 @@ function RuleCard({
     return (
         <div className={`card flex items-start gap-4 ${!rule.enabled ? 'opacity-50' : ''}`}>
             {/* Toggle */}
-            <button
+            <button type="button"
                 onClick={() => onToggle?.(rule.id, !rule.enabled)}
                 className={`mt-1 flex h-5 w-9 shrink-0 items-center rounded-full px-0.5 transition-colors ${rule.enabled ? 'bg-reflex' : 'bg-muted'
                     }`}
@@ -218,7 +218,7 @@ function RuleCard({
             </div>
 
             {/* Delete */}
-            <button
+            <button type="button"
                 onClick={() => onDelete?.(rule.id)}
                 className="shrink-0 rounded-md p-1.5 text-muted-foreground/50 hover:bg-destructive/10 hover:text-destructive transition-colors"
             >
@@ -274,13 +274,13 @@ function QueuePanel({
 
                         {item.status === 'pending' && (
                             <div className="flex shrink-0 gap-2">
-                                <button
+                                <button type="button"
                                     onClick={() => onApprove?.(item.id)}
                                     className="rounded-lg bg-reflex/10 px-3 py-1.5 text-xs font-medium text-reflex hover:bg-reflex/20 transition-colors"
                                 >
                                     Approve
                                 </button>
-                                <button
+                                <button type="button"
                                     onClick={() => onReject?.(item.id)}
                                     className="rounded-lg bg-destructive/10 px-3 py-1.5 text-xs font-medium text-destructive hover:bg-destructive/20 transition-colors"
                                 >
@@ -415,7 +415,7 @@ function CreateRuleModal({
                         <label className="mb-2 block text-xs font-medium text-muted-foreground">Autonomy Level</label>
                         <div className="flex gap-2">
                             {(['suggest', 'confirm', 'auto'] as const).map(level => (
-                                <button
+                                <button type="button"
                                     key={level}
                                     onClick={() => setAutonomy(level)}
                                     className={`flex-1 rounded-lg border px-3 py-2 text-xs font-medium transition-colors ${autonomy === level
@@ -445,8 +445,8 @@ function CreateRuleModal({
                 </div>
 
                 <div className="mt-6 flex justify-end gap-3">
-                    <button onClick={onClose} className="btn text-sm">Cancel</button>
-                    <button onClick={handleSubmit} className="btn-primary text-sm" disabled={!name.trim()}>
+                    <button type="button" onClick={onClose} className="btn text-sm">Cancel</button>
+                    <button type="button" onClick={handleSubmit} className="btn-primary text-sm" disabled={!name.trim()}>
                         Create Rule
                     </button>
                 </div>

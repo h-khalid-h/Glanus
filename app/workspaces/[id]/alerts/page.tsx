@@ -176,7 +176,7 @@ export default function WorkspaceAlertsPage() {
             <div className="max-w-5xl mx-auto">
                 {/* Header */}
                 <div className="mb-8">
-                    <button
+                    <button type="button"
                         onClick={() => router.push(`/workspaces/${workspaceId}/agents`)}
                         className="text-sm text-nerve hover:underline mb-4"
                     >
@@ -187,7 +187,7 @@ export default function WorkspaceAlertsPage() {
                             <h1 className="text-3xl font-bold text-white mb-2">Alert Configuration</h1>
                             <p className="text-slate-400">Configure monitoring alerts for all agents in this workspace</p>
                         </div>
-                        <button
+                        <button type="button"
                             onClick={createNewRule}
                             className="flex items-center gap-2 px-4 py-2.5 bg-nerve text-white rounded-lg text-sm font-medium hover:brightness-110 transition-all hover:shadow-lg hover:shadow-nerve/20"
                         >
@@ -251,13 +251,13 @@ export default function WorkspaceAlertsPage() {
                                 </div>
 
                                 <div className="flex items-center space-x-2 ml-4">
-                                    <button
+                                    <button type="button"
                                         onClick={() => setEditingRule(rule)}
                                         className="px-4 py-2 text-sm text-nerve hover:bg-nerve/5 rounded-md transition"
                                     >
                                         Edit
                                     </button>
-                                    <button
+                                    <button type="button"
                                         onClick={() => toggleRule(rule.id)}
                                         className={`px-4 py-2 text-sm rounded-md transition ${rule.enabled
                                             ? 'bg-slate-700 text-slate-300 hover:bg-slate-600'
@@ -362,13 +362,13 @@ export default function WorkspaceAlertsPage() {
                             </div>
 
                             <div className="mt-6 flex justify-end space-x-3">
-                                <button
+                                <button type="button"
                                     onClick={() => setEditingRule(null)}
                                     className="px-4 py-2 text-sm text-slate-300 hover:bg-slate-800/50 rounded-md transition"
                                 >
                                     Cancel
                                 </button>
-                                <button
+                                <button type="button"
                                     onClick={saveRule}
                                     disabled={saving}
                                     className="px-4 py-2 text-sm bg-nerve text-white rounded-md hover:brightness-110 transition disabled:opacity-50 disabled:cursor-not-allowed"
@@ -401,7 +401,7 @@ export default function WorkspaceAlertsPage() {
                             />
                         </div>
 
-                        <button
+                        <button type="button"
                             onClick={saveWebhook}
                             disabled={savingWebhook || !webhookUrl}
                             className="px-4 py-2 bg-nerve text-white rounded-lg hover:brightness-110 transition disabled:opacity-50 disabled:cursor-not-allowed"

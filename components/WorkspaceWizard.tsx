@@ -254,13 +254,13 @@ export default function WorkspaceWizard({ onComplete, showSampleDataOption = fal
                         <div className="bg-slate-50 p-6 rounded-xl border border-slate-200">
                             <h3 className="text-sm font-medium text-slate-500 uppercase tracking-wider mb-4">Preview</h3>
                             <div className="flex items-center gap-4">
-                                <button
+                                <button type="button"
                                     className="px-4 py-2 rounded-lg text-white font-medium shadow-sm"
                                     style={{ backgroundColor: formData.primaryColor }}
                                 >
                                     Primary Button
                                 </button>
-                                <button
+                                <button type="button"
                                     className="px-4 py-2 rounded-lg font-medium border border-slate-700 bg-slate-800/50"
                                     style={{ color: formData.primaryColor, borderColor: formData.primaryColor }}
                                 >
