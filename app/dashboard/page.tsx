@@ -200,9 +200,14 @@ export default function DashboardPage() {
 
                 {/* Active Sessions */}
                 <div className="rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm overflow-hidden">
-                    <div className="border-b border-slate-800 px-5 py-4">
-                        <h2 className="text-sm font-semibold text-white">Active Remote Sessions</h2>
-                        <p className="text-xs text-slate-500">Currently active remote desktop connections</p>
+                    <div className="border-b border-slate-800 px-5 py-4 flex items-center justify-between">
+                        <div>
+                            <h2 className="text-sm font-semibold text-white">Active Remote Sessions</h2>
+                            <p className="text-xs text-slate-500">Currently active remote desktop connections</p>
+                        </div>
+                        <Link href="/remote" className="text-xs text-nerve hover:text-nerve/80 transition-colors">
+                            View All →
+                        </Link>
                     </div>
                     <div className="p-5">
                         {data && data.activeSessionsList?.length > 0 ? (
@@ -210,15 +215,20 @@ export default function DashboardPage() {
                                 {data.activeSessionsList.map((session) => (
                                     <div key={session.id} className="flex items-center justify-between border-b border-slate-800/50 pb-3 last:border-0 last:pb-0">
                                         <div>
-                                            <p className="text-sm font-medium text-slate-200">{session.asset.name}</p>
+                                            <Link href={`/assets/${session.asset.id}`} className="text-sm font-medium text-slate-200 hover:text-nerve transition-colors">
+                                                {session.asset.name}
+                                            </Link>
                                             <p className="text-xs text-slate-500">
                                                 {session.user?.name || 'Unknown'} • {formatDateTime(session.startedAt || session.lastSeen)}
                                             </p>
                                         </div>
-                                        <div className="flex items-center gap-1.5">
+                                        <Link
+                                            href={`/remote/${session.id}`}
+                                            className="flex items-center gap-1.5 px-3 py-1 bg-nerve/10 text-nerve rounded-lg text-xs font-medium hover:bg-nerve/20 transition-colors"
+                                        >
                                             <span className="h-2 w-2 rounded-full bg-health-good animate-pulse" />
-                                            <span className="text-xs font-medium text-health-good">Active</span>
-                                        </div>
+                                            Join
+                                        </Link>
                                     </div>
                                 ))}
                             </div>
