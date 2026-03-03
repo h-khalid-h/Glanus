@@ -132,7 +132,7 @@ function PartnerDashboardContent() {
     const nextLevel = certificationLevels[currentLevelIndex + 1];
 
     return (
-        <div className="min-h-screen bg-slate-900/30 py-8 px-4 sm:px-6 lg:px-8">
+        <div className="py-8 px-4 sm:px-6 lg:px-8">
             <div className="max-w-7xl mx-auto">
                 {/* Welcome Banner */}
                 {showWelcome && (
@@ -353,14 +353,7 @@ function PartnerDashboardContent() {
 
 export default function PartnerDashboardPage() {
     return (
-        <Suspense fallback={
-            <div className="min-h-screen flex items-center justify-center bg-gradient-midnight">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-nerve mx-auto mb-4"></div>
-                    <p className="text-slate-400">Loading dashboard...</p>
-                </div>
-            </div>
-        }>
+        <Suspense fallback={<PageSpinner text="Loading dashboard…" />}>
             <PartnerDashboardContent />
         </Suspense>
     );

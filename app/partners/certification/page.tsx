@@ -51,6 +51,7 @@ export default function CertificationCenterPage() {
     const router = useRouter();
     const [view, setView] = useState<'select' | 'exam' | 'results'>('select');
     const [selectedLevel, setSelectedLevel] = useState<string | null>(null);
+    const [error, setError] = useState<string | null>(null);
 
     // Exam state
     const [exam, setExam] = useState<Exam | null>(null);
@@ -135,6 +136,9 @@ export default function CertificationCenterPage() {
         return `${mins}:${secs.toString().padStart(2, '0')}`;
     };
 
+    // Error guard
+    if (error) return <ErrorState title="Certification error" description={error} onRetry={() => { setError(null); setView('select'); }} />;
+
     // Select Level View
     if (view === 'select') {
         const levels = [
@@ -165,7 +169,7 @@ export default function CertificationCenterPage() {
         ];
 
         return (
-            <div className="min-h-screen bg-slate-900/30 py-12 px-4 sm:px-6 lg:px-8">
+            <div className="py-12 px-4 sm:px-6 lg:px-8">
                 <div className="max-w-4xl mx-auto">
                     <div className="text-center mb-12">
                         <h1 className="text-4xl font-bold text-white mb-4">Certification Center</h1>
@@ -215,7 +219,7 @@ export default function CertificationCenterPage() {
         const progress = (answeredCount / questions.length) * 100;
 
         return (
-            <div className="min-h-screen bg-slate-900/30 py-8 px-4 sm:px-6 lg:px-8">
+            <div className="py-8 px-4 sm:px-6 lg:px-8">
                 <div className="max-w-4xl mx-auto">
                     {/* Header */}
                     <div className="rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm p-6 mb-6">
@@ -301,7 +305,7 @@ export default function CertificationCenterPage() {
         const passed = result.results.passed;
 
         return (
-            <div className="min-h-screen bg-slate-900/30 py-12 px-4 sm:px-6 lg:px-8">
+            <div className="py-12 px-4 sm:px-6 lg:px-8">
                 <div className="max-w-3xl mx-auto">
                     <div className={`rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm p-8 text-center mb-8 ${passed ? 'border-t-8 border-health-good' : 'border-t-8 border-health-critical'
                         }`}>
