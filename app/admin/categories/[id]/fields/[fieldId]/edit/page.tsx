@@ -5,7 +5,8 @@ import { csrfFetch } from '@/lib/api/csrfFetch';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Loader2 } from 'lucide-react';
+import { PageSpinner } from '@/components/ui/Spinner';
+import { ArrowLeft } from 'lucide-react';
 
 export default function EditFieldPage({ params }: { params: Promise<{ id: string; fieldId: string }> }) {
     const router = useRouter();
@@ -92,12 +93,7 @@ export default function EditFieldPage({ params }: { params: Promise<{ id: string
     };
 
     if (loading) {
-        return (
-            <div className="container mx-auto px-4 py-8 flex items-center gap-2 text-slate-400">
-                <Loader2 className="animate-spin" size={20} />
-                Loading field...
-            </div>
-        );
+        return <PageSpinner text="Loading field..." />;
     }
 
 
