@@ -78,7 +78,7 @@ export function MissionControl({ data, workspaceName, workspaceId, plan }: Missi
                         type="button"
                         onClick={() => {
                             if (workspaceId) {
-                                window.location.href = `/api/workspaces/${workspaceId}/reports?format=csv&include=inventory`;
+                                window.location.href = `/api/workspaces/${workspaceId}/reports?type=asset_inventory&format=csv`;
                             }
                         }}
                         className="hidden sm:flex items-center gap-2 rounded-lg bg-nerve/10 hover:bg-nerve/20 transition-colors border border-nerve/20 px-3 py-1.5 text-xs font-semibold text-nerve"
