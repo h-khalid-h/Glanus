@@ -10,7 +10,7 @@ export const PATCH = withErrorHandler(async (
 ) => {
     const user = await requireAuth();
     const { id: workspaceId, profileId } = await context.params;
-    const access = await verifyWorkspaceAccess(user.id, workspaceId);
+    const access = await verifyWorkspaceAccess(user.email, workspaceId);
 
     if (!access.allowed || (access.role !== 'OWNER' && access.role !== 'ADMIN')) {
         throw new ApiError(403, 'Only Workspace Admins can modify MDM profiles');
@@ -46,7 +46,7 @@ export const DELETE = withErrorHandler(async (
 ) => {
     const user = await requireAuth();
     const { id: workspaceId, profileId } = await context.params;
-    const access = await verifyWorkspaceAccess(user.id, workspaceId);
+    const access = await verifyWorkspaceAccess(user.email, workspaceId);
 
     if (!access.allowed || (access.role !== 'OWNER' && access.role !== 'ADMIN')) {
         throw new ApiError(403, 'Only Workspace Admins can delete MDM profiles');

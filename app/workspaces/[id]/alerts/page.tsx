@@ -162,9 +162,9 @@ export default function WorkspaceAlertsPage() {
         setSavingWebhook(true);
         try {
             const res = await csrfFetch(`/api/workspaces/${workspaceId}/alerts/webhook`, {
-                method: 'PUT',
+                method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ webhookUrl }),
+                body: JSON.stringify({ url: webhookUrl }),
             });
             if (!res.ok) throw new Error('Failed to save webhook');
         } catch (err: unknown) {

@@ -10,7 +10,7 @@ export const GET = withErrorHandler(async (
 ) => {
     const user = await requireAuth();
     const { id: workspaceId } = await context.params;
-    const access = await verifyWorkspaceAccess(user.id, workspaceId);
+    const access = await verifyWorkspaceAccess(user.email, workspaceId);
 
     if (!access.allowed) {
         throw new ApiError(403, 'Insufficient workspace permissions');
@@ -44,7 +44,7 @@ export const POST = withErrorHandler(async (
 ) => {
     const user = await requireAuth();
     const { id: workspaceId } = await context.params;
-    const access = await verifyWorkspaceAccess(user.id, workspaceId);
+    const access = await verifyWorkspaceAccess(user.email, workspaceId);
 
     if (!access.allowed || (access.role !== 'OWNER' && access.role !== 'ADMIN')) {
         throw new ApiError(403, 'Only Workspace Admins can create MDM profiles');
