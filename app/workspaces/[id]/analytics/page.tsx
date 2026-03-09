@@ -183,7 +183,7 @@ export default function AnalyticsPage() {
 
             {/* Intelligence bar (ORACLE summary) */}
             {showIntelligence && (
-                <IntelligenceBar summary={intelligence} />
+                <IntelligenceBar summary={intelligence} workspaceId={workspaceId} />
             )}
 
             {/* Topology Map */}
@@ -206,7 +206,7 @@ export default function AnalyticsPage() {
 
 // ─── Intelligence Bar ────────────────────────────────────
 
-function IntelligenceBar({ summary }: { summary: IntelligenceSummary }) {
+function IntelligenceBar({ summary, workspaceId }: { summary: IntelligenceSummary; workspaceId: string }) {
     const statusConfig = {
         nominal: {
             label: 'All Systems Nominal',
@@ -253,12 +253,12 @@ function IntelligenceBar({ summary }: { summary: IntelligenceSummary }) {
                         </p>
                     </div>
                 </div>
-                <button type="button"
-                    onClick={() => { /* future: navigate to ORACLE details */ }}
+                <a
+                    href={`/workspaces/${workspaceId}/intelligence`}
                     className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
                 >
                     View Details →
-                </button>
+                </a>
             </div>
         </div>
     );

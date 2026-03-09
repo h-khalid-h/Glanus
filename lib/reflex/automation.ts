@@ -344,8 +344,63 @@ export async function executeAction(
             } else {
                 throw new Error('No online agents available to execute this action.');
             }
-        } else {
-            await new Promise(resolve => setTimeout(resolve, 1000));
+        } else if (item.rule.action.type === 'send_notification') {
+            // Create a notification audit log entry that the NotificationPopover picks up
+            await prisma.auditLog.create({
+                data: {
+                    workspaceId,
+                    action: 'reflex.notification',
+                    resourceType: 'notification',
+                    resourceId: item.rule.id,
+                    details: {
+                        channel: item.rule.action.notificationChannel || 'in-app',
+                        message: item.rule.action.message || `Automation "${item.rule.name}" triggered`,
+                        source: 'REFLEX_ENGINE',
+                    },
+                },
+            });
+
+        } else if (item.rule.action.type === 'restart_agent') {
+            const agent = await prisma.agentConnection.findFirst({
+                where: {
+                    workspaceId,
+                    status: 'ONLINE',
+                    ...(item.rule.action.targetAssetId ? { assetId: item.rule.action.targetAssetId } : {}),
+                },
+            });
+
+            if (agent) {
+                // Queue a restart command that the agent picks up on next heartbeat
+                await prisma.scriptExecution.create({
+                    data: {
+                        agentId: agent.id,
+                        assetId: agent.assetId,
+                        workspaceId,
+                        scriptName: `Restart Agent (${item.rule.name})`,
+                        scriptBody: process.platform === 'win32'
+                            ? 'Restart-Service GlanusAgent -Force'
+                            : 'sudo systemctl restart glanus-agent',
+                        language: process.platform === 'win32' ? 'powershell' : 'bash',
+                        status: 'PENDING',
+                        createdBy: 'REFLEX_ENGINE',
+                    },
+                });
+            } else {
+                throw new Error('No online agents available to restart.');
+            }
+
+        } else if (item.rule.action.type === 'create_alert') {
+            // Create an alert rule in the database
+            await prisma.alertRule.create({
+                data: {
+                    workspaceId,
+                    name: item.rule.action.message || `Auto-Alert: ${item.rule.name}`,
+                    metric: (item.rule.trigger.metric || 'cpu').toUpperCase() as 'CPU' | 'RAM' | 'DISK',
+                    threshold: item.rule.trigger.value ?? 90,
+                    severity: 'WARNING',
+                    enabled: true,
+                },
+            });
         }
 
         // Log to audit trail

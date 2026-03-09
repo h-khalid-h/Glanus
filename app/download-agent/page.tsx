@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Monitor, Apple, Terminal, Download, CheckCircle2 } from 'lucide-react';
@@ -8,8 +8,19 @@ import { Monitor, Apple, Terminal, Download, CheckCircle2 } from 'lucide-react';
 export default function DownloadAgentPage() {
     const [selectedPlatform, setSelectedPlatform] = useState<'windows' | 'macos' | 'linux'>('windows');
     const [downloadStarted, setDownloadStarted] = useState(false);
+    const [version, setVersion] = useState('latest');
 
-    const version = '0.1.0'; // Future: Fetch version from release API
+    useEffect(() => {
+        // Fetch latest version from the agent version API
+        fetch('/api/agent/check-update?platform=windows&version=0.0.0')
+            .then(res => res.ok ? res.json() : null)
+            .then(data => {
+                if (data?.data?.latestVersion) {
+                    setVersion(data.data.latestVersion);
+                }
+            })
+            .catch(() => { /* Keep 'latest' fallback */ });
+    }, []);
 
     const platforms = [
         {
@@ -64,8 +75,9 @@ export default function DownloadAgentPage() {
     const handleDownload = async () => {
         setDownloadStarted(true);
 
-        // Future: Replace with CDN or GitHub Releases download URL when CI/CD publishes agent
-        const downloadUrl = `https://github.com/your-org/glanus-agent/releases/download/v${version}/${selectedPlatformData.file}`;
+        const baseUrl = process.env.NEXT_PUBLIC_AGENT_DOWNLOAD_URL
+            || 'https://releases.glanus.io/agent';
+        const downloadUrl = `${baseUrl}/v${version}/${selectedPlatformData.file}`;
 
         // Trigger download
         const link = document.createElement('a');

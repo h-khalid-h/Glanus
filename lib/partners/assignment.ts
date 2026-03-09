@@ -91,13 +91,12 @@ export async function findBestPartner(
         }
 
         // 2. Industry expertise (25 points max)
-        // This would require workspace.industry field - placeholder for now
+        // Full match requires workspace.industry field; partial credit awarded for listed expertise
         if (partner.industries) {
             const industries = partner.industries as string[];
-            // If workspace has matching industry, give full points
-            // For now, give some points if partner has ANY industries listed
+            // Award partial credit when partner has industries listed
             if (industries.length > 0) {
-                breakdown.industry = 15; // Partial credit
+                breakdown.industry = 15;
             }
         }
 
