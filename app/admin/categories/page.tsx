@@ -90,7 +90,7 @@ export default function CategoriesPage() {
             />
             <div className="flex justify-between items-center mb-6">
                 <div>
-                    <h1 className="text-3xl font-bold text-white">Asset Categories</h1>
+                    <h1 className="text-3xl font-bold text-foreground">Asset Categories</h1>
                     <p className="text-slate-400 mt-1">
                         Manage asset categories, fields, and actions
                     </p>
@@ -117,7 +117,7 @@ export default function CategoriesPage() {
                                 <div className="flex items-center gap-3">
                                     <span className="text-3xl">{category.icon || '📁'}</span>
                                     <div>
-                                        <h3 className="text-lg font-semibold text-white">
+                                        <h3 className="text-lg font-semibold text-foreground">
                                             {category.name}
                                         </h3>
                                         <p className="text-sm text-slate-500">{category.slug}</p>

@@ -227,13 +227,13 @@ export default function WorkspacePartnerPage() {
                             <div className="grid grid-cols-3 gap-4 mb-6">
                                 <div className="bg-slate-900/30 rounded-lg p-4">
                                     <p className="text-sm text-slate-400 mb-1">Assigned</p>
-                                    <p className="text-lg font-semibold text-white">
+                                    <p className="text-lg font-semibold text-foreground">
                                         {formatDate(assignment.assignedAt)}
                                     </p>
                                 </div>
                                 <div className="bg-slate-900/30 rounded-lg p-4">
                                     <p className="text-sm text-slate-400 mb-1">Revenue Split</p>
-                                    <p className="text-lg font-semibold text-white">
+                                    <p className="text-lg font-semibold text-foreground">
                                         {Number(assignment.revenueSplit) * 100}%
                                     </p>
                                 </div>

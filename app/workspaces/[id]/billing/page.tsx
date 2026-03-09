@@ -272,7 +272,7 @@ export default function BillingPage() {
 
             {/* Plans Comparison */}
             <div>
-                <h2 className="text-2xl font-bold text-white mb-6">Available Plans</h2>
+                <h2 className="text-2xl font-bold text-foreground mb-6">Available Plans</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     {PLANS.map((plan) => {
                         const isCurrent = plan.id === currentPlan;

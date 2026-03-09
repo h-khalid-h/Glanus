@@ -129,7 +129,7 @@ export default function NewFieldPage({ params }: { params: Promise<{ id: string 
                 <div className="space-y-6">
                     {/* Basic Info Section */}
                     <div className="pb-6 border-b border-slate-800">
-                        <h3 className="text-lg font-semibold text-white mb-4">Basic Information</h3>
+                        <h3 className="text-lg font-semibold text-foreground mb-4">Basic Information</h3>
 
                         <div className="grid grid-cols-2 gap-4">
                             <div>

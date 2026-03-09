@@ -177,7 +177,7 @@ export default function FieldsPage({ params }: { params: Promise<{ id: string }>
                                     </td>
                                     <td className="px-4 py-4">
                                         <div>
-                                            <div className="text-sm font-medium text-white">{field.label}</div>
+                                            <div className="text-sm font-medium text-foreground">{field.label}</div>
                                             <div className="text-sm text-slate-500">{field.name}</div>
                                         </div>
                                     </td>

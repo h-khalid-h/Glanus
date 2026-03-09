@@ -161,7 +161,7 @@ export default function MDMDashboardPage() {
                 <div className="space-y-4">
                     {isCreatingProfile ? (
                         <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
-                            <h2 className="text-lg font-bold text-white mb-6">Create MDM Profile</h2>
+                            <h2 className="text-lg font-bold text-foreground mb-6">Create MDM Profile</h2>
                             <MdmProfileForm
                                 workspaceId={params.id as string}
                                 onSuccess={() => { setIsCreatingProfile(false); fetchData(); }}
@@ -222,7 +222,7 @@ export default function MDMDashboardPage() {
                     {assignments.length === 0 ? (
                         <div className="p-12 text-center">
                             <ArrowRightLeft className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-                            <h3 className="text-lg font-medium text-white mb-2">No Active Deployments</h3>
+                            <h3 className="text-lg font-medium text-foreground mb-2">No Active Deployments</h3>
                             <p className="text-slate-400">Profiles assigned to your physical assets will appear here outlining their enforcement status.</p>
                         </div>
                     ) : (
@@ -240,7 +240,7 @@ export default function MDMDashboardPage() {
                                     {assignments.map(assign => (
                                         <tr key={assign.id} className="hover:bg-slate-800/50">
                                             <td className="px-6 py-4">
-                                                <div className="font-medium text-white">{assign.profile?.name}</div>
+                                                <div className="font-medium text-foreground">{assign.profile?.name}</div>
                                                 <div className="text-xs text-slate-500 mt-0.5">{assign.profile?.platform}</div>
                                             </td>
                                             <td className="px-6 py-4">
