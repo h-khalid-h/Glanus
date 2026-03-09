@@ -38,7 +38,7 @@ export const GET = withErrorHandler(async (
     return apiSuccess({ webhooks });
 });
 
-// POST - Create or Update a notification webhook
+// POST - Create or Update a notification webhook (upsert)
 export const POST = withErrorHandler(async (
     request: NextRequest,
     context: { params: Promise<{ id: string }> }
@@ -52,35 +52,59 @@ export const POST = withErrorHandler(async (
     const body = await request.json();
     const data = webhookSchema.parse(body);
 
-    const webhook = await prisma.notificationWebhook.create({
-        data: {
-            ...data,
-            workspaceId,
-        },
-        select: {
-            id: true,
-            url: true,
-            enabled: true,
-            lastSuccess: true,
-            lastFailure: true,
-            failureCount: true,
-            createdAt: true,
-            updatedAt: true,
-        },
+    // Upsert: update existing webhook for this workspace, or create a new one
+    const existing = await prisma.notificationWebhook.findFirst({
+        where: { workspaceId },
     });
+
+    const webhook = existing
+        ? await prisma.notificationWebhook.update({
+            where: { id: existing.id },
+            data: {
+                url: data.url,
+                secret: data.secret,
+                enabled: data.enabled,
+            },
+            select: {
+                id: true,
+                url: true,
+                enabled: true,
+                lastSuccess: true,
+                lastFailure: true,
+                failureCount: true,
+                createdAt: true,
+                updatedAt: true,
+            },
+        })
+        : await prisma.notificationWebhook.create({
+            data: {
+                ...data,
+                workspaceId,
+            },
+            select: {
+                id: true,
+                url: true,
+                enabled: true,
+                lastSuccess: true,
+                lastFailure: true,
+                failureCount: true,
+                createdAt: true,
+                updatedAt: true,
+            },
+        });
 
     await prisma.auditLog.create({
         data: {
             workspaceId,
             userId: user.id,
-            action: 'webhook.created',
+            action: existing ? 'webhook.updated' : 'webhook.created',
             resourceType: 'NotificationWebhook',
             resourceId: webhook.id,
             metadata: { url: webhook.url },
         },
     });
 
-    return apiSuccess(webhook, undefined, 201);
+    return apiSuccess(webhook, undefined, existing ? 200 : 201);
 });
 
 // DELETE - Remove a webhook configuration
