@@ -18,3 +18,8 @@ logs/
 # Backups & stale files
 *.bak
 *.backup
+
+# Playwright
+test-results/
+playwright-report/
+blob-report/
