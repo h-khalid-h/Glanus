@@ -2,6 +2,9 @@ import { test, expect } from '@playwright/test';
 import { login, navigateToWorkspace } from './helpers/auth';
 
 test.describe('Assets Page', () => {
+    // Cold-start page compilation can exceed 90s on dev server
+    test.slow();
+
     test.beforeEach(async ({ page }) => {
         await login(page);
     });

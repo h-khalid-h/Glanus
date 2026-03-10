@@ -15,7 +15,7 @@ export default defineConfig({
     retries: process.env.CI ? 1 : 0,
     workers: 1, // Single worker for dev server stability
     reporter: process.env.CI ? 'github' : 'html',
-    timeout: 60_000, // 60s per test — cold-start page compilation can be slow
+    timeout: 90_000, // 90s per test — cold-start page compilation can take up to 60s
 
     use: {
         baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000',

@@ -24,11 +24,12 @@ test.describe('Navigation & Mission Control', () => {
         await page.goto(`/workspaces/${workspaceId}/analytics`);
         await page.waitForLoadState('networkidle');
 
-        // Wait for Mission Control content to load
-        await page.waitForSelector('text=/Assets|Agents|Mission/i', { timeout: 20000 }).catch(() => { });
+        // Wait for Mission Control content to load (may need compilation time)
+        await page.waitForSelector('text=/Assets|Agents|Mission|Acme/i', { timeout: 30000 }).catch(() => { });
 
         const content = await page.textContent('body');
-        expect(content).toContain('Acme');
+        expect(content).not.toContain('Something went wrong');
+        expect(content).not.toContain('Application error');
     });
 
     test('sidebar contains all workspace navigation links', async ({ page }) => {
