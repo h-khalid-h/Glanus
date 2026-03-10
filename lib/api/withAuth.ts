@@ -160,7 +160,7 @@ export async function requireAdmin() {
  *     return apiSuccess({ user });
  * });
  */
-export function withErrorHandler<T extends any[]>(
+export function withErrorHandler<T extends unknown[]>(
     handler: (...args: T) => Promise<Response>
 ) {
     return async (...args: T): Promise<Response> => {

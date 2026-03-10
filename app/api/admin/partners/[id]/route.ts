@@ -37,7 +37,7 @@ export const PATCH = withErrorHandler(async (
     }
 
     // Perform action
-    let updateData: any = {
+    const updateData: any = {
         verifiedBy: user.email,
     };
 

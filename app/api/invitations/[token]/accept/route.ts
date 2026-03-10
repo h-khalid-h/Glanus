@@ -54,7 +54,7 @@ export const POST = withErrorHandler(async (
     }
 
     // Get or create user
-    let user = await prisma.user.findUnique({
+    const user = await prisma.user.findUnique({
         where: { email: invitation.email },
     });
 

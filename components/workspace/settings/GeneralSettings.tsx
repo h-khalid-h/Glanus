@@ -144,7 +144,7 @@ export default function GeneralSettings({ workspace }: { workspace: Workspace })
                                     return;
                                 }
                                 setMessage({ type: 'success', text: `Uploaded ${file.name} successfully.` });
-                            } catch (err: unknown) {
+                            } catch (_err: unknown) {
                                 setMessage({ type: 'error', text: 'Upload failed due to network error' });
                             } finally {
                                 setIsLoading(false);

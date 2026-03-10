@@ -1,4 +1,4 @@
-import { logError, logInfo, logWarn } from '@/lib/logger';
+import { logError, logInfo } from '@/lib/logger';
 
 type EmailData = {
     to: string;

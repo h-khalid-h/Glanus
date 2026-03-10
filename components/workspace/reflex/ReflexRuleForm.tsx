@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { csrfFetch } from '@/lib/api/csrfFetch';
 import { useToast } from '@/lib/toast';
 import type { AutomationRule, AutomationTrigger, AutomationAction, AutonomyLevel } from '@/lib/reflex/automation';
-import { Save, X, Info, AlertTriangle } from 'lucide-react';
+import { Save, X, AlertTriangle } from 'lucide-react';
 
 interface ReflexRuleFormProps {
     workspaceId: string;

@@ -1,13 +1,6 @@
 // Alert evaluation service - checks metrics against alert rules
 import { prisma } from '@/lib/db';
 
-interface MetricReading {
-    cpuUsage: number;
-    ramUsage: number;
-    diskUsage: number;
-    timestamp: Date;
-}
-
 interface AlertTrigger {
     ruleId: string;
     ruleName: string;

@@ -4,11 +4,6 @@ import { withSentryConfig } from '@sentry/nextjs'
 const nextConfig = {
     reactStrictMode: true,
     output: 'standalone',
-    eslint: {
-        // ~80 files have pre-existing lint issues (mostly Prisma JSON `any` casts).
-        // Lint sweep is tracked separately; tsc --noEmit is the real safety gate.
-        ignoreDuringBuilds: true,
-    },
     serverExternalPackages: ['ssh2', 'node-ssh', 'isomorphic-dompurify', 'jsdom'],
     images: {
         remotePatterns: [

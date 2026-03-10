@@ -33,7 +33,7 @@ export default function DangerZone({ workspace }: { workspace: Workspace }) {
             await fetchWorkspaces();
             setCurrentWorkspace(null);
             router.push('/workspaces/new');
-        } catch (error: unknown) {
+        } catch (_error: unknown) {
             showError('Delete Failed', 'Could not delete workspace. Please try again.');
             setIsDeleting(false);
         }

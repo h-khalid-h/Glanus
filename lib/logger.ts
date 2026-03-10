@@ -26,11 +26,11 @@ const isEdge = process.env.NEXT_RUNTIME === 'edge';
 
 // Create a light logger for Edge Runtime
 const edgeLogger = {
-    error: (msg: string, meta?: any) => console.error(`[ERROR] ${msg}`, meta || ''),
-    warn: (msg: string, meta?: any) => console.warn(`[WARN] ${msg}`, meta || ''),
-    info: (msg: string, meta?: any) => console.log(`[INFO] ${msg}`, meta || ''),
-    http: (msg: string, meta?: any) => console.log(`[HTTP] ${msg}`, meta || ''),
-    debug: (msg: string, meta?: any) => console.log(`[DEBUG] ${msg}`, meta || ''),
+    error: (msg: string, meta?: unknown) => console.error(`[ERROR] ${msg}`, meta || ''),
+    warn: (msg: string, meta?: unknown) => console.warn(`[WARN] ${msg}`, meta || ''),
+    info: (msg: string, meta?: unknown) => console.log(`[INFO] ${msg}`, meta || ''),
+    http: (msg: string, meta?: unknown) => console.log(`[HTTP] ${msg}`, meta || ''),
+    debug: (msg: string, meta?: unknown) => console.log(`[DEBUG] ${msg}`, meta || ''),
 };
 
 // JSON format for structured logging (production + files)
@@ -117,7 +117,15 @@ function buildTransports(): winston.transport[] {
 }
 
 // Create the logger instance
-let logger: any;
+type Logger = {
+    error: (msg: string, meta?: unknown) => void;
+    warn: (msg: string, meta?: unknown) => void;
+    info: (msg: string, meta?: unknown) => void;
+    http: (msg: string, meta?: unknown) => void;
+    debug: (msg: string, meta?: unknown) => void;
+};
+
+let logger: Logger;
 
 if (!isEdge) {
     logger = winston.createLogger({

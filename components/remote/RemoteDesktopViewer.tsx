@@ -37,7 +37,7 @@ export function RemoteDesktopViewer({
 
         // Polling state
         let lastSeenIceCandidates = 0;
-        let hasProcessedOffer = false;
+        const hasProcessedOffer = false;
         let hasProcessedAnswer = false;
 
         webrtcClient.onSignal = async (signal) => {

@@ -75,7 +75,7 @@ export default function NewFieldPage({ params }: { params: Promise<{ id: string 
             setError(null);
 
             // Parse validation rules if provided
-            let parsedData = { ...data };
+            const parsedData = { ...data };
             if (data.validationRules) {
                 try {
                     JSON.parse(data.validationRules);

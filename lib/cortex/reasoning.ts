@@ -7,7 +7,7 @@
  */
 
 import { getOpenAIClient, defaultModel } from '@/lib/ai/openai';
-import { enrichMetric, type EnrichedMetric } from '@/lib/nerve/enrichment';
+import { type EnrichedMetric } from '@/lib/nerve/enrichment';
 import { findSimilarPatterns, type PatternMatch } from '@/lib/nerve/memory';
 import { getBlastRadius, type OperationalGraphData } from '@/lib/nerve/operational-graph';
 

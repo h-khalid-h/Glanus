@@ -195,7 +195,7 @@ export async function validateFieldValue(
         // Count existing field values with this value (excluding current asset if updating)
         const count = await prisma.assetFieldValue.count({
             where: {
-                fieldDefinitionId: (fieldDefinition as any).id,
+                fieldDefinitionId: (fieldDefinition as typeof fieldDefinition & { id: string }).id,
                 ...(fieldDefinition.fieldType === 'STRING' ||
                     fieldDefinition.fieldType === 'TEXT' ||
                     fieldDefinition.fieldType === 'EMAIL' ||
@@ -222,7 +222,7 @@ export async function validateFieldValue(
  * Resolve all field definitions for a category (including inherited from parents)
  */
 export async function resolveInheritedFields(categoryId: string) {
-    const fields: any[] = []; // eslint-disable-line @typescript-eslint/no-explicit-any -- dynamic field definitions
+    const fields: ({ id: string; fieldType: string; isRequired: boolean; isUnique: boolean; validationRules: unknown; slug: string; name: string; label: string; description: string | null; defaultValue: string | null; isInherited: boolean; sortOrder: number; categoryId: string })[] = [];
     let currentCategoryId: string | null = categoryId;
 
     while (currentCategoryId) {

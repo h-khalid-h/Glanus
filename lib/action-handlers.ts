@@ -64,7 +64,7 @@ export async function executeAction(
     actionDefinition: ActionDefinition,
     asset: ActionAsset,
     parameters: Record<string, unknown>,
-    executionId: string
+    _executionId: string
 ): Promise<ActionResult> {
     try {
         switch (actionDefinition.handlerType) {
