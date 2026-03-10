@@ -4,6 +4,7 @@ import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/db';
 import { z } from 'zod';
 import { hashAgentToken } from '@/lib/security/agent-auth';
+import { withRateLimit } from '@/lib/security/rateLimit';
 
 // Validation schema
 const heartbeatSchema = z.object({
@@ -31,6 +32,10 @@ const heartbeatSchema = z.object({
 
 export async function POST(request: NextRequest) {
     try {
+        // Rate limit — high-frequency endpoint, use generous 'api' tier
+        const rateLimitResponse = await withRateLimit(request, 'api');
+        if (rateLimitResponse) return rateLimitResponse;
+
         const body = await request.json();
         const data = heartbeatSchema.parse(body);
 

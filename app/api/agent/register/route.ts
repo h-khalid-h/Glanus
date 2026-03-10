@@ -4,6 +4,7 @@ import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/db';
 import { z } from 'zod';
 import { generateAgentToken } from '@/lib/security/agent-auth';
+import { withRateLimit } from '@/lib/security/rateLimit';
 
 // Validation schema
 const registerSchema = z.object({
@@ -24,6 +25,10 @@ const registerSchema = z.object({
 
 export async function POST(request: NextRequest) {
     try {
+        // Rate limit — agent registration is a public write endpoint
+        const rateLimitResponse = await withRateLimit(request, 'strict-api');
+        if (rateLimitResponse) return rateLimitResponse;
+
         const body = await request.json();
         const data = registerSchema.parse(body);
 
