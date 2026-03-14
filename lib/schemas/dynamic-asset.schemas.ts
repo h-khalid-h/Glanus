@@ -227,7 +227,7 @@ export const createRelationshipSchema = z
         childAssetId: z.string().cuid('Invalid child asset ID'),
         relationshipType: relationshipTypeEnum,
         quantity: z.number().int().positive().optional(),
-        position: z.string().max(255).optional(),
+        position: z.coerce.number().int().optional(),
         metadata: z.record(z.unknown()).optional(),
     })
     .refine((data) => data.parentAssetId !== data.childAssetId, {
@@ -237,7 +237,7 @@ export const createRelationshipSchema = z
 export const updateRelationshipSchema = z.object({
     relationshipType: relationshipTypeEnum.optional(),
     quantity: z.number().int().positive().optional(),
-    position: z.string().max(255).optional(),
+    position: z.coerce.number().int().optional(),
     metadata: z.record(z.unknown()).optional(),
 });
 

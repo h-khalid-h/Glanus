@@ -13,7 +13,7 @@ const baseAssetSchema = z.object({
 
     // Transform empty strings to undefined for optional date fields
     purchaseDate: z.string().datetime().optional().or(z.literal('').transform(() => undefined)),
-    purchaseCost: z.number().positive().optional().or(z.string().transform((val) => val === '' || val === '0' ? undefined : parseFloat(val))),
+    purchaseCost: z.coerce.number().positive().optional(),
     warrantyUntil: z.string().datetime().optional().or(z.literal('').transform(() => undefined)),
 
     location: z.string().max(255).optional(),

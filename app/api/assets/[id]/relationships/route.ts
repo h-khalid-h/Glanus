@@ -39,6 +39,6 @@ export const POST = withErrorHandler(async (request: NextRequest, { params }: Ro
     const { id } = await params;
     const body = await request.json();
     const data = createRelationshipSchema.parse(body);
-    const relationship = await AssetRelationshipService.createRelationship(id, user.id, data as any);
+    const relationship = await AssetRelationshipService.createRelationship(id, user.id, data);
     return apiSuccess(relationship, undefined, 201);
 });

@@ -41,12 +41,9 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
 
     await requireWorkspaceAccess(workspaceId, user.id, request);
 
-    try {
-        const asset = await AssetService.createAsset(workspaceId, user.id, data as any);
-        return apiSuccess(asset, undefined, 201);
-    } catch (error: any) {
-        if (error.message.includes('already exists')) return apiError(409, error.message);
-        if (error.message.includes('Quota exceeded')) return apiError(403, error.message);
-        return apiError(400, error.message);
-    }
+    const asset = await AssetService.createAsset(workspaceId, user.id, {
+        ...data,
+        assetType: data.assetType ?? 'DYNAMIC',
+    });
+    return apiSuccess(asset, undefined, 201);
 });

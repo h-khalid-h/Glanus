@@ -25,6 +25,6 @@ export const POST = withErrorHandler(async (request: NextRequest, { params }: Ro
     await requireAuth();
     const { id, actionSlug } = await params;
     const data = executeActionSchema.parse(await request.json());
-    const result = await AssetService.executeAction(id, actionSlug, data as any);
+    const result = await AssetService.executeAction(id, actionSlug, data);
     return apiSuccess(result, { status: 202 }); // 202 Accepted
 });
