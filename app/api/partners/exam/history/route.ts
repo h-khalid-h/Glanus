@@ -1,12 +1,12 @@
 import { apiSuccess, apiError } from '@/lib/api/response';
 import { requireAuth, withErrorHandler } from '@/lib/api/withAuth';
-import { PartnerService } from '@/lib/services/PartnerService';
+import { PartnerExamService } from '@/lib/services/PartnerExamService';
 
 // GET /api/partners/exam/history
 export const GET = withErrorHandler(async () => {
     const user = await requireAuth();
     try {
-        const exams = await PartnerService.getExamHistory(user.email!);
+        const exams = await PartnerExamService.getExamHistory(user.email!);
 
         type ExamSummary = (typeof exams)[number];
         const byLevel = exams.reduce((acc: Record<string, ExamSummary[]>, exam: ExamSummary) => {

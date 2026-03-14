@@ -34,7 +34,9 @@
 
 | Service | File | Responsibility |
 |---|---|---|
-| `AssetService` | `lib/services/AssetService.ts` | CRUD, actions (list/execute), metrics, schema, CSV export |
+| `AssetService` | `lib/services/AssetService.ts` | Asset CRUD: getAssets (filtered/paginated), createAsset (quotas + polymorphic sub-entities + dynamic fields), getAssetById, updateAsset, deleteAsset (soft) |
+| `AssetActionService` | `lib/services/AssetActionService.ts` | Dynamic asset actions: listActions, getActionBySlug, executeAction (fire-and-forget 202 pattern) |
+| `AssetAnalyticsService` | `lib/services/AssetAnalyticsService.ts` | Asset telemetry: getMetrics (agent time-series), getSchema (dynamic field + action definition), exportAssets (CSV) |
 | `AssetBulkService` | `lib/services/AssetBulkService.ts` | `bulkDelete`, `bulkUpdate`, `bulkAssign`, `bulkAction`, `importCSV` |
 | `AssetRelationshipService` | `lib/services/AssetRelationshipService.ts` | Relationship CRUD + circular dependency BFS check |
 | `AssetAssignmentService` | `lib/services/AssetAssignmentService.ts` | `assignAsset`, `unassignAsset`, `executeScript`, `getScriptHistory`, `getLinkedAgent` |

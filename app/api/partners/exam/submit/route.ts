@@ -3,7 +3,7 @@ import { NextRequest } from 'next/server';
 import { withRateLimit } from '@/lib/security/rateLimit';
 import { requireAuth, withErrorHandler } from '@/lib/api/withAuth';
 import { z } from 'zod';
-import { PartnerService } from '@/lib/services/PartnerService';
+import { PartnerExamService } from '@/lib/services/PartnerExamService';
 
 const submitExamSchema = z.object({
     examId: z.string(),
@@ -21,7 +21,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     if (!validation.success) return apiError(400, 'Validation failed', validation.error.errors);
 
     try {
-        const result = await PartnerService.submitExam(user.email!, validation.data.examId, validation.data.answers);
+        const result = await PartnerExamService.submitExam(user.email!, validation.data.examId, validation.data.answers);
         return apiSuccess(result);
     } catch (err: unknown) {
         const e = err as { statusCode?: number; message?: string };

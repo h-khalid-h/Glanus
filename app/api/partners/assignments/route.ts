@@ -1,12 +1,12 @@
 import { apiSuccess, apiError } from '@/lib/api/response';
 import { requireAuth, withErrorHandler } from '@/lib/api/withAuth';
-import { PartnerService } from '@/lib/services/PartnerService';
+import { PartnerAssignmentService } from '@/lib/services/PartnerAssignmentService';
 
 // GET /api/partners/assignments
 export const GET = withErrorHandler(async () => {
     const user = await requireAuth();
     try {
-        const assignments = await PartnerService.getAssignments(user.email!);
+        const assignments = await PartnerAssignmentService.getAssignments(user.email!);
         return apiSuccess({ assignments });
     } catch (err: unknown) {
         const e = err as { statusCode?: number; message?: string };
