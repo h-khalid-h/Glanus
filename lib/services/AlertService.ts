@@ -20,42 +20,45 @@ export class AlertService {
             try {
                 // Execute Oracle prediction logic
                 const forecasts = await forecastFailures(workspace.id);
-
-                // Filter and aggregate purely high/critical anomalies
                 const criticalForecasts = forecasts.filter(f => f.severity === 'critical' || f.severity === 'high');
 
-                for (const forecast of criticalForecasts) {
-                    // Throttle duplication by checking for recent matching insights (within last 6 hours)
-                    const sixHoursAgo = new Date(Date.now() - 6 * 60 * 60 * 1000);
-                    const existing = await prisma.aIInsight.findFirst({
-                        where: {
+                if (!criticalForecasts.length) continue;
+
+                // ── Batch dedup: 1 SELECT per workspace instead of N SELECTs ─────────
+                const sixHoursAgo = new Date(Date.now() - 6 * 60 * 60 * 1000);
+                const recentInsights = await prisma.aIInsight.findMany({
+                    where: {
+                        workspaceId: workspace.id,
+                        type: 'CAPACITY_FORECAST',
+                        createdAt: { gte: sixHoursAgo },
+                    },
+                    select: { assetId: true },
+                });
+                const recentAssetIds = new Set(recentInsights.map((i) => i.assetId));
+
+                // Only create insights for forecasts not already throttled
+                const newForecasts = criticalForecasts.filter((f) => !recentAssetIds.has(f.assetId));
+
+                if (newForecasts.length) {
+                    await prisma.aIInsight.createMany({
+                        data: newForecasts.map((forecast) => ({
                             workspaceId: workspace.id,
                             assetId: forecast.assetId,
-                            type: 'CAPACITY_FORECAST',
-                            createdAt: { gte: sixHoursAgo }
-                        }
+                            type: 'CAPACITY_FORECAST' as const,
+                            severity: forecast.severity.toUpperCase() as 'INFO' | 'WARNING' | 'CRITICAL',
+                            title: `Capacity Burn - ${forecast.metric.toUpperCase()}`,
+                            description: `Oracle expects ${forecast.metric.toUpperCase()} exhaustion in ${forecast.timeToThreshold}.`,
+                            confidence: forecast.confidence,
+                            metadata: {
+                                recommendations: [
+                                    `Review ${forecast.metric} resource consumption immediately.`,
+                                    `Consider upgrading allocations before failure state occurs.`,
+                                ],
+                            },
+                        })),
+                        skipDuplicates: true,
                     });
-
-                    if (!existing) {
-                        await prisma.aIInsight.create({
-                            data: {
-                                workspaceId: workspace.id,
-                                assetId: forecast.assetId,
-                                type: 'CAPACITY_FORECAST',
-                                severity: forecast.severity.toUpperCase() as "INFO" | "WARNING" | "CRITICAL",
-                                title: `Capacity Burn - ${forecast.metric.toUpperCase()}`,
-                                description: `Oracle expects ${forecast.metric.toUpperCase()} exhaustion in ${forecast.timeToThreshold}.`,
-                                confidence: forecast.confidence,
-                                metadata: {
-                                    recommendations: [
-                                        `Review ${forecast.metric} resource consumption immediately.`,
-                                        `Consider upgrading allocations before failure state occurs.`
-                                    ]
-                                }
-                            }
-                        });
-                        insightsGenerated++;
-                    }
+                    insightsGenerated += newForecasts.length;
                 }
             } catch (insightErr) {
                 logError(`[SERVICE] Failed persisting insights for workspace ${workspace.id}`, insightErr);

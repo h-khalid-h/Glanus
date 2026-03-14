@@ -113,6 +113,18 @@ export class ScriptScheduleService {
             include: { script: true },
         });
 
+        if (!dueSchedules.length) {
+            return { schedulesProcessed: 0, executionsQueued: 0, errors: 0, durationMs: Date.now() - startTime };
+        }
+
+        // ── Batch agent lookup: 1 SELECT instead of N SELECTs ─────────────────
+        const allTargetIds = [...new Set(dueSchedules.flatMap((s) => (s.targetIds as string[])))];
+        const allAgents = await prisma.agentConnection.findMany({
+            where: { id: { in: allTargetIds } },
+            select: { id: true, assetId: true },
+        });
+        const agentMap = new Map(allAgents.map((a) => [a.id, a]));
+
         let executionsQueued = 0;
         let schedulesProcessed = 0;
         let errors = 0;
@@ -122,14 +134,12 @@ export class ScriptScheduleService {
                 const targetIds = schedule.targetIds as string[];
 
                 if (targetIds && targetIds.length > 0) {
-                    const agents = await prisma.agentConnection.findMany({
-                        where: { id: { in: targetIds } },
-                        select: { id: true, assetId: true },
-                    });
+                    const agents = targetIds.map((id) => agentMap.get(id)).filter(Boolean) as typeof allAgents;
 
-                    await Promise.all(agents.map((agent) =>
-                        prisma.scriptExecution.create({
-                            data: {
+                    if (agents.length > 0) {
+                        // Batch insert all executions in a single query
+                        await prisma.scriptExecution.createMany({
+                            data: agents.map((agent) => ({
                                 scriptId: schedule.scriptId,
                                 scriptName: schedule.script.name,
                                 scriptBody: schedule.script.content,
@@ -137,13 +147,13 @@ export class ScriptScheduleService {
                                 agentId: agent.id,
                                 assetId: agent.assetId,
                                 workspaceId: schedule.workspaceId,
-                                status: 'PENDING',
+                                status: 'PENDING' as const,
                                 createdBy: 'system_cron',
-                            },
-                        })
-                    ));
-                    executionsQueued += agents.length;
-                    logInfo(`[SERVICE] Dispatched schedule ${schedule.id} (${schedule.name}) to ${targetIds.length} agents.`);
+                            })),
+                        });
+                        executionsQueued += agents.length;
+                        logInfo(`[SERVICE] Dispatched schedule ${schedule.id} (${schedule.name}) to ${agents.length} agents.`);
+                    }
                 }
 
                 let nextRunAt: Date | null = null;

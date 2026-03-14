@@ -444,38 +444,49 @@ export class AgentService {
             },
         });
 
-        for (const device of uniqueDevices) {
-            const existing = await prisma.networkDevice.findFirst({
-                where: { workspaceId: agent.workspaceId, ipAddress: device.ipAddress },
-            });
+        // ── Batch upsert: 1 SELECT instead of N SELECTs ──────────────────────
+        const incomingIps = uniqueDevices.map((d) => d.ipAddress);
+        const existingDevices = await prisma.networkDevice.findMany({
+            where: { workspaceId: agent.workspaceId, ipAddress: { in: incomingIps } },
+            select: { id: true, ipAddress: true, macAddress: true, hostname: true, deviceType: true, snmpData: true },
+        });
+        const existingMap = new Map(existingDevices.map((d) => [d.ipAddress, d]));
 
-            if (existing) {
-                await prisma.networkDevice.update({
-                    where: { id: existing.id },
+        const toCreate = uniqueDevices.filter((d) => !existingMap.has(d.ipAddress));
+        const toUpdate = uniqueDevices.filter((d) => existingMap.has(d.ipAddress));
+        const now = new Date();
+
+        await prisma.$transaction([
+            // Batch insert for new devices
+            prisma.networkDevice.createMany({
+                data: toCreate.map((device) => ({
+                    workspaceId: agent.workspaceId,
+                    discoveredById: agent.id,
+                    ipAddress: device.ipAddress,
+                    macAddress: device.macAddress || null,
+                    hostname: device.hostname || null,
+                    deviceType: device.deviceType,
+                    snmpData: device.snmpData ? (device.snmpData as object) : undefined,
+                    lastSeen: now,
+                })),
+                skipDuplicates: true,
+            }),
+            // Individual updates for existing devices (Prisma lacks updateMany with per-row data)
+            ...toUpdate.map((device) => {
+                const e = existingMap.get(device.ipAddress)!;
+                return prisma.networkDevice.update({
+                    where: { id: e.id },
                     data: {
-                        macAddress: device.macAddress || existing.macAddress,
-                        hostname: device.hostname || existing.hostname,
-                        deviceType: device.deviceType !== 'UNKNOWN' ? device.deviceType : existing.deviceType,
-                        snmpData: device.snmpData ? (device.snmpData as object) : (existing.snmpData as object),
-                        lastSeen: new Date(),
+                        macAddress: device.macAddress || e.macAddress,
+                        hostname: device.hostname || e.hostname,
+                        deviceType: device.deviceType !== 'UNKNOWN' ? device.deviceType : e.deviceType,
+                        snmpData: device.snmpData ? (device.snmpData as object) : (e.snmpData as object),
+                        lastSeen: now,
                         discoveredById: agent.id,
                     },
                 });
-            } else {
-                await prisma.networkDevice.create({
-                    data: {
-                        workspaceId: agent.workspaceId,
-                        discoveredById: agent.id,
-                        ipAddress: device.ipAddress,
-                        macAddress: device.macAddress || null,
-                        hostname: device.hostname || null,
-                        deviceType: device.deviceType,
-                        snmpData: device.snmpData ? (device.snmpData as object) : undefined,
-                        lastSeen: new Date(),
-                    },
-                });
-            }
-        }
+            }),
+        ]);
 
         return { scanId: scan.id, count: uniqueDevices.length };
     }
