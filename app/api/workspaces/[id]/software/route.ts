@@ -3,10 +3,10 @@ import { requireAuth, requireWorkspaceRole, withErrorHandler } from '@/lib/api/w
 import { apiSuccess } from '@/lib/api/response';
 import { NetworkService } from '@/lib/services/NetworkService';
 
-type RouteContext = { params: { id: string } };
+type RouteContext = { params: Promise<{ id: string }> };
 
 export const GET = withErrorHandler(async (_request: NextRequest, { params }: RouteContext) => {
-    const workspaceId = params.id;
+    const { id: workspaceId } = await params;
     const user = await requireAuth();
     await requireWorkspaceRole(workspaceId, user.id, 'VIEWER');
     const software = await NetworkService.getSoftwareInventory(workspaceId);
