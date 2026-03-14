@@ -46,45 +46,61 @@ interface AgentWithAsset {
     };
 }
 
+// Metric history map: agentId → recent metrics (pre-loaded once per workspace evaluation)
+type MetricHistory = Map<string, { cpuUsage: number | null; ramUsage: number | null; diskUsage: number | null; timestamp: Date }[]>;
+
 export class AlertEvaluator {
     /**
-     * Evaluate all enabled alert rules for a workspace
+     * Evaluate all enabled alert rules for a workspace.
+     * Batch-loads all agent metrics upfront to eliminate N+1 queries.
      */
     async evaluateWorkspace(workspaceId: string): Promise<AlertTrigger[]> {
         const triggers: AlertTrigger[] = [];
 
         // Get all enabled alert rules
         const rules = await prisma.alertRule.findMany({
-            where: {
-                workspaceId,
-                enabled: true,
-            },
+            where: { workspaceId, enabled: true },
         });
 
-        if (rules.length === 0) {
-            return triggers;
-        }
+        if (rules.length === 0) return triggers;
 
         // Get all agents in workspace with latest metrics
         const agents = await prisma.agentConnection.findMany({
             where: { workspaceId },
             include: {
-                asset: {
-                    select: {
-                        id: true,
-                        name: true,
-                    },
-                },
+                asset: { select: { id: true, name: true } },
             },
         });
 
-        // Evaluate each rule against each agent
+        if (agents.length === 0) return triggers;
+
+        // ── Batch metrics: 1 SELECT instead of R×A SELECTs ────────────────────
+        const maxDuration = rules.reduce((max, r) => Math.max(max, r.duration || 0), 0);
+        const metricsStartTime = new Date();
+        metricsStartTime.setMinutes(metricsStartTime.getMinutes() - maxDuration);
+
+        const allMetrics = await prisma.agentMetric.findMany({
+            where: {
+                agentId: { in: agents.map((a) => a.id) },
+                timestamp: { gte: metricsStartTime },
+            },
+            orderBy: { timestamp: 'asc' },
+            select: { agentId: true, cpuUsage: true, ramUsage: true, diskUsage: true, timestamp: true },
+        });
+
+        // Group by agentId for O(1) lookup per rule×agent combination
+        const metricsByAgent: MetricHistory = new Map();
+        for (const m of allMetrics) {
+            const existing = metricsByAgent.get(m.agentId) ?? [];
+            existing.push(m);
+            metricsByAgent.set(m.agentId, existing);
+        }
+
+        // Evaluate each rule against each agent — no more DB calls inside the loop
         for (const rule of rules) {
             for (const agent of agents) {
-                const trigger = await this.evaluateRule(rule, agent);
-                if (trigger) {
-                    triggers.push(trigger);
-                }
+                const trigger = this.evaluateRule(rule, agent, metricsByAgent);
+                if (trigger) triggers.push(trigger);
             }
         }
 
@@ -92,12 +108,13 @@ export class AlertEvaluator {
     }
 
     /**
-     * Evaluate a single rule against an agent
+     * Evaluate a single rule against an agent (purely synchronous — metrics pre-loaded).
      */
-    private async evaluateRule(
+    private evaluateRule(
         rule: AlertRule,
-        agent: AgentWithAsset
-    ): Promise<AlertTrigger | null> {
+        agent: AgentWithAsset,
+        metricsByAgent: MetricHistory,
+    ): AlertTrigger | null {
         const { metric, threshold, duration } = rule;
 
         // Check offline condition
@@ -120,45 +137,22 @@ export class AlertEvaluator {
         }
 
         // Skip if agent is offline
-        if (agent.status !== 'ONLINE') {
-            return null;
-        }
+        if (agent.status !== 'ONLINE') return null;
 
         // Check metric thresholds
         let currentValue: number | null = null;
-
         switch (metric) {
-            case 'CPU':
-                currentValue = agent.cpuUsage;
-                break;
-            case 'RAM':
-                currentValue = agent.ramUsage;
-                break;
-            case 'DISK':
-                currentValue = agent.diskUsage;
-                break;
+            case 'CPU': currentValue = agent.cpuUsage; break;
+            case 'RAM': currentValue = agent.ramUsage; break;
+            case 'DISK': currentValue = agent.diskUsage; break;
         }
 
-        if (currentValue === null) {
-            return null;
-        }
+        if (currentValue === null || currentValue <= threshold) return null;
 
-        // Check if over threshold
-        if (currentValue <= threshold) {
-            return null;
-        }
-
-        // Check duration (if specified)
+        // Check duration via pre-loaded metrics (synchronous — no DB call)
         if (duration > 0) {
-            const sustained = await this.checkSustainedViolation(
-                agent,
-                metric,
-                threshold,
-                duration
-            );
-            if (!sustained) {
-                return null;
-            }
+            const sustained = this.checkSustainedViolation(agent, metric, threshold, duration, metricsByAgent);
+            if (!sustained) return null;
         }
 
         return {
@@ -175,53 +169,46 @@ export class AlertEvaluator {
     }
 
     /**
-     * Check if metric has been over threshold for duration
+     * Check if metric has been over threshold for duration — uses pre-loaded metrics (no DB).
      */
-    private async checkSustainedViolation(
+    private checkSustainedViolation(
         agent: AgentWithAsset,
         metric: string,
         threshold: number,
-        durationMinutes: number
-    ): Promise<boolean> {
+        durationMinutes: number,
+        metricsByAgent: MetricHistory,
+    ): boolean {
         const startTime = new Date();
         startTime.setMinutes(startTime.getMinutes() - durationMinutes);
 
-        const metrics = await prisma.agentMetric.findMany({
-            where: {
-                agentId: agent.id,
-                timestamp: {
-                    gte: startTime,
-                },
-            },
-            orderBy: { timestamp: 'asc' },
-        });
+        const agentMetrics = (metricsByAgent.get(agent.id) ?? []).filter(
+            (m) => m.timestamp >= startTime,
+        );
 
-        // Current Live State Check (Volatile memory configures absolute truth)
-        const currentVolatileValue = metric === 'CPU' ? agent.cpuUsage : metric === 'RAM' ? agent.ramUsage : agent.diskUsage;
+        const currentVolatileValue =
+            metric === 'CPU' ? agent.cpuUsage :
+                metric === 'RAM' ? agent.ramUsage :
+                    agent.diskUsage;
 
-        if (metrics.length === 0) {
-            // Prism Deduplication Engine dropped history because variance < 5%
-            // If the live value exceeds the threshold, the alert is sustained cleanly.
-            return (typeof currentVolatileValue === 'number' && currentVolatileValue > threshold);
+        if (agentMetrics.length === 0) {
+            // No history — use live volatile value (Prism Deduplication dropped history < 5% variance)
+            return typeof currentVolatileValue === 'number' && currentVolatileValue > threshold;
         }
 
-        // Check if ALL historical readings in this period exceeded threshold
         const field = metric === 'CPU' ? 'cpuUsage' : metric === 'RAM' ? 'ramUsage' : 'diskUsage';
-        const sustainedHistory = metrics.every((m) => {
+        const sustainedHistory = agentMetrics.every((m) => {
             const val = m[field as keyof typeof m];
             return typeof val === 'number' && val > threshold;
         });
 
-        // Both history and live state must trigger
-        return sustainedHistory && (typeof currentVolatileValue === 'number' && currentVolatileValue > threshold);
+        return sustainedHistory && typeof currentVolatileValue === 'number' && currentVolatileValue > threshold;
     }
 
     /**
-     * Calculate minutes since last seen
+     * Calculate minutes since last seen.
      */
     private getMinutesOffline(lastSeen: Date): number {
-        const now = new Date();
-        const diff = now.getTime() - new Date(lastSeen).getTime();
+        const diff = Date.now() - new Date(lastSeen).getTime();
         return Math.floor(diff / 1000 / 60);
     }
 }
