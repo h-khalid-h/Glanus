@@ -1,6 +1,6 @@
-import { apiSuccess, apiError } from '@/lib/api/response';
-import { logError } from '@/lib/logger';
+import { apiSuccess } from '@/lib/api/response';
 import { NextRequest } from 'next/server';
+import { withErrorHandler } from '@/lib/api/withAuth';
 import { z } from 'zod';
 import { withRateLimit } from '@/lib/security/rateLimit';
 import { AgentService } from '@/lib/services/AgentService';
@@ -28,28 +28,15 @@ const heartbeatSchema = z.object({
     }),
 });
 
-export async function POST(request: NextRequest) {
-    try {
-        const rateLimitResponse = await withRateLimit(request, 'api');
-        if (rateLimitResponse) return rateLimitResponse;
+export const POST = withErrorHandler(async (request: NextRequest) => {
+    const rateLimitResponse = await withRateLimit(request, 'api');
+    if (rateLimitResponse) return rateLimitResponse;
 
-        const body = await request.json();
-        const data = heartbeatSchema.parse(body);
-
-        const result = await AgentService.processHeartbeat(data.authToken, data.metrics);
-
-        return apiSuccess({
-            status: 'ok',
-            agentId: result.agentId,
-            commands: result.commands,
-        });
-    } catch (error: unknown) {
-        if (error instanceof z.ZodError) {
-            return apiError(400, 'Validation failed', error.errors);
-        }
-        const err = error as { statusCode?: number; message?: string };
-        if (err.statusCode) return apiError(err.statusCode, err.message || 'Error');
-        logError('Agent heartbeat failed', error);
-        return apiError(500, 'Failed to process heartbeat');
-    }
-}
+    const data = heartbeatSchema.parse(await request.json());
+    const result = await AgentService.processHeartbeat(data.authToken, data.metrics);
+    return apiSuccess({
+        status: 'ok',
+        agentId: result.agentId,
+        commands: result.commands,
+    });
+});

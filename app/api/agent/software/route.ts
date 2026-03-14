@@ -1,6 +1,6 @@
-import { apiSuccess, apiError } from '@/lib/api/response';
-import { logError } from '@/lib/logger';
+import { apiSuccess } from '@/lib/api/response';
 import { NextRequest } from 'next/server';
+import { withErrorHandler } from '@/lib/api/withAuth';
 import { z } from 'zod';
 import { withRateLimit } from '@/lib/security/rateLimit';
 import { AgentService } from '@/lib/services/AgentService';
@@ -21,24 +21,11 @@ const softwareSchema = z.object({
     })).max(5000),
 });
 
-export async function POST(request: NextRequest) {
-    try {
-        const rateLimitResponse = await withRateLimit(request, 'api');
-        if (rateLimitResponse) return rateLimitResponse;
+export const POST = withErrorHandler(async (request: NextRequest) => {
+    const rateLimitResponse = await withRateLimit(request, 'api');
+    if (rateLimitResponse) return rateLimitResponse;
 
-        const body = await request.json();
-        const data = softwareSchema.parse(body);
-
-        const result = await AgentService.syncSoftwareInventory(data.authToken, data.software);
-
-        return apiSuccess({ count: result.count }, { message: 'Software inventory synchronized' });
-    } catch (error: unknown) {
-        if (error instanceof z.ZodError) {
-            return apiError(400, 'Invalid payload', error.errors);
-        }
-        const err = error as { statusCode?: number; message?: string };
-        if (err.statusCode) return apiError(err.statusCode, err.message || 'Error');
-        logError('Error synchronizing agent software', error);
-        return apiError(500, 'Internal Server Error');
-    }
-}
+    const data = softwareSchema.parse(await request.json());
+    const result = await AgentService.syncSoftwareInventory(data.authToken, data.software);
+    return apiSuccess({ count: result.count }, { message: 'Software inventory synchronized' });
+});
