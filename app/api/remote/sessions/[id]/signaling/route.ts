@@ -1,7 +1,7 @@
 import { apiSuccess, apiError } from '@/lib/api/response';
 import { NextRequest } from 'next/server';
 import { requireAuth } from '@/lib/api/withAuth';
-import { RemoteSessionService } from '@/lib/services/RemoteSessionService';
+import { RemoteSignalingService } from '@/lib/services/RemoteSignalingService';
 
 interface RouteContext {
     params: Promise<{ id: string }>;
@@ -26,10 +26,10 @@ export async function GET(request: NextRequest, context: RouteContext) {
             }
         }
 
-        const { isAuthorized } = await RemoteSessionService.verifySignalingAccess(id, userId, agentToken);
+        const { isAuthorized } = await RemoteSignalingService.verifySignalingAccess(id, userId, agentToken);
         if (!isAuthorized) return apiError(401, 'Unauthorized');
 
-        const session = await RemoteSessionService.getSignalingState(id);
+        const session = await RemoteSignalingService.getSignalingState(id);
         return apiSuccess(session);
     } catch (error: unknown) {
         const e = error as { statusCode?: number; message?: string };
@@ -56,10 +56,10 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
             }
         }
 
-        const { isAuthorized, isAgent } = await RemoteSessionService.verifySignalingAccess(id, userId, agentToken);
+        const { isAuthorized, isAgent } = await RemoteSignalingService.verifySignalingAccess(id, userId, agentToken);
         if (!isAuthorized) return apiError(401, 'Unauthorized');
 
-        const updated = await RemoteSessionService.patchSignalingState(id, body, isAgent);
+        const updated = await RemoteSignalingService.patchSignalingState(id, body, isAgent);
         return apiSuccess(updated);
     } catch (error: unknown) {
         const e = error as { statusCode?: number; message?: string };

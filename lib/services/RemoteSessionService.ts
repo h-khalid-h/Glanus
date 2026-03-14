@@ -1,11 +1,15 @@
 /**
- * RemoteSessionService — Manages remote access sessions for workspace agents.
+ * RemoteSessionService — WebRTC remote access session lifecycle.
  *
  * Responsibilities:
- *  - getSessions: list sessions with optional agent/status/date filters
- *  - createSession: initiate a new remote session with a signed token
- *  - updateSession: update session status or end time
- *  - deleteSession: remove a session record
+ *  - getSessions: list sessions with workspace-scoped pagination + filters
+ *  - createSession: initiate session with conflict detection + audit log
+ *  - getSessionById: fetch single session (workspace membership guard)
+ *  - updateSession: ICE candidate appending, status transitions, duration tracking
+ *  - endSession: terminate session with duration computation + audit log
+ *
+ * Extracted to sibling service:
+ *  - RemoteSignalingService → verifySignalingAccess / getSignalingState / patchSignalingState
  */
 import { prisma } from '@/lib/db';
 import { hashAgentToken } from '@/lib/security/agent-auth';
@@ -258,86 +262,5 @@ export class RemoteSessionService {
             },
         });
     }
-
-    // ========================================
-    // SIGNALING — DUAL AUTH (User OR Agent)
-    // ========================================
-
-    /**
-     * Verifies if the caller is an authorized user or a valid agent for the session.
-     * Returns { isAuthorized, isAgent }.
-     */
-    static async verifySignalingAccess(
-        sessionId: string,
-        userId: string | null,
-        agentBearerToken: string | null,
-    ): Promise<{ isAuthorized: boolean; isAgent: boolean }> {
-        if (userId) return { isAuthorized: true, isAgent: false };
-
-        if (agentBearerToken) {
-            const hashedToken = hashAgentToken(agentBearerToken);
-            const agent = await prisma.agentConnection.findUnique({
-                where: { authToken: hashedToken },
-            });
-            if (agent) {
-                const session = await prisma.remoteSession.findUnique({
-                    where: { id: sessionId },
-                    select: { assetId: true },
-                });
-                if (session && session.assetId === agent.assetId) {
-                    return { isAuthorized: true, isAgent: true };
-                }
-            }
-        }
-
-        return { isAuthorized: false, isAgent: false };
-    }
-
-    static async getSignalingState(sessionId: string) {
-        const session = await prisma.remoteSession.findUnique({
-            where: { id: sessionId },
-            select: { id: true, status: true, offer: true, answer: true, iceCandidates: true },
-        });
-        if (!session) {
-            throw Object.assign(new Error('Session not found'), { statusCode: 404 });
-        }
-        return session;
-    }
-
-    static async patchSignalingState(
-        sessionId: string,
-        body: { offer?: unknown; answer?: unknown; status?: string; iceCandidate?: unknown },
-        isAgent: boolean,
-    ) {
-        const updateData: Record<string, unknown> = {};
-
-        if (body.offer && !isAgent) updateData.offer = body.offer;
-        if (body.answer && isAgent) updateData.answer = body.answer;
-
-        if (body.status) {
-            updateData.status = body.status;
-            if (body.status === 'ENDED' || body.status === 'FAILED') {
-                updateData.endedAt = new Date();
-            }
-        }
-
-        if (body.iceCandidate) {
-            const session = await prisma.remoteSession.findUnique({
-                where: { id: sessionId },
-                select: { iceCandidates: true },
-            });
-            const existing = (session?.iceCandidates as unknown[]) || [];
-            updateData.iceCandidates = [...existing, { ...body.iceCandidate as object, source: isAgent ? 'agent' : 'admin' }];
-        }
-
-        if (Object.keys(updateData).length === 0) {
-            throw Object.assign(new Error('No valid signaling data provided'), { statusCode: 400 });
-        }
-
-        return prisma.remoteSession.update({
-            where: { id: sessionId },
-            data: updateData as Parameters<typeof prisma.remoteSession.update>[0]['data'],
-            select: { id: true, status: true, offer: true, answer: true, iceCandidates: true },
-        });
-    }
 }
+
