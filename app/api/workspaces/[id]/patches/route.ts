@@ -14,7 +14,7 @@ export const GET = withErrorHandler(async (
     try {
         const enrichedPolicies = await PatchService.getPatchPolicies(params.id);
         return apiSuccess(enrichedPolicies);
-    } catch (error: any) {
+    } catch (_error) {
         return apiError(500, 'Failed to fetch patch policies');
     }
 });

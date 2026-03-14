@@ -1,9 +1,15 @@
-// Notification Orchestrator - coordinates alert evaluation and delivery
-import { alertEvaluator } from './alert-evaluator';
-import { webhookService } from './webhook-service';
-import { emailService } from './email-service';
-import { fireWebhookAsync, WebhookEvents } from './notifications/webhook-delivery';
-import { prisma } from './db';
+/**
+ * NotificationOrchestratorService — Coordinates alert evaluation and multi-channel delivery.
+ *
+ * Responsibilities:
+ *  - run: evaluate all workspaces for triggered alerts and dispatch via webhook + email
+ *  - Delegates evaluation to AlertEvaluator and delivery to WebhookService / EmailService
+ */
+import { alertEvaluator } from '@/lib/services/AlertEvaluatorService';
+import { webhookService } from '@/lib/services/WebhookNotificationService';
+import { emailService } from '@/lib/services/AlertEmailService';
+import { fireWebhookAsync, WebhookEvents } from '@/lib/notifications/webhook-delivery';
+import { prisma } from '@/lib/db';
 
 interface NotificationResult {
     workspaceId: string;

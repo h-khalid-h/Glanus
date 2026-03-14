@@ -1,8 +1,7 @@
 import { apiSuccess, apiError } from '@/lib/api/response';
 import { NextRequest } from 'next/server';
 import { getActionQueue } from '@/lib/reflex/automation';
-import { requireAuth, withErrorHandler } from '@/lib/api/withAuth';
-import { verifyWorkspaceAccess } from '@/lib/workspace/permissions';
+import { requireAuth, requireWorkspaceRole, withErrorHandler } from '@/lib/api/withAuth';
 
 interface RouteContext {
     params: Promise<{ id: string }>;
@@ -12,11 +11,7 @@ interface RouteContext {
 export const GET = withErrorHandler(async (request: NextRequest, context: RouteContext) => {
     const user = await requireAuth();
     const { id: workspaceId } = await context.params;
-
-    const access = await verifyWorkspaceAccess(user.email, workspaceId);
-    if (!access.allowed) {
-        return apiError(403, 'Forbidden - Insufficient permissions');
-    }
+    await requireWorkspaceRole(workspaceId, user.id, 'MEMBER', request);
 
     try {
         const queue = await getActionQueue(workspaceId);

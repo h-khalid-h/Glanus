@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { csrfFetch } from '@/lib/api/csrfFetch';
 import { useToast } from '@/lib/toast';
-import { Calendar, PlayCircle, Plus, Trash2, Clock, X, Power, Loader2, CheckCircle, Search } from 'lucide-react';
+import { Calendar, PlayCircle, Plus, Trash2, Clock, X, Power, Loader2 } from 'lucide-react';
 
 interface Script {
     id: string;
@@ -110,8 +110,8 @@ export function ScheduledJobsPanel({ workspaceId, availableScripts }: { workspac
             success('Success', 'Scheduled job registered and activated.');
             setIsCreating(false);
             fetchSchedules();
-        } catch (err: any) {
-            showError('Creation Failed', err.message || 'Unknown error');
+        } catch (err: unknown) {
+            showError('Creation Failed', err instanceof Error ? err.message : 'Unknown error');
         } finally {
             setIsSubmitting(false);
         }

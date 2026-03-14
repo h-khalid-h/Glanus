@@ -29,7 +29,7 @@ export class AnalyticsService {
         });
 
         if (!workspace) {
-            throw new Error('Workspace not found');
+            throw Object.assign(new Error('Workspace not found'), { statusCode: 404 });
         }
 
         const thirtyDaysAgo = subDays(new Date(), 30);
@@ -134,20 +134,20 @@ export class AnalyticsService {
         ]);
 
         // Build a quick-lookup map: agentId → latest metric
-        const metricByAgentId = new Map(latestMetrics.map((m: any) => [m.agentId, m]));
+        const metricByAgentId = new Map(latestMetrics.map((m) => [m.agentId, m]));
 
         // Compute system health from agent metrics using the Map built above
         const onlineAgentsWithMetrics = agentList.filter(
-            (a: any) => a.status === 'ONLINE' && metricByAgentId.has(a.id)
+            (a) => a.status === 'ONLINE' && metricByAgentId.has(a.id)
         );
-        const offlineAgentCount = agentList.filter((a: any) => a.status === 'OFFLINE').length;
-        const errorAgentCount = agentList.filter((a: any) => a.status === 'ERROR').length;
+        const offlineAgentCount = agentList.filter((a) => a.status === 'OFFLINE').length;
+        const errorAgentCount = agentList.filter((a) => a.status === 'ERROR').length;
 
         let avgCpu = 0, avgRam = 0, avgDisk = 0;
         if (onlineAgentsWithMetrics.length > 0) {
             let cpuSum = 0, ramSum = 0, diskSum = 0;
             for (const agent of onlineAgentsWithMetrics) {
-                const m = metricByAgentId.get(agent.id) as any;
+                const m = metricByAgentId.get(agent.id)!;
                 cpuSum += m.cpuUsage ?? 0;
                 ramSum += m.ramTotal > 0 ? (m.ramUsed / m.ramTotal) * 100 : 0;
                 diskSum += m.diskTotal > 0 ? (m.diskUsed / m.diskTotal) * 100 : 0;
@@ -172,9 +172,9 @@ export class AnalyticsService {
         const memberChange = memberCount - memberCountPrevious;
 
         const alertCounts = {
-            info: alerts.find((a: any) => a.severity === 'INFO')?._count.severity || 0,
-            warning: alerts.find((a: any) => a.severity === 'WARNING')?._count.severity || 0,
-            critical: alerts.find((a: any) => a.severity === 'CRITICAL')?._count.severity || 0,
+            info: alerts.find((a) => a.severity === 'INFO')?._count.severity || 0,
+            warning: alerts.find((a) => a.severity === 'WARNING')?._count.severity || 0,
+            critical: alerts.find((a) => a.severity === 'CRITICAL')?._count.severity || 0,
         };
 
         const totalAlerts = alertCounts.info + alertCounts.warning + alertCounts.critical;
@@ -227,7 +227,7 @@ export class AnalyticsService {
             },
             alerts: alertCounts,
             systemHealth,
-            recentActivity: recentActivity.map((event: any) => ({
+            recentActivity: recentActivity.map((event) => ({
                 id: event.id,
                 action: event.action,
                 resourceType: event.resourceType,

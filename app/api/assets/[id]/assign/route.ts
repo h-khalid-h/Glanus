@@ -1,78 +1,17 @@
-import { apiSuccess, apiError } from '@/lib/api/response';
+import { apiSuccess } from '@/lib/api/response';
 import { NextRequest } from 'next/server';
-import { prisma } from '@/lib/db';
 import { requireAuth, withErrorHandler } from '@/lib/api/withAuth';
+import { AssetAssignmentService } from '@/lib/services/AssetAssignmentService';
 import { assignAssetSchema } from '@/lib/schemas/asset.schemas';
 import { validateRequest } from '@/lib/validation';
 
+type RouteContext = { params: Promise<{ id: string }> };
+
 // POST /api/assets/[id]/assign - Assign asset to user
-export const POST = withErrorHandler(async (
-    request: NextRequest,
-    context: { params: Promise<{ id: string }> }
-) => {
-    const { id } = await context.params;
+export const POST = withErrorHandler(async (request: NextRequest, { params }: RouteContext) => {
+    const { id } = await params;
     const user = await requireAuth();
-
     const { userId, notes } = await validateRequest(request, assignAssetSchema);
-
-    const asset = await prisma.asset.findFirst({
-        where: {
-            id,
-            deletedAt: null,
-            workspace: {
-                members: { some: { userId: user.id } },
-            },
-        },
-    });
-    if (!asset) {
-        return apiError(404, 'Asset not found');
-    }
-
-    const targetUser = await prisma.user.findUnique({ where: { id: userId } });
-    if (!targetUser) {
-        return apiError(404, 'User not found');
-    }
-
-    // Close previous assignment if exists
-    if (asset.assignedToId) {
-        const currentAssignment = await prisma.assignmentHistory.findFirst({
-            where: { assetId: id, unassignedAt: null },
-        });
-        if (currentAssignment) {
-            await prisma.assignmentHistory.update({
-                where: { id: currentAssignment.id },
-                data: { unassignedAt: new Date() },
-            });
-        }
-    }
-
-    await prisma.assignmentHistory.create({
-        data: { assetId: id, userId, notes: notes || null },
-    });
-
-    const updatedAsset = await prisma.asset.update({
-        where: { id },
-        data: { assignedToId: userId, status: 'ASSIGNED' },
-        include: {
-            assignedTo: { select: { id: true, name: true, email: true } },
-        },
-    });
-
-    await prisma.auditLog.create({
-        data: {
-            action: 'ASSET_ASSIGNED',
-            resourceType: 'Asset',
-            resourceId: updatedAsset.id,
-            userId: user.id,
-            assetId: updatedAsset.id,
-            metadata: {
-                assetName: updatedAsset.name,
-                assignedTo: targetUser.name,
-                assignedToId: userId,
-                notes,
-            },
-        },
-    });
-
-    return apiSuccess(updatedAsset);
+    const asset = await AssetAssignmentService.assignAsset(id, user.id, userId, notes);
+    return apiSuccess(asset);
 });

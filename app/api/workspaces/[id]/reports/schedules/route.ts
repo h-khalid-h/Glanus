@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { requireAuth, requireWorkspaceRole, withErrorHandler } from '@/lib/api/withAuth';
 import { apiSuccess } from '@/lib/api/response';
-import { prisma } from '@/lib/db';
+import { WorkspaceReportService, ReportScheduleCreateInput } from '@/lib/services/WorkspaceReportService';
 import { z } from 'zod';
 
 const createScheduleSchema = z.object({
@@ -17,82 +17,21 @@ const createScheduleSchema = z.object({
     enabled: z.boolean().default(true),
 });
 
-/**
- * GET /api/workspaces/[id]/reports/schedules
- * List all scheduled report delivery configurations
- */
-export const GET = withErrorHandler(async (
-    request: NextRequest,
-    context: { params: Promise<{ id: string }> }
-) => {
-    const params = await context.params;
+type RouteContext = { params: Promise<{ id: string }> };
+
+export const GET = withErrorHandler(async (_request: NextRequest, { params }: RouteContext) => {
+    const { id: workspaceId } = await params;
     const user = await requireAuth();
-    await requireWorkspaceRole(params.id, user.id, 'MEMBER');
-
-    const schedules = await prisma.reportSchedule.findMany({
-        where: { workspaceId: params.id },
-        orderBy: { createdAt: 'desc' }
-    });
-
+    await requireWorkspaceRole(workspaceId, user.id, 'MEMBER');
+    const schedules = await WorkspaceReportService.listReportSchedules(workspaceId);
     return apiSuccess({ schedules });
 });
 
-/**
- * POST /api/workspaces/[id]/reports/schedules
- * Create a new scheduled report delivery
- */
-export const POST = withErrorHandler(async (
-    request: NextRequest,
-    context: { params: Promise<{ id: string }> }
-) => {
-    const params = await context.params;
+export const POST = withErrorHandler(async (request: NextRequest, { params }: RouteContext) => {
+    const { id: workspaceId } = await params;
     const user = await requireAuth();
-    await requireWorkspaceRole(params.id, user.id, 'ADMIN');
-
-    const body = await request.json();
-    const data = createScheduleSchema.parse(body);
-
-    // Validate frequency-specific fields
-    if (data.frequency === 'weekly' && data.dayOfWeek === undefined) {
-        data.dayOfWeek = 1; // Default to Monday
-    }
-    if (data.frequency === 'monthly' && data.dayOfMonth === undefined) {
-        data.dayOfMonth = 1; // Default to 1st of month
-    }
-
-    const schedule = await prisma.reportSchedule.create({
-        data: {
-            workspaceId: params.id,
-            name: data.name,
-            reportType: data.reportType,
-            format: data.format,
-            frequency: data.frequency,
-            dayOfWeek: data.dayOfWeek,
-            dayOfMonth: data.dayOfMonth,
-            timeOfDay: data.timeOfDay,
-            timezone: data.timezone,
-            recipients: data.recipients,
-            enabled: data.enabled,
-            createdBy: user.id,
-        }
-    });
-
-    // Audit trail
-    await prisma.auditLog.create({
-        data: {
-            workspaceId: params.id,
-            userId: user.id,
-            action: 'report_schedule.created',
-            resourceType: 'report_schedule',
-            resourceId: schedule.id,
-            details: {
-                name: schedule.name,
-                reportType: schedule.reportType,
-                frequency: schedule.frequency,
-                recipientCount: schedule.recipients.length
-            }
-        }
-    });
-
+    await requireWorkspaceRole(workspaceId, user.id, 'ADMIN');
+    const data = createScheduleSchema.parse(await request.json());
+    const schedule = await WorkspaceReportService.createReportSchedule(workspaceId, user.id, data as ReportScheduleCreateInput);
     return apiSuccess({ schedule }, { message: 'Report schedule created successfully' }, 201);
 });

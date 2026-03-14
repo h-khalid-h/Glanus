@@ -1,4 +1,11 @@
-// Alert evaluation service - checks metrics against alert rules
+/**
+ * AlertEvaluatorService — Evaluates workspace alert rules against live telemetry.
+ *
+ * Responsibilities:
+ *  - evaluateWorkspace: run all alert rules for a workspace against current agent metrics
+ *  - triggerAlert: create or update an active alert, fire notifications via webhooks and email
+ *  - resolveAlert: mark an alert as resolved when conditions are no longer met
+ */
 import { prisma } from '@/lib/db';
 
 interface AlertTrigger {

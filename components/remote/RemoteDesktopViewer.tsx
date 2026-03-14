@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { WebRTCClient, ConnectionMetrics } from '@/lib/webrtc/client';
-import SimplePeer from 'simple-peer';
 import { csrfFetch } from '@/lib/api/csrfFetch';
 
 interface RemoteDesktopViewerProps {

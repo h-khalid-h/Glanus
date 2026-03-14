@@ -5,8 +5,6 @@ import { Button } from '@/components/ui/Button';
 import { Plus, Download, AlertCircle, FileText, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
 
-import { AgentVersion } from '@prisma/client';
-
 export const dynamic = 'force-dynamic';
 
 export default async function AgentVersionsPage() {
@@ -19,11 +17,8 @@ export default async function AgentVersionsPage() {
 
     // Group by platform
     const mappedVersions = {
-        // @ts-ignore
         WINDOWS: versions.filter((v: any) => v.platform === 'WINDOWS'),
-        // @ts-ignore
         MACOS: versions.filter((v: any) => v.platform === 'MACOS'),
-        // @ts-ignore
         LINUX: versions.filter((v: any) => v.platform === 'LINUX'),
     };
 

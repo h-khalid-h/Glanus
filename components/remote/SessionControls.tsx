@@ -15,7 +15,7 @@ interface SessionControlsProps {
 }
 
 export function SessionControls({
-    sessionId,
+    sessionId: _sessionId,
     isRecording,
     onStartRecording,
     onStopRecording,
@@ -65,8 +65,8 @@ export function SessionControls({
                     <button type="button"
                         onClick={isRecording ? onStopRecording : onStartRecording}
                         className={`btn px-3 py-2 text-sm ${isRecording
-                                ? 'bg-destructive hover:bg-destructive/80 text-white'
-                                : 'bg-slate-800 hover:bg-slate-700 text-white'
+                            ? 'bg-destructive hover:bg-destructive/80 text-white'
+                            : 'bg-slate-800 hover:bg-slate-700 text-white'
                             }`}
                         title={isRecording ? 'Stop Recording' : 'Start Recording'}
                     >

@@ -1,11 +1,21 @@
 import { prisma } from '@/lib/db';
+import { Prisma, AssetType, AssetStatus, HardwareCategory, SoftwareCategory, LicenseType, HostType } from '@prisma/client';
 import { generateAssetQRCode } from '@/lib/generateQRCode';
 import { logError } from '@/lib/logger';
 import { enforceQuota } from '@/lib/workspace/quotas';
 import { auditLog } from '@/lib/workspace/auditLog';
 import { z } from 'zod';
 import { createAssetSchema, assetQuerySchema, updateAssetSchema } from '@/lib/schemas/asset.schemas';
+import { DynamicFieldService, FieldType } from '@/lib/services/DynamicFieldService';
 
+/**
+ * AssetService — Core CRUD + actions + metrics + schema + CSV export.
+ *
+ * Extracted responsibilities (see sibling services):
+ *  - Bulk operations   → AssetBulkService
+ *  - Relationships     → AssetRelationshipService
+ *  - Assignment/Script → AssetAssignmentService
+ */
 export class AssetService {
     /**
      * Fetch a paginated, filtered list of assets for a workspace.
@@ -17,12 +27,13 @@ export class AssetService {
         const { page = 1, limit = 20, sortBy = 'createdAt', sortOrder = 'desc', search, category, status, assignedToId, assetType, location } = params;
         const skip = (page - 1) * limit;
 
-        const where: any = {
+        // Build where clause with Prisma's generated type for compile-time safety
+        const where: Prisma.AssetWhereInput = {
             workspaceId,
             deletedAt: null,
         };
 
-        if (assetType) where.assetType = assetType;
+        if (assetType) where.assetType = assetType as AssetType;
         if (search) {
             where.OR = [
                 { name: { contains: search, mode: 'insensitive' } },
@@ -32,8 +43,8 @@ export class AssetService {
                 { serialNumber: { contains: search, mode: 'insensitive' } },
             ];
         }
-        if (category) where.category = category;
-        if (status) where.status = status;
+        if (category) where.category = { name: { equals: category, mode: 'insensitive' } };
+        if (status) where.status = status as AssetStatus;
         if (assignedToId) where.assignedToId = assignedToId;
         if (location) where.location = { contains: location, mode: 'insensitive' };
 
@@ -78,7 +89,7 @@ export class AssetService {
             const existing = await prisma.asset.findFirst({
                 where: { serialNumber: data.serialNumber, workspaceId },
             });
-            if (existing) throw new Error('An asset with this serial number already exists in this workspace');
+            if (existing) throw Object.assign(new Error('An asset with this serial number already exists in this workspace'), { statusCode: 409 });
         }
 
         const selectedCategory = await prisma.assetCategory.findUnique({
@@ -86,65 +97,54 @@ export class AssetService {
             include: { fieldDefinitions: true }
         });
 
-        if (!selectedCategory) throw new Error('The specified Asset Category does not exist.');
+        if (!selectedCategory) throw Object.assign(new Error('The specified Asset Category does not exist.'), { statusCode: 404 });
 
         // Build Payload
         const fieldValuesPayload = [];
         if (data.customFields && Object.keys(data.customFields).length > 0) {
-            const mapValToRecord = (fieldType: string, val: any) => {
-                const recordParams: Record<string, any> = {};
-                switch (fieldType) {
-                    case 'NUMBER': case 'DECIMAL': case 'CURRENCY':
-                        recordParams.valueNumber = Number(val);
-                        break;
-                    case 'BOOLEAN':
-                        recordParams.valueBoolean = val === true || val === 'true';
-                        break;
-                    case 'DATE': case 'DATETIME': case 'TIME':
-                        recordParams.valueDate = new Date(val);
-                        break;
-                    case 'JSON': case 'ARRAY':
-                        try {
-                            recordParams.valueJson = typeof val === 'string' ? JSON.parse(val) : val;
-                        } catch {
-                            recordParams.valueString = String(val);
-                        }
-                        break;
-                    default:
-                        recordParams.valueString = String(val);
-                }
-                return recordParams;
-            }
-
             for (const def of selectedCategory.fieldDefinitions) {
                 const incomingValue = data.customFields[def.name];
-                if (def.isRequired && (incomingValue === undefined || incomingValue === null || incomingValue.toString().trim() === '')) {
-                    throw new Error(`Missing required custom field: ${def.label}`);
+
+                // 1. Enforce rigorous Architectural validation
+                const validationCheck = await DynamicFieldService.validateFieldValue(
+                    incomingValue,
+                    {
+                        fieldType: def.fieldType as FieldType,
+                        isRequired: def.isRequired,
+                        isUnique: def.isUnique,
+                        validationRules: typeof def.validationRules === 'object' ? def.validationRules as Record<string, unknown> : null,
+                    }
+                );
+
+                if (!validationCheck.valid) {
+                    throw Object.assign(new Error(`Validation failed for '${def.label}': ${validationCheck.error}`), { statusCode: 400 });
                 }
+
+                // 2. If valid and present, serialize for Prisma
                 if (incomingValue !== undefined && incomingValue !== null && incomingValue !== '') {
                     fieldValuesPayload.push({
                         fieldDefinitionId: def.id,
-                        ...mapValToRecord(def.fieldType, incomingValue)
+                        ...DynamicFieldService.serializeFieldValue(incomingValue, def.fieldType as FieldType)
                     });
                 }
             }
         } else {
-            const missingRequired = selectedCategory.fieldDefinitions.filter((def: any) => def.isRequired);
+            const missingRequired = selectedCategory.fieldDefinitions.filter((def) => def.isRequired);
             if (missingRequired.length > 0) {
-                throw new Error(`Missing required custom field: ${missingRequired[0].label}`);
+                throw Object.assign(new Error(`Missing required custom field: ${missingRequired[0].label}`), { statusCode: 400 });
             }
         }
 
         const asset = await prisma.asset.create({
             data: {
                 workspaceId,
-                assetType: (data.assetType || 'PHYSICAL') as any,
+                assetType: (data.assetType || 'PHYSICAL') as AssetType,
                 name: data.name,
                 categoryId: data.categoryId,
                 manufacturer: data.manufacturer || null,
                 model: data.model || null,
                 serialNumber: data.serialNumber || null,
-                status: (data.status || 'AVAILABLE') as any,
+                status: (data.status || 'AVAILABLE') as AssetStatus,
                 purchaseDate: data.purchaseDate ? new Date(data.purchaseDate) : null,
                 purchaseCost: data.purchaseCost ? parseFloat(String(data.purchaseCost)) : null,
                 warrantyUntil: data.warrantyUntil ? new Date(data.warrantyUntil) : null,
@@ -156,7 +156,7 @@ export class AssetService {
                 ...(data.assetType === 'PHYSICAL' && data.physicalAsset ? {
                     physicalAsset: {
                         create: {
-                            category: (data.physicalAsset.category || 'OTHER') as any,
+                            category: (data.physicalAsset.category || 'OTHER') as HardwareCategory,
                             processor: data.physicalAsset.processor,
                             ram: data.physicalAsset.ram,
                             storage: data.physicalAsset.storage,
@@ -170,11 +170,11 @@ export class AssetService {
                 ...(data.assetType === 'DIGITAL' && data.digitalAsset ? {
                     digitalAsset: {
                         create: {
-                            category: (data.digitalAsset.category || 'OTHER') as any,
+                            category: (data.digitalAsset.category || 'OTHER') as SoftwareCategory,
                             version: data.digitalAsset.version,
                             vendor: data.digitalAsset.vendor,
                             licenseKey: data.digitalAsset.licenseKey,
-                            licenseType: data.digitalAsset.licenseType as any,
+                            licenseType: data.digitalAsset.licenseType as LicenseType,
                             seatCount: data.digitalAsset.seatCount,
                             seatsUsed: data.digitalAsset.seatsUsed || 0,
                             subscriptionTier: data.digitalAsset.subscriptionTier,
@@ -182,7 +182,7 @@ export class AssetService {
                             renewalDate: data.digitalAsset.renewalDate ? new Date(data.digitalAsset.renewalDate) : null,
                             autoRenew: data.digitalAsset.autoRenew || false,
                             host: data.digitalAsset.host,
-                            hostType: data.digitalAsset.hostType as any,
+                            hostType: data.digitalAsset.hostType as HostType,
                             url: data.digitalAsset.url,
                             connectionString: data.digitalAsset.connectionString,
                             databaseSize: data.digitalAsset.databaseSize
@@ -243,7 +243,7 @@ export class AssetService {
         });
 
         if (!accessCheck) {
-            throw new Error('Asset not found');
+            throw Object.assign(new Error('Asset not found'), { statusCode: 404 });
         }
 
         const asset = await prisma.asset.findFirst({
@@ -287,7 +287,7 @@ export class AssetService {
     static async updateAsset(
         assetId: string,
         userId: string,
-        data: z.infer<typeof updateAssetSchema> // Assuming you have this imported or defined
+        data: z.infer<typeof updateAssetSchema>
     ) {
         // Verify workspace membership and get current state
         const existingAsset = await prisma.asset.findFirst({
@@ -319,50 +319,43 @@ export class AssetService {
                 },
             });
             if (duplicate) {
-                throw new Error('An asset with this serial number already exists');
+                throw Object.assign(new Error('An asset with this serial number already exists'), { statusCode: 409 });
             }
         }
 
         if (data.customFields && existingAsset.category) {
-            const mapValToRecord = (fieldType: string, val: any) => {
-                const recordParams: Record<string, any> = {};
-                switch (fieldType) {
-                    case 'NUMBER': case 'DECIMAL': case 'CURRENCY':
-                        recordParams.valueNumber = Number(val);
-                        break;
-                    case 'BOOLEAN':
-                        recordParams.valueBoolean = val === true || val === 'true';
-                        break;
-                    case 'DATE': case 'DATETIME': case 'TIME':
-                        recordParams.valueDate = new Date(val);
-                        break;
-                    case 'JSON': case 'ARRAY':
-                        try {
-                            recordParams.valueJson = typeof val === 'string' ? JSON.parse(val) : val;
-                        } catch {
-                            recordParams.valueString = String(val);
-                        }
-                        break;
-                    default:
-                        recordParams.valueString = String(val);
-                }
-                return recordParams;
-            }
-
             for (const def of existingAsset.category.fieldDefinitions) {
                 const incomingValue = data.customFields[def.name];
-                const existingValueRecord = existingAsset.fieldValues.find((fv: any) => fv.fieldDefinitionId === def.id);
+                const existingValueRecord = existingAsset.fieldValues.find((fv) => fv.fieldDefinitionId === def.id);
 
                 if (incomingValue !== undefined) {
                     if (incomingValue === '' || incomingValue === null) {
                         if (def.isRequired) {
-                            throw new Error(`Missing required custom field: ${def.label}`);
+                            throw Object.assign(new Error(`Missing required custom field: ${def.label}`), { statusCode: 400 });
                         }
                         if (existingValueRecord) {
                             await prisma.assetFieldValue.delete({ where: { id: existingValueRecord.id } });
                         }
                     } else {
-                        const mappedData = mapValToRecord(def.fieldType, incomingValue);
+                        // 1. Enforce rigorous Architectural validation
+                        const validationCheck = await DynamicFieldService.validateFieldValue(
+                            incomingValue,
+                            {
+                                fieldType: def.fieldType as FieldType,
+                                isRequired: def.isRequired,
+                                isUnique: def.isUnique,
+                                validationRules: typeof def.validationRules === 'object' ? def.validationRules as Record<string, unknown> : null,
+                            },
+                            assetId // Pass the assetId to exclude current record from uniqueness checks
+                        );
+
+                        if (!validationCheck.valid) {
+                            throw Object.assign(new Error(`Validation failed for '${def.label}': ${validationCheck.error}`), { statusCode: 400 });
+                        }
+
+                        // 2. Serialize for Prisma
+                        const mappedData = DynamicFieldService.serializeFieldValue(incomingValue, def.fieldType as FieldType);
+
                         if (existingValueRecord) {
                             await prisma.assetFieldValue.update({
                                 where: { id: existingValueRecord.id },
@@ -390,7 +383,7 @@ export class AssetService {
                 ...(data.manufacturer !== undefined && { manufacturer: data.manufacturer }),
                 ...(data.model !== undefined && { model: data.model }),
                 ...(data.serialNumber !== undefined && { serialNumber: data.serialNumber }),
-                ...(data.status !== undefined && { status: data.status as any }),
+                ...(data.status !== undefined && { status: data.status as AssetStatus }),
                 ...(data.purchaseDate !== undefined && { purchaseDate: data.purchaseDate ? new Date(data.purchaseDate) : null }),
                 ...(data.purchaseCost !== undefined && { purchaseCost: data.purchaseCost ? parseFloat(String(data.purchaseCost)) : null }),
                 ...(data.warrantyUntil !== undefined && { warrantyUntil: data.warrantyUntil ? new Date(data.warrantyUntil) : null }),
@@ -402,7 +395,7 @@ export class AssetService {
                     physicalAsset: {
                         upsert: {
                             create: {
-                                category: (data.physicalAsset.category || 'OTHER') as any,
+                                category: (data.physicalAsset.category || 'OTHER') as HardwareCategory,
                                 processor: data.physicalAsset.processor,
                                 ram: data.physicalAsset.ram,
                                 storage: data.physicalAsset.storage,
@@ -412,7 +405,7 @@ export class AssetService {
                                 isManaged: data.physicalAsset.isManaged || false
                             },
                             update: {
-                                category: (data.physicalAsset.category || 'OTHER') as any,
+                                category: (data.physicalAsset.category || 'OTHER') as HardwareCategory,
                                 processor: data.physicalAsset.processor,
                                 ram: data.physicalAsset.ram,
                                 storage: data.physicalAsset.storage,
@@ -428,11 +421,11 @@ export class AssetService {
                     digitalAsset: {
                         upsert: {
                             create: {
-                                category: (data.digitalAsset.category || 'OTHER') as any,
+                                category: (data.digitalAsset.category || 'OTHER') as SoftwareCategory,
                                 version: data.digitalAsset.version,
                                 vendor: data.digitalAsset.vendor,
                                 licenseKey: data.digitalAsset.licenseKey,
-                                licenseType: data.digitalAsset.licenseType as any,
+                                licenseType: data.digitalAsset.licenseType as LicenseType,
                                 seatCount: data.digitalAsset.seatCount,
                                 seatsUsed: data.digitalAsset.seatsUsed || 0,
                                 subscriptionTier: data.digitalAsset.subscriptionTier,
@@ -440,17 +433,17 @@ export class AssetService {
                                 renewalDate: data.digitalAsset.renewalDate ? new Date(data.digitalAsset.renewalDate) : null,
                                 autoRenew: data.digitalAsset.autoRenew || false,
                                 host: data.digitalAsset.host,
-                                hostType: data.digitalAsset.hostType as any,
+                                hostType: data.digitalAsset.hostType as HostType,
                                 url: data.digitalAsset.url,
                                 connectionString: data.digitalAsset.connectionString,
                                 databaseSize: data.digitalAsset.databaseSize
                             },
                             update: {
-                                category: (data.digitalAsset.category || 'OTHER') as any,
+                                category: (data.digitalAsset.category || 'OTHER') as SoftwareCategory,
                                 version: data.digitalAsset.version,
                                 vendor: data.digitalAsset.vendor,
                                 licenseKey: data.digitalAsset.licenseKey,
-                                licenseType: data.digitalAsset.licenseType as any,
+                                licenseType: data.digitalAsset.licenseType as LicenseType,
                                 seatCount: data.digitalAsset.seatCount,
                                 seatsUsed: data.digitalAsset.seatsUsed || 0,
                                 subscriptionTier: data.digitalAsset.subscriptionTier,
@@ -458,7 +451,7 @@ export class AssetService {
                                 renewalDate: data.digitalAsset.renewalDate ? new Date(data.digitalAsset.renewalDate) : null,
                                 autoRenew: data.digitalAsset.autoRenew || false,
                                 host: data.digitalAsset.host,
-                                hostType: data.digitalAsset.hostType as any,
+                                hostType: data.digitalAsset.hostType as HostType,
                                 url: data.digitalAsset.url,
                                 connectionString: data.digitalAsset.connectionString,
                                 databaseSize: data.digitalAsset.databaseSize
@@ -505,7 +498,7 @@ export class AssetService {
         });
 
         if (!existingAsset) {
-            throw new Error('Asset not found');
+            throw Object.assign(new Error('Asset not found'), { statusCode: 404 });
         }
 
         const asset = await prisma.asset.update({
@@ -525,5 +518,225 @@ export class AssetService {
         });
 
         return asset;
+    }
+
+    // ========================================
+    // ASSET ACTIONS (Category action definitions)
+    // ========================================
+
+    static async listActions(assetId: string) {
+        const asset = await prisma.asset.findUnique({
+            where: { id: assetId },
+            include: {
+                category: {
+                    include: { actionDefinitions: { orderBy: { sortOrder: 'asc' } } },
+                },
+            },
+        });
+
+        if (!asset) throw Object.assign(new Error('Asset not found'), { statusCode: 404 });
+
+        if (!asset.categoryId) {
+            return { assetId, assetName: asset.name, categoryId: null, categoryName: null, actions: [] };
+        }
+
+        const actions = asset.category?.actionDefinitions || [];
+        return {
+            assetId, assetName: asset.name, categoryId: asset.categoryId, categoryName: asset.category?.name,
+            actions: actions.map((action) => ({
+                id: action.id, name: action.name, label: action.label, slug: action.slug,
+                description: action.description, icon: action.icon, actionType: action.actionType,
+                isDestructive: action.isDestructive, requiresConfirmation: action.requiresConfirmation,
+                estimatedDuration: action.estimatedDuration, buttonColor: action.buttonColor,
+                parameters: action.parameters,
+            })),
+        };
+    }
+
+    static async getActionBySlug(assetId: string, actionSlug: string) {
+        const asset = await prisma.asset.findUnique({
+            where: { id: assetId }, select: { id: true, name: true, categoryId: true },
+        });
+        if (!asset) throw Object.assign(new Error('Asset not found'), { statusCode: 404 });
+        if (!asset.categoryId) throw Object.assign(new Error('Asset does not have a dynamic category'), { statusCode: 400 });
+
+        const actions = await prisma.assetActionDefinition.findMany({
+            where: { categoryId: asset.categoryId, isVisible: true },
+            orderBy: { sortOrder: 'asc' },
+            select: {
+                id: true, name: true, label: true, slug: true, description: true, icon: true,
+                actionType: true, isDestructive: true, requiresConfirmation: true,
+                estimatedDuration: true, handlerType: true, parameters: true, buttonColor: true,
+            },
+        });
+
+        const action = actions.find((a) => a.slug === actionSlug);
+        if (!action) throw Object.assign(new Error('Action not found'), { statusCode: 404 });
+
+        return { asset: { id: asset.id, name: asset.name }, action, actions };
+    }
+
+    static async executeAction(assetId: string, actionSlug: string, data: { parameters?: Record<string, unknown>; confirm?: boolean }) {
+        const asset = await prisma.asset.findUnique({
+            where: { id: assetId }, select: { id: true, name: true, categoryId: true },
+        });
+        if (!asset) throw Object.assign(new Error('Asset not found'), { statusCode: 404 });
+        if (!asset.categoryId) throw Object.assign(new Error('Asset does not have a dynamic category'), { statusCode: 400 });
+
+        const actionDefinition = await prisma.assetActionDefinition.findFirst({
+            where: { categoryId: asset.categoryId, slug: actionSlug, isVisible: true },
+        });
+        if (!actionDefinition) throw Object.assign(new Error('Action not found'), { statusCode: 404 });
+
+        if (actionDefinition.isDestructive && actionDefinition.requiresConfirmation && !data.confirm) {
+            throw Object.assign(new Error('Confirmation required for destructive action'), { statusCode: 400 });
+        }
+
+        const execution = await prisma.assetActionExecution.create({
+            data: {
+                assetId, actionDefinitionId: actionDefinition.id,
+                status: 'PENDING', parameters: (data.parameters || {}) as Prisma.InputJsonValue, startedAt: new Date(),
+            },
+        });
+
+        // Dispatch async — import lazily to avoid circular deps
+        const { executeAction } = await import('@/lib/action-handlers');
+        // executeAction arg type is a union of all action definition shapes — cast at boundary only
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        executeAction(actionDefinition as any, asset, data.parameters || {}, execution.id)
+            .then(async (result) => {
+                await prisma.assetActionExecution.update({
+                    where: { id: execution.id },
+                    data: {
+                        status: result.status, result: result.output as Prisma.InputJsonValue,
+                        errorMessage: result.error, completedAt: result.status === 'COMPLETED' ? new Date() : null,
+                    },
+                });
+            })
+            .catch(async (error: unknown) => {
+                const message = error instanceof Error ? error.message : 'Unknown execution error';
+                await prisma.assetActionExecution.update({
+                    where: { id: execution.id },
+                    data: { status: 'FAILED', errorMessage: message, completedAt: new Date() },
+                }).catch(() => { /* best-effort */ });
+            });
+
+        return {
+            execution: { id: execution.id, status: execution.status, startedAt: execution.startedAt },
+            message: 'Action execution started',
+            pollUrl: `/api/executions/${execution.id}`,
+        };
+    }
+
+    // ========================================
+    // ASSET METRICS
+    // ========================================
+
+    static async getMetrics(assetId: string, userId: string, timeRange = '24h') {
+        const now = new Date();
+        const startTime = new Date();
+        switch (timeRange) {
+            case '1h': startTime.setHours(now.getHours() - 1); break;
+            case '7d': startTime.setDate(now.getDate() - 7); break;
+            case '30d': startTime.setDate(now.getDate() - 30); break;
+            default: startTime.setHours(now.getHours() - 24);
+        }
+
+        const asset = await prisma.asset.findFirst({
+            where: { id: assetId, workspace: { members: { some: { userId } } } },
+        });
+        if (!asset) throw Object.assign(new Error('Asset not found or access denied'), { statusCode: 404 });
+
+        const metrics = await prisma.agentMetric.findMany({
+            where: { assetId, timestamp: { gte: startTime } },
+            orderBy: { timestamp: 'asc' },
+        });
+
+        return { metrics, timeRange, count: metrics.length };
+    }
+
+    // ========================================
+    // ASSET SCHEMA (Dynamic fields + actions)
+    // ========================================
+
+    static async getSchema(assetId: string) {
+        const asset = await prisma.asset.findUnique({
+            where: { id: assetId },
+            include: {
+                category: {
+                    select: {
+                        id: true, name: true,
+                        fieldDefinitions: { orderBy: { sortOrder: 'asc' } },
+                        parent: { select: { id: true, name: true } },
+                    },
+                },
+                fieldValues: {
+                    include: {
+                        fieldDefinition: { select: { name: true, label: true, slug: true, fieldType: true } },
+                    },
+                },
+            },
+        });
+
+        if (!asset) throw Object.assign(new Error('Asset not found'), { statusCode: 404 });
+        if (!asset.categoryId) throw Object.assign(new Error('Asset does not have a dynamic category assigned'), { statusCode: 400 });
+
+        const allFields = await DynamicFieldService.resolveInheritedFields(asset.category!.id);
+        const actions = await prisma.assetActionDefinition.findMany({
+            where: { categoryId: asset.category!.id }, orderBy: { name: 'asc' },
+        });
+
+        const fieldValuesMap = new Map(asset.fieldValues.map(fv => [fv.fieldDefinitionId, fv]));
+
+        const fieldsWithValues = allFields.map((field) => {
+            const value = fieldValuesMap.get(field.id);
+            return {
+                ...field,
+                currentValue: value ? {
+                    id: value.id, valueString: value.valueString, valueNumber: value.valueNumber,
+                    valueBoolean: value.valueBoolean, valueDate: value.valueDate, valueJson: value.valueJson,
+                } : null,
+            };
+        });
+
+        return { asset: { id: asset.id, name: asset.name }, category: asset.category, fields: fieldsWithValues, actions };
+    }
+
+    // ========================================
+    // ASSET CSV EXPORT
+    // ========================================
+
+    static async exportAssets(workspaceId: string) {
+        const assets = await prisma.asset.findMany({
+            where: { workspaceId, deletedAt: null },
+            include: {
+                assignedTo: { select: { name: true, email: true } },
+                category: { select: { name: true } },
+            },
+            orderBy: { createdAt: 'desc' },
+        });
+
+        const headers = [
+            'ID', 'Name', 'Category', 'Manufacturer', 'Model', 'Serial Number',
+            'Status', 'Location', 'Assigned To', 'Assigned Email',
+            'Purchase Date', 'Purchase Cost', 'Warranty Until', 'Tags',
+            'Description', 'Created At',
+        ];
+
+        const rows = assets.map((asset) => [
+            asset.id, asset.name, asset.category?.name || '', asset.manufacturer || '',
+            asset.model || '', asset.serialNumber || '', asset.status, asset.location || '',
+            asset.assignedTo?.name || '', asset.assignedTo?.email || '',
+            asset.purchaseDate ? new Date(asset.purchaseDate).toISOString().split('T')[0] : '',
+            asset.purchaseCost || '',
+            asset.warrantyUntil ? new Date(asset.warrantyUntil).toISOString().split('T')[0] : '',
+            Array.isArray(asset.tags) ? asset.tags.join('; ') : '',
+            asset.description?.replace(/"/g, '""') || '',
+            new Date(asset.createdAt).toISOString(),
+        ]);
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const csvContent = [headers.join(','), ...rows.map((row: any[]) => row.map((cell: any) => `"${cell}"`).join(','))].join('\n');
+        return csvContent;
     }
 }

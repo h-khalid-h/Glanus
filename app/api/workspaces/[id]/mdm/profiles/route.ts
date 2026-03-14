@@ -1,43 +1,29 @@
-import { NextRequest } from 'next/server';
 import { apiSuccess } from '@/lib/api/response';
-import { requireAuth, withErrorHandler, ApiError } from '@/lib/api/withAuth';
-import { verifyWorkspaceAccess } from '@/lib/workspace/permissions';
+import { NextRequest } from 'next/server';
+import { requireAuth, requireWorkspaceRole, withErrorHandler, ApiError } from '@/lib/api/withAuth';
 import { MdmService } from '@/lib/services/MdmService';
 
-export const GET = withErrorHandler(async (
-    req: NextRequest,
-    context: { params: Promise<{ id: string }> }
-) => {
+type RouteContext = { params: Promise<{ id: string }> };
+
+// GET /api/workspaces/[id]/mdm/profiles
+export const GET = withErrorHandler(async (req: NextRequest, context: RouteContext) => {
     const user = await requireAuth();
     const { id: workspaceId } = await context.params;
-    const access = await verifyWorkspaceAccess(user.email, workspaceId);
-
-    if (!access.allowed) {
-        throw new ApiError(403, 'Insufficient workspace permissions');
-    }
+    await requireWorkspaceRole(workspaceId, user.id, 'MEMBER', req);
 
     const url = new URL(req.url);
     const platform = url.searchParams.get('platform');
-
     const profiles = await MdmService.getProfiles(workspaceId, platform);
     return apiSuccess(profiles);
 });
 
-export const POST = withErrorHandler(async (
-    req: NextRequest,
-    context: { params: Promise<{ id: string }> }
-) => {
+// POST /api/workspaces/[id]/mdm/profiles
+export const POST = withErrorHandler(async (req: NextRequest, context: RouteContext) => {
     const user = await requireAuth();
     const { id: workspaceId } = await context.params;
-    const access = await verifyWorkspaceAccess(user.email, workspaceId);
-
-    if (!access.allowed || (access.role !== 'OWNER' && access.role !== 'ADMIN')) {
-        throw new ApiError(403, 'Only Workspace Admins can create MDM profiles');
-    }
+    await requireWorkspaceRole(workspaceId, user.id, 'ADMIN', req);
 
     const body = await req.json();
-
-    // Explicit runtime validation mapping
     if (!body.name || !body.platform || !body.profileType || !body.configPayload) {
         throw new ApiError(400, 'Missing required fields');
     }

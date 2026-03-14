@@ -2,10 +2,7 @@ import { NextRequest } from 'next/server';
 import { apiSuccess, apiError } from '@/lib/api/response';
 import { withErrorHandler } from '@/lib/api/withAuth';
 import { withRateLimit } from '@/lib/security/rateLimit';
-import { prisma } from '@/lib/db';
-import { verifyResetToken } from '@/lib/auth/password-reset';
-import { logInfo } from '@/lib/logger';
-import bcrypt from 'bcryptjs';
+import { AccountService } from '@/lib/services/AccountService';
 import { z } from 'zod';
 
 const resetPasswordSchema = z.object({
@@ -26,38 +23,13 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
 
     const body = await request.json();
     const parsed = resetPasswordSchema.safeParse(body);
-    if (!parsed.success) {
-        return apiError(400, parsed.error.errors[0].message);
+    if (!parsed.success) return apiError(400, parsed.error.errors[0].message);
+
+    try {
+        await AccountService.resetPassword(parsed.data.token, parsed.data.password);
+        return apiSuccess({ message: 'Password has been reset successfully. You can now sign in.' });
+    } catch (err: unknown) {
+        const e = err as { statusCode?: number; message?: string };
+        return apiError(e.statusCode || 400, e.message || 'Reset failed');
     }
-
-    const { token, password } = parsed.data;
-
-    const result = verifyResetToken(token);
-    if (!result) {
-        return apiError(400, 'Invalid or tampered reset link. Please request a new one.');
-    }
-    if (result.expired) {
-        return apiError(400, 'This reset link has expired. Please request a new one.');
-    }
-
-    // Verify user exists
-    const user = await prisma.user.findUnique({ where: { id: result.userId } });
-    if (!user) {
-        return apiError(400, 'Invalid reset link.');
-    }
-
-    // Hash new password and update
-    const hashedPassword = await bcrypt.hash(password, 12);
-    await prisma.user.update({
-        where: { id: result.userId },
-        data: { password: hashedPassword },
-    });
-
-    // Note: Account lockout is managed via Redis/in-memory in auth.ts,
-    // and sessions use JWT strategy (no DB sessions to invalidate).
-    // JWT tokens will expire naturally within their short-lived window.
-    logInfo(`[AUTH] Password reset completed for user ${user.email}`);
-
-    return apiSuccess({ message: 'Password has been reset successfully. You can now sign in.' });
 });
-

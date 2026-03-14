@@ -6,7 +6,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useDebounce } from '@/lib/hooks/useDebounce';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { getStatusOptions, ASSET_STATUSES } from '@/lib/constants/assetConstants';
+import { ASSET_STATUSES } from '@/lib/constants/assetConstants';
 import { ConfirmDialog } from '@/components/ui';
 import { useWorkspace } from '@/lib/workspace/context';
 import { PageSpinner } from '@/components/ui/Spinner';
@@ -47,7 +47,7 @@ interface PaginationData {
 
 export default function AssetsPage() {
     const { error: showError } = useToast();
-    const router = useRouter();
+    const _router = useRouter();
     const [assets, setAssets] = useState<Asset[]>([]);
     const [categories, setCategories] = useState<AssetCategory[]>([]);
     const [pagination, setPagination] = useState<PaginationData>({
@@ -64,7 +64,7 @@ export default function AssetsPage() {
     const [assetType, setAssetType] = useState('');
     const [categoryId, setCategoryId] = useState('');
     const [status, setStatus] = useState('');
-    const [assignmentFilter, setAssignmentFilter] = useState('');
+    const [assignmentFilter, _setAssignmentFilter] = useState('');
 
     // Bulk selection state
     const [selectedAssets, setSelectedAssets] = useState<Set<string>>(new Set());
@@ -194,7 +194,7 @@ export default function AssetsPage() {
 
             if (!response.ok) throw new Error('Bulk delete failed');
 
-            const result = await response.json();
+            const _result = await response.json();
             setSelectedAssets(new Set());
             setShowBulkActions(false);
             fetchAssets(pagination.page);
@@ -237,7 +237,7 @@ export default function AssetsPage() {
     // CSV Import
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [importing, setImporting] = useState(false);
-    const [importResult, setImportResult] = useState<{ imported: number; skipped: number; errors: number } | null>(null);
+    const [_importResult, setImportResult] = useState<{ imported: number; skipped: number; errors: number } | null>(null);
 
     const handleImportCSV = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];

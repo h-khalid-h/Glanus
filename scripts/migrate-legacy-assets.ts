@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client';
-import { serializeFieldValue } from '../lib/dynamic-fields';
+import { DynamicFieldService, FieldType } from '../lib/services/DynamicFieldService';
 
 const prisma = new PrismaClient();
 
@@ -193,22 +193,28 @@ async function migratePhysicalAssets(categoryId: string, fieldDefinitions: any[]
                     warrantyExpiry: pa.warrantyExpiry,
                 };
 
+                const fieldValuesToCreate: any[] = [];
+
                 for (const [fieldName, value] of Object.entries(fieldMappings)) {
                     if (value !== null && value !== undefined) {
-                        const fieldDef = fieldDefinitions.find((f) => f.name === fieldName);
+                        const fieldDef = fieldDefinitions.find((f: any) => f.name === fieldName);
                         if (!fieldDef) {
                             console.warn(`Field definition not found for ${fieldName}`);
                             continue;
                         }
 
-                        await tx.assetFieldValue.create({
-                            data: {
-                                assetId: pa.assetId,
-                                fieldDefinitionId: fieldDef.id,
-                                value: serializeFieldValue(value, fieldDef.fieldType),
-                            } as any,
+                        fieldValuesToCreate.push({
+                            assetId: pa.assetId,
+                            fieldDefinitionId: fieldDef.id,
+                            ...DynamicFieldService.serializeFieldValue(value, fieldDef.fieldType as FieldType),
                         });
                     }
+                }
+
+                if (fieldValuesToCreate.length > 0) {
+                    await tx.assetFieldValue.createMany({
+                        data: fieldValuesToCreate,
+                    });
                 }
             });
 
@@ -248,22 +254,28 @@ async function migrateDigitalAssets(categoryId: string, fieldDefinitions: any[])
                     maxUsers: da.maxUsers,
                 };
 
+                const fieldValuesToCreate: any[] = [];
+
                 for (const [fieldName, value] of Object.entries(fieldMappings)) {
                     if (value !== null && value !== undefined) {
-                        const fieldDef = fieldDefinitions.find((f) => f.name === fieldName);
+                        const fieldDef = fieldDefinitions.find((f: any) => f.name === fieldName);
                         if (!fieldDef) {
                             console.warn(`Field definition not found for ${fieldName}`);
                             continue;
                         }
 
-                        await tx.assetFieldValue.create({
-                            data: {
-                                assetId: da.assetId,
-                                fieldDefinitionId: fieldDef.id,
-                                value: serializeFieldValue(value, fieldDef.fieldType),
-                            } as any,
+                        fieldValuesToCreate.push({
+                            assetId: da.assetId,
+                            fieldDefinitionId: fieldDef.id,
+                            ...DynamicFieldService.serializeFieldValue(value, fieldDef.fieldType as FieldType),
                         });
                     }
+                }
+
+                if (fieldValuesToCreate.length > 0) {
+                    await tx.assetFieldValue.createMany({
+                        data: fieldValuesToCreate,
+                    });
                 }
             });
 

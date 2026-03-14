@@ -48,7 +48,7 @@ export class PatchService {
         });
 
         if (!script) {
-            throw new Error('Remediation script not found or does not belong to this workspace');
+            throw Object.assign(new Error('Remediation script not found or does not belong to this workspace'), { statusCode: 404 });
         }
 
         return prisma.patchPolicy.create({
@@ -75,11 +75,11 @@ export class PatchService {
         });
 
         if (!policy) {
-            throw new Error('Patch policy not found');
+            throw Object.assign(new Error('Patch policy not found'), { statusCode: 404 });
         }
 
         if (!policy.isEnabled) {
-            throw new Error('Cannot deploy a disabled patch policy. Please enable it first.');
+            throw Object.assign(new Error('Cannot deploy a disabled patch policy. Please enable it first.'), { statusCode: 400 });
         }
 
         // Identify vulnerable endpoints logically across the workspace

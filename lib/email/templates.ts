@@ -260,8 +260,26 @@ export const getSubscriptionCanceledEmailTemplate = (
         <p style="margin: 0; color: #854d0e; font-size: 14px;"><strong>Note:</strong> Downgrading to Free may limit your assets to 5, AI credits to 100/month, and storage to 1 GB. Data exceeding these limits will not be deleted but will become read-only.</p>
       </div>
       <div style="text-align: center;">
-        <a href="${process.env.NEXTAUTH_URL}/dashboard" class="button-secondary">Reactivate Subscription</a>
       </div>
-    </div>
   `);
 };
+
+/**
+ * Password reset email - sent when user requests a password reset link
+ */
+export const getPasswordResetEmailTemplate = (resetUrl: string) =>
+  emailWrapper(`
+    <div class="content">
+      <h2>Reset your password</h2>
+      <p>We received a request to reset your Glanus password.</p>
+      <p>Click the button below to set a new password. This link expires in <strong>1 hour</strong>.</p>
+      <div style="text-align: center;">
+        <a href="${resetUrl}" class="button">Reset Password</a>
+      </div>
+      <p style="font-size: 13px; color: #6b7280; margin-top: 24px;">
+        If you didn't request a password reset, you can safely ignore this email. Your password will not change.
+      </p>
+      <p style="font-size: 12px; color: #9ca3af; word-break: break-all;">Or copy this link: ${resetUrl}</p>
+    </div>
+  `);
+

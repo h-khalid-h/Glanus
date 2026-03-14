@@ -6,7 +6,7 @@ import { csrfFetch } from '@/lib/api/csrfFetch';
 import { useToast } from '@/lib/toast';
 import {
     Settings, ShieldAlert, AlertTriangle, Building2, Paintbrush,
-    Key, Webhook, Bell, Plus, Trash2, Copy, Check, Eye, EyeOff,
+    Key, Webhook, Bell, Plus, Trash2, Copy, Check,
     Shield, Clock, Globe, ToggleLeft, ToggleRight,
 } from 'lucide-react';
 
@@ -316,8 +316,8 @@ export default function WorkspaceSettingsPage() {
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id)}
                         className={`flex items-center gap-2 px-4 py-2.5 rounded-md text-sm font-medium transition-all ${activeTab === tab.id
-                                ? 'bg-nerve text-white shadow-lg shadow-nerve/20'
-                                : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                            ? 'bg-nerve text-white shadow-lg shadow-nerve/20'
+                            : 'text-slate-400 hover:text-white hover:bg-slate-800'
                             }`}
                     >
                         {tab.icon}

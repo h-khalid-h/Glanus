@@ -24,7 +24,7 @@ interface WorkspaceWizardProps {
 
 export default function WorkspaceWizard({ onComplete, showSampleDataOption = false }: WorkspaceWizardProps = {}) {
     const router = useRouter();
-    const { data: session } = useSession();
+    useSession();
     const { setCurrentWorkspace, fetchWorkspaces } = useWorkspaceStore();
 
     const [currentStep, setCurrentStep] = useState(1);

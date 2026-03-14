@@ -1,88 +1,37 @@
 import { apiSuccess, apiError } from '@/lib/api/response';
 import { NextRequest } from 'next/server';
-import { prisma } from '@/lib/db';
 import { withErrorHandler } from '@/lib/api/withAuth';
+import { PartnerService } from '@/lib/services/PartnerService';
 
-// GET /api/partners/[id] - Get public partner profile
+// GET /api/partners/[id] - Get public partner profile (includes rating breakdown)
 export const GET = withErrorHandler(async (
-    request: NextRequest,
+    _request: NextRequest,
     context: { params: Promise<{ id: string }> }
 ) => {
     const params = await context.params;
-    // Get partner with public info only
-    const partner = await prisma.partner.findUnique({
-        where: { id: params.id },
-        select: {
-            id: true,
-            status: true,
-            companyName: true,
-            bio: true,
-            logo: true,
-            coverImage: true,
-            website: true,
-            phone: true,
-            certificationLevel: true,
-            certifiedAt: true,
-            city: true,
-            region: true,
-            country: true,
-            timezone: true,
-            serviceRadius: true,
-            remoteOnly: true,
-            industries: true,
-            certifications: true,
-            languages: true,
-            averageRating: true,
-            totalReviews: true,
-            maxWorkspaces: true,
-            availableSlots: true,
-            acceptingNew: true,
-            createdAt: true,
-            // Assignments with reviews
-            assignments: {
-                where: {
-                    status: 'COMPLETED',
-                    rating: { not: null },
-                },
-                select: {
-                    rating: true,
-                    review: true,
-                    ratedAt: true,
-                    completedAt: true,
-                    workspace: {
-                        select: {
-                            name: true,
-                            logo: true,
-                        },
-                    },
-                },
-                orderBy: { ratedAt: 'desc' },
-                take: 10, // Latest 10 reviews
-            },
-        },
-    });
 
-    if (!partner) {
-        return apiError(404, 'Partner not found');
+    try {
+        const partner = await PartnerService.getPartnerById(params.id);
+
+        if (partner.status !== 'ACTIVE') {
+            return apiError(404, 'Partner profile not available');
+        }
+
+        const ratings = partner.assignments
+            .map((a: { rating: number | null }) => a.rating)
+            .filter((r: number | null): r is number => r !== null);
+
+        const ratingBreakdown = {
+            5: ratings.filter((r: number) => r === 5).length,
+            4: ratings.filter((r: number) => r === 4).length,
+            3: ratings.filter((r: number) => r === 3).length,
+            2: ratings.filter((r: number) => r === 2).length,
+            1: ratings.filter((r: number) => r === 1).length,
+        };
+
+        return apiSuccess({ partner, ratingBreakdown });
+    } catch (err: unknown) {
+        const e = err as { statusCode?: number; message?: string };
+        return apiError(e.statusCode || 500, e.message || 'Error');
     }
-
-    // Don't show if not active
-    if (partner.status !== 'ACTIVE') {
-        return apiError(404, 'Partner profile not available');
-    }
-
-    // Calculate rating breakdown (5-star distribution)
-    const ratings = partner.assignments.map((a) => a.rating).filter((r) => r !== null);
-    const ratingBreakdown = {
-        5: ratings.filter((r) => r === 5).length,
-        4: ratings.filter((r) => r === 4).length,
-        3: ratings.filter((r) => r === 3).length,
-        2: ratings.filter((r) => r === 2).length,
-        1: ratings.filter((r) => r === 1).length,
-    };
-
-    return apiSuccess({
-        partner,
-        ratingBreakdown,
-    });
 });

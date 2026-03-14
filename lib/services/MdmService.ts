@@ -1,3 +1,12 @@
+/**
+ * MdmService — Manages Mobile Device Management (MDM) profiles for workspace endpoints.
+ *
+ * Responsibilities:
+ *  - getProfiles: list MDM profiles with optional platform filter
+ *  - createProfile: create a new MDM configuration profile
+ *  - deleteProfile: remove a profile from the workspace
+ *  - assignProfiles: push profiles to specific agent connections
+ */
 import { prisma } from '@/lib/db';
 import { z } from 'zod';
 
@@ -97,7 +106,7 @@ export class MdmService {
         });
 
         if (!existing || existing.workspaceId !== workspaceId) {
-            throw new Error('MDM profile not found');
+            throw Object.assign(new Error('MDM profile not found'), { statusCode: 404 });
         }
 
         return prisma.mdmProfile.delete({
@@ -139,7 +148,7 @@ export class MdmService {
         });
 
         if (!profile || profile.workspaceId !== workspaceId) {
-            throw new Error('MDM profile not found');
+            throw Object.assign(new Error('MDM profile not found'), { statusCode: 404 });
         }
 
         return Promise.all(

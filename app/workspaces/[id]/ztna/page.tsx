@@ -5,10 +5,9 @@ import { csrfFetch } from '@/lib/api/csrfFetch';
 import { useToast } from '@/lib/toast';
 import { useWorkspace } from '@/lib/workspace/context';
 import { PageSpinner } from '@/components/ui/Spinner';
-import { ErrorState, EmptyState } from '@/components/ui/EmptyState';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { WorkspaceLayout } from '@/components/workspace/WorkspaceLayout';
 import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
 import { ShieldCheck, ShieldAlert, Network, X, Key, Info, Ban, Activity } from 'lucide-react';
 
 interface ZtnaPolicy {

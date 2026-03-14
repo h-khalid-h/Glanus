@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { csrfFetch } from '@/lib/api/csrfFetch';
 import { useToast } from '@/lib/toast';
 import { Monitor, RefreshCw, XCircle, Play, Clock, Search, ChevronLeft, ChevronRight, Wifi, WifiOff } from 'lucide-react';
@@ -45,8 +45,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; icon: typeof
 
 export default function RemoteSessionsPage() {
     const params = useParams();
-    const router = useRouter();
-    const workspaceId = params.id as string;
+    const _workspaceId = params.id as string;
     const { success: toastSuccess, error: toastError } = useToast();
 
     const [sessions, setSessions] = useState<RemoteSession[]>([]);

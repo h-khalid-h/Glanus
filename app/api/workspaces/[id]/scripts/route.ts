@@ -21,7 +21,7 @@ export const GET = withErrorHandler(async (
     try {
         const scripts = await ScriptService.getScripts(params.id, language);
         return apiSuccess({ scripts });
-    } catch (error: any) {
+    } catch (_error) {
         return apiError(500, 'Failed to fetch scripts');
     }
 });
@@ -49,7 +49,7 @@ export const POST = withErrorHandler(async (
     try {
         const script = await ScriptService.createScript(params.id, user.id, data.data);
         return apiSuccess({ script }, { message: 'Script created successfully' }, 201);
-    } catch (error: any) {
+    } catch (_error) {
         return apiError(500, 'Failed to create script');
     }
 });

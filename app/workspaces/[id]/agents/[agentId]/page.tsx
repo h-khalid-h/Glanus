@@ -90,7 +90,7 @@ function MiniSparkline({ data, color }: { data: number[]; color: string }) {
 export default function AgentDetailPage() {
     const { error: showError } = useToast();
     const params = useParams();
-    const router = useRouter();
+    const _router = useRouter();
     const workspaceId = params?.id as string;
     const agentId = params?.agentId as string;
 

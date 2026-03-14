@@ -2,10 +2,9 @@
 import { useToast } from '@/lib/toast';
 import { csrfFetch } from '@/lib/api/csrfFetch';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { Button } from '@/components/ui/Button';
 import { CheckCircle2, Sparkles, Users, BarChart3, ArrowRight } from 'lucide-react';
 import WorkspaceWizard from '@/components/WorkspaceWizard';
 
@@ -14,9 +13,9 @@ type OnboardingStep = 'welcome' | 'create-workspace' | 'complete';
 export default function OnboardingPage() {
     const { error: showError } = useToast();
     const router = useRouter();
-    const { data: session } = useSession();
+    useSession();
     const [currentStep, setCurrentStep] = useState<OnboardingStep>('welcome');
-    const [isLoading, setIsLoading] = useState(false);
+    const [_isLoading, setIsLoading] = useState(false);
 
     const handleCompleteOnboarding = async (workspaceId?: string) => {
         setIsLoading(true);

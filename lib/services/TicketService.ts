@@ -1,4 +1,14 @@
+/**
+ * TicketService — IT support ticket and messaging management.
+ *
+ * Responsibilities:
+ *  - getTickets: list workspace tickets with role-aware access enforcement
+ *  - getTicketById: fetch full ticket with message thread
+ *  - createTicket / updateTicket / deleteTicket: lifecycle management
+ *  - addMessage: append replies or internal notes with access enforcement
+ */
 import { prisma } from '@/lib/db';
+import { Prisma, $Enums } from '@prisma/client';
 import { z } from 'zod';
 
 export const createTicketSchema = z.object({
@@ -38,10 +48,11 @@ export class TicketService {
         auth: WorkspaceAuthContext,
         filters: { status?: string | null, priority?: string | null, assigneeId?: string | null }
     ) {
-        const where: any = { workspaceId };
+        // Build typed where clause to avoid loose `any` for Prisma query filter
+        const where: Prisma.TicketWhereInput = { workspaceId };
 
-        if (filters.status) where.status = filters.status;
-        if (filters.priority) where.priority = filters.priority;
+        if (filters.status) where.status = filters.status as $Enums.TicketStatus;
+        if (filters.priority) where.priority = filters.priority as $Enums.TicketPriority;
         if (filters.assigneeId) where.assigneeId = filters.assigneeId;
 
         // Non IT_STAFF / ADMINs only see their own tickets
@@ -82,7 +93,7 @@ export class TicketService {
                 where: { id: data.assetId, workspaceId },
                 select: { id: true }
             });
-            if (!asset) throw new Error('Invalid asset selection');
+            if (!asset) throw Object.assign(new Error('Invalid asset selection'), { statusCode: 400 });
         }
 
         const ticket = await prisma.ticket.create({
@@ -141,12 +152,12 @@ export class TicketService {
             }
         });
 
-        if (!ticket) throw new Error('Ticket not found');
+        if (!ticket) throw Object.assign(new Error('Ticket not found'), { statusCode: 404 });
 
         // Access enforcement
         if (auth.role !== 'ADMIN' && auth.role !== 'OWNER' && user.role !== 'IT_STAFF') {
             if (ticket.creatorId !== user.id) {
-                throw new Error('Access denied to this ticket');
+                throw Object.assign(new Error('Access denied to this ticket'), { statusCode: 403 });
             }
         }
 
@@ -168,15 +179,15 @@ export class TicketService {
             select: { id: true, status: true, creatorId: true }
         });
 
-        if (!ticket) throw new Error('Ticket not found');
+        if (!ticket) throw Object.assign(new Error('Ticket not found'), { statusCode: 404 });
 
         // Only IT_STAFF, ADMIN, or OWNER can reassign or change priority
         if (auth.role !== 'ADMIN' && auth.role !== 'OWNER' && user.role !== 'IT_STAFF') {
-            if (ticket.creatorId !== user.id) throw new Error('Access denied to this ticket');
+            if (ticket.creatorId !== user.id) throw Object.assign(new Error('Access denied to this ticket'), { statusCode: 403 });
 
             // Basic users shouldn't re-assign tickets or change priority, only status (e.g., closing it)
             if (data.assigneeId !== undefined || data.priority !== undefined) {
-                throw new Error('Permission denied to modify ticket administrative properties');
+                throw Object.assign(new Error('Permission denied to modify ticket administrative properties'), { statusCode: 403 });
             }
         }
 
@@ -186,7 +197,7 @@ export class TicketService {
                 where: { id: data.assigneeId }
             });
             if (!validMember || validMember.workspaceId !== workspaceId) {
-                throw new Error('Invalid assignee selected');
+                throw Object.assign(new Error('Invalid assignee selected'), { statusCode: 400 });
             }
         }
 
@@ -215,14 +226,14 @@ export class TicketService {
         auth: WorkspaceAuthContext
     ) {
         if (auth.role !== 'ADMIN' && auth.role !== 'OWNER' && user.role !== 'IT_STAFF') {
-            throw new Error('Insufficient permissions to delete tickets');
+            throw Object.assign(new Error('Insufficient permissions to delete tickets'), { statusCode: 403 });
         }
 
         const ticket = await prisma.ticket.findUnique({
             where: { id: ticketId, workspaceId }
         });
 
-        if (!ticket) throw new Error('Ticket not found');
+        if (!ticket) throw Object.assign(new Error('Ticket not found'), { statusCode: 404 });
 
         await prisma.ticket.delete({
             where: { id: ticketId }
@@ -246,17 +257,17 @@ export class TicketService {
             select: { id: true, creatorId: true, status: true, assigneeId: true }
         });
 
-        if (!ticket) throw new Error('Ticket not found');
+        if (!ticket) throw Object.assign(new Error('Ticket not found'), { statusCode: 404 });
 
         const isPrivileged = auth.role === 'ADMIN' || auth.role === 'OWNER' || user.role === 'IT_STAFF';
 
         // Access enforcement: Normal users can only reply to their own tickets and cannot post internal notes
         if (!isPrivileged) {
             if (ticket.creatorId !== user.id) {
-                throw new Error('Access denied to this ticket');
+                throw Object.assign(new Error('Access denied to this ticket'), { statusCode: 403 });
             }
             if (data.isInternal) {
-                throw new Error('Permission denied for internal messages');
+                throw Object.assign(new Error('Permission denied for internal messages'), { statusCode: 403 });
             }
         }
 

@@ -1,5 +1,5 @@
 'use client';
-import { formatDate, formatDateTime } from '@/lib/utils';
+import { formatDate } from '@/lib/utils';
 import { csrfFetch } from '@/lib/api/csrfFetch';
 
 import { useEffect, useState } from 'react';

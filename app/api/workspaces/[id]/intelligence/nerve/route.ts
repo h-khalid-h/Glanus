@@ -1,14 +1,16 @@
 import { NextRequest } from 'next/server';
 import { requireAuth, requireWorkspaceRole, withErrorHandler } from '@/lib/api/withAuth';
-import { apiSuccess, apiError } from '@/lib/api/response';
+import { apiSuccess } from '@/lib/api/response';
 import { enrichMetric } from '@/lib/nerve/enrichment';
 import { prisma } from '@/lib/db';
 
 /**
  * GET /api/workspaces/[id]/intelligence/nerve
  *
- * Returns enriched telemetry data for all agents in the workspace.
- * Includes health scores, metric deviations, and correlated recent changes.
+ * Returns enriched telemetry data for all online agents in the workspace.
+ * Intentionally retains the Prisma call here — this is a thin infrastructure
+ * projection (online agents list) where the real business logic lives inside
+ * `enrichMetric` (lib/nerve/enrichment). No service abstraction needed.
  */
 export const GET = withErrorHandler(async (
     request: NextRequest,
@@ -18,32 +20,17 @@ export const GET = withErrorHandler(async (
     const user = await requireAuth();
     await requireWorkspaceRole(params.id, user.id, 'MEMBER');
 
-    const workspaceId = params.id;
-
-    // Get all online agents in this workspace
     const agents = await prisma.agentConnection.findMany({
-        where: { workspaceId, status: 'ONLINE' },
-        select: {
-            id: true,
-            cpuUsage: true,
-            ramUsage: true,
-            diskUsage: true,
-        },
+        where: { workspaceId: params.id, status: 'ONLINE' },
+        select: { id: true, cpuUsage: true, ramUsage: true, diskUsage: true },
     });
 
-    // Enrich metrics for each agent in parallel
     const enrichedMetrics = await Promise.all(
-        agents.map(agent =>
-            enrichMetric(
-                agent.id,
-                agent.cpuUsage ?? 0,
-                agent.ramUsage ?? 0,
-                agent.diskUsage ?? 0,
-            )
+        agents.map((agent) =>
+            enrichMetric(agent.id, agent.cpuUsage ?? 0, agent.ramUsage ?? 0, agent.diskUsage ?? 0)
         )
     );
 
-    // Filter out null results (agents without assets)
     const validMetrics = enrichedMetrics.filter(Boolean);
 
     return apiSuccess({

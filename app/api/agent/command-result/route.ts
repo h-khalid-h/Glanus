@@ -1,12 +1,9 @@
 import { apiSuccess, apiError } from '@/lib/api/response';
 import { logError } from '@/lib/logger';
 import { NextRequest } from 'next/server';
-import { prisma } from '@/lib/db';
 import { z } from 'zod';
+import { AgentService } from '@/lib/services/AgentService';
 
-import { hashAgentToken } from '@/lib/security/agent-auth';
-
-// Validation schema
 const commandResultSchema = z.object({
     authToken: z.string(),
     executionId: z.string(),
@@ -14,7 +11,7 @@ const commandResultSchema = z.object({
     exitCode: z.number().optional(),
     output: z.string().optional(),
     error: z.string().optional(),
-    duration: z.number().optional(), // milliseconds
+    duration: z.number().optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -22,58 +19,15 @@ export async function POST(request: NextRequest) {
         const body = await request.json();
         const data = commandResultSchema.parse(body);
 
-        // Verify agent auth
-        const hashedToken = hashAgentToken(data.authToken);
-        const agent = await prisma.agentConnection.findUnique({
-            where: { authToken: hashedToken },
-        });
+        await AgentService.recordCommandResult(data);
 
-        if (!agent) {
-            return apiError(401, 'Invalid auth token');
-        }
-
-        // Find script execution
-        const execution = await prisma.scriptExecution.findUnique({
-            where: { id: data.executionId },
-        });
-
-        if (!execution) {
-            return apiError(404, 'Execution not found');
-        }
-
-        // Verify execution belongs to this agent
-        if (execution.agentId !== agent.id) {
-            return apiError(403, 'Execution does not belong to this agent');
-        }
-
-        // Map status to ScriptStatus enum
-        const statusMap: Record<string, 'COMPLETED' | 'FAILED' | 'TIMEOUT'> = {
-            completed: 'COMPLETED',
-            failed: 'FAILED',
-            timeout: 'TIMEOUT',
-        };
-
-        // Update execution with result
-        await prisma.scriptExecution.update({
-            where: { id: data.executionId },
-            data: {
-                status: statusMap[data.status],
-                exitCode: data.exitCode,
-                output: data.output,
-                error: data.error,
-                completedAt: new Date(),
-            },
-        });
-
-        return apiSuccess({
-            status: 'ok',
-            message: 'Result recorded successfully',
-        });
+        return apiSuccess({ status: 'ok', message: 'Result recorded successfully' });
     } catch (error: unknown) {
         if (error instanceof z.ZodError) {
             return apiError(400, 'Validation failed', error.errors);
         }
-
+        const err = error as { statusCode?: number; message?: string };
+        if (err.statusCode) return apiError(err.statusCode, err.message || 'Error');
         logError('Agent command result failed', error);
         return apiError(500, 'Failed to record result');
     }

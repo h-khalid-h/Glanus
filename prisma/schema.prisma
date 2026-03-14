@@ -697,7 +697,7 @@ model AIInsight {
   userId  String?
   user    User?   @relation(fields: [userId], references: [id])
   assetId String?
-  asset   Asset?  @relation(fields: [assetId], references: [id])
+  asset   Asset?  @relation(fields: [assetId], references: [id], onDelete: Cascade)
 
   // Workspace scoping (Glanus 2.0)
   workspaceId String?
@@ -947,7 +947,7 @@ model AssetActionExecution {
 
   // References
   assetId            String
-  asset              Asset                 @relation("AssetActionExecutions", fields: [assetId], references: [id])
+  asset              Asset                 @relation("AssetActionExecutions", fields: [assetId], references: [id], onDelete: Cascade)
   actionDefinitionId String
   actionDefinition   AssetActionDefinition @relation(fields: [actionDefinitionId], references: [id])
   userId             String?

@@ -1,8 +1,7 @@
 import { apiSuccess, apiError } from '@/lib/api/response';
 import { NextRequest } from 'next/server';
 import { getRules, saveRule } from '@/lib/reflex/automation';
-import { requireAuth, withErrorHandler } from '@/lib/api/withAuth';
-import { verifyWorkspaceAccess } from '@/lib/workspace/permissions';
+import { requireAuth, requireWorkspaceRole, withErrorHandler } from '@/lib/api/withAuth';
 
 interface RouteContext {
     params: Promise<{ id: string }>;
@@ -12,11 +11,7 @@ interface RouteContext {
 export const GET = withErrorHandler(async (request: NextRequest, context: RouteContext) => {
     const user = await requireAuth();
     const { id: workspaceId } = await context.params;
-
-    const access = await verifyWorkspaceAccess(user.email, workspaceId);
-    if (!access.allowed) {
-        return apiError(403, 'Forbidden - Insufficient permissions');
-    }
+    await requireWorkspaceRole(workspaceId, user.id, 'MEMBER', request);
 
     try {
         const rules = await getRules(workspaceId);
@@ -30,17 +25,10 @@ export const GET = withErrorHandler(async (request: NextRequest, context: RouteC
 export const POST = withErrorHandler(async (request: NextRequest, context: RouteContext) => {
     const user = await requireAuth();
     const { id: workspaceId } = await context.params;
-
-    const access = await verifyWorkspaceAccess(user.email, workspaceId);
-    // Strict RBAC: Only Owners and Admins can forge autonomous rule executions
-    if (!access.allowed || (access.role !== 'OWNER' && access.role !== 'ADMIN')) {
-        return apiError(403, 'Forbidden - Requires Admin permissions to manage automation rules');
-    }
+    await requireWorkspaceRole(workspaceId, user.id, 'ADMIN', request);
 
     try {
         const body = await request.json();
-
-        // Very basic validation - in production, this should leverage Zod schemas
         if (!body.name || !body.trigger || !body.action || !body.autonomyLevel) {
             return apiError(400, 'Missing required rule fields: name, trigger, action, autonomyLevel');
         }

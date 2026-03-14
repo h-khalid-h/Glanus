@@ -25,7 +25,7 @@ export async function GET() {
     try {
         await prisma.$queryRaw`SELECT 1`;
         checks.services.database = { status: 'connected' };
-    } catch (error: unknown) {
+    } catch (_error) {
         checks.services.database = { status: 'disconnected', error: 'Connection failed' };
         checks.status = 'degraded';
         httpStatus = 503;

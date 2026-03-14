@@ -1,5 +1,4 @@
 import { apiSuccess, apiError } from '@/lib/api/response';
-import { prisma } from '@/lib/db';
 import { stripe } from '@/lib/stripe/client';
 import { requireAuth, requireWorkspaceRole, withErrorHandler } from '@/lib/api/withAuth';
 import { checkoutSchema } from '@/lib/schemas/workspace.schemas';

@@ -3,7 +3,6 @@ import { csrfFetch } from '@/lib/api/csrfFetch';
 
 import { useState, useEffect, useCallback } from 'react';
 import { useWorkspaceStore } from '@/lib/stores/workspaceStore';
-import { Button } from '@/components/ui/Button';
 import { Trash2, RefreshCw, Mail } from 'lucide-react';
 import { Badge, ConfirmDialog } from '@/components/ui';
 import { useToast } from '@/lib/toast';

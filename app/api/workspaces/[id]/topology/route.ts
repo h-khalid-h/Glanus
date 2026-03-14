@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { requireAuth, requireWorkspaceAccess, withErrorHandler } from '@/lib/api/withAuth';
-import { apiSuccess, apiError } from '@/lib/api/response';
+import { apiSuccess } from '@/lib/api/response';
 import { buildOperationalGraph, getBlastRadius } from '@/lib/nerve/operational-graph';
 
 // GET /api/workspaces/[id]/topology - Get workspace infrastructure topology graph

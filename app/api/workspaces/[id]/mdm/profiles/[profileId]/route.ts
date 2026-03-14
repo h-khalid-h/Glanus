@@ -1,60 +1,55 @@
+import { apiSuccess, apiError } from '@/lib/api/response';
 import { NextRequest } from 'next/server';
-import { apiSuccess } from '@/lib/api/response';
-import { requireAuth, withErrorHandler, ApiError } from '@/lib/api/withAuth';
-import { verifyWorkspaceAccess } from '@/lib/workspace/permissions';
+import { requireAuth, requireWorkspaceRole, withErrorHandler, ApiError } from '@/lib/api/withAuth';
 import { MdmService } from '@/lib/services/MdmService';
 
-export const PATCH = withErrorHandler(async (
-    req: NextRequest,
-    context: { params: Promise<{ id: string, profileId: string }> }
-) => {
+type RouteContext = { params: Promise<{ id: string; profileId: string }> };
+
+// GET /api/workspaces/[id]/mdm/profiles/[profileId]
+export const GET = withErrorHandler(async (req: NextRequest, context: RouteContext) => {
     const user = await requireAuth();
     const { id: workspaceId, profileId } = await context.params;
-    const access = await verifyWorkspaceAccess(user.email, workspaceId);
+    await requireWorkspaceRole(workspaceId, user.id, 'MEMBER', req);
 
-    if (!access.allowed || (access.role !== 'OWNER' && access.role !== 'ADMIN')) {
-        throw new ApiError(403, 'Only Workspace Admins can modify MDM profiles');
-    }
+    const profiles = await MdmService.getProfiles(workspaceId);
+    const profile = profiles.find(p => p.id === profileId);
+    if (!profile) throw new ApiError(404, 'MDM profile not found');
+    return apiSuccess(profile);
+});
+
+// PUT /api/workspaces/[id]/mdm/profiles/[profileId]
+export const PUT = withErrorHandler(async (req: NextRequest, context: RouteContext) => {
+    const user = await requireAuth();
+    const { id: workspaceId, profileId } = await context.params;
+    await requireWorkspaceRole(workspaceId, user.id, 'ADMIN', req);
 
     const body = await req.json();
-
     try {
         const profile = await MdmService.updateProfile(workspaceId, profileId, {
             name: body.name,
             description: body.description,
             platform: body.platform,
             profileType: body.profileType,
-            configPayload: body.configPayload
+            configPayload: body.configPayload,
         });
-
         return apiSuccess(profile, { message: 'MDM profile updated successfully' });
     } catch (error: any) {
-        if (error.message.includes('not found')) {
-            throw new ApiError(404, 'MDM profile not found');
-        }
+        if (error.message.includes('not found')) throw new ApiError(404, 'MDM profile not found');
         throw new ApiError(500, 'Failed to update MDM profile');
     }
 });
 
-export const DELETE = withErrorHandler(async (
-    req: NextRequest,
-    context: { params: Promise<{ id: string, profileId: string }> }
-) => {
+// DELETE /api/workspaces/[id]/mdm/profiles/[profileId]
+export const DELETE = withErrorHandler(async (req: NextRequest, context: RouteContext) => {
     const user = await requireAuth();
     const { id: workspaceId, profileId } = await context.params;
-    const access = await verifyWorkspaceAccess(user.email, workspaceId);
-
-    if (!access.allowed || (access.role !== 'OWNER' && access.role !== 'ADMIN')) {
-        throw new ApiError(403, 'Only Workspace Admins can delete MDM profiles');
-    }
+    await requireWorkspaceRole(workspaceId, user.id, 'ADMIN', req);
 
     try {
         await MdmService.deleteProfile(workspaceId, profileId);
         return apiSuccess({ deletedId: profileId }, { message: 'MDM profile deleted successfully' });
     } catch (error: any) {
-        if (error.message.includes('not found')) {
-            throw new ApiError(404, 'MDM profile not found');
-        }
+        if (error.message.includes('not found')) throw new ApiError(404, 'MDM profile not found');
         throw new ApiError(500, 'Failed to delete MDM profile');
     }
 });

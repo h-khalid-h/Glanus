@@ -1,11 +1,10 @@
 'use client';
-import { ErrorState } from '@/components/ui/EmptyState';
 import { csrfFetch } from '@/lib/api/csrfFetch';
 import { useToast } from '@/lib/toast';
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Plus, Play, Edit2, Trash2 } from 'lucide-react';
+import { Plus, Edit2, Trash2 } from 'lucide-react';
 import { AssetActionDefinition } from '@prisma/client';
 import { ArrowLeft } from 'lucide-react';
 import { ConfirmDialog } from '@/components/ui';

@@ -20,17 +20,6 @@ import {
 } from 'lucide-react';
 import { clsx } from 'clsx';
 
-interface BillingData {
-    plan: string;
-    status: string;
-    currentPeriodEnd?: string;
-    usage: {
-        assets: { current: number; limit: number };
-        aiCredits: { current: number; limit: number };
-        storage: { current: number; limit: number };
-    };
-}
-
 /** Extended workspace type with subscription and counts from API */
 interface WorkspaceWithSubscription {
     subscription?: {

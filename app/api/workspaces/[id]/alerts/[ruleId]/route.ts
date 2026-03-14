@@ -1,8 +1,8 @@
 import { apiSuccess, apiError } from '@/lib/api/response';
 import { NextRequest } from 'next/server';
-import { prisma } from '@/lib/db';
 import { requireAuth, requireWorkspaceAccess, requireWorkspaceRole, withErrorHandler } from '@/lib/api/withAuth';
 import { z } from 'zod';
+import { WorkspaceAlertService } from '@/lib/services/WorkspaceAlertService';
 
 const updateAlertRuleSchema = z.object({
     name: z.string().min(1).max(255).optional(),
@@ -15,7 +15,7 @@ const updateAlertRuleSchema = z.object({
     notifyWebhook: z.boolean().optional(),
 });
 
-// GET - Get single alert rule
+// GET /api/workspaces/[id]/alerts/[ruleId]
 export const GET = withErrorHandler(async (
     _request: NextRequest,
     context: { params: Promise<{ id: string; ruleId: string }> }
@@ -23,19 +23,16 @@ export const GET = withErrorHandler(async (
     const { id: workspaceId, ruleId } = await context.params;
     const user = await requireAuth();
     await requireWorkspaceRole(workspaceId, user.id, 'ADMIN');
-
-    const alertRule = await prisma.alertRule.findFirst({
-        where: { id: ruleId, workspaceId },
-    });
-
-    if (!alertRule) {
-        return apiError(404, 'Alert rule not found');
+    try {
+        const alertRule = await WorkspaceAlertService.getAlertRule(workspaceId, ruleId);
+        return apiSuccess(alertRule);
+    } catch (err: unknown) {
+        const e = err as { statusCode?: number; message?: string };
+        return apiError(e.statusCode || 500, e.message || 'Error');
     }
-
-    return apiSuccess(alertRule);
 });
 
-// PATCH - Update alert rule (ADMIN or higher)
+// PATCH /api/workspaces/[id]/alerts/[ruleId]
 export const PATCH = withErrorHandler(async (
     request: NextRequest,
     context: { params: Promise<{ id: string; ruleId: string }> }
@@ -43,37 +40,18 @@ export const PATCH = withErrorHandler(async (
     const { id: workspaceId, ruleId } = await context.params;
     const user = await requireAuth();
     await requireWorkspaceRole(workspaceId, user.id, 'ADMIN');
-
-    const existingRule = await prisma.alertRule.findFirst({
-        where: { id: ruleId, workspaceId },
-    });
-
-    if (!existingRule) {
-        return apiError(404, 'Alert rule not found');
-    }
-
     const body = await request.json();
     const data = updateAlertRuleSchema.parse(body);
-
-    const alertRule = await prisma.alertRule.update({
-        where: { id: ruleId },
-        data,
-    });
-
-    await prisma.auditLog.create({
-        data: {
-            action: 'ALERT_RULE_UPDATED',
-            resourceType: 'AlertRule',
-            resourceId: ruleId,
-            userId: user.id,
-            metadata: { ruleName: alertRule.name, changes: data },
-        },
-    });
-
-    return apiSuccess(alertRule);
+    try {
+        const alertRule = await WorkspaceAlertService.updateAlertRule(workspaceId, ruleId, user.id, data);
+        return apiSuccess(alertRule);
+    } catch (err: unknown) {
+        const e = err as { statusCode?: number; message?: string };
+        return apiError(e.statusCode || 500, e.message || 'Error');
+    }
 });
 
-// DELETE - Delete alert rule (ADMIN or higher)
+// DELETE /api/workspaces/[id]/alerts/[ruleId]
 export const DELETE = withErrorHandler(async (
     _request: NextRequest,
     context: { params: Promise<{ id: string; ruleId: string }> }
@@ -81,26 +59,22 @@ export const DELETE = withErrorHandler(async (
     const { id: workspaceId, ruleId } = await context.params;
     const user = await requireAuth();
     await requireWorkspaceRole(workspaceId, user.id, 'ADMIN');
-
-    const existingRule = await prisma.alertRule.findFirst({
-        where: { id: ruleId, workspaceId },
-    });
-
-    if (!existingRule) {
-        return apiError(404, 'Alert rule not found');
+    try {
+        await WorkspaceAlertService.deleteAlertRule(workspaceId, ruleId, user.id);
+        return apiSuccess({ message: 'Alert rule deleted successfully' });
+    } catch (err: unknown) {
+        const e = err as { statusCode?: number; message?: string };
+        return apiError(e.statusCode || 500, e.message || 'Error');
     }
+});
 
-    await prisma.alertRule.delete({ where: { id: ruleId } });
-
-    await prisma.auditLog.create({
-        data: {
-            action: 'ALERT_RULE_DELETED',
-            resourceType: 'AlertRule',
-            resourceId: ruleId,
-            userId: user.id,
-            metadata: { ruleName: existingRule.name },
-        },
-    });
-
-    return apiSuccess({ message: 'Alert rule deleted successfully' });
+// GET /api/workspaces/[id]/alerts (also handles access-level check for non-admins)
+export const HEAD = withErrorHandler(async (
+    _request: NextRequest,
+    context: { params: Promise<{ id: string; ruleId: string }> }
+) => {
+    const { id: workspaceId } = await context.params;
+    const user = await requireAuth();
+    await requireWorkspaceAccess(workspaceId, user.id);
+    return apiSuccess({});
 });

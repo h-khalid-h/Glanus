@@ -5,11 +5,10 @@ import { useRouter, usePathname } from 'next/navigation';
 import Image from 'next/image';
 import { useWorkspaceStore, Workspace } from '@/lib/stores/workspaceStore';
 import { ChevronsUpDown, Check, Plus, Building } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
 
 export default function WorkspaceSwitcher() {
     const router = useRouter();
-    const pathname = usePathname();
+    const _pathname = usePathname();
     const { workspaces, currentWorkspace, setCurrentWorkspace, fetchWorkspaces, isLoading } = useWorkspaceStore();
     const [mounted, setMounted] = useState(false);
     const [isOpen, setIsOpen] = useState(false);

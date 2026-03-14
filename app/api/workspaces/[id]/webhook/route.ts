@@ -1,7 +1,7 @@
-import { apiSuccess, apiError } from '@/lib/api/response';
+import { apiSuccess } from '@/lib/api/response';
 import { NextRequest } from 'next/server';
-import { prisma } from '@/lib/db';
-import { requireAuth, requireWorkspaceAccess, requireWorkspaceRole, withErrorHandler } from '@/lib/api/withAuth';
+import { requireAuth, requireWorkspaceRole, withErrorHandler } from '@/lib/api/withAuth';
+import { WorkspaceWebhookService, WebhookInput } from '@/lib/services/WorkspaceWebhookService';
 import { z } from 'zod';
 
 const webhookSchema = z.object({
@@ -10,69 +10,32 @@ const webhookSchema = z.object({
     secret: z.string().optional(),
 });
 
+type RouteContext = { params: Promise<{ id: string }> };
+
 // GET - Get webhook configuration
-export const GET = withErrorHandler(async (
-    _request: NextRequest,
-    context: { params: Promise<{ id: string }> }
-) => {
-    const { id: workspaceId } = await context.params;
+export const GET = withErrorHandler(async (_request: NextRequest, { params }: RouteContext) => {
+    const { id: workspaceId } = await params;
     const user = await requireAuth();
     await requireWorkspaceRole(workspaceId, user.id, 'ADMIN');
-
-    const webhook = await prisma.notificationWebhook.findFirst({
-        where: { workspaceId },
-    });
-
+    const webhook = await WorkspaceWebhookService.getWebhook(workspaceId);
     return apiSuccess({ webhook });
 });
 
 // POST - Create or update webhook (ADMIN or higher)
-export const POST = withErrorHandler(async (
-    request: NextRequest,
-    context: { params: Promise<{ id: string }> }
-) => {
-    const { id: workspaceId } = await context.params;
+export const POST = withErrorHandler(async (request: NextRequest, { params }: RouteContext) => {
+    const { id: workspaceId } = await params;
     const user = await requireAuth();
     await requireWorkspaceRole(workspaceId, user.id, 'ADMIN');
-
-    const body = await request.json();
-    const data = webhookSchema.parse(body);
-
-    const existing = await prisma.notificationWebhook.findFirst({
-        where: { workspaceId },
-    });
-
-    let webhook;
-    if (existing) {
-        webhook = await prisma.notificationWebhook.update({
-            where: { id: existing.id },
-            data: {
-                url: data.url,
-                enabled: data.enabled ?? true,
-                secret: data.secret,
-            },
-        });
-    } else {
-        webhook = await prisma.notificationWebhook.create({
-            data: { ...data, workspaceId, enabled: data.enabled ?? true },
-        });
-    }
-
-    return apiSuccess(webhook, undefined, existing ? 200 : 201);
+    const data = webhookSchema.parse(await request.json());
+    const { webhook, created } = await WorkspaceWebhookService.upsertWebhook(workspaceId, data as WebhookInput);
+    return apiSuccess(webhook, undefined, created ? 201 : 200);
 });
 
 // DELETE - Delete webhook (ADMIN or higher)
-export const DELETE = withErrorHandler(async (
-    _request: NextRequest,
-    context: { params: Promise<{ id: string }> }
-) => {
-    const { id: workspaceId } = await context.params;
+export const DELETE = withErrorHandler(async (_request: NextRequest, { params }: RouteContext) => {
+    const { id: workspaceId } = await params;
     const user = await requireAuth();
     await requireWorkspaceRole(workspaceId, user.id, 'ADMIN');
-
-    await prisma.notificationWebhook.deleteMany({
-        where: { workspaceId },
-    });
-
-    return apiSuccess({ message: 'Webhook deleted successfully' });
+    const result = await WorkspaceWebhookService.deleteWebhook(workspaceId);
+    return apiSuccess(result);
 });

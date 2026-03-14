@@ -1,4 +1,14 @@
+/**
+ * ScriptService — Manages automation scripts and their scheduled execution.
+ *
+ * Responsibilities:
+ *  - getScripts / getScriptById: fetch scripts with optional language filter
+ *  - createScript / updateScript / deleteScript: CRUD for script records
+ *  - updateSchedule: modify cron schedule and re-compute nextRunAt
+ *  - processDueSchedules: cron-invoked — generate pending executions for eligible targets
+ */
 import { prisma } from '@/lib/db';
+import { Prisma } from '@prisma/client';
 import { z } from 'zod';
 import { logInfo, logError } from '@/lib/logger';
 import { CronExpressionParser } from 'cron-parser';
@@ -83,7 +93,7 @@ export class ScriptService {
         });
 
         if (!script) {
-            throw new Error('Script not found in this workspace.');
+            throw Object.assign(new Error('Script not found in this workspace.'), { statusCode: 404 });
         }
 
         return script;
@@ -98,7 +108,7 @@ export class ScriptService {
         });
 
         if (!script) {
-            throw new Error('Script not found.');
+            throw Object.assign(new Error('Script not found.'), { statusCode: 404 });
         }
 
         await prisma.script.delete({
@@ -270,5 +280,152 @@ export class ScriptService {
 
         logInfo('[SERVICE] Script scheduler complete', stats);
         return stats;
+    }
+
+    /**
+     * Returns a status snapshot of the script cron system.
+     */
+    static async getCronStatus() {
+        const stats = await prisma.scriptSchedule.aggregate({
+            _count: { id: true },
+            where: { enabled: true },
+        });
+
+        return {
+            status: 'ready' as const,
+            activeSchedules: stats._count.id,
+            cronInfo: {
+                endpoint: '/api/cron/scripts',
+                method: 'POST',
+                recommendedInterval: '* * * * *',
+                requiresAuth: !!process.env.CRON_SECRET,
+            },
+        };
+    }
+
+    // ========================================
+    // SCRIPT SCHEDULES
+    // ========================================
+
+    static async listSchedules(workspaceId: string) {
+        return prisma.scriptSchedule.findMany({
+            where: { workspaceId },
+            include: { script: { select: { id: true, name: true, language: true } } },
+            orderBy: { createdAt: 'desc' },
+        });
+    }
+
+    static async createSchedule(
+        workspaceId: string,
+        data: { name: string; description?: string; scriptId: string; targetIds: string[]; cronExpression: string }
+    ) {
+        // Validate script exists in workspace
+        const script = await prisma.script.findFirst({ where: { id: data.scriptId, workspaceId } });
+        if (!script) throw Object.assign(new Error('Script not found'), { statusCode: 404 });
+
+        // Validate and parse next run time
+        let nextRunAt: Date;
+        try {
+            const interval = CronExpressionParser.parse(data.cronExpression);
+            nextRunAt = interval.next().toDate();
+        } catch {
+            throw Object.assign(new Error('Invalid cron expression'), { statusCode: 400 });
+        }
+
+        return prisma.scriptSchedule.create({
+            data: {
+                workspaceId, scriptId: data.scriptId, name: data.name,
+                description: data.description, targetIds: data.targetIds,
+                cronExpression: data.cronExpression, nextRunAt, enabled: true,
+            },
+            include: { script: { select: { id: true, name: true, language: true } } },
+        });
+    }
+
+    static async updateSchedule(
+        workspaceId: string,
+        scheduleId: string,
+        data: { name?: string; description?: string; targetIds?: string[]; cronExpression?: string; enabled?: boolean }
+    ) {
+        const schedule = await prisma.scriptSchedule.findUnique({ where: { id: scheduleId, workspaceId } });
+        if (!schedule) throw Object.assign(new Error('Schedule not found'), { statusCode: 404 });
+
+        const updateData: Prisma.ScriptScheduleUpdateInput = { ...data };
+
+        if (data.cronExpression && data.cronExpression !== schedule.cronExpression) {
+            try {
+                const interval = CronExpressionParser.parse(data.cronExpression);
+                updateData.nextRunAt = interval.next().toDate();
+            } catch {
+                throw Object.assign(new Error('Invalid cron expression'), { statusCode: 400 });
+            }
+        } else if (data.enabled === true && schedule.enabled === false) {
+            try {
+                const interval = CronExpressionParser.parse(schedule.cronExpression);
+                updateData.nextRunAt = interval.next().toDate();
+            } catch { /* safe fallback — expression was valid before */ }
+        }
+
+        return prisma.scriptSchedule.update({
+            where: { id: scheduleId }, data: updateData,
+            include: { script: { select: { id: true, name: true, language: true } } },
+        });
+    }
+
+    static async deleteSchedule(workspaceId: string, scheduleId: string) {
+        const schedule = await prisma.scriptSchedule.findUnique({ where: { id: scheduleId, workspaceId } });
+        if (!schedule) throw Object.assign(new Error('Schedule not found'), { statusCode: 404 });
+        await prisma.scriptSchedule.delete({ where: { id: scheduleId } });
+        return { message: 'Schedule deleted successfully' };
+    }
+
+    // ========================================
+    // SCRIPT DEPLOY (mass execution)
+    // ========================================
+
+    static async deployScript(workspaceId: string, scriptId: string, userId: string, targetAgentIds: string[]) {
+        const script = await prisma.script.findUnique({ where: { id: scriptId, workspaceId } });
+        if (!script) throw Object.assign(new Error('Script template not found.'), { statusCode: 404 });
+
+        const targetAgents = await prisma.agentConnection.findMany({
+            where: { id: { in: targetAgentIds }, workspaceId, status: 'ONLINE' },
+            select: { id: true, assetId: true, hostname: true },
+        });
+
+        if (targetAgents.length === 0) {
+            throw Object.assign(
+                new Error('None of the provided agents are currently ONLINE or available in this workspace.'),
+                { statusCode: 400 }
+            );
+        }
+
+        const executionsData = targetAgents.map((agent) => ({
+            workspaceId, agentId: agent.id, assetId: agent.assetId,
+            scriptId: script.id, scriptName: script.name,
+            scriptBody: script.content, language: script.language,
+            status: 'PENDING' as const, createdBy: userId,
+        }));
+
+        await prisma.scriptExecution.createMany({ data: executionsData });
+
+        const spawnedExecutions = await prisma.scriptExecution.findMany({
+            where: { scriptId: script.id, agentId: { in: targetAgents.map((a) => a.id) }, status: 'PENDING' },
+            orderBy: { createdAt: 'desc' },
+            take: targetAgents.length,
+        });
+
+        await prisma.auditLog.create({
+            data: {
+                workspaceId, userId, action: 'script.deployed',
+                resourceType: 'script', resourceId: script.id,
+                details: { name: script.name, language: script.language, targetCount: targetAgents.length, targetAgents: targetAgents.map((a) => a.hostname) },
+            },
+        });
+
+        return {
+            deployedCount: targetAgents.length,
+            skippedCount: targetAgentIds.length - targetAgents.length,
+            executions: spawnedExecutions,
+        };
     }
 }

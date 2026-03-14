@@ -1,8 +1,7 @@
 import { apiSuccess, apiError } from '@/lib/api/response';
 import { NextRequest } from 'next/server';
 import { deleteRule } from '@/lib/reflex/automation';
-import { requireAuth, withErrorHandler } from '@/lib/api/withAuth';
-import { verifyWorkspaceAccess } from '@/lib/workspace/permissions';
+import { requireAuth, requireWorkspaceRole, withErrorHandler } from '@/lib/api/withAuth';
 
 interface RouteContext {
     params: Promise<{ id: string; ruleId: string }>;
@@ -12,13 +11,7 @@ interface RouteContext {
 export const DELETE = withErrorHandler(async (request: NextRequest, context: RouteContext) => {
     const user = await requireAuth();
     const { id: workspaceId, ruleId } = await context.params;
-
-    const access = await verifyWorkspaceAccess(user.email, workspaceId);
-
-    // Strict RBAC boundary
-    if (!access.allowed || (access.role !== 'OWNER' && access.role !== 'ADMIN')) {
-        return apiError(403, 'Forbidden - Requires Admin permissions to drop automation rules');
-    }
+    await requireWorkspaceRole(workspaceId, user.id, 'ADMIN', request);
 
     try {
         await deleteRule(workspaceId, ruleId);

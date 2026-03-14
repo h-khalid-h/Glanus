@@ -6,8 +6,8 @@ import { useToast } from '@/lib/toast';
 import { PageSpinner } from '@/components/ui/Spinner';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { WorkspaceLayout } from '@/components/workspace/WorkspaceLayout';
-import { LifeBuoy, Plus, Search, MessageSquare, Clock, AlertTriangle } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/Card';
+import { LifeBuoy, Plus, MessageSquare, Clock, AlertTriangle } from 'lucide-react';
+import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 
@@ -69,8 +69,8 @@ function HelpdeskDashboardContent() {
             if (!res.ok) throw new Error('Failed to fetch support tickets');
             const data = await res.json();
             setTickets(data.data?.tickets || []);
-        } catch (err: any) {
-            showError('Data Error', err.message);
+        } catch (err: unknown) {
+            showError('Data Error', err instanceof Error ? err.message : 'An unexpected error occurred');
         } finally {
             setLoading(false);
         }

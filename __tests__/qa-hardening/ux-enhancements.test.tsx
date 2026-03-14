@@ -42,11 +42,13 @@ describe('Billing page — Valid Tailwind classes', () => {
 // Round 1, Fix #3: Workspace route — audit log ordering
 // ============================================
 
-describe('Workspace DELETE route — Audit log order', () => {
-    it('audit log creation appears before workspace deletion in source', async () => {
+describe('Workspace DELETE — Audit log order (WorkspaceService)', () => {
+    it('audit log creation appears before workspace deletion in WorkspaceService source', async () => {
         const fs = require('fs');
+        const path = require('path');
+        // Since Phase 35+, business logic lives in the service — not the route
         const content = fs.readFileSync(
-            require.resolve('@/app/api/workspaces/[id]/route'),
+            path.resolve(process.cwd(), 'lib/services/WorkspaceService.ts'),
             'utf-8'
         );
         const auditLogIndex = content.indexOf('auditLog.create');

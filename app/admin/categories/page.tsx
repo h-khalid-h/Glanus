@@ -3,7 +3,7 @@ import { csrfFetch } from '@/lib/api/csrfFetch';
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Plus, Edit2, Trash2, FolderTree } from 'lucide-react';
+import { Plus, Edit2, Trash2 } from 'lucide-react';
 import { AssetCategory } from '@prisma/client';
 import { PageSpinner } from '@/components/ui/Spinner';
 import { NoData, ErrorState } from '@/components/ui/EmptyState';

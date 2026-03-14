@@ -1,67 +1,26 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { requireAuth, requireWorkspaceRole, withErrorHandler } from '@/lib/api/withAuth';
 import { apiSuccess, apiError, apiDeleted } from '@/lib/api/response';
-import { prisma } from '@/lib/db';
-import { z } from 'zod';
+import { ZtnaService, updateZtnaSchema } from '@/lib/services/ZtnaService';
 
-const updateZtnaSchema = z.object({
-    isEnabled: z.boolean().optional(),
-    ipWhitelist: z.string().min(3).max(1000).optional(),
-    action: z.string().optional(),
-});
+type RouteContext = { params: Promise<{ id: string; policyId: string }> };
 
-export const PATCH = withErrorHandler(async (
-    request: NextRequest,
-    context: { params: Promise<{ id: string; policyId: string }> }
-) => {
-    const params = await context.params;
+export const PATCH = withErrorHandler(async (request: NextRequest, { params }: RouteContext) => {
+    const { id: workspaceId, policyId } = await params;
     const user = await requireAuth();
+    await requireWorkspaceRole(workspaceId, user.id, 'ADMIN', request);
 
-    await requireWorkspaceRole(params.id, user.id, 'ADMIN', request);
+    const result = updateZtnaSchema.safeParse(await request.json());
+    if (!result.success) return apiError(400, 'Invalid ZTNA policy update data', result.error.errors);
 
-    const body = await request.json();
-    const result = updateZtnaSchema.safeParse(body);
-
-    if (!result.success) {
-        return apiError(400, 'Invalid ZTNA policy update data', result.error.errors);
-    }
-
-    const policy = await (prisma as any).ztnaPolicy.findUnique({
-        where: { id: params.policyId, workspaceId: params.id }
-    });
-
-    if (!policy) {
-        return apiError(404, 'Zero-Trust Network Policy not found');
-    }
-
-    const updated = await (prisma as any).ztnaPolicy.update({
-        where: { id: params.policyId },
-        data: result.data
-    });
-
+    const updated = await ZtnaService.updatePolicy(workspaceId, policyId, result.data);
     return apiSuccess(updated, { message: 'Zero-Trust Network Policy updated.' });
 });
 
-export const DELETE = withErrorHandler(async (
-    request: NextRequest,
-    context: { params: Promise<{ id: string; policyId: string }> }
-) => {
-    const params = await context.params;
+export const DELETE = withErrorHandler(async (request: NextRequest, { params }: RouteContext) => {
+    const { id: workspaceId, policyId } = await params;
     const user = await requireAuth();
-
-    await requireWorkspaceRole(params.id, user.id, 'ADMIN', request);
-
-    const policy = await (prisma as any).ztnaPolicy.findUnique({
-        where: { id: params.policyId, workspaceId: params.id }
-    });
-
-    if (!policy) {
-        return apiError(404, 'Zero-Trust Network Policy not found');
-    }
-
-    await (prisma as any).ztnaPolicy.delete({
-        where: { id: params.policyId }
-    });
-
+    await requireWorkspaceRole(workspaceId, user.id, 'ADMIN', request);
+    await ZtnaService.deletePolicy(workspaceId, policyId);
     return apiDeleted();
 });

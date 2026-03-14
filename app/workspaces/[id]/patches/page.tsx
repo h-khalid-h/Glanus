@@ -1,13 +1,13 @@
 'use client';
 import { useState, useEffect, Suspense } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { csrfFetch } from '@/lib/api/csrfFetch';
 import { useToast } from '@/lib/toast';
 import { PageSpinner } from '@/components/ui/Spinner';
-import { ErrorState, EmptyState } from '@/components/ui/EmptyState';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { WorkspaceLayout } from '@/components/workspace/WorkspaceLayout';
 import { Button } from '@/components/ui/Button';
-import { ShieldAlert, Plus, ShieldCheck, Play, ArrowRight, Server, Terminal, Trash2, X } from 'lucide-react';
+import { ShieldAlert, Plus, ShieldCheck, Play, Server, Terminal, Trash2, X } from 'lucide-react';
 
 interface Script {
     id: string;

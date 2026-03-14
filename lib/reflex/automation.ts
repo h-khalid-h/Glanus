@@ -90,6 +90,7 @@ async function loadRulesFromDB(workspaceId: string): Promise<AutomationRule[]> {
 /**
  * Save rules to database
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function saveRulesToDB(workspaceId: string, rules: AutomationRule[]): Promise<void> {
     const workspace = await prisma.workspace.findUnique({
         where: { id: workspaceId },

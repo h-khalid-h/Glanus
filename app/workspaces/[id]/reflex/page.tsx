@@ -5,8 +5,8 @@ import { useParams } from 'next/navigation';
 import { csrfFetch } from '@/lib/api/csrfFetch';
 import { useToast } from '@/lib/toast';
 import {
-    Activity, ShieldAlert, Cpu, HardDrive, Clock,
-    Play, CheckCircle2, XCircle, AlertTriangle,
+    Activity, ShieldAlert, Cpu, Clock,
+    Play, XCircle,
     ListFilter, Zap, Plus
 } from 'lucide-react';
 import type { AutomationRule, ActionQueueItem } from '@/lib/reflex/automation';
@@ -44,7 +44,7 @@ export default function ReflexDashboardPage() {
                 const queueData = await queueRes.json();
                 setQueue(queueData.data || queueData);
             }
-        } catch (err: unknown) {
+        } catch (_err: unknown) {
             showError('Failed to load Reflex engine data');
         } finally {
             setLoading(false);

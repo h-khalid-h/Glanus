@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { csrfFetch } from '@/lib/api/csrfFetch';
 import { useToast } from '@/lib/toast';
-import { Smartphone, Shield, Plus, XCircle, Search, Server, ArrowRightLeft } from 'lucide-react';
+import { Smartphone, Shield, Plus, XCircle, Server, ArrowRightLeft } from 'lucide-react';
 import { MdmProfileForm } from '@/components/workspace/mdm/MdmProfileForm';
 
 interface MdmProfile {
@@ -70,7 +70,7 @@ export default function MDMDashboardPage() {
                 const data = await assRes.json();
                 setAssignments(data.data || data);
             }
-        } catch (err: unknown) {
+        } catch (_err: unknown) {
             showError('Failed to load MDM data');
         } finally {
             setLoading(false);
@@ -85,7 +85,7 @@ export default function MDMDashboardPage() {
                 success('Profile deleted');
                 setProfiles(profiles.filter(p => p.id !== profileId));
             }
-        } catch (err: unknown) {
+        } catch (_err: unknown) {
             showError('Deletion failed');
         }
     };

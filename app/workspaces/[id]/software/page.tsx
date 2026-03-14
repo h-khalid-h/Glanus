@@ -6,7 +6,7 @@ import { useToast } from '@/lib/toast';
 import { PageSpinner } from '@/components/ui/Spinner';
 import { ErrorState, EmptyState } from '@/components/ui/EmptyState';
 import { WorkspaceLayout } from '@/components/workspace/WorkspaceLayout';
-import { Search, ArrowUpDown, Box, Server, ShieldAlert } from 'lucide-react';
+import { Search, ArrowUpDown, Box, Server } from 'lucide-react';
 
 interface SoftwareItem {
     name: string;

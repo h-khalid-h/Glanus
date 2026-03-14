@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState, useCallback } from 'react';
-import type { GraphNode, GraphEdge, OperationalGraphData } from '@/lib/nerve/operational-graph';
+import type { GraphNode, OperationalGraphData } from '@/lib/nerve/operational-graph';
 
 interface TopologyMapProps {
     graph: OperationalGraphData;

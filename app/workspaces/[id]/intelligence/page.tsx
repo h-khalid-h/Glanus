@@ -25,7 +25,6 @@ export default function IntelligencePage() {
 
     // CORTEX state
     const [analysis, setAnalysis] = useState<CausalAnalysis | null>(null);
-    const [riskProfile, setRiskProfile] = useState<Record<string, unknown> | null>(null);
     const [cortexLoading, setCortexLoading] = useState(false);
     const [cortexError, setCortexError] = useState<string | null>(null);
     const [agents, setAgents] = useState<{ id: string; hostname: string; status: string }[]>([]);

@@ -1,96 +1,16 @@
-import { apiSuccess, apiError } from '@/lib/api/response';
+import { apiSuccess } from '@/lib/api/response';
 import { NextRequest } from 'next/server';
-import { prisma } from '@/lib/db';
-import { requireAuth, withErrorHandler } from '@/lib/api/withAuth';
-import { verifyWorkspaceAccess, hasWorkspacePermission } from '@/lib/workspace/permissions';
-import {
-    findBestPartner,
-    getPartnerEligibilityCriteria,
-} from '@/lib/partners/assignment';
+import { requireAuth, requireWorkspaceRole, withErrorHandler } from '@/lib/api/withAuth';
+import { WorkspacePartnerService } from '@/lib/services/WorkspacePartnerService';
+
+type RouteContext = { params: Promise<{ id: string }> };
 
 // POST /api/workspaces/[id]/assign-partner - Find and assign best matching partner
-export const POST = withErrorHandler(async (
-    _request: NextRequest,
-    context: { params: Promise<{ id: string }> }
-) => {
-    const { id: workspaceId } = await context.params;
+export const POST = withErrorHandler(async (_request: NextRequest, { params }: RouteContext) => {
+    const { id: workspaceId } = await params;
     const user = await requireAuth();
+    await requireWorkspaceRole(workspaceId, user.id, 'ADMIN');
 
-    // Use workspace permissions system for partner assignment
-    const accessResult = await verifyWorkspaceAccess(user.email, workspaceId);
-    if (!accessResult.allowed) {
-        return apiError(403, accessResult.error || 'Access denied');
-    }
-
-    if (!hasWorkspacePermission(accessResult!.role, 'manageMembers')) {
-        return apiError(403, 'Only workspace admins can assign partners');
-    }
-
-    // Get workspace with existing partner assignment
-    const workspace = await prisma.workspace.findUnique({
-        where: { id: workspaceId },
-        include: { partnerAssignment: true },
-    });
-
-    if (!workspace) {
-        return apiError(404, 'Workspace not found');
-    }
-
-    if (workspace.partnerAssignment) {
-        return apiError(409, 'Workspace already has a partner assigned');
-    }
-
-    // Find eligible partners
-    const eligiblePartners = await prisma.partner.findMany({
-        where: getPartnerEligibilityCriteria(),
-        include: {
-            assignments: {
-                where: { status: { in: ['ACCEPTED', 'ACTIVE'] } },
-            },
-        },
-    });
-
-    if (eligiblePartners.length === 0) {
-        return apiError(404, 'No partners available at this time. Please try again later.');
-    }
-
-    const bestMatch = await findBestPartner(workspace as unknown as Parameters<typeof findBestPartner>[0], eligiblePartners);
-    if (!bestMatch) {
-        return apiError(404, 'No suitable partner found for your workspace.');
-    }
-
-    const [assignment] = await prisma.$transaction([
-        prisma.partnerAssignment.create({
-            data: {
-                partnerId: (bestMatch.partner as unknown as { id: string }).id,
-                workspaceId: workspace.id,
-                status: 'PENDING',
-                revenueSplit: 0.5,
-            },
-            include: {
-                partner: {
-                    select: {
-                        id: true,
-                        companyName: true,
-                        bio: true,
-                        logo: true,
-                        certificationLevel: true,
-                        averageRating: true,
-                        totalReviews: true,
-                    },
-                },
-            },
-        }),
-        prisma.partner.update({
-            where: { id: (bestMatch.partner as unknown as { id: string }).id },
-            data: { availableSlots: { decrement: 1 } },
-        }),
-    ]);
-
-    return apiSuccess({
-        assignment,
-        matchScore: Math.round(bestMatch.score),
-        matchBreakdown: bestMatch.breakdown,
-        message: 'Partner assigned successfully! They will be notified and can accept or decline.',
-    });
+    const result = await WorkspacePartnerService.assignPartner(workspaceId);
+    return apiSuccess(result);
 });

@@ -1,7 +1,7 @@
 'use client';
 import { ErrorState } from '@/components/ui/EmptyState';
 import { PageSpinner } from '@/components/ui/Spinner';
-import { formatDate, formatDateTime } from '@/lib/utils';
+import { formatDate } from '@/lib/utils';
 import { useToast } from '@/lib/toast';
 import { csrfFetch } from '@/lib/api/csrfFetch';
 
@@ -107,7 +107,7 @@ export default function PartnerEarningsPage() {
             if (data.url) {
                 window.location.href = data.url;
             }
-        } catch (err: unknown) {
+        } catch (_err: unknown) {
             showError('Failed to connect Stripe. Please try again.');
         }
     };

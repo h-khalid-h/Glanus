@@ -1,29 +1,15 @@
 import { apiSuccess, apiError } from '@/lib/api/response';
-import { prisma } from '@/lib/db';
 import { requireAuth, withErrorHandler } from '@/lib/api/withAuth';
+import { PartnerService } from '@/lib/services/PartnerService';
 
-// GET /api/partners/assignments - List partner assignments
+// GET /api/partners/assignments
 export const GET = withErrorHandler(async () => {
     const user = await requireAuth();
-
-    const dbUser = await prisma.user.findUnique({
-        where: { email: user.email! },
-        include: { partnerProfile: true },
-    });
-
-    if (!dbUser || !dbUser.partnerProfile) {
-        return apiError(404, 'Partner profile not found');
+    try {
+        const assignments = await PartnerService.getAssignments(user.email!);
+        return apiSuccess({ assignments });
+    } catch (err: unknown) {
+        const e = err as { statusCode?: number; message?: string };
+        return apiError(e.statusCode || 500, e.message || 'Error');
     }
-
-    const assignments = await prisma.partnerAssignment.findMany({
-        where: { partnerId: dbUser.partnerProfile.id },
-        include: {
-            workspace: {
-                select: { id: true, name: true, slug: true, logo: true },
-            },
-        },
-        orderBy: { assignedAt: 'desc' },
-    });
-
-    return apiSuccess({ assignments });
 });

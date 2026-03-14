@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useRef } from 'react';
 import { AlertTriangle } from 'lucide-react';
-import { Button } from './Button';
 
 interface ConfirmDialogProps {
     open: boolean;

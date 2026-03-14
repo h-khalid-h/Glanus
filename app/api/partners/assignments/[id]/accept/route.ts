@@ -1,7 +1,7 @@
 import { apiSuccess, apiError } from '@/lib/api/response';
 import { NextRequest } from 'next/server';
-import { prisma } from '@/lib/db';
 import { requireAuth, withErrorHandler } from '@/lib/api/withAuth';
+import { PartnerService } from '@/lib/services/PartnerService';
 
 // POST /api/partners/assignments/[id]/accept
 export const POST = withErrorHandler(async (
@@ -10,25 +10,11 @@ export const POST = withErrorHandler(async (
 ) => {
     const { id } = await context.params;
     const user = await requireAuth();
-
-    const dbUser = await prisma.user.findUnique({
-        where: { email: user.email! },
-        include: { partnerProfile: true },
-    });
-
-    if (!dbUser || !dbUser.partnerProfile) {
-        return apiError(404, 'Partner profile not found');
+    try {
+        const assignment = await PartnerService.acceptAssignment(user.email!, id);
+        return apiSuccess({ assignment, message: 'Assignment accepted successfully' });
+    } catch (err: unknown) {
+        const e = err as { statusCode?: number; message?: string };
+        return apiError(e.statusCode || 500, e.message || 'Error');
     }
-
-    const assignment = await prisma.partnerAssignment.findUnique({ where: { id } });
-    if (!assignment) return apiError(404, 'Assignment not found');
-    if (assignment.partnerId !== dbUser.partnerProfile.id) return apiError(403, 'Unauthorized');
-    if (assignment.status !== 'PENDING') return apiError(400, 'Can only accept pending assignments');
-
-    const updated = await prisma.partnerAssignment.update({
-        where: { id },
-        data: { status: 'ACCEPTED' },
-    });
-
-    return apiSuccess({ assignment: updated, message: 'Assignment accepted successfully' });
 });

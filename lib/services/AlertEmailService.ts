@@ -1,3 +1,10 @@
+/**
+ * AlertEmailService — Delivers alert notification emails via SendGrid and Brevo.
+ *
+ * Responsibilities:
+ *  - sendAlertEmail: dispatch an alert email using the configured provider
+ *  - Supports SendGrid (primary) and Brevo (fallback) transports
+ */
 import { logError, logInfo } from '@/lib/logger';
 // Email notification service
 interface EmailPayload {

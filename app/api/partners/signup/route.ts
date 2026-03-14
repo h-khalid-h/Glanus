@@ -1,12 +1,11 @@
 import { apiSuccess, apiError } from '@/lib/api/response';
-import { prisma } from '@/lib/db';
 import { requireAuth, withErrorHandler } from '@/lib/api/withAuth';
 import { z } from 'zod';
-import { sanitizeText } from '@/lib/security/sanitize';
 import { checkRateLimit } from '@/lib/security/rateLimit';
+import { PartnerService } from '@/lib/services/PartnerService';
 
 const partnerSignupSchema = z.object({
-    companyName: z.string().min(2, 'Company name is required').max(100),
+    companyName: z.string().min(2).max(100),
     businessNumber: z.string().optional(),
     website: z.string().url().optional().nullable(),
     phone: z.string().min(10).max(20).optional(),
@@ -23,59 +22,23 @@ const partnerSignupSchema = z.object({
     languages: z.array(z.string()).default(['en']),
 });
 
-// POST /api/partners/signup - Register as a partner
+// POST /api/partners/signup
 export const POST = withErrorHandler(async (request: Request) => {
     const user = await requireAuth();
 
-    const clientIp = request.headers.get('x-forwarded-for') || 'unknown';
+    const clientIp = (request as unknown as { headers: { get: (h: string) => string | null } }).headers.get('x-forwarded-for') || 'unknown';
     const rateLimitResult = await checkRateLimit(`partner-signup-${clientIp}`, 'api');
-    if (!rateLimitResult.allowed) {
-        return apiError(429, 'Rate limit exceeded');
-    }
-
-    const dbUser = await prisma.user.findUnique({
-        where: { email: user.email! },
-        include: { partnerProfile: true },
-    });
-
-    if (!dbUser) return apiError(404, 'User not found');
-    if (dbUser.partnerProfile) return apiError(409, 'You are already registered as a partner');
+    if (!rateLimitResult.allowed) return apiError(429, 'Rate limit exceeded');
 
     const body = await request.json();
     const validation = partnerSignupSchema.safeParse(body);
-    if (!validation.success) {
-        return apiError(400, 'Validation failed', validation.error.errors);
+    if (!validation.success) return apiError(400, 'Validation failed', validation.error.errors);
+
+    try {
+        const partner = await PartnerService.applyAsPartner({ ...validation.data, userId: user.id, userEmail: user.email! });
+        return apiSuccess({ partner, message: 'Partner application submitted successfully.' }, undefined, 201);
+    } catch (err: unknown) {
+        const e = err as { statusCode?: number; message?: string };
+        return apiError(e.statusCode || 500, e.message || 'Error');
     }
-
-    const data = validation.data;
-    const sanitizedData = {
-        ...data,
-        companyName: sanitizeText(data.companyName),
-        bio: data.bio ? sanitizeText(data.bio) : null,
-        address: data.address ? sanitizeText(data.address) : null,
-    };
-
-    const partner = await prisma.partner.create({
-        data: {
-            userId: dbUser.id,
-            companyName: sanitizedData.companyName,
-            businessNumber: sanitizedData.businessNumber,
-            website: sanitizedData.website,
-            phone: sanitizedData.phone,
-            bio: sanitizedData.bio,
-            address: sanitizedData.address,
-            city: sanitizedData.city,
-            region: sanitizedData.region,
-            country: sanitizedData.country,
-            timezone: sanitizedData.timezone,
-            serviceRadius: sanitizedData.serviceRadius,
-            remoteOnly: sanitizedData.remoteOnly,
-            industries: sanitizedData.industries || [],
-            certifications: sanitizedData.certifications || [],
-            languages: sanitizedData.languages,
-            status: 'PENDING',
-        },
-    });
-
-    return apiSuccess({ partner, message: 'Partner application submitted successfully.' }, undefined, 201);
 });

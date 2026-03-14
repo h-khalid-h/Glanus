@@ -1,7 +1,7 @@
 'use client';
 import { ErrorState } from '@/components/ui/EmptyState';
 import { PageSpinner } from '@/components/ui/Spinner';
-import { formatDate, formatDateTime } from '@/lib/utils';
+import { formatDate } from '@/lib/utils';
 import { csrfFetch } from '@/lib/api/csrfFetch';
 
 import { Suspense, useEffect, useState } from 'react';
@@ -45,9 +45,9 @@ interface Exam {
 }
 
 function PartnerDashboardContent() {
-    const { error: showError, success: showSuccess } = useToast();
+    const { error: showError } = useToast();
     const router = useRouter();
-    const { data: session, status } = useSession();
+    const { status } = useSession();
     const searchParams = useSearchParams();
     const showWelcome = searchParams?.get('welcome') === 'true';
 

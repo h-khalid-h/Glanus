@@ -50,7 +50,7 @@ const CERTIFICATIONS = [
 
 export default function PartnerSignupPage() {
     const router = useRouter();
-    const { data: session } = useSession();
+    useSession();
     const [step, setStep] = useState(1);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');

@@ -36,7 +36,7 @@ export const GET = withErrorHandler(async (
         });
 
         return apiSuccess(result);
-    } catch (error: any) {
+    } catch (_error) {
         return apiError(500, 'Failed to fetch script executions');
     }
 });

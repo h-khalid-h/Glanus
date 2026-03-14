@@ -1,10 +1,9 @@
 import { apiSuccess, apiError } from '@/lib/api/response';
 import { NextRequest } from 'next/server';
-import { prisma } from '@/lib/db';
 import { requireAuth, withErrorHandler } from '@/lib/api/withAuth';
-import { verifyWorkspaceAccess, hasWorkspacePermission } from '@/lib/workspace/permissions';
-import { Prisma } from '@prisma/client';
+import { WorkspaceAuditService } from '@/lib/services/WorkspaceAuditService';
 
+// GET /api/workspaces/[id]/audit
 export const GET = withErrorHandler(async (
     request: NextRequest,
     context: { params: Promise<{ id: string }> }
@@ -12,77 +11,24 @@ export const GET = withErrorHandler(async (
     const { id: workspaceId } = await context.params;
     const user = await requireAuth();
 
-    const accessResult = await verifyWorkspaceAccess(user.email, workspaceId);
-    if (!accessResult.allowed) {
-        return apiError(403, accessResult.error || 'Access denied');
-    }
-
-    if (!hasWorkspacePermission(accessResult!.role, 'manageSettings')) {
-        return apiError(403, 'Permission denied. Must be an admin or owner to view audit logs.');
+    try {
+        await WorkspaceAuditService.verifyAdminAccess(user.id, workspaceId);
+    } catch (err: unknown) {
+        const e = err as { statusCode?: number; message?: string };
+        return apiError(e.statusCode || 403, e.message || 'Access denied');
     }
 
     const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get('page') || '1', 10);
-    const limit = parseInt(searchParams.get('limit') || '50', 10);
-    const skip = (page - 1) * limit;
-
-    const userId = searchParams.get('userId');
-    const action = searchParams.get('action');
-    const resourceType = searchParams.get('resourceType');
-    const assetId = searchParams.get('assetId');
-    const startDate = searchParams.get('startDate');
-    const endDate = searchParams.get('endDate');
-
-    const where: Prisma.AuditLogWhereInput = {
-        workspaceId,
-    };
-
-    if (userId) where.userId = userId;
-    if (action) where.action = { contains: action, mode: 'insensitive' };
-    if (resourceType) where.resourceType = resourceType;
-    if (assetId) where.assetId = assetId;
-    if (startDate || endDate) {
-        where.createdAt = {};
-        if (startDate) (where.createdAt as Prisma.DateTimeFilter).gte = new Date(startDate);
-        if (endDate) {
-            const end = new Date(endDate);
-            end.setHours(23, 59, 59, 999);
-            (where.createdAt as Prisma.DateTimeFilter).lte = end;
-        }
-    }
-
-    const [logs, total] = await Promise.all([
-        prisma.auditLog.findMany({
-            where,
-            orderBy: { createdAt: 'desc' },
-            skip,
-            take: limit,
-            include: {
-                user: {
-                    select: {
-                        id: true,
-                        name: true,
-                        email: true,
-                    },
-                },
-                asset: {
-                    select: {
-                        id: true,
-                        name: true,
-                    },
-                },
-            },
-        }),
-        prisma.auditLog.count({ where }),
-    ]);
-
-    return apiSuccess({
-        logs,
-        pagination: {
-            page,
-            limit,
-            total,
-            totalPages: Math.ceil(total / limit),
-        },
+    const result = await WorkspaceAuditService.getLogs(workspaceId, {
+        page: parseInt(searchParams.get('page') || '1', 10),
+        limit: parseInt(searchParams.get('limit') || '50', 10),
+        userId: searchParams.get('userId'),
+        action: searchParams.get('action'),
+        resourceType: searchParams.get('resourceType'),
+        assetId: searchParams.get('assetId'),
+        startDate: searchParams.get('startDate'),
+        endDate: searchParams.get('endDate'),
     });
+
+    return apiSuccess(result);
 });

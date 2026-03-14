@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { csrfFetch } from '@/lib/api/csrfFetch';
 import { useToast } from '@/lib/toast';
-import { Webhook, Eye, EyeOff, Save, Trash2, RefreshCw, Copy, CheckCircle2, XCircle, AlertTriangle } from 'lucide-react';
+import { Webhook, Eye, EyeOff, Save, Trash2, RefreshCw, Copy, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { SkeletonDashboard } from '@/components/ui/Skeleton';
 
 interface WebhookConfig {
@@ -152,8 +152,8 @@ export default function WebhooksPage() {
             {/* Status Banner */}
             {webhook && (
                 <div className={`flex items-center gap-3 p-4 rounded-xl border ${webhook.enabled
-                        ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-400'
-                        : 'bg-amber-500/5 border-amber-500/20 text-amber-400'
+                    ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-400'
+                    : 'bg-amber-500/5 border-amber-500/20 text-amber-400'
                     }`}>
                     {webhook.enabled ? <CheckCircle2 className="w-5 h-5" /> : <AlertTriangle className="w-5 h-5" />}
                     <div>

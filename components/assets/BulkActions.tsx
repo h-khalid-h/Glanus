@@ -1,8 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Trash2, UserPlus, Edit } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
+import { Trash2 } from 'lucide-react';
 import { useToast } from '@/lib/toast';
 
 interface BulkActionsProps {
@@ -18,7 +17,7 @@ export function BulkActions({
     selectedCount,
     onDelete,
     onUpdateStatus,
-    onAssign,
+    onAssign: _onAssign,
     onClearSelection,
     disabled = false,
 }: BulkActionsProps) {

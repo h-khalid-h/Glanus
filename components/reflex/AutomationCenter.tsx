@@ -25,7 +25,7 @@ interface AutomationCenterProps {
  * view action queue, and control autonomy levels.
  */
 export function AutomationCenter({
-    workspaceId,
+    workspaceId: _workspaceId,
     rules,
     queue,
     onCreateRule,

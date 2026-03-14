@@ -6,7 +6,7 @@ import { useToast } from '@/lib/toast';
 import { PageSpinner } from '@/components/ui/Spinner';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { WorkspaceLayout } from '@/components/workspace/WorkspaceLayout';
-import { Network, Server, Printer, Settings, Signal, Plus, Computer, ScanSearch } from 'lucide-react';
+import { Network, Server, Printer, Settings, Signal, Computer, ScanSearch } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -76,8 +76,8 @@ function NetworkDashboardContent() {
             const data = await res.json();
             setDevices(data.data?.devices || []);
             setScans(data.data?.recentScans || []);
-        } catch (err: any) {
-            showError('Data Error', err.message);
+        } catch (err: unknown) {
+            showError('Data Error', err instanceof Error ? err.message : 'An unexpected error occurred');
         } finally {
             setLoading(false);
         }

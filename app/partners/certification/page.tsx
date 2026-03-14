@@ -47,10 +47,9 @@ interface ExamResult {
 }
 
 export default function CertificationCenterPage() {
-    const { error: showError, success: showSuccess } = useToast();
+    const { error: showError } = useToast();
     const router = useRouter();
     const [view, setView] = useState<'select' | 'exam' | 'results'>('select');
-    const [selectedLevel, setSelectedLevel] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
 
     // Exam state

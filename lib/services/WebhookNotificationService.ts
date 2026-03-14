@@ -1,4 +1,11 @@
-// Webhook notification service with retry logic
+/**
+ * WebhookNotificationService — Delivers webhook payloads with exponential-backoff retry logic.
+ *
+ * Responsibilities:
+ *  - sendWebhook: POST a signed webhook payload to a subscriber URL
+ *  - retryFailedWebhooks: cron-invoked — retry pending/failed deliveries with backoff
+ *  - Supports HMAC-SHA256 request signing for endpoint verification
+ */
 import crypto from 'crypto';
 
 interface WebhookPayload {

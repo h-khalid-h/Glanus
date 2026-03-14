@@ -1,5 +1,5 @@
-import { validateFieldValue, serializeFieldValue, deserializeFieldValue } from '@/lib/dynamic-fields';
-import { FieldType } from '@prisma/client';
+import { DynamicFieldService } from '@/lib/services/DynamicFieldService';
+import { FieldType, Prisma } from '@prisma/client';
 
 /**
  * Unit Tests for Dynamic Field Utilities
@@ -20,11 +20,11 @@ describe('Dynamic Fields Utilities', () => {
                 validationRules: { minLength: 3, maxLength: 10 },
             };
 
-            const valid = await validateFieldValue('test', field);
+            const valid = await DynamicFieldService.validateFieldValue('test', field);
             expect(valid.valid).toBe(true);
 
             // Short strings are still valid — minLength is not enforced in current impl
-            const short = await validateFieldValue('ab', field);
+            const short = await DynamicFieldService.validateFieldValue('ab', field);
             expect(short.valid).toBe(true);
         });
 
@@ -36,10 +36,10 @@ describe('Dynamic Fields Utilities', () => {
                 validationRules: { min: 0, max: 100 },
             };
 
-            const valid = await validateFieldValue(50, field);
+            const valid = await DynamicFieldService.validateFieldValue(50, field);
             expect(valid.valid).toBe(true);
 
-            const tooSmall = await validateFieldValue(-10, field);
+            const tooSmall = await DynamicFieldService.validateFieldValue(-10, field);
             expect(tooSmall.valid).toBe(false);
         });
 
@@ -50,7 +50,7 @@ describe('Dynamic Fields Utilities', () => {
                 isUnique: false,
             };
 
-            const valid = await validateFieldValue(true, field);
+            const valid = await DynamicFieldService.validateFieldValue(true, field);
             expect(valid.valid).toBe(true);
         });
 
@@ -61,7 +61,7 @@ describe('Dynamic Fields Utilities', () => {
                 isUnique: false,
             };
 
-            const result = await validateFieldValue(null, field);
+            const result = await DynamicFieldService.validateFieldValue(null, field);
             expect(result.valid).toBe(false);
         });
     });
@@ -72,43 +72,43 @@ describe('Dynamic Fields Utilities', () => {
 
     describe('serializeFieldValue', () => {
         it('should serialize STRING values to valueString', () => {
-            const result = serializeFieldValue('test string', 'STRING' as FieldType);
+            const result = DynamicFieldService.serializeFieldValue('test string', 'STRING' as FieldType);
             expect(result.valueString).toBe('test string');
             expect(result.valueNumber).toBeNull();
         });
 
         it('should serialize NUMBER values to valueNumber', () => {
-            const result = serializeFieldValue(42, 'NUMBER' as FieldType);
+            const result = DynamicFieldService.serializeFieldValue(42, 'NUMBER' as FieldType);
             expect(result.valueNumber).toBe(42);
             expect(result.valueString).toBeNull();
         });
 
         it('should serialize BOOLEAN values to valueBoolean', () => {
-            const result = serializeFieldValue(true, 'BOOLEAN' as FieldType);
+            const result = DynamicFieldService.serializeFieldValue(true, 'BOOLEAN' as FieldType);
             expect(result.valueBoolean).toBe(true);
             expect(result.valueString).toBeNull();
         });
 
         it('should serialize JSON values to valueJson', () => {
             const obj = { key: 'value', nested: { foo: 'bar' } };
-            const result = serializeFieldValue(obj, 'JSON' as FieldType);
+            const result = DynamicFieldService.serializeFieldValue(obj, 'JSON' as FieldType);
             expect(result.valueJson).toEqual(obj);
             expect(result.valueString).toBeNull();
         });
 
         it('should serialize DATE values to valueDate', () => {
             const date = new Date('2024-01-01');
-            const result = serializeFieldValue(date.toISOString(), 'DATE' as FieldType);
+            const result = DynamicFieldService.serializeFieldValue(date.toISOString(), 'DATE' as FieldType);
             expect(result.valueDate).toBeInstanceOf(Date);
         });
 
         it('should serialize null to all-null columns', () => {
-            const result = serializeFieldValue(null, 'STRING' as FieldType);
+            const result = DynamicFieldService.serializeFieldValue(null, 'STRING' as FieldType);
             expect(result.valueString).toBeNull();
             expect(result.valueNumber).toBeNull();
             expect(result.valueBoolean).toBeNull();
             expect(result.valueDate).toBeNull();
-            expect(result.valueJson).toBeNull();
+            expect(result.valueJson).toEqual(Prisma.JsonNull);
         });
     });
 
@@ -118,7 +118,7 @@ describe('Dynamic Fields Utilities', () => {
 
     describe('deserializeFieldValue', () => {
         it('should deserialize STRING values', () => {
-            const result = deserializeFieldValue({
+            const result = DynamicFieldService.deserializeFieldValue({
                 fieldDefinition: { fieldType: 'STRING' as FieldType },
                 valueString: 'test',
                 valueNumber: null,
@@ -130,7 +130,7 @@ describe('Dynamic Fields Utilities', () => {
         });
 
         it('should deserialize NUMBER values', () => {
-            const result = deserializeFieldValue({
+            const result = DynamicFieldService.deserializeFieldValue({
                 fieldDefinition: { fieldType: 'NUMBER' as FieldType },
                 valueString: null,
                 valueNumber: 42,
@@ -141,75 +141,66 @@ describe('Dynamic Fields Utilities', () => {
             expect(result).toBe(42);
         });
 
-        it('should deserialize BOOLEAN values', () => {
-            const result = deserializeFieldValue({
-                fieldDefinition: { fieldType: 'BOOLEAN' as FieldType },
-                valueString: null,
-                valueNumber: null,
-                valueBoolean: true,
-                valueDate: null,
-                valueJson: null,
-            });
+        it('should deserialize BOOLEAN values from valueBoolean', () => {
+            const fieldDef = { fieldType: 'BOOLEAN' as FieldType };
+            const fieldValue = { fieldDefinition: fieldDef, valueBoolean: true, valueString: null, valueNumber: null, valueDate: null, valueJson: null };
+            const result = DynamicFieldService.deserializeFieldValue(fieldValue as any);
             expect(result).toBe(true);
         });
 
-        it('should deserialize JSON values', () => {
-            const obj = { key: 'value' };
-            const result = deserializeFieldValue({
-                fieldDefinition: { fieldType: 'JSON' as FieldType },
-                valueString: null,
-                valueNumber: null,
-                valueBoolean: null,
-                valueDate: null,
-                valueJson: obj,
-            });
-            expect(result).toEqual(obj);
+        it('should handle complex JSON deserialization', () => {
+            const fieldDef = { fieldType: 'JSON' as FieldType };
+            const complexObj = { key: 'value', nested: { array: [1, 2, 3] } };
+            const fieldValue = { fieldDefinition: fieldDef, valueJson: complexObj, valueString: null, valueNumber: null, valueBoolean: null, valueDate: null };
+            const result = DynamicFieldService.deserializeFieldValue(fieldValue as any);
+            expect(result).toEqual(complexObj);
+        });
+
+        it('should return null for unrecognized field types', () => {
+            const fieldDef = { fieldType: 'UNKNOWN_TYPE' as FieldType };
+            const fieldValue = { fieldDefinition: fieldDef, valueString: 'test', valueNumber: null, valueBoolean: null, valueDate: null, valueJson: null };
+            const result = DynamicFieldService.deserializeFieldValue(fieldValue as any);
+            expect(result).toBeNull();
         });
     });
 
-    // ============================================
-    // Round-trip Tests
-    // ============================================
+    describe('Integration edge cases', () => {
+        it('should round-trip serialize and deserialize seamlessly', () => {
+            const originalString = 'Seamless transition';
+            const fieldDefString = { fieldType: 'STRING' as FieldType };
+            const serializedStr = DynamicFieldService.serializeFieldValue(originalString, fieldDefString.fieldType);
+            const deserializedStr = DynamicFieldService.deserializeFieldValue({
+                fieldDefinition: fieldDefString,
+                ...serializedStr
+            } as any);
+            expect(deserializedStr).toBe(originalString);
 
-    describe('Round-trip serialization', () => {
-        it('should round-trip STRING values', () => {
-            const original = 'test string';
-            const serialized = serializeFieldValue(original, 'STRING' as FieldType);
-            const deserialized = deserializeFieldValue({
-                fieldDefinition: { fieldType: 'STRING' as FieldType },
-                ...serialized,
-            });
-            expect(deserialized).toEqual(original);
-        });
+            const originalNumber = 1337.42;
+            const fieldDefNumber = { fieldType: 'DECIMAL' as FieldType };
+            const serializedNum = DynamicFieldService.serializeFieldValue(originalNumber, fieldDefNumber.fieldType);
+            const deserializedNum = DynamicFieldService.deserializeFieldValue({
+                fieldDefinition: fieldDefNumber,
+                ...serializedNum
+            } as any);
+            expect(deserializedNum).toBe(originalNumber);
 
-        it('should round-trip NUMBER values', () => {
-            const original = 42.5;
-            const serialized = serializeFieldValue(original, 'NUMBER' as FieldType);
-            const deserialized = deserializeFieldValue({
-                fieldDefinition: { fieldType: 'NUMBER' as FieldType },
-                ...serialized,
-            });
-            expect(deserialized).toEqual(original);
-        });
+            const originalBool = false;
+            const fieldDefBool = { fieldType: 'BOOLEAN' as FieldType };
+            const serializedBool = DynamicFieldService.serializeFieldValue(originalBool, fieldDefBool.fieldType);
+            const deserializedBool = DynamicFieldService.deserializeFieldValue({
+                fieldDefinition: fieldDefBool,
+                ...serializedBool
+            } as any);
+            expect(deserializedBool).toBe(originalBool);
 
-        it('should round-trip BOOLEAN values', () => {
-            const original = true;
-            const serialized = serializeFieldValue(original, 'BOOLEAN' as FieldType);
-            const deserialized = deserializeFieldValue({
-                fieldDefinition: { fieldType: 'BOOLEAN' as FieldType },
-                ...serialized,
-            });
-            expect(deserialized).toEqual(original);
-        });
-
-        it('should round-trip JSON values', () => {
-            const original = { key: 'value', nested: { array: [1, 2, 3] } };
-            const serialized = serializeFieldValue(original, 'JSON' as FieldType);
-            const deserialized = deserializeFieldValue({
-                fieldDefinition: { fieldType: 'JSON' as FieldType },
-                ...serialized,
-            });
-            expect(deserialized).toEqual(original);
+            const originalJson = { matrix: [0, 1, 1, 0] };
+            const fieldDefJson = { fieldType: 'JSON' as FieldType };
+            const serializedJson = DynamicFieldService.serializeFieldValue(originalJson, fieldDefJson.fieldType);
+            const deserializedJson = DynamicFieldService.deserializeFieldValue({
+                fieldDefinition: fieldDefJson,
+                ...serializedJson
+            } as any);
+            expect(deserializedJson).toEqual(originalJson);
         });
     });
 });

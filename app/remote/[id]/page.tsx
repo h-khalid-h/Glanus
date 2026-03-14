@@ -102,7 +102,7 @@ export default function ActiveSessionPage() {
             mediaRecorder.start(1000); // Collect data every second
             mediaRecorderRef.current = mediaRecorder;
             setIsRecording(true);
-        } catch (err: unknown) {
+        } catch (_err: unknown) {
             showError('Failed to start recording');
         }
     };

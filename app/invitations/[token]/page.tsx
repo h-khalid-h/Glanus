@@ -5,7 +5,7 @@ import { use, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Button } from '@/components/ui/Button';
-import { CheckCircle2, XCircle, Loader2 } from 'lucide-react';
+import { XCircle, Loader2 } from 'lucide-react';
 import { useSession, signIn } from 'next-auth/react';
 
 export default function InvitationPage({ params: paramsPromise }: { params: Promise<{ token: string }> }) {

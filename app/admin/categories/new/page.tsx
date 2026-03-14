@@ -1,6 +1,5 @@
 'use client';
 import { ErrorState } from '@/components/ui/EmptyState';
-import { csrfFetch } from '@/lib/api/csrfFetch';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -58,7 +57,7 @@ export default function NewCategoryPage() {
                 throw new Error(errorData.error || 'Failed to create category');
             }
 
-            const result = await response.json();
+            const _result = await response.json();
             success(`Category "${data.name}" created successfully`);
             router.push('/admin/categories');
         } catch (err: unknown) {

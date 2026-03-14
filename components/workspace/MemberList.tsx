@@ -3,9 +3,7 @@ import { csrfFetch } from '@/lib/api/csrfFetch';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useWorkspaceStore } from '@/lib/stores/workspaceStore';
-import { Button } from '@/components/ui/Button';
-import { UserMinus, Shield, ShieldAlert, User, MoreVertical, Users } from 'lucide-react';
-import { clsx } from 'clsx';
+import { UserMinus, ShieldAlert, User, MoreVertical, Users } from 'lucide-react';
 import { Badge, ConfirmDialog } from '@/components/ui';
 import { useToast } from '@/lib/toast';
 
@@ -22,7 +20,7 @@ interface Member {
 export default function MemberList({ workspaceId }: { workspaceId: string }) {
     const [members, setMembers] = useState<Member[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [actionLoading, setActionLoading] = useState<string | null>(null);
+    const [_actionLoading, setActionLoading] = useState<string | null>(null);
     const [openMenuId, setOpenMenuId] = useState<string | null>(null);
     const { currentWorkspace } = useWorkspaceStore();
     const { error: showError } = useToast();

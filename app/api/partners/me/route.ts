@@ -1,7 +1,7 @@
 import { apiSuccess, apiError } from '@/lib/api/response';
-import { prisma } from '@/lib/db';
 import { requireAuth, withErrorHandler } from '@/lib/api/withAuth';
 import { z } from 'zod';
+import { PartnerService } from '@/lib/services/PartnerService';
 
 const updatePartnerSchema = z.object({
     bio: z.string().max(1000).optional(),
@@ -17,59 +17,30 @@ const updatePartnerSchema = z.object({
     acceptingNew: z.boolean().optional(),
 });
 
-// GET /api/partners/me - Get current user's partner profile
+// GET /api/partners/me
 export const GET = withErrorHandler(async () => {
     const user = await requireAuth();
-
-    const dbUser = await prisma.user.findUnique({
-        where: { email: user.email! },
-        include: {
-            partnerProfile: {
-                include: {
-                    assignments: {
-                        where: { status: { in: ['PENDING', 'ACCEPTED', 'ACTIVE'] } },
-                        include: {
-                            workspace: { select: { id: true, name: true, slug: true, logo: true } },
-                        },
-                    },
-                    examsCompleted: true,
-                    payouts: { orderBy: { createdAt: 'desc' }, take: 10 },
-                    _count: { select: { assignments: true } },
-                },
-            },
-        },
-    });
-
-    if (!dbUser || !dbUser.partnerProfile) {
-        return apiError(404, 'Partner profile not found');
+    try {
+        const partner = await PartnerService.getMyProfile(user.email!);
+        return apiSuccess({ partner });
+    } catch (err: unknown) {
+        const e = err as { statusCode?: number; message?: string };
+        return apiError(e.statusCode || 500, e.message || 'Error');
     }
-
-    return apiSuccess({ partner: dbUser.partnerProfile });
 });
 
-// PATCH /api/partners/me - Update partner profile
+// PATCH /api/partners/me
 export const PATCH = withErrorHandler(async (request: Request) => {
     const user = await requireAuth();
-
-    const dbUser = await prisma.user.findUnique({
-        where: { email: user.email! },
-        include: { partnerProfile: true },
-    });
-
-    if (!dbUser || !dbUser.partnerProfile) {
-        return apiError(404, 'Partner profile not found');
-    }
-
     const body = await request.json();
     const validation = updatePartnerSchema.safeParse(body);
-    if (!validation.success) {
-        return apiError(400, 'Validation failed', validation.error.errors);
+    if (!validation.success) return apiError(400, 'Validation failed', validation.error.errors);
+
+    try {
+        const partner = await PartnerService.updateMyProfile(user.email!, validation.data);
+        return apiSuccess({ partner });
+    } catch (err: unknown) {
+        const e = err as { statusCode?: number; message?: string };
+        return apiError(e.statusCode || 500, e.message || 'Error');
     }
-
-    const updatedPartner = await prisma.partner.update({
-        where: { id: dbUser.partnerProfile.id },
-        data: validation.data,
-    });
-
-    return apiSuccess({ partner: updatedPartner });
 });

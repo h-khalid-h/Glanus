@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation';
 import { csrfFetch } from '@/lib/api/csrfFetch';
 import { BaseNotification } from '@/components/workspace/NotificationPopover';
 import {
-    Bell, Filter, Trash2, CheckCheck, AlertTriangle,
+    Bell, Trash2, CheckCheck, AlertTriangle,
     Info, Sparkles, X, ChevronDown, RefreshCw,
 } from 'lucide-react';
 

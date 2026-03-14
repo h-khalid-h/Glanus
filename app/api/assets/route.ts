@@ -1,10 +1,9 @@
 import { apiSuccess, apiError } from '@/lib/api/response';
 import { NextRequest } from 'next/server';
-import { requireAuth, withErrorHandler } from '@/lib/api/withAuth';
+import { requireAuth, requireWorkspaceAccess, withErrorHandler } from '@/lib/api/withAuth';
 import { validateQuery, validateRequest } from '@/lib/validation';
 import { assetQuerySchema, createAssetSchema } from '@/lib/schemas/asset.schemas';
 import { withRateLimit } from '@/lib/security/rateLimit';
-import { verifyWorkspaceAccess } from '@/lib/workspace/utils';
 import { AssetService } from '@/lib/services/AssetService';
 
 // GET /api/assets - List assets with filtering and pagination
@@ -17,10 +16,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
         return apiError(400, 'Workspace ID required. Please select a workspace.');
     }
 
-    const { hasAccess } = await verifyWorkspaceAccess(user.id, workspaceId);
-    if (!hasAccess) {
-        return apiError(403, 'Access denied to workspace');
-    }
+    await requireWorkspaceAccess(workspaceId, user.id, request);
 
     const params = validateQuery(searchParams, assetQuerySchema);
 
@@ -43,10 +39,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
         return apiError(400, 'Workspace ID is required to create an asset.');
     }
 
-    const { hasAccess } = await verifyWorkspaceAccess(user.id, workspaceId);
-    if (!hasAccess) {
-        return apiError(403, 'Access denied to workspace');
-    }
+    await requireWorkspaceAccess(workspaceId, user.id, request);
 
     try {
         const asset = await AssetService.createAsset(workspaceId, user.id, data as any);

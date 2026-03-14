@@ -36,7 +36,7 @@ export async function POST(
     try {
         const user = await requireAuth();
         const params = await (context.params instanceof Promise ? context.params : Promise.resolve(context.params));
-        const auth = await requireWorkspaceAccess(params.id, user.id, request);
+        const _auth = await requireWorkspaceAccess(params.id, user.id, request);
 
         const body = await request.json();
         const data = createTicketSchema.parse(body);

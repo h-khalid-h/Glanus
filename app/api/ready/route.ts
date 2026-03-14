@@ -1,4 +1,4 @@
-import { apiSuccess, apiError } from '@/lib/api/response';
+import { apiSuccess } from '@/lib/api/response';
 /**
  * Readiness Probe Endpoint
  * 
@@ -31,9 +31,9 @@ export async function GET() {
     }
 
     return apiSuccess({
-            ready,
-            checks,
-            timestamp: new Date().toISOString(),
-        },
+        ready,
+        checks,
+        timestamp: new Date().toISOString(),
+    },
         { status: ready ? 200 : 503 });
 }

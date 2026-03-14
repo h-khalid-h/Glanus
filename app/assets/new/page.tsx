@@ -55,7 +55,7 @@ export default function DynamicAssetCreatePage() {
                 if (!res.ok) throw new Error('Failed to load classes');
                 const data = await res.json();
                 setCategories(data.data || []);
-            } catch (err) {
+            } catch (_err) {
                 toastError('Error Loading Schemas', 'Please try again later.');
             } finally {
                 setLoading(false);
@@ -141,8 +141,8 @@ export default function DynamicAssetCreatePage() {
             success('Asset Created', `${assetName} has been successfully provisioned.`);
             router.push(`/assets/${newAsset.data?.id || newAsset.id}`);
 
-        } catch (err: any) {
-            toastError('Creation Failed', err.message);
+        } catch (err: unknown) {
+            toastError('Creation Failed', err instanceof Error ? err.message : 'An unexpected error occurred');
         } finally {
             setSubmitting(false);
         }

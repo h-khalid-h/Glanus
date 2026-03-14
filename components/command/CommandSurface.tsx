@@ -292,12 +292,12 @@ export function CommandSurface() {
             }
         }
         if (searchResults?.agents) {
-            for (const ag of searchResults.agents) {
+            for (const _ag of searchResults.agents) {
                 handlers.push(() => { router.push(`/workspaces/${workspaceId}/agents`); setOpen(false); });
             }
         }
         if (searchResults?.insights) {
-            for (const ins of searchResults.insights) {
+            for (const _ins of searchResults.insights) {
                 handlers.push(() => { router.push(`/workspaces/${workspaceId}/notifications`); setOpen(false); });
             }
         }

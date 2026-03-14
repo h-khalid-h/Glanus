@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { PageSpinner } from '@/components/ui/Spinner';
 import { ErrorState } from '@/components/ui/EmptyState';
 import { formatDateTime } from '@/lib/utils';
-import { ArrowLeft, Edit, Trash2, Play, Clock, CheckCircle, XCircle, Monitor, Wrench, Calendar } from 'lucide-react';
+import { ArrowLeft, Edit, Trash2, Clock, CheckCircle, XCircle, Monitor, Wrench, Calendar } from 'lucide-react';
 import { useToast } from '@/lib/toast';
 import { ConfirmDialog } from '@/components/ui';
 import { useWorkspace } from '@/lib/workspace/context';

@@ -1,10 +1,8 @@
 import { NextRequest } from 'next/server';
 import { apiSuccess, apiError } from '@/lib/api/response';
 import { withErrorHandler } from '@/lib/api/withAuth';
-import { logInfo } from '@/lib/logger';
 import { withRateLimit } from '@/lib/security/rateLimit';
-import bcrypt from 'bcryptjs';
-import { prisma } from '@/lib/db';
+import { AccountService } from '@/lib/services/AccountService';
 import { z } from 'zod';
 
 const signupSchema = z.object({
@@ -25,60 +23,15 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
 
     const body = await request.json();
     const parsed = signupSchema.safeParse(body);
-
-    if (!parsed.success) {
-        return apiError(400, parsed.error.errors[0].message);
-    }
+    if (!parsed.success) return apiError(400, parsed.error.errors[0].message);
 
     const { name, email, password } = parsed.data;
 
-    // Check for existing user
-    const existing = await prisma.user.findUnique({
-        where: { email },
-        select: { id: true },
-    });
-
-    if (existing) {
-        return apiError(409, 'An account with this email already exists');
+    try {
+        const user = await AccountService.register(name, email, password);
+        return apiSuccess({ user, message: 'Account created successfully' }, undefined, 201);
+    } catch (err: unknown) {
+        const e = err as { statusCode?: number; message?: string };
+        return apiError(e.statusCode || 500, e.message || 'Registration failed');
     }
-
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 12);
-
-    // Create user
-    const user = await prisma.user.create({
-        data: {
-            name,
-            email,
-            password: hashedPassword,
-            role: 'USER',
-        },
-        select: {
-            id: true,
-            name: true,
-            email: true,
-            role: true,
-        },
-    });
-
-    // Audit log
-    await prisma.auditLog.create({
-        data: {
-            action: 'USER_SIGNUP',
-            resourceType: 'User',
-            resourceId: user.id,
-            userId: user.id,
-            metadata: {
-                signupTime: new Date().toISOString(),
-            },
-        },
-    });
-
-    logInfo('New user registered', { userId: user.id, email });
-
-    return apiSuccess(
-        { user, message: 'Account created successfully' },
-        undefined,
-        201,
-    );
 });
