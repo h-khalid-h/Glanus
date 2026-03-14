@@ -1,11 +1,13 @@
 /**
- * WorkspaceService — Core workspace lifecycle and membership management.
+ * WorkspaceService — Core workspace lifecycle and activity feed.
  *
  * Responsibilities:
- *  - getWorkspace / updateWorkspace: fetch and modify workspace settings
- *  - inviteMember / updateMemberRole / removeMember: membership CRUD with email notifications
- *  - getActivityFeed: aggregated activity timeline from audit logs + assets
- *  - createWorkspace: provision a new workspace with sample data
+ *  - listWorkspaces / getWorkspace / updateWorkspace / deleteWorkspace: workspace CRUD with audit logging
+ *  - createWorkspace: provision workspace, subscription, OWNER membership, and optional sample data
+ *  - getActivity: unified activity feed (audit logs + alerts + agent events + AI insights)
+ *
+ * Extracted to sibling service:
+ *  - WorkspaceMemberService → listMembers / updateMemberRole / removeMember
  */
 import { prisma } from '@/lib/db';
 import { logError } from '@/lib/logger';
@@ -227,139 +229,6 @@ export class WorkspaceService {
 
         await prisma.workspace.delete({ where: { id: workspaceId } });
     }
-
-    // ========================================
-    // MEMBER MANAGEMENT
-    // ========================================
-
-    /**
-     * List all members in a workspace, with the owner prepended as a synthetic OWNER entry.
-     */
-    static async listMembers(workspaceId: string) {
-        const workspace = await prisma.workspace.findUnique({
-            where: { id: workspaceId },
-            select: { ownerId: true, createdAt: true },
-        });
-        if (!workspace) throw Object.assign(new Error('Workspace not found'), { statusCode: 404 });
-
-        const [members, owner] = await Promise.all([
-            prisma.workspaceMember.findMany({
-                where: { workspaceId },
-                include: { user: { select: { id: true, name: true, email: true, createdAt: true } } },
-                orderBy: { joinedAt: 'asc' },
-            }),
-            prisma.user.findUnique({
-                where: { id: workspace.ownerId },
-                select: { id: true, name: true, email: true, createdAt: true },
-            }),
-        ]);
-
-        return [
-            {
-                id: 'owner',
-                workspaceId,
-                userId: workspace.ownerId,
-                role: 'OWNER',
-                joinedAt: workspace.createdAt,
-                user: owner,
-            },
-            ...members,
-        ];
-    }
-
-    /**
-     * Update a member's role. Sends a non-blocking email notification to the affected member.
-     */
-    static async updateMemberRole(
-        workspaceId: string,
-        memberId: string,
-        userId: string,
-        newRole: 'ADMIN' | 'MEMBER' | 'VIEWER',
-        workspaceName: string,
-    ) {
-        if (memberId === 'owner') {
-            throw Object.assign(new Error('Cannot change owner role'), { statusCode: 400 });
-        }
-
-        const targetMember = await prisma.workspaceMember.findUnique({
-            where: { id: memberId },
-            include: { user: { select: { name: true, email: true } } },
-        });
-        if (!targetMember) throw Object.assign(new Error('Member not found'), { statusCode: 404 });
-
-        const oldRole = targetMember.role;
-
-        const updated = await prisma.workspaceMember.update({
-            where: { id: memberId },
-            data: { role: newRole },
-            include: { user: { select: { id: true, name: true, email: true } } },
-        });
-
-        // Non-blocking email
-        sendEmail({
-            to: updated.user.email,
-            subject: `Your role in ${workspaceName} has been updated`,
-            html: getRoleChangedEmailTemplate(
-                updated.user.name || updated.user.email,
-                oldRole,
-                newRole,
-                workspaceName,
-            ),
-        }).catch((err: unknown) => logError('Failed to send role change email', err));
-
-        await auditLog({
-            workspaceId,
-            userId,
-            action: 'member.role_changed',
-            resourceType: 'WorkspaceMember',
-            resourceId: memberId,
-            details: { oldRole, newRole },
-        });
-
-        return updated;
-    }
-
-    /**
-     * Remove a member from a workspace. Sends a non-blocking removal notification email.
-     */
-    static async removeMember(
-        workspaceId: string,
-        memberId: string,
-        userId: string,
-        workspaceName: string,
-    ) {
-        if (memberId === 'owner') {
-            throw Object.assign(new Error('Cannot remove owner from workspace'), { statusCode: 400 });
-        }
-
-        const memberToRemove = await prisma.workspaceMember.findUnique({
-            where: { id: memberId },
-            include: { user: { select: { name: true, email: true } } },
-        });
-        if (!memberToRemove) throw Object.assign(new Error('Member not found'), { statusCode: 404 });
-
-        await prisma.workspaceMember.delete({ where: { id: memberId } });
-
-        // Non-blocking email
-        sendEmail({
-            to: memberToRemove.user.email,
-            subject: `You've been removed from ${workspaceName}`,
-            html: getMemberRemovedEmailTemplate(
-                memberToRemove.user.name || memberToRemove.user.email,
-                workspaceName,
-            ),
-        }).catch((err: unknown) => logError('Failed to send removal email', err));
-
-        await auditLog({
-            workspaceId,
-            userId,
-            action: 'member.removed',
-            resourceType: 'WorkspaceMember',
-            resourceId: memberId,
-            details: { removedUser: memberToRemove.user.email },
-        });
-    }
-
     // ========================================
     // ACTIVITY FEED
     // ========================================

@@ -65,7 +65,8 @@
 |---|---|---|
 | `AgentService` | `lib/services/AgentService.ts` | Agent registration, heartbeat (Prism dedup engine), command results, update checks, software sync, discovery |
 | `RemoteSessionService` | `lib/services/RemoteSessionService.ts` | WebRTC remote session lifecycle |
-| `ScriptService` | `lib/services/ScriptService.ts` | Script CRUD and execution dispatch |
+| `ScriptService` | `lib/services/ScriptService.ts` | Script CRUD: getScripts, createScript, getScriptById, deleteScript, getScriptExecutions, deployScript |
+| `ScriptScheduleService` | `lib/services/ScriptScheduleService.ts` | Cron scheduling: listSchedules, createSchedule (cron parse + nextRunAt), updateSchedule, deleteSchedule, evaluateSchedules (dispatch PENDING executions), getCronStatus |
 | `PatchService` | `lib/services/PatchService.ts` | Patch policy CRUD (get/create/update/delete) + execution dispatch across vulnerable endpoints |
 | `MdmService` | `lib/services/MdmService.ts` | Mobile device management |
 

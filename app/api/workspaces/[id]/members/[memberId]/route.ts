@@ -1,7 +1,7 @@
 import { apiSuccess, apiError } from '@/lib/api/response';
 import { requireAuth, requireWorkspaceRole, withErrorHandler } from '@/lib/api/withAuth';
 import { z } from 'zod';
-import { WorkspaceService } from '@/lib/services/WorkspaceService';
+import { WorkspaceMemberService } from '@/lib/services/WorkspaceMemberService';
 
 const updateRoleSchema = z.object({
     role: z.enum(['ADMIN', 'MEMBER', 'VIEWER']),
@@ -21,7 +21,7 @@ export const PATCH = withErrorHandler(async (
     if (!validation.success) return apiError(400, 'Validation failed', validation.error.errors);
 
     try {
-        const member = await WorkspaceService.updateMemberRole(
+        const member = await WorkspaceMemberService.updateMemberRole(
             workspaceId, memberId, user.id, validation.data.role, workspace.name,
         );
         return apiSuccess({ member });
@@ -41,7 +41,7 @@ export const DELETE = withErrorHandler(async (
     const { workspace } = await requireWorkspaceRole(workspaceId, user.id, 'ADMIN');
 
     try {
-        await WorkspaceService.removeMember(workspaceId, memberId, user.id, workspace.name);
+        await WorkspaceMemberService.removeMember(workspaceId, memberId, user.id, workspace.name);
         return apiSuccess({ message: 'Member removed' });
     } catch (err: unknown) {
         const e = err as { statusCode?: number; message?: string };

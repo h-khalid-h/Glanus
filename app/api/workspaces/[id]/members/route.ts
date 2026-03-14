@@ -1,6 +1,6 @@
 import { apiSuccess } from '@/lib/api/response';
 import { requireAuth, requireWorkspaceAccess, withErrorHandler } from '@/lib/api/withAuth';
-import { WorkspaceService } from '@/lib/services/WorkspaceService';
+import { WorkspaceMemberService } from '@/lib/services/WorkspaceMemberService';
 
 // GET /api/workspaces/[id]/members
 export const GET = withErrorHandler(async (
@@ -11,6 +11,6 @@ export const GET = withErrorHandler(async (
     const user = await requireAuth();
     await requireWorkspaceAccess(workspaceId, user.id);
 
-    const members = await WorkspaceService.listMembers(workspaceId);
+    const members = await WorkspaceMemberService.listMembers(workspaceId);
     return apiSuccess({ members });
 });
