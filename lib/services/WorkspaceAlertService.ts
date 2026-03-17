@@ -1,3 +1,4 @@
+import { ApiError } from '@/lib/errors';
 /**
  * WorkspaceAlertService — Manages alert rules and their webhook delivery configuration.
  *
@@ -81,13 +82,13 @@ export class WorkspaceAlertService {
 
     static async getAlertRule(workspaceId: string, ruleId: string) {
         const rule = await prisma.alertRule.findFirst({ where: { id: ruleId, workspaceId } });
-        if (!rule) throw Object.assign(new Error('Alert rule not found'), { statusCode: 404 });
+        if (!rule) throw new ApiError(404, 'Alert rule not found');
         return rule;
     }
 
     static async updateAlertRule(workspaceId: string, ruleId: string, userId: string, data: UpdateAlertRuleInput) {
         const existing = await prisma.alertRule.findFirst({ where: { id: ruleId, workspaceId } });
-        if (!existing) throw Object.assign(new Error('Alert rule not found'), { statusCode: 404 });
+        if (!existing) throw new ApiError(404, 'Alert rule not found');
 
         const updated = await prisma.alertRule.update({ where: { id: ruleId }, data });
         await prisma.auditLog.create({
@@ -104,7 +105,7 @@ export class WorkspaceAlertService {
 
     static async deleteAlertRule(workspaceId: string, ruleId: string, userId: string) {
         const existing = await prisma.alertRule.findFirst({ where: { id: ruleId, workspaceId } });
-        if (!existing) throw Object.assign(new Error('Alert rule not found'), { statusCode: 404 });
+        if (!existing) throw new ApiError(404, 'Alert rule not found');
 
         await prisma.alertRule.delete({ where: { id: ruleId } });
         await prisma.auditLog.create({
@@ -170,7 +171,7 @@ export class WorkspaceAlertService {
 
     static async deleteWebhook(workspaceId: string, webhookId: string, userId: string) {
         const target = await prisma.notificationWebhook.findFirst({ where: { id: webhookId, workspaceId } });
-        if (!target) throw Object.assign(new Error('Webhook not found'), { statusCode: 404 });
+        if (!target) throw new ApiError(404, 'Webhook not found');
 
         await prisma.notificationWebhook.delete({ where: { id: webhookId } });
         await prisma.auditLog.create({

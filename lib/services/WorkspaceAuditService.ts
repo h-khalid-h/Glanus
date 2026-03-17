@@ -1,3 +1,4 @@
+import { ApiError } from '@/lib/errors';
 /**
  * WorkspaceAuditService — Manages the workspace audit log for compliance and traceability.
  *
@@ -76,7 +77,7 @@ export class WorkspaceAuditService {
             where: { id: workspaceId },
             select: { ownerId: true },
         });
-        if (!workspace) throw Object.assign(new Error('Workspace not found'), { statusCode: 404 });
+        if (!workspace) throw new ApiError(404, 'Workspace not found');
 
         const isOwner = workspace.ownerId === userId;
         if (!isOwner) {
@@ -85,7 +86,7 @@ export class WorkspaceAuditService {
                 select: { role: true },
             });
             if (!membership || !['ADMIN', 'OWNER'].includes(membership.role)) {
-                throw Object.assign(new Error('Must be an admin or owner to view audit logs'), { statusCode: 403 });
+                throw new ApiError(403, 'Must be an admin or owner to view audit logs');
             }
         }
     }

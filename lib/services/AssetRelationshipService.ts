@@ -1,3 +1,4 @@
+import { ApiError } from '@/lib/errors';
 import { prisma } from '@/lib/db';
 import { Prisma, RelationshipType } from '@prisma/client';
 
@@ -18,7 +19,7 @@ export class AssetRelationshipService {
         relationshipType?: string | null
     ) {
         const asset = await prisma.asset.findUnique({ where: { id: assetId }, select: { id: true, name: true } });
-        if (!asset) throw Object.assign(new Error('Asset not found'), { statusCode: 404 });
+        if (!asset) throw new ApiError(404, 'Asset not found');
 
         const filter: Prisma.AssetRelationshipWhereInput = {
             ...(relationshipType && { relationshipType: relationshipType as RelationshipType }),
@@ -84,26 +85,26 @@ export class AssetRelationshipService {
         metadata?: Record<string, unknown>;
     }) {
         if (urlAssetId !== data.parentAssetId && urlAssetId !== data.childAssetId) {
-            throw Object.assign(new Error('Asset ID in URL must match either parentAssetId or childAssetId'), { statusCode: 400 });
+            throw new ApiError(400, 'Asset ID in URL must match either parentAssetId or childAssetId');
         }
 
         const [parentAsset, childAsset] = await Promise.all([
             prisma.asset.findUnique({ where: { id: data.parentAssetId }, select: { id: true, name: true } }),
             prisma.asset.findUnique({ where: { id: data.childAssetId }, select: { id: true, name: true } }),
         ]);
-        if (!parentAsset) throw Object.assign(new Error('Parent asset not found'), { statusCode: 404 });
-        if (!childAsset) throw Object.assign(new Error('Child asset not found'), { statusCode: 404 });
+        if (!parentAsset) throw new ApiError(404, 'Parent asset not found');
+        if (!childAsset) throw new ApiError(404, 'Child asset not found');
 
         // BFS circular check
         const isCircular = await AssetRelationshipService._checkCircularRelationship(data.parentAssetId, data.childAssetId);
         if (isCircular) {
-            throw Object.assign(new Error('Cannot create relationship: would create a circular dependency'), { statusCode: 400 });
+            throw new ApiError(400, 'Cannot create relationship: would create a circular dependency');
         }
 
         const dup = await prisma.assetRelationship.findFirst({
             where: { parentAssetId: data.parentAssetId, childAssetId: data.childAssetId, relationshipType: data.relationshipType as RelationshipType },
         });
-        if (dup) throw Object.assign(new Error('A relationship of this type already exists between these assets'), { statusCode: 400 });
+        if (dup) throw new ApiError(400, 'A relationship of this type already exists between these assets');
 
         return prisma.assetRelationship.create({
             data: {
@@ -137,7 +138,7 @@ export class AssetRelationshipService {
             },
             select: { id: true },
         });
-        if (!existing) throw Object.assign(new Error('Relationship not found'), { statusCode: 404 });
+        if (!existing) throw new ApiError(404, 'Relationship not found');
 
         return prisma.assetRelationship.update({
             where: { id },
@@ -169,7 +170,7 @@ export class AssetRelationshipService {
                 childAsset: { select: { id: true, name: true } },
             },
         });
-        if (!relationship) throw Object.assign(new Error('Relationship not found'), { statusCode: 404 });
+        if (!relationship) throw new ApiError(404, 'Relationship not found');
 
         await prisma.assetRelationship.delete({ where: { id } });
 

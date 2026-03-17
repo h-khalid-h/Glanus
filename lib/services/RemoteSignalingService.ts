@@ -1,3 +1,4 @@
+import { ApiError } from '@/lib/errors';
 /**
  * RemoteSignalingService — WebRTC signaling channel for remote access sessions.
  *
@@ -57,7 +58,7 @@ export class RemoteSignalingService {
             select: { id: true, status: true, offer: true, answer: true, iceCandidates: true },
         });
         if (!session) {
-            throw Object.assign(new Error('Session not found'), { statusCode: 404 });
+            throw new ApiError(404, 'Session not found');
         }
         return session;
     }
@@ -95,7 +96,7 @@ export class RemoteSignalingService {
         }
 
         if (Object.keys(updateData).length === 0) {
-            throw Object.assign(new Error('No valid signaling data provided'), { statusCode: 400 });
+            throw new ApiError(400, 'No valid signaling data provided');
         }
 
         return prisma.remoteSession.update({

@@ -1,3 +1,4 @@
+import { ApiError } from '@/lib/errors';
 /**
  * TicketService — IT support ticket and messaging management.
  *
@@ -93,7 +94,7 @@ export class TicketService {
                 where: { id: data.assetId, workspaceId },
                 select: { id: true }
             });
-            if (!asset) throw Object.assign(new Error('Invalid asset selection'), { statusCode: 400 });
+            if (!asset) throw new ApiError(400, 'Invalid asset selection');
         }
 
         const ticket = await prisma.ticket.create({
@@ -152,12 +153,12 @@ export class TicketService {
             }
         });
 
-        if (!ticket) throw Object.assign(new Error('Ticket not found'), { statusCode: 404 });
+        if (!ticket) throw new ApiError(404, 'Ticket not found');
 
         // Access enforcement
         if (auth.role !== 'ADMIN' && auth.role !== 'OWNER' && user.role !== 'IT_STAFF') {
             if (ticket.creatorId !== user.id) {
-                throw Object.assign(new Error('Access denied to this ticket'), { statusCode: 403 });
+                throw new ApiError(403, 'Access denied to this ticket');
             }
         }
 
@@ -179,15 +180,15 @@ export class TicketService {
             select: { id: true, status: true, creatorId: true }
         });
 
-        if (!ticket) throw Object.assign(new Error('Ticket not found'), { statusCode: 404 });
+        if (!ticket) throw new ApiError(404, 'Ticket not found');
 
         // Only IT_STAFF, ADMIN, or OWNER can reassign or change priority
         if (auth.role !== 'ADMIN' && auth.role !== 'OWNER' && user.role !== 'IT_STAFF') {
-            if (ticket.creatorId !== user.id) throw Object.assign(new Error('Access denied to this ticket'), { statusCode: 403 });
+            if (ticket.creatorId !== user.id) throw new ApiError(403, 'Access denied to this ticket');
 
             // Basic users shouldn't re-assign tickets or change priority, only status (e.g., closing it)
             if (data.assigneeId !== undefined || data.priority !== undefined) {
-                throw Object.assign(new Error('Permission denied to modify ticket administrative properties'), { statusCode: 403 });
+                throw new ApiError(403, 'Permission denied to modify ticket administrative properties');
             }
         }
 
@@ -197,7 +198,7 @@ export class TicketService {
                 where: { id: data.assigneeId }
             });
             if (!validMember || validMember.workspaceId !== workspaceId) {
-                throw Object.assign(new Error('Invalid assignee selected'), { statusCode: 400 });
+                throw new ApiError(400, 'Invalid assignee selected');
             }
         }
 
@@ -226,14 +227,14 @@ export class TicketService {
         auth: WorkspaceAuthContext
     ) {
         if (auth.role !== 'ADMIN' && auth.role !== 'OWNER' && user.role !== 'IT_STAFF') {
-            throw Object.assign(new Error('Insufficient permissions to delete tickets'), { statusCode: 403 });
+            throw new ApiError(403, 'Insufficient permissions to delete tickets');
         }
 
         const ticket = await prisma.ticket.findUnique({
             where: { id: ticketId, workspaceId }
         });
 
-        if (!ticket) throw Object.assign(new Error('Ticket not found'), { statusCode: 404 });
+        if (!ticket) throw new ApiError(404, 'Ticket not found');
 
         await prisma.ticket.delete({
             where: { id: ticketId }
@@ -257,17 +258,17 @@ export class TicketService {
             select: { id: true, creatorId: true, status: true, assigneeId: true }
         });
 
-        if (!ticket) throw Object.assign(new Error('Ticket not found'), { statusCode: 404 });
+        if (!ticket) throw new ApiError(404, 'Ticket not found');
 
         const isPrivileged = auth.role === 'ADMIN' || auth.role === 'OWNER' || user.role === 'IT_STAFF';
 
         // Access enforcement: Normal users can only reply to their own tickets and cannot post internal notes
         if (!isPrivileged) {
             if (ticket.creatorId !== user.id) {
-                throw Object.assign(new Error('Access denied to this ticket'), { statusCode: 403 });
+                throw new ApiError(403, 'Access denied to this ticket');
             }
             if (data.isInternal) {
-                throw Object.assign(new Error('Permission denied for internal messages'), { statusCode: 403 });
+                throw new ApiError(403, 'Permission denied for internal messages');
             }
         }
 

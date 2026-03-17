@@ -1,3 +1,4 @@
+import { ApiError } from '@/lib/errors';
 /**
  * InvitationService — Workspace member invitation lifecycle management.
  *
@@ -55,7 +56,7 @@ export class InvitationService {
                 where: { workspaceId_userId: { workspaceId, userId: existingUser.id } },
             });
             if (existingMembership) {
-                throw Object.assign(new Error('User is already a member of this workspace'), { statusCode: 409 });
+                throw new ApiError(409, 'User is already a member of this workspace');
             }
         }
 
@@ -63,7 +64,7 @@ export class InvitationService {
             where: { workspaceId, email, status: 'PENDING' },
         });
         if (existingInvitation) {
-            throw Object.assign(new Error('Invitation already sent to this email'), { statusCode: 409 });
+            throw new ApiError(409, 'Invitation already sent to this email');
         }
 
         const token = randomBytes(32).toString('hex');
@@ -94,7 +95,7 @@ export class InvitationService {
             where: { id: invitationId, workspaceId },
         });
         if (!invitation) {
-            throw Object.assign(new Error('Invitation not found'), { statusCode: 404 });
+            throw new ApiError(404, 'Invitation not found');
         }
         await prisma.workspaceInvitation.update({
             where: { id: invitationId },
@@ -116,18 +117,15 @@ export class InvitationService {
             },
         });
 
-        if (!invitation) throw Object.assign(new Error('Invitation not found or has expired'), { statusCode: 404 });
+        if (!invitation) throw new ApiError(404, 'Invitation not found or has expired');
 
         if (invitation.status !== 'PENDING') {
-            throw Object.assign(
-                new Error(`Invitation has already been ${invitation.status.toLowerCase()}`),
-                { statusCode: 400 },
-            );
+            throw new ApiError(400, `Invitation has already been ${invitation.status.toLowerCase()}`);
         }
 
         if (new Date() > invitation.expiresAt) {
             await prisma.workspaceInvitation.update({ where: { id: invitation.id }, data: { status: 'EXPIRED' } });
-            throw Object.assign(new Error('This invitation has expired'), { statusCode: 400 });
+            throw new ApiError(400, 'This invitation has expired');
         }
 
         return {
@@ -147,28 +145,28 @@ export class InvitationService {
             include: { workspace: true },
         });
 
-        if (!invitation) throw Object.assign(new Error('Invitation not found'), { statusCode: 404 });
+        if (!invitation) throw new ApiError(404, 'Invitation not found');
 
         if (invitation.email.toLowerCase() !== userEmail.toLowerCase()) {
-            throw Object.assign(new Error('This invitation was sent to a different email address'), { statusCode: 403 });
+            throw new ApiError(403, 'This invitation was sent to a different email address');
         }
 
         if (invitation.status !== 'PENDING') {
-            throw Object.assign(new Error('Invitation already used or revoked'), { statusCode: 400 });
+            throw new ApiError(400, 'Invitation already used or revoked');
         }
 
         if (new Date() > invitation.expiresAt) {
             await prisma.workspaceInvitation.update({ where: { id: invitation.id }, data: { status: 'EXPIRED' } });
-            throw Object.assign(new Error('Invitation expired'), { statusCode: 400 });
+            throw new ApiError(400, 'Invitation expired');
         }
 
         const user = await prisma.user.findUnique({ where: { email: invitation.email } });
-        if (!user) throw Object.assign(new Error('Account not found. Please sign up first.'), { statusCode: 404 });
+        if (!user) throw new ApiError(404, 'Account not found. Please sign up first.');
 
         const existingMembership = await prisma.workspaceMember.findUnique({
             where: { workspaceId_userId: { workspaceId: invitation.workspaceId, userId: user.id } },
         });
-        if (existingMembership) throw Object.assign(new Error('Already a member of this workspace'), { statusCode: 409 });
+        if (existingMembership) throw new ApiError(409, 'Already a member of this workspace');
 
         const result = await prisma.$transaction(async (tx) => {
             const membership = await tx.workspaceMember.create({

@@ -1,3 +1,4 @@
+import { ApiError } from '@/lib/errors';
 /**
  * AssetService — CMDB asset lifecycle management for workspace inventories.
  *
@@ -108,7 +109,7 @@ export class AssetService {
             const existing = await prisma.asset.findFirst({
                 where: { serialNumber: data.serialNumber, workspaceId },
             });
-            if (existing) throw Object.assign(new Error('An asset with this serial number already exists in this workspace'), { statusCode: 409 });
+            if (existing) throw new ApiError(409, 'An asset with this serial number already exists in this workspace');
         }
 
         const selectedCategory = await prisma.assetCategory.findUnique({
@@ -116,7 +117,7 @@ export class AssetService {
             include: { fieldDefinitions: true }
         });
 
-        if (!selectedCategory) throw Object.assign(new Error('The specified Asset Category does not exist.'), { statusCode: 404 });
+        if (!selectedCategory) throw new ApiError(404, 'The specified Asset Category does not exist.');
 
         // Build Payload
         const fieldValuesPayload = [];
@@ -136,7 +137,7 @@ export class AssetService {
                 );
 
                 if (!validationCheck.valid) {
-                    throw Object.assign(new Error(`Validation failed for '${def.label}': ${validationCheck.error}`), { statusCode: 400 });
+                    throw new ApiError(400, `Validation failed for '${def.label}': ${validationCheck.error}`);
                 }
 
                 // 2. If valid and present, serialize for Prisma
@@ -150,7 +151,7 @@ export class AssetService {
         } else {
             const missingRequired = selectedCategory.fieldDefinitions.filter((def) => def.isRequired);
             if (missingRequired.length > 0) {
-                throw Object.assign(new Error(`Missing required custom field: ${missingRequired[0].label}`), { statusCode: 400 });
+                throw new ApiError(400, `Missing required custom field: ${missingRequired[0].label}`);
             }
         }
 
@@ -262,7 +263,7 @@ export class AssetService {
         });
 
         if (!accessCheck) {
-            throw Object.assign(new Error('Asset not found'), { statusCode: 404 });
+            throw new ApiError(404, 'Asset not found');
         }
 
         const asset = await prisma.asset.findFirst({
@@ -294,7 +295,7 @@ export class AssetService {
         });
 
         if (!asset) {
-            throw Object.assign(new Error('Asset not found'), { statusCode: 404 });
+            throw new ApiError(404, 'Asset not found');
         }
 
         return asset;
@@ -326,7 +327,7 @@ export class AssetService {
         });
 
         if (!existingAsset) {
-            throw Object.assign(new Error('Asset not found'), { statusCode: 404 });
+            throw new ApiError(404, 'Asset not found');
         }
 
         if (data.serialNumber && data.serialNumber !== existingAsset.serialNumber) {
@@ -338,7 +339,7 @@ export class AssetService {
                 },
             });
             if (duplicate) {
-                throw Object.assign(new Error('An asset with this serial number already exists'), { statusCode: 409 });
+                throw new ApiError(409, 'An asset with this serial number already exists');
             }
         }
 
@@ -350,7 +351,7 @@ export class AssetService {
                 if (incomingValue !== undefined) {
                     if (incomingValue === '' || incomingValue === null) {
                         if (def.isRequired) {
-                            throw Object.assign(new Error(`Missing required custom field: ${def.label}`), { statusCode: 400 });
+                            throw new ApiError(400, `Missing required custom field: ${def.label}`);
                         }
                         if (existingValueRecord) {
                             await prisma.assetFieldValue.delete({ where: { id: existingValueRecord.id } });
@@ -369,7 +370,7 @@ export class AssetService {
                         );
 
                         if (!validationCheck.valid) {
-                            throw Object.assign(new Error(`Validation failed for '${def.label}': ${validationCheck.error}`), { statusCode: 400 });
+                            throw new ApiError(400, `Validation failed for '${def.label}': ${validationCheck.error}`);
                         }
 
                         // 2. Serialize for Prisma
@@ -517,7 +518,7 @@ export class AssetService {
         });
 
         if (!existingAsset) {
-            throw Object.assign(new Error('Asset not found'), { statusCode: 404 });
+            throw new ApiError(404, 'Asset not found');
         }
 
         const asset = await prisma.asset.update({

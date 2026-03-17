@@ -1,3 +1,4 @@
+import { ApiError } from '@/lib/errors';
 /**
  * ScriptScheduleService — Manages the cron-driven script scheduling system.
  *
@@ -36,14 +37,14 @@ export class ScriptScheduleService {
         data: { name: string; description?: string; scriptId: string; targetIds: string[]; cronExpression: string }
     ) {
         const script = await prisma.script.findFirst({ where: { id: data.scriptId, workspaceId } });
-        if (!script) throw Object.assign(new Error('Script not found'), { statusCode: 404 });
+        if (!script) throw new ApiError(404, 'Script not found');
 
         let nextRunAt: Date;
         try {
             const interval = CronExpressionParser.parse(data.cronExpression);
             nextRunAt = interval.next().toDate();
         } catch {
-            throw Object.assign(new Error('Invalid cron expression'), { statusCode: 400 });
+            throw new ApiError(400, 'Invalid cron expression');
         }
 
         return prisma.scriptSchedule.create({
@@ -65,7 +66,7 @@ export class ScriptScheduleService {
         data: { name?: string; description?: string; targetIds?: string[]; cronExpression?: string; enabled?: boolean }
     ) {
         const schedule = await prisma.scriptSchedule.findUnique({ where: { id: scheduleId, workspaceId } });
-        if (!schedule) throw Object.assign(new Error('Schedule not found'), { statusCode: 404 });
+        if (!schedule) throw new ApiError(404, 'Schedule not found');
 
         const updateData: Prisma.ScriptScheduleUpdateInput = { ...data };
 
@@ -74,7 +75,7 @@ export class ScriptScheduleService {
                 const interval = CronExpressionParser.parse(data.cronExpression);
                 updateData.nextRunAt = interval.next().toDate();
             } catch {
-                throw Object.assign(new Error('Invalid cron expression'), { statusCode: 400 });
+                throw new ApiError(400, 'Invalid cron expression');
             }
         } else if (data.enabled === true && schedule.enabled === false) {
             try {
@@ -94,7 +95,7 @@ export class ScriptScheduleService {
      */
     static async deleteSchedule(workspaceId: string, scheduleId: string) {
         const schedule = await prisma.scriptSchedule.findUnique({ where: { id: scheduleId, workspaceId } });
-        if (!schedule) throw Object.assign(new Error('Schedule not found'), { statusCode: 404 });
+        if (!schedule) throw new ApiError(404, 'Schedule not found');
         await prisma.scriptSchedule.delete({ where: { id: scheduleId } });
         return { message: 'Schedule deleted successfully' };
     }

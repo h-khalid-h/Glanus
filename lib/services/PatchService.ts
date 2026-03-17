@@ -1,3 +1,4 @@
+import { ApiError } from '@/lib/errors';
 /**
  * PatchService — Automated patch policy management and execution dispatch.
  *
@@ -58,7 +59,7 @@ export class PatchService {
         });
 
         if (!script) {
-            throw Object.assign(new Error('Remediation script not found or does not belong to this workspace'), { statusCode: 404 });
+            throw new ApiError(404, 'Remediation script not found or does not belong to this workspace');
         }
 
         return prisma.patchPolicy.create({
@@ -85,11 +86,11 @@ export class PatchService {
         });
 
         if (!policy) {
-            throw Object.assign(new Error('Patch policy not found'), { statusCode: 404 });
+            throw new ApiError(404, 'Patch policy not found');
         }
 
         if (!policy.isEnabled) {
-            throw Object.assign(new Error('Cannot deploy a disabled patch policy. Please enable it first.'), { statusCode: 400 });
+            throw new ApiError(400, 'Cannot deploy a disabled patch policy. Please enable it first.');
         }
 
         // Identify vulnerable endpoints logically across the workspace
@@ -133,11 +134,11 @@ export class PatchService {
      */
     static async updatePatchPolicy(workspaceId: string, patchId: string, data: PatchPolicyUpdateInput) {
         const policy = await prisma.patchPolicy.findUnique({ where: { id: patchId, workspaceId } });
-        if (!policy) throw Object.assign(new Error('Patch policy not found'), { statusCode: 404 });
+        if (!policy) throw new ApiError(404, 'Patch policy not found');
 
         if (data.actionScriptId) {
             const script = await prisma.script.findUnique({ where: { id: data.actionScriptId, workspaceId } });
-            if (!script) throw Object.assign(new Error('Replacement remediation script not found'), { statusCode: 404 });
+            if (!script) throw new ApiError(404, 'Replacement remediation script not found');
         }
 
         return prisma.patchPolicy.update({
@@ -152,7 +153,7 @@ export class PatchService {
      */
     static async deletePatchPolicy(workspaceId: string, patchId: string) {
         const policy = await prisma.patchPolicy.findUnique({ where: { id: patchId, workspaceId } });
-        if (!policy) throw Object.assign(new Error('Patch policy not found'), { statusCode: 404 });
+        if (!policy) throw new ApiError(404, 'Patch policy not found');
         await prisma.patchPolicy.delete({ where: { id: patchId } });
         return { deleted: true };
     }

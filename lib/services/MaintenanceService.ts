@@ -1,3 +1,4 @@
+import { ApiError } from '@/lib/errors';
 /**
  * MaintenanceService — Manages scheduled maintenance windows for workspace assets.
  *
@@ -69,10 +70,10 @@ export class MaintenanceService {
 
     static async createMaintenanceWindow(workspaceId: string, userId: string, data: MaintenanceCreateInput) {
         const asset = await prisma.asset.findFirst({ where: { id: data.assetId, workspaceId } });
-        if (!asset) throw Object.assign(new Error('Asset not found in this workspace.'), { statusCode: 400 });
+        if (!asset) throw new ApiError(400, 'Asset not found in this workspace.');
 
         if (new Date(data.scheduledEnd) <= new Date(data.scheduledStart)) {
-            throw Object.assign(new Error('Scheduled end must be after scheduled start.'), { statusCode: 400 });
+            throw new ApiError(400, 'Scheduled end must be after scheduled start.');
         }
 
         const window = await prisma.maintenanceWindow.create({
@@ -98,7 +99,7 @@ export class MaintenanceService {
 
     static async updateMaintenanceWindow(workspaceId: string, userId: string, windowId: string, data: MaintenanceUpdateInput) {
         const existing = await prisma.maintenanceWindow.findFirst({ where: { id: windowId, workspaceId } });
-        if (!existing) throw Object.assign(new Error('Maintenance window not found.'), { statusCode: 404 });
+        if (!existing) throw new ApiError(404, 'Maintenance window not found.');
 
         void userId; // captured for future audit
 
@@ -123,7 +124,7 @@ export class MaintenanceService {
 
     static async deleteMaintenanceWindow(workspaceId: string, userId: string, windowId: string) {
         const existing = await prisma.maintenanceWindow.findFirst({ where: { id: windowId, workspaceId } });
-        if (!existing) throw Object.assign(new Error('Maintenance window not found.'), { statusCode: 404 });
+        if (!existing) throw new ApiError(404, 'Maintenance window not found.');
 
         await prisma.maintenanceWindow.delete({ where: { id: windowId } });
 

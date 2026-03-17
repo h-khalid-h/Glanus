@@ -1,3 +1,4 @@
+import { ApiError } from '@/lib/errors';
 /**
  * WorkspaceApiKeyService — Manages programmatic API access keys for workspace automation.
  *
@@ -73,8 +74,8 @@ export class WorkspaceApiKeyService {
 
     static async revokeApiKey(workspaceId: string, keyId: string, userId: string) {
         const existing = await prisma.apiKey.findUnique({ where: { id: keyId, workspaceId } });
-        if (!existing) throw Object.assign(new Error('API key not found'), { statusCode: 404 });
-        if (existing.revokedAt) throw Object.assign(new Error('Key is already revoked'), { statusCode: 400 });
+        if (!existing) throw new ApiError(404, 'API key not found');
+        if (existing.revokedAt) throw new ApiError(400, 'Key is already revoked');
 
         await prisma.apiKey.update({ where: { id: keyId }, data: { revokedAt: new Date() } });
 

@@ -1,3 +1,4 @@
+import { ApiError } from '@/lib/errors';
 /**
  * WorkspaceSubFeatureService — Workspace-level utility operations.
  *
@@ -93,7 +94,7 @@ export class WorkspaceSubFeatureService {
         });
 
         if (!subscription?.stripeCustomerId) {
-            throw Object.assign(new Error('No billing account found. Please upgrade first.'), { statusCode: 400 });
+            throw new ApiError(400, 'No billing account found. Please upgrade first.');
         }
 
         const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';

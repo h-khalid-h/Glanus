@@ -1,3 +1,4 @@
+import { ApiError } from '@/lib/errors';
 /**
  * PartnerAssignmentService — Partner workspace assignment state machine.
  *
@@ -19,7 +20,7 @@ async function getPartnerForUser(userEmail: string) {
         include: { partnerProfile: true },
     });
     if (!dbUser || !dbUser.partnerProfile) {
-        throw Object.assign(new Error('Partner profile not found'), { statusCode: 404 });
+        throw new ApiError(404, 'Partner profile not found');
     }
     return dbUser.partnerProfile;
 }
@@ -43,9 +44,9 @@ export class PartnerAssignmentService {
     static async acceptAssignment(userEmail: string, assignmentId: string) {
         const partner = await getPartnerForUser(userEmail);
         const assignment = await prisma.partnerAssignment.findUnique({ where: { id: assignmentId } });
-        if (!assignment) throw Object.assign(new Error('Assignment not found'), { statusCode: 404 });
-        if (assignment.partnerId !== partner.id) throw Object.assign(new Error('Unauthorized'), { statusCode: 403 });
-        if (assignment.status !== 'PENDING') throw Object.assign(new Error('Can only accept pending assignments'), { statusCode: 400 });
+        if (!assignment) throw new ApiError(404, 'Assignment not found');
+        if (assignment.partnerId !== partner.id) throw new ApiError(403, 'Unauthorized');
+        if (assignment.status !== 'PENDING') throw new ApiError(400, 'Can only accept pending assignments');
 
         return prisma.partnerAssignment.update({
             where: { id: assignmentId },
@@ -60,9 +61,9 @@ export class PartnerAssignmentService {
     static async rejectAssignment(userEmail: string, assignmentId: string) {
         const partner = await getPartnerForUser(userEmail);
         const assignment = await prisma.partnerAssignment.findUnique({ where: { id: assignmentId } });
-        if (!assignment) throw Object.assign(new Error('Assignment not found'), { statusCode: 404 });
-        if (assignment.partnerId !== partner.id) throw Object.assign(new Error('Unauthorized'), { statusCode: 403 });
-        if (assignment.status !== 'PENDING') throw Object.assign(new Error('Can only reject pending assignments'), { statusCode: 400 });
+        if (!assignment) throw new ApiError(404, 'Assignment not found');
+        if (assignment.partnerId !== partner.id) throw new ApiError(403, 'Unauthorized');
+        if (assignment.status !== 'PENDING') throw new ApiError(400, 'Can only reject pending assignments');
 
         const [updated] = await prisma.$transaction([
             prisma.partnerAssignment.update({ where: { id: assignmentId }, data: { status: 'REJECTED' } }),
@@ -78,11 +79,11 @@ export class PartnerAssignmentService {
     static async completeAssignment(userEmail: string, assignmentId: string) {
         const partner = await getPartnerForUser(userEmail);
         const assignment = await prisma.partnerAssignment.findUnique({ where: { id: assignmentId } });
-        if (!assignment) throw Object.assign(new Error('Assignment not found'), { statusCode: 404 });
-        if (assignment.partnerId !== partner.id) throw Object.assign(new Error('Unauthorized'), { statusCode: 403 });
-        if (assignment.status === 'COMPLETED') throw Object.assign(new Error('Assignment is already completed'), { statusCode: 409 });
+        if (!assignment) throw new ApiError(404, 'Assignment not found');
+        if (assignment.partnerId !== partner.id) throw new ApiError(403, 'Unauthorized');
+        if (assignment.status === 'COMPLETED') throw new ApiError(409, 'Assignment is already completed');
         if (assignment.status !== 'ACCEPTED' && assignment.status !== 'ACTIVE') {
-            throw Object.assign(new Error('Can only complete ACCEPTED or ACTIVE assignments'), { statusCode: 400 });
+            throw new ApiError(400, 'Can only complete ACCEPTED or ACTIVE assignments');
         }
 
         const [updated] = await prisma.$transaction([

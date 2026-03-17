@@ -1,3 +1,4 @@
+import { ApiError } from '@/lib/errors';
 import { prisma } from '@/lib/db';
 
 /**
@@ -15,10 +16,10 @@ export class AssetAssignmentService {
         const asset = await prisma.asset.findFirst({
             where: { id: assetId, deletedAt: null, workspace: { members: { some: { userId: requestingUserId } } } },
         });
-        if (!asset) throw Object.assign(new Error('Asset not found'), { statusCode: 404 });
+        if (!asset) throw new ApiError(404, 'Asset not found');
 
         const targetUser = await prisma.user.findUnique({ where: { id: assigneeId } });
-        if (!targetUser) throw Object.assign(new Error('User not found'), { statusCode: 404 });
+        if (!targetUser) throw new ApiError(404, 'User not found');
 
         // Close previous open assignment
         if (asset.assignedToId) {
@@ -52,8 +53,8 @@ export class AssetAssignmentService {
             where: { id: assetId, deletedAt: null, workspace: { members: { some: { userId: requestingUserId } } } },
             include: { assignedTo: true },
         });
-        if (!asset) throw Object.assign(new Error('Asset not found'), { statusCode: 404 });
-        if (!asset.assignedToId) throw Object.assign(new Error('Asset is not currently assigned'), { statusCode: 400 });
+        if (!asset) throw new ApiError(404, 'Asset not found');
+        if (!asset.assignedToId) throw new ApiError(400, 'Asset is not currently assigned');
 
         const currentAssignment = await prisma.assignmentHistory.findFirst({ where: { assetId, unassignedAt: null } });
         if (currentAssignment) {
@@ -78,8 +79,8 @@ export class AssetAssignmentService {
             where: { id: assetId, workspace: { members: { some: { userId } } } },
             include: { agentConnection: true, workspace: true },
         });
-        if (!asset) throw Object.assign(new Error('Asset not found or access denied'), { statusCode: 404 });
-        if (!asset.agentConnection) throw Object.assign(new Error('No agent installed on this asset'), { statusCode: 400 });
+        if (!asset) throw new ApiError(404, 'Asset not found or access denied');
+        if (!asset.agentConnection) throw new ApiError(400, 'No agent installed on this asset');
 
         if (asset.agentConnection.status === 'OFFLINE') {
             return { queued: true, message: 'Agent is offline. Script will be queued and executed when agent comes online.' };
@@ -100,7 +101,7 @@ export class AssetAssignmentService {
         const asset = await prisma.asset.findFirst({
             where: { id: assetId, workspace: { members: { some: { userId } } } },
         });
-        if (!asset) throw Object.assign(new Error('Asset not found or access denied'), { statusCode: 404 });
+        if (!asset) throw new ApiError(404, 'Asset not found or access denied');
 
         const executions = await prisma.scriptExecution.findMany({
             where: { assetId }, orderBy: { createdAt: 'desc' }, take: 50,
@@ -114,8 +115,8 @@ export class AssetAssignmentService {
             where: { id: assetId, workspace: { members: { some: { userId } } } },
             include: { agentConnection: true },
         });
-        if (!asset) throw Object.assign(new Error('Asset not found or access denied'), { statusCode: 404 });
-        if (!asset.agentConnection) throw Object.assign(new Error('No agent connected to this asset'), { statusCode: 404 });
+        if (!asset) throw new ApiError(404, 'Asset not found or access denied');
+        if (!asset.agentConnection) throw new ApiError(404, 'No agent connected to this asset');
         return asset.agentConnection;
     }
 }

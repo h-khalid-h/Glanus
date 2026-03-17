@@ -1,3 +1,4 @@
+import { ApiError } from '@/lib/errors';
 /**
  * AgentService — Manages agent lifecycle and telemetry.
  *
@@ -108,7 +109,7 @@ export class AgentService {
             select: { id: true },
         });
         if (!workspace) {
-            throw Object.assign(new Error('Workspace not found'), { statusCode: 404 });
+            throw new ApiError(404, 'Workspace not found');
         }
 
         // Verify asset belongs to workspace
@@ -116,7 +117,7 @@ export class AgentService {
             where: { id: data.assetId, workspaceId: data.workspaceId },
         });
         if (!asset) {
-            throw Object.assign(new Error('Asset not found or does not belong to workspace'), { statusCode: 404 });
+            throw new ApiError(404, 'Asset not found or does not belong to workspace');
         }
 
         const config = { metricsInterval: 300, heartbeatInterval: 60 };
@@ -210,7 +211,7 @@ export class AgentService {
         });
 
         if (!agent) {
-            throw Object.assign(new Error('Invalid auth token'), { statusCode: 401 });
+            throw new ApiError(401, 'Invalid auth token');
         }
 
         // Deduplication variance check
@@ -302,17 +303,17 @@ export class AgentService {
             where: { authToken: hashedToken },
         });
         if (!agent) {
-            throw Object.assign(new Error('Invalid auth token'), { statusCode: 401 });
+            throw new ApiError(401, 'Invalid auth token');
         }
 
         const execution = await prisma.scriptExecution.findUnique({
             where: { id: input.executionId },
         });
         if (!execution) {
-            throw Object.assign(new Error('Execution not found'), { statusCode: 404 });
+            throw new ApiError(404, 'Execution not found');
         }
         if (execution.agentId !== agent.id) {
-            throw Object.assign(new Error('Execution does not belong to this agent'), { statusCode: 403 });
+            throw new ApiError(403, 'Execution does not belong to this agent');
         }
 
         await prisma.scriptExecution.update({
@@ -389,7 +390,7 @@ export class AgentService {
             select: { id: true },
         });
         if (!agent) {
-            throw Object.assign(new Error('Invalid auth token'), { statusCode: 401 });
+            throw new ApiError(401, 'Invalid auth token');
         }
 
         await prisma.$transaction([
@@ -427,7 +428,7 @@ export class AgentService {
             select: { id: true, workspaceId: true },
         });
         if (!agent) {
-            throw Object.assign(new Error('Invalid auth token'), { statusCode: 401 });
+            throw new ApiError(401, 'Invalid auth token');
         }
 
         const uniqueDevices = Array.from(new Map(devices.map((d) => [d.ipAddress, d])).values());
@@ -511,7 +512,7 @@ export class AgentService {
             select: { assetId: true },
         });
         if (!agent) {
-            throw Object.assign(new Error('Invalid agent token'), { statusCode: 401 });
+            throw new ApiError(401, 'Invalid agent token');
         }
 
         const activeSession = await prisma.remoteSession.findFirst({

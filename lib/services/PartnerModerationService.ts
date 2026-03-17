@@ -1,3 +1,4 @@
+import { ApiError } from '@/lib/errors';
 import { prisma } from '@/lib/db';
 
 export type PartnerAdminAction = 'verify' | 'activate' | 'suspend' | 'ban' | 'unsuspend';
@@ -48,7 +49,7 @@ export class PartnerModerationService {
      */
     static async moderatePartner(id: string, action: PartnerAdminAction, adminEmail: string, reason?: string) {
         const partner = await prisma.partner.findUnique({ where: { id } });
-        if (!partner) throw Object.assign(new Error('Partner not found'), { statusCode: 404 });
+        if (!partner) throw new ApiError(404, 'Partner not found');
 
         const statusMap: Record<PartnerAdminAction, string> = {
             verify: 'VERIFIED',
@@ -59,10 +60,10 @@ export class PartnerModerationService {
         };
 
         const gates: Partial<Record<PartnerAdminAction, () => void>> = {
-            verify: () => { if (partner.status !== 'PENDING') throw Object.assign(new Error('Can only verify pending partners'), { statusCode: 400 }); },
-            activate: () => { if (!['VERIFIED', 'SUSPENDED'].includes(partner.status)) throw Object.assign(new Error('Can only activate verified or suspended partners'), { statusCode: 400 }); },
-            suspend: () => { if (partner.status === 'BANNED') throw Object.assign(new Error('Cannot suspend banned partner'), { statusCode: 400 }); },
-            unsuspend: () => { if (partner.status !== 'SUSPENDED') throw Object.assign(new Error('Can only unsuspend suspended partners'), { statusCode: 400 }); },
+            verify: () => { if (partner.status !== 'PENDING') throw new ApiError(400, 'Can only verify pending partners'); },
+            activate: () => { if (!['VERIFIED', 'SUSPENDED'].includes(partner.status)) throw new ApiError(400, 'Can only activate verified or suspended partners'); },
+            suspend: () => { if (partner.status === 'BANNED') throw new ApiError(400, 'Cannot suspend banned partner'); },
+            unsuspend: () => { if (partner.status !== 'SUSPENDED') throw new ApiError(400, 'Can only unsuspend suspended partners'); },
         };
         gates[action]?.();
 

@@ -1,3 +1,4 @@
+import { ApiError } from '@/lib/errors';
 import { prisma } from '@/lib/db';
 import { sanitizeText } from '@/lib/security/sanitize';
 import {
@@ -19,12 +20,12 @@ export class WorkspacePartnerService {
             where: { id: workspaceId },
             include: { partnerAssignment: true },
         });
-        if (!workspace) throw Object.assign(new Error('Workspace not found'), { statusCode: 404 });
-        if (!workspace.partnerAssignment) throw Object.assign(new Error('No partner assigned to this workspace'), { statusCode: 404 });
+        if (!workspace) throw new ApiError(404, 'Workspace not found');
+        if (!workspace.partnerAssignment) throw new ApiError(404, 'No partner assigned to this workspace');
 
         const assignment = workspace.partnerAssignment;
         if (assignment.status === 'COMPLETED') {
-            throw Object.assign(new Error('Cannot remove completed partner assignments (kept for records)'), { statusCode: 400 });
+            throw new ApiError(400, 'Cannot remove completed partner assignments (kept for records)');
         }
 
         await prisma.$transaction(async (tx) => {
@@ -49,15 +50,15 @@ export class WorkspacePartnerService {
             include: { partnerAssignment: true },
         });
         if (!workspace || !workspace.partnerAssignment) {
-            throw Object.assign(new Error('No partner assigned to this workspace'), { statusCode: 404 });
+            throw new ApiError(404, 'No partner assigned to this workspace');
         }
 
         const assignment = workspace.partnerAssignment;
         if (assignment.rating) {
-            throw Object.assign(new Error('Partner already reviewed. Contact support to update review.'), { statusCode: 409 });
+            throw new ApiError(409, 'Partner already reviewed. Contact support to update review.');
         }
         if (assignment.status !== 'COMPLETED') {
-            throw Object.assign(new Error('Can only review completed assignments'), { statusCode: 400 });
+            throw new ApiError(400, 'Can only review completed assignments');
         }
 
         const updated = await prisma.partnerAssignment.update({
@@ -85,21 +86,21 @@ export class WorkspacePartnerService {
             where: { id: workspaceId },
             include: { partnerAssignment: true },
         });
-        if (!workspace) throw Object.assign(new Error('Workspace not found'), { statusCode: 404 });
-        if (workspace.partnerAssignment) throw Object.assign(new Error('Workspace already has a partner assigned'), { statusCode: 409 });
+        if (!workspace) throw new ApiError(404, 'Workspace not found');
+        if (workspace.partnerAssignment) throw new ApiError(409, 'Workspace already has a partner assigned');
 
         const eligiblePartners = await prisma.partner.findMany({
             where: getPartnerEligibilityCriteria(),
             include: { assignments: { where: { status: { in: ['ACCEPTED', 'ACTIVE'] } } } },
         });
         if (eligiblePartners.length === 0) {
-            throw Object.assign(new Error('No partners available at this time. Please try again later.'), { statusCode: 404 });
+            throw new ApiError(404, 'No partners available at this time. Please try again later.');
         }
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const bestMatch = await findBestPartner(workspace as unknown as Parameters<typeof findBestPartner>[0], eligiblePartners as any);
         if (!bestMatch) {
-            throw Object.assign(new Error('No suitable partner found for your workspace.'), { statusCode: 404 });
+            throw new ApiError(404, 'No suitable partner found for your workspace.');
         }
 
         const partnerId = (bestMatch.partner as unknown as { id: string }).id;

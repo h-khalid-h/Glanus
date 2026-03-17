@@ -1,3 +1,4 @@
+import { ApiError } from '@/lib/errors';
 /**
  * WorkspaceService — Core workspace lifecycle and activity feed.
  *
@@ -121,7 +122,7 @@ export class WorkspaceService {
 
         // Slug uniqueness — fast-fail before starting the transaction
         const existingSlug = await prisma.workspace.findUnique({ where: { slug: data.slug } });
-        if (existingSlug) throw Object.assign(new Error('Workspace slug already taken'), { statusCode: 409 });
+        if (existingSlug) throw new ApiError(409, 'Workspace slug already taken');
 
         const workspace = await prisma.$transaction(async (tx) => {
             const newWorkspace = await tx.workspace.create({
@@ -180,7 +181,7 @@ export class WorkspaceService {
             },
         });
         if (!workspace) {
-            throw Object.assign(new Error('Workspace not found'), { statusCode: 404 });
+            throw new ApiError(404, 'Workspace not found');
         }
         return workspace;
     }

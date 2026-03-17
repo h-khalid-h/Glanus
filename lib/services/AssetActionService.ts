@@ -1,3 +1,4 @@
+import { ApiError } from '@/lib/errors';
 /**
  * AssetActionService — Dynamic asset action dispatch, execution tracking, and status polling.
  *
@@ -27,7 +28,7 @@ export class AssetActionService {
             },
         });
 
-        if (!asset) throw Object.assign(new Error('Asset not found'), { statusCode: 404 });
+        if (!asset) throw new ApiError(404, 'Asset not found');
 
         if (!asset.categoryId) {
             return { assetId, assetName: asset.name, categoryId: null, categoryName: null, actions: [] };
@@ -53,8 +54,8 @@ export class AssetActionService {
         const asset = await prisma.asset.findUnique({
             where: { id: assetId }, select: { id: true, name: true, categoryId: true },
         });
-        if (!asset) throw Object.assign(new Error('Asset not found'), { statusCode: 404 });
-        if (!asset.categoryId) throw Object.assign(new Error('Asset does not have a dynamic category'), { statusCode: 400 });
+        if (!asset) throw new ApiError(404, 'Asset not found');
+        if (!asset.categoryId) throw new ApiError(400, 'Asset does not have a dynamic category');
 
         const actions = await prisma.assetActionDefinition.findMany({
             where: { categoryId: asset.categoryId, isVisible: true },
@@ -67,7 +68,7 @@ export class AssetActionService {
         });
 
         const action = actions.find((a) => a.slug === actionSlug);
-        if (!action) throw Object.assign(new Error('Action not found'), { statusCode: 404 });
+        if (!action) throw new ApiError(404, 'Action not found');
 
         return { asset: { id: asset.id, name: asset.name }, action, actions };
     }
@@ -84,16 +85,16 @@ export class AssetActionService {
         const asset = await prisma.asset.findUnique({
             where: { id: assetId }, select: { id: true, name: true, categoryId: true },
         });
-        if (!asset) throw Object.assign(new Error('Asset not found'), { statusCode: 404 });
-        if (!asset.categoryId) throw Object.assign(new Error('Asset does not have a dynamic category'), { statusCode: 400 });
+        if (!asset) throw new ApiError(404, 'Asset not found');
+        if (!asset.categoryId) throw new ApiError(400, 'Asset does not have a dynamic category');
 
         const actionDefinition = await prisma.assetActionDefinition.findFirst({
             where: { categoryId: asset.categoryId, slug: actionSlug, isVisible: true },
         });
-        if (!actionDefinition) throw Object.assign(new Error('Action not found'), { statusCode: 404 });
+        if (!actionDefinition) throw new ApiError(404, 'Action not found');
 
         if (actionDefinition.isDestructive && actionDefinition.requiresConfirmation && !data.confirm) {
-            throw Object.assign(new Error('Confirmation required for destructive action'), { statusCode: 400 });
+            throw new ApiError(400, 'Confirmation required for destructive action');
         }
 
         const execution = await prisma.assetActionExecution.create({
@@ -144,7 +145,7 @@ export class AssetActionService {
                 actionDefinition: { select: { name: true, label: true, actionType: true } },
             },
         });
-        if (!execution) throw Object.assign(new Error('Execution not found'), { statusCode: 404 });
+        if (!execution) throw new ApiError(404, 'Execution not found');
         return execution;
     }
 }

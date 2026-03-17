@@ -1,3 +1,4 @@
+import { ApiError } from '@/lib/errors';
 /**
  * RemoteSessionService — WebRTC remote access session lifecycle.
  *
@@ -108,7 +109,7 @@ export class RemoteSessionService {
             },
         });
         if (!asset) {
-            throw Object.assign(new Error('Asset not found or access denied'), { statusCode: 404 });
+            throw new ApiError(404, 'Asset not found or access denied');
         }
 
         // Conflict detection — prevent duplicate active sessions
@@ -116,7 +117,7 @@ export class RemoteSessionService {
             where: { assetId: input.assetId, status: 'ACTIVE' },
         });
         if (activeSession) {
-            throw Object.assign(new Error('An active session already exists for this asset'), { statusCode: 409 });
+            throw new ApiError(409, 'An active session already exists for this asset');
         }
 
         const session = await prisma.remoteSession.create({
@@ -163,7 +164,7 @@ export class RemoteSessionService {
             },
         });
         if (!session) {
-            throw Object.assign(new Error('Session not found'), { statusCode: 404 });
+            throw new ApiError(404, 'Session not found');
         }
         return session;
     }
@@ -241,7 +242,7 @@ export class RemoteSessionService {
             select: { startedAt: true, assetId: true },
         });
         if (!session) {
-            throw Object.assign(new Error('Session not found'), { statusCode: 404 });
+            throw new ApiError(404, 'Session not found');
         }
 
         const duration = Math.floor((Date.now() - new Date(session.startedAt).getTime()) / 1000);

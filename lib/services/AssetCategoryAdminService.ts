@@ -1,3 +1,4 @@
+import { ApiError } from '@/lib/errors';
 /**
  * AssetCategoryAdminService — Manages asset category definitions and their field/action schemas.
  *
@@ -65,13 +66,13 @@ export class AssetCategoryAdminService {
     static async createCategory(data: CreateCategoryInput, userId: string) {
         const slug = data.slug || data.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
         const existing = await prisma.assetCategory.findUnique({ where: { slug } });
-        if (existing) throw Object.assign(new Error('Category slug already exists'), { statusCode: 409 });
+        if (existing) throw new ApiError(409, 'Category slug already exists');
 
         if (data.parentId) {
             const parent = await prisma.assetCategory.findUnique({ where: { id: data.parentId } });
-            if (!parent) throw Object.assign(new Error('Parent category not found'), { statusCode: 404 });
-            if (!parent.allowsChildren) throw Object.assign(new Error('Parent category does not allow children'), { statusCode: 400 });
-            if (parent.assetTypeValue !== data.assetTypeValue) throw Object.assign(new Error('Child category must have same asset type as parent'), { statusCode: 400 });
+            if (!parent) throw new ApiError(404, 'Parent category not found');
+            if (!parent.allowsChildren) throw new ApiError(400, 'Parent category does not allow children');
+            if (parent.assetTypeValue !== data.assetTypeValue) throw new ApiError(400, 'Child category must have same asset type as parent');
         }
 
         const category = await prisma.assetCategory.create({
@@ -108,26 +109,26 @@ export class AssetCategoryAdminService {
                 _count: { select: { assets: true } },
             },
         });
-        if (!category) throw Object.assign(new Error('Category not found'), { statusCode: 404 });
+        if (!category) throw new ApiError(404, 'Category not found');
         return category;
     }
 
     static async updateCategory(id: string, data: UpdateCategoryInput, userId: string) {
         const existing = await prisma.assetCategory.findUnique({ where: { id } });
-        if (!existing) throw Object.assign(new Error('Category not found'), { statusCode: 404 });
+        if (!existing) throw new ApiError(404, 'Category not found');
 
         if (data.slug && data.slug !== existing.slug) {
             const conflict = await prisma.assetCategory.findUnique({ where: { slug: data.slug } });
-            if (conflict) throw Object.assign(new Error('Category slug already exists'), { statusCode: 409 });
+            if (conflict) throw new ApiError(409, 'Category slug already exists');
         }
 
         if (data.parentId !== undefined && data.parentId !== existing.parentId) {
-            if (data.parentId === id) throw Object.assign(new Error('Category cannot be its own parent'), { statusCode: 400 });
+            if (data.parentId === id) throw new ApiError(400, 'Category cannot be its own parent');
             if (data.parentId) {
                 const parent = await prisma.assetCategory.findUnique({ where: { id: data.parentId } });
-                if (!parent) throw Object.assign(new Error('Parent category not found'), { statusCode: 404 });
-                if (!parent.allowsChildren) throw Object.assign(new Error('Parent category does not allow children'), { statusCode: 400 });
-                if (await AssetCategoryAdminService.hasCircularRef(id, data.parentId)) throw Object.assign(new Error('This change would create a circular reference'), { statusCode: 400 });
+                if (!parent) throw new ApiError(404, 'Parent category not found');
+                if (!parent.allowsChildren) throw new ApiError(400, 'Parent category does not allow children');
+                if (await AssetCategoryAdminService.hasCircularRef(id, data.parentId)) throw new ApiError(400, 'This change would create a circular reference');
             }
         }
 
@@ -148,9 +149,9 @@ export class AssetCategoryAdminService {
             where: { id },
             include: { children: true, _count: { select: { assets: true } } },
         });
-        if (!category) throw Object.assign(new Error('Category not found'), { statusCode: 404 });
-        if (category.children.length > 0) throw Object.assign(new Error('Cannot delete category with children. Delete children first.'), { statusCode: 400 });
-        if (category._count.assets > 0) throw Object.assign(new Error('Cannot delete category with assets. Reassign or delete assets first.'), { statusCode: 400 });
+        if (!category) throw new ApiError(404, 'Category not found');
+        if (category.children.length > 0) throw new ApiError(400, 'Cannot delete category with children. Delete children first.');
+        if (category._count.assets > 0) throw new ApiError(400, 'Cannot delete category with assets. Reassign or delete assets first.');
 
         await prisma.assetCategory.delete({ where: { id } });
         await prisma.auditLog.create({
@@ -174,26 +175,26 @@ export class AssetCategoryAdminService {
 
     static async listCategoryFields(categoryId: string) {
         const category = await prisma.assetCategory.findUnique({ where: { id: categoryId } });
-        if (!category) throw Object.assign(new Error('Category not found'), { statusCode: 404 });
+        if (!category) throw new ApiError(404, 'Category not found');
         const fields = await prisma.assetFieldDefinition.findMany({ where: { categoryId }, orderBy: { sortOrder: 'asc' } });
         return { fields, count: fields.length };
     }
 
     static async createCategoryField(categoryId: string, data: CreateFieldInput) {
         const category = await prisma.assetCategory.findUnique({ where: { id: categoryId } });
-        if (!category) throw Object.assign(new Error('Category not found'), { statusCode: 404 });
+        if (!category) throw new ApiError(404, 'Category not found');
         const existing = await prisma.assetFieldDefinition.findUnique({ where: { categoryId_slug: { categoryId, slug: data.slug } } });
-        if (existing) throw Object.assign(new Error('Field with this slug already exists in category'), { statusCode: 409 });
+        if (existing) throw new ApiError(409, 'Field with this slug already exists in category');
         return prisma.assetFieldDefinition.create({ data: { ...data, categoryId, sortOrder: data.sortOrder ?? 0 } });
     }
 
     static async updateField(id: string, data: UpdateFieldInput, userId: string) {
         const existing = await prisma.assetFieldDefinition.findUnique({ where: { id }, select: { categoryId: true, slug: true, name: true } });
-        if (!existing) throw Object.assign(new Error('Field definition not found'), { statusCode: 404 });
+        if (!existing) throw new ApiError(404, 'Field definition not found');
 
         if (data.slug && data.slug !== existing.slug) {
             const conflict = await prisma.assetFieldDefinition.findFirst({ where: { categoryId: existing.categoryId, slug: data.slug, id: { not: id } } });
-            if (conflict) throw Object.assign(new Error('A field with this slug already exists in this category'), { statusCode: 400 });
+            if (conflict) throw new ApiError(400, 'A field with this slug already exists in this category');
         }
 
         const field = await prisma.assetFieldDefinition.update({ where: { id }, data: { ...data, validationRules: data.validationRules as never } });
@@ -205,10 +206,10 @@ export class AssetCategoryAdminService {
 
     static async deleteField(id: string, userId: string) {
         const field = await prisma.assetFieldDefinition.findUnique({ where: { id }, select: { id: true, name: true } });
-        if (!field) throw Object.assign(new Error('Field definition not found'), { statusCode: 404 });
+        if (!field) throw new ApiError(404, 'Field definition not found');
 
         const valueCount = await prisma.assetFieldValue.count({ where: { fieldDefinitionId: id } });
-        if (valueCount > 0) throw Object.assign(new Error(`Cannot delete field definition. ${valueCount} asset(s) have values for this field.`), { statusCode: 400 });
+        if (valueCount > 0) throw new ApiError(400, `Cannot delete field definition. ${valueCount} asset(s) have values for this field.`);
 
         await prisma.assetFieldDefinition.delete({ where: { id } });
         await prisma.auditLog.create({
@@ -223,19 +224,19 @@ export class AssetCategoryAdminService {
 
     static async createCategoryAction(categoryId: string, data: CreateActionInput) {
         const category = await prisma.assetCategory.findUnique({ where: { id: categoryId } });
-        if (!category) throw Object.assign(new Error('Category not found'), { statusCode: 404 });
+        if (!category) throw new ApiError(404, 'Category not found');
         const existing = await prisma.assetActionDefinition.findUnique({ where: { categoryId_slug: { categoryId, slug: data.slug } } });
-        if (existing) throw Object.assign(new Error('Action with this slug already exists in category'), { statusCode: 409 });
+        if (existing) throw new ApiError(409, 'Action with this slug already exists in category');
         return prisma.assetActionDefinition.create({ data: { ...data, categoryId, sortOrder: data.sortOrder ?? 0 } });
     }
 
     static async updateAction(id: string, data: UpdateActionInput) {
         const existing = await prisma.assetActionDefinition.findUnique({ where: { id }, select: { categoryId: true, slug: true } });
-        if (!existing) throw Object.assign(new Error('Action definition not found'), { statusCode: 404 });
+        if (!existing) throw new ApiError(404, 'Action definition not found');
 
         if (data.slug && data.slug !== existing.slug) {
             const conflict = await prisma.assetActionDefinition.findFirst({ where: { categoryId: existing.categoryId, slug: data.slug, id: { not: id } } });
-            if (conflict) throw Object.assign(new Error('An action with this slug already exists in this category'), { statusCode: 400 });
+            if (conflict) throw new ApiError(400, 'An action with this slug already exists in this category');
         }
 
         return prisma.assetActionDefinition.update({ where: { id }, data: { ...data, handlerConfig: data.handlerConfig as never, parameters: data.parameters as never } });
@@ -247,7 +248,7 @@ export class AssetCategoryAdminService {
      */
     static async deleteAction(id: string) {
         const action = await prisma.assetActionDefinition.findUnique({ where: { id }, select: { id: true, name: true } });
-        if (!action) throw Object.assign(new Error('Action definition not found'), { statusCode: 404 });
+        if (!action) throw new ApiError(404, 'Action definition not found');
 
         const executionCount = await prisma.assetActionExecution.count({ where: { actionDefinitionId: id } });
         if (executionCount > 0) {

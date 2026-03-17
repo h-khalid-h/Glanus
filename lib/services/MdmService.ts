@@ -1,3 +1,4 @@
+import { ApiError } from '@/lib/errors';
 /**
  * MdmService — Manages Mobile Device Management (MDM) profiles for workspace endpoints.
  *
@@ -82,7 +83,7 @@ export class MdmService {
         });
 
         if (!existing || existing.workspaceId !== workspaceId) {
-            throw Object.assign(new Error('MDM profile not found'), { statusCode: 404 });
+            throw new ApiError(404, 'MDM profile not found');
         }
 
         return prisma.mdmProfile.update({
@@ -106,7 +107,7 @@ export class MdmService {
         });
 
         if (!existing || existing.workspaceId !== workspaceId) {
-            throw Object.assign(new Error('MDM profile not found'), { statusCode: 404 });
+            throw new ApiError(404, 'MDM profile not found');
         }
 
         return prisma.mdmProfile.delete({
@@ -148,7 +149,7 @@ export class MdmService {
         });
 
         if (!profile || profile.workspaceId !== workspaceId) {
-            throw Object.assign(new Error('MDM profile not found'), { statusCode: 404 });
+            throw new ApiError(404, 'MDM profile not found');
         }
 
         return Promise.all(

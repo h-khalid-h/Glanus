@@ -1,3 +1,4 @@
+import { ApiError } from '@/lib/errors';
 import { prisma } from '@/lib/db';
 import bcrypt from 'bcryptjs';
 import { verifyResetToken, generateResetToken } from '@/lib/auth/password-reset';
@@ -36,7 +37,7 @@ export class AccountService {
             where: { email },
             select: { id: true },
         });
-        if (existing) throw Object.assign(new Error('An account with this email already exists'), { statusCode: 409 });
+        if (existing) throw new ApiError(409, 'An account with this email already exists');
 
         const hashedPassword = await bcrypt.hash(password, 12);
 
@@ -65,11 +66,11 @@ export class AccountService {
      */
     static async resetPassword(token: string, newPassword: string) {
         const result = verifyResetToken(token);
-        if (!result) throw Object.assign(new Error('Invalid or tampered reset link. Please request a new one.'), { statusCode: 400 });
-        if (result.expired) throw Object.assign(new Error('This reset link has expired. Please request a new one.'), { statusCode: 400 });
+        if (!result) throw new ApiError(400, 'Invalid or tampered reset link. Please request a new one.');
+        if (result.expired) throw new ApiError(400, 'This reset link has expired. Please request a new one.');
 
         const user = await prisma.user.findUnique({ where: { id: result.userId } });
-        if (!user) throw Object.assign(new Error('Invalid reset link.'), { statusCode: 400 });
+        if (!user) throw new ApiError(400, 'Invalid reset link.');
 
         const hashedPassword = await bcrypt.hash(newPassword, 12);
         await prisma.user.update({
@@ -119,7 +120,7 @@ export class AccountService {
                 },
             },
         });
-        if (!profile) throw Object.assign(new Error('User not found.'), { statusCode: 404 });
+        if (!profile) throw new ApiError(404, 'User not found.');
         return profile;
     }
 
@@ -128,7 +129,7 @@ export class AccountService {
             const currentUser = await prisma.user.findUnique({ where: { id: userId }, select: { email: true } });
             if (data.email !== currentUser?.email) {
                 const existing = await prisma.user.findUnique({ where: { email: data.email } });
-                if (existing) throw Object.assign(new Error('An account with this email already exists.'), { statusCode: 409 });
+                if (existing) throw new ApiError(409, 'An account with this email already exists.');
             }
         }
 
@@ -144,13 +145,13 @@ export class AccountService {
 
     static async changePassword(userId: string, currentPassword: string, newPassword: string) {
         const userRecord = await prisma.user.findUnique({ where: { id: userId }, select: { password: true } });
-        if (!userRecord) throw Object.assign(new Error('User not found.'), { statusCode: 404 });
+        if (!userRecord) throw new ApiError(404, 'User not found.');
 
         const isValid = await bcrypt.compare(currentPassword, userRecord.password);
-        if (!isValid) throw Object.assign(new Error('Current password is incorrect.'), { statusCode: 401 });
+        if (!isValid) throw new ApiError(401, 'Current password is incorrect.');
 
         const isSame = await bcrypt.compare(newPassword, userRecord.password);
-        if (isSame) throw Object.assign(new Error('New password must be different from the current password.'), { statusCode: 400 });
+        if (isSame) throw new ApiError(400, 'New password must be different from the current password.');
 
         const hashedPassword = await bcrypt.hash(newPassword, 12);
         await prisma.user.update({ where: { id: userId }, data: { password: hashedPassword } });

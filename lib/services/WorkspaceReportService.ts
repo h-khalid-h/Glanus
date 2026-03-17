@@ -1,3 +1,4 @@
+import { ApiError } from '@/lib/errors';
 /**
  * WorkspaceReportService — Generates and schedules workspace analytics reports.
  *
@@ -168,7 +169,7 @@ export class WorkspaceReportService {
             });
         }
 
-        throw Object.assign(new Error(`Unknown report type: ${type}`), { statusCode: 400 });
+        throw new ApiError(400, `Unknown report type: ${type}`);
     }
 
     static async listReportSchedules(workspaceId: string) {
@@ -182,7 +183,7 @@ export class WorkspaceReportService {
         const schedule = await prisma.reportSchedule.findUnique({
             where: { id: scheduleId, workspaceId },
         });
-        if (!schedule) throw Object.assign(new Error('Schedule not found.'), { statusCode: 404 });
+        if (!schedule) throw new ApiError(404, 'Schedule not found.');
         return schedule;
     }
 
@@ -212,7 +213,7 @@ export class WorkspaceReportService {
 
     static async updateReportSchedule(workspaceId: string, userId: string, scheduleId: string, data: ReportScheduleUpdateInput) {
         const existing = await prisma.reportSchedule.findUnique({ where: { id: scheduleId, workspaceId } });
-        if (!existing) throw Object.assign(new Error('Schedule not found.'), { statusCode: 404 });
+        if (!existing) throw new ApiError(404, 'Schedule not found.');
 
         const updated = await prisma.reportSchedule.update({
             where: { id: scheduleId },
@@ -241,7 +242,7 @@ export class WorkspaceReportService {
 
     static async deleteReportSchedule(workspaceId: string, userId: string, scheduleId: string) {
         const existing = await prisma.reportSchedule.findUnique({ where: { id: scheduleId, workspaceId } });
-        if (!existing) throw Object.assign(new Error('Schedule not found.'), { statusCode: 404 });
+        if (!existing) throw new ApiError(404, 'Schedule not found.');
 
         await prisma.reportSchedule.delete({ where: { id: scheduleId } });
 

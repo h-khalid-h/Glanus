@@ -1,3 +1,4 @@
+import { ApiError } from '@/lib/errors';
 /**
  * PartnerExamService — Partner certification exam lifecycle.
  *
@@ -23,27 +24,27 @@ export class PartnerExamService {
             include: { partnerProfile: true },
         });
         if (!dbUser || !dbUser.partnerProfile) {
-            throw Object.assign(new Error('Partner profile not found'), { statusCode: 404 });
+            throw new ApiError(404, 'Partner profile not found');
         }
         const partner = dbUser.partnerProfile;
 
         if (partner.status !== 'ACTIVE' && partner.status !== 'VERIFIED') {
-            throw Object.assign(new Error('Partner must be verified or active to take exams'), { statusCode: 403 });
+            throw new ApiError(403, 'Partner must be verified or active to take exams');
         }
 
         const activeExam = await prisma.partnerExam.findFirst({ where: { partnerId: partner.id, status: 'STARTED' } });
         if (activeExam) {
-            throw Object.assign(new Error('You already have an exam in progress'), { statusCode: 409 });
+            throw new ApiError(409, 'You already have an exam in progress');
         }
 
         const passedExam = await prisma.partnerExam.findFirst({ where: { partnerId: partner.id, level, status: 'PASSED' } });
         if (passedExam && partner.certificationLevel === level) {
-            throw Object.assign(new Error(`You are already certified at ${level} level`), { statusCode: 409 });
+            throw new ApiError(409, `You are already certified at ${level} level`);
         }
 
         const allQuestions = await prisma.examQuestion.findMany({ where: { level, isActive: true } });
         if (allQuestions.length < 20) {
-            throw Object.assign(new Error(`Not enough questions for ${level} exam (need 20, have ${allQuestions.length})`), { statusCode: 500 });
+            throw new ApiError(500, `Not enough questions for ${level} exam (need 20, have ${allQuestions.length})`);
         }
 
         const selectedQuestions = allQuestions.sort(() => Math.random() - 0.5).slice(0, 20);
@@ -80,17 +81,17 @@ export class PartnerExamService {
             include: { partnerProfile: true },
         });
         if (!dbUser || !dbUser.partnerProfile) {
-            throw Object.assign(new Error('Partner profile not found'), { statusCode: 404 });
+            throw new ApiError(404, 'Partner profile not found');
         }
 
         const exam = await prisma.partnerExam.findUnique({ where: { id: examId } });
-        if (!exam) throw Object.assign(new Error('Exam not found'), { statusCode: 404 });
-        if (exam.partnerId !== dbUser.partnerProfile.id) throw Object.assign(new Error('Unauthorized'), { statusCode: 403 });
-        if (exam.status !== 'STARTED') throw Object.assign(new Error('Exam already submitted'), { statusCode: 409 });
+        if (!exam) throw new ApiError(404, 'Exam not found');
+        if (exam.partnerId !== dbUser.partnerProfile.id) throw new ApiError(403, 'Unauthorized');
+        if (exam.status !== 'STARTED') throw new ApiError(409, 'Exam already submitted');
 
         const timeElapsed = Date.now() - exam.startedAt.getTime();
         if (timeElapsed > exam.timeLimit * 60 * 1000) {
-            throw Object.assign(new Error('Exam time limit exceeded'), { statusCode: 400 });
+            throw new ApiError(400, 'Exam time limit exceeded');
         }
 
         const questionIds = exam.questions as string[];
@@ -139,7 +140,7 @@ export class PartnerExamService {
             include: { partnerProfile: true },
         });
         if (!dbUser || !dbUser.partnerProfile) {
-            throw Object.assign(new Error('Partner profile not found'), { statusCode: 404 });
+            throw new ApiError(404, 'Partner profile not found');
         }
         return prisma.partnerExam.findMany({
             where: { partnerId: dbUser.partnerProfile.id },

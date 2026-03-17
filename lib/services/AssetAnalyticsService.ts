@@ -1,3 +1,4 @@
+import { ApiError } from '@/lib/errors';
 /**
  * AssetAnalyticsService — Asset telemetry, schema, and data export.
  *
@@ -29,7 +30,7 @@ export class AssetAnalyticsService {
         const asset = await prisma.asset.findFirst({
             where: { id: assetId, workspace: { members: { some: { userId } } } },
         });
-        if (!asset) throw Object.assign(new Error('Asset not found or access denied'), { statusCode: 404 });
+        if (!asset) throw new ApiError(404, 'Asset not found or access denied');
 
         const metrics = await prisma.agentMetric.findMany({
             where: { assetId, timestamp: { gte: startTime } },
@@ -62,8 +63,8 @@ export class AssetAnalyticsService {
             },
         });
 
-        if (!asset) throw Object.assign(new Error('Asset not found'), { statusCode: 404 });
-        if (!asset.categoryId) throw Object.assign(new Error('Asset does not have a dynamic category assigned'), { statusCode: 400 });
+        if (!asset) throw new ApiError(404, 'Asset not found');
+        if (!asset.categoryId) throw new ApiError(400, 'Asset does not have a dynamic category assigned');
 
         const allFields = await DynamicFieldService.resolveInheritedFields(asset.category!.id);
         const actions = await prisma.assetActionDefinition.findMany({

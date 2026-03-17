@@ -1,3 +1,4 @@
+import { ApiError } from '@/lib/errors';
 /**
  * ScriptService — Script library CRUD, execution history, and manual deploy.
  *
@@ -97,7 +98,7 @@ export class ScriptService {
         });
 
         if (!script) {
-            throw Object.assign(new Error('Script not found in this workspace.'), { statusCode: 404 });
+            throw new ApiError(404, 'Script not found in this workspace.');
         }
 
         return script;
@@ -112,7 +113,7 @@ export class ScriptService {
         });
 
         if (!script) {
-            throw Object.assign(new Error('Script not found.'), { statusCode: 404 });
+            throw new ApiError(404, 'Script not found.');
         }
 
         await prisma.script.delete({
@@ -193,7 +194,7 @@ export class ScriptService {
 
     static async deployScript(workspaceId: string, scriptId: string, userId: string, targetAgentIds: string[]) {
         const script = await prisma.script.findUnique({ where: { id: scriptId, workspaceId } });
-        if (!script) throw Object.assign(new Error('Script template not found.'), { statusCode: 404 });
+        if (!script) throw new ApiError(404, 'Script template not found.');
 
         const targetAgents = await prisma.agentConnection.findMany({
             where: { id: { in: targetAgentIds }, workspaceId, status: 'ONLINE' },
@@ -201,10 +202,7 @@ export class ScriptService {
         });
 
         if (targetAgents.length === 0) {
-            throw Object.assign(
-                new Error('None of the provided agents are currently ONLINE or available in this workspace.'),
-                { statusCode: 400 }
-            );
+            throw new ApiError(400, 'None of the provided agents are currently ONLINE or available in this workspace.');
         }
 
         const executionsData = targetAgents.map((agent) => ({

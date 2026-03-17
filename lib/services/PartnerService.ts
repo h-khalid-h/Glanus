@@ -1,3 +1,4 @@
+import { ApiError } from '@/lib/errors';
 /**
  * PartnerService — Public-facing partner directory and profile management.
  *
@@ -147,7 +148,7 @@ export class PartnerService {
             },
         });
         if (!partner) {
-            throw Object.assign(new Error('Partner not found'), { statusCode: 404 });
+            throw new ApiError(404, 'Partner not found');
         }
         return partner;
     }
@@ -174,7 +175,7 @@ export class PartnerService {
             },
         });
         if (!dbUser || !dbUser.partnerProfile) {
-            throw Object.assign(new Error('Partner profile not found'), { statusCode: 404 });
+            throw new ApiError(404, 'Partner profile not found');
         }
         return dbUser.partnerProfile;
     }
@@ -185,7 +186,7 @@ export class PartnerService {
             include: { partnerProfile: true },
         });
         if (!dbUser || !dbUser.partnerProfile) {
-            throw Object.assign(new Error('Partner profile not found'), { statusCode: 404 });
+            throw new ApiError(404, 'Partner profile not found');
         }
         const updated = await prisma.partner.update({
             where: { id: dbUser.partnerProfile.id },
@@ -204,10 +205,10 @@ export class PartnerService {
             include: { partnerProfile: true },
         });
         if (!dbUser) {
-            throw Object.assign(new Error('User not found'), { statusCode: 404 });
+            throw new ApiError(404, 'User not found');
         }
         if (dbUser.partnerProfile) {
-            throw Object.assign(new Error('You are already registered as a partner'), { statusCode: 409 });
+            throw new ApiError(409, 'You are already registered as a partner');
         }
 
         const partner = await prisma.partner.create({

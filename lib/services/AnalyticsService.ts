@@ -1,3 +1,4 @@
+import { ApiError } from '@/lib/errors';
 import { prisma } from '@/lib/db';
 import { subDays } from 'date-fns';
 
@@ -29,7 +30,7 @@ export class AnalyticsService {
         });
 
         if (!workspace) {
-            throw Object.assign(new Error('Workspace not found'), { statusCode: 404 });
+            throw new ApiError(404, 'Workspace not found');
         }
 
         const thirtyDaysAgo = subDays(new Date(), 30);

@@ -18,19 +18,10 @@ import { Prisma } from '@prisma/client';
 import { ZodError } from 'zod';
 import * as Sentry from '@sentry/nextjs';
 
-// ============================================
-// Custom API Error
-// ============================================
+// Import ApiError from canonical errors module for internal use, and re-export for routes
+import { ApiError } from '@/lib/errors';
+export { ApiError } from '@/lib/errors';
 
-export class ApiError extends Error {
-    public statusCode: number;
-
-    constructor(statusCode: number, message: string) {
-        super(message);
-        this.name = 'ApiError';
-        this.statusCode = statusCode;
-    }
-}
 
 // ============================================
 // Core Auth Functions

@@ -1,3 +1,4 @@
+import { ApiError } from '@/lib/errors';
 /**
  * PartnerEarningsService — Partner revenue dashboard, payout history, and Stripe Connect onboarding.
  *
@@ -24,7 +25,7 @@ export class PartnerEarningsService {
             include: { partnerProfile: true },
         });
         if (!dbUser || !dbUser.partnerProfile) {
-            throw Object.assign(new Error('Partner profile not found'), { statusCode: 404 });
+            throw new ApiError(404, 'Partner profile not found');
         }
         const partner = dbUser.partnerProfile;
 
@@ -77,7 +78,7 @@ export class PartnerEarningsService {
             include: { partnerProfile: true },
         });
         if (!dbUser || !dbUser.partnerProfile) {
-            throw Object.assign(new Error('Partner profile not found'), { statusCode: 404 });
+            throw new ApiError(404, 'Partner profile not found');
         }
 
         const payouts = await prisma.partnerPayout.findMany({
@@ -110,7 +111,7 @@ export class PartnerEarningsService {
             include: { partnerProfile: true },
         });
         if (!dbUser || !dbUser.partnerProfile) {
-            throw Object.assign(new Error('Partner profile not found'), { statusCode: 404 });
+            throw new ApiError(404, 'Partner profile not found');
         }
 
         if (dbUser.partnerProfile.stripeOnboarded) {

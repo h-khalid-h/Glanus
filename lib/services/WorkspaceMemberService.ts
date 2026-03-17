@@ -1,3 +1,4 @@
+import { ApiError } from '@/lib/errors';
 /**
  * WorkspaceMemberService — Workspace membership management.
  *
@@ -24,7 +25,7 @@ export class WorkspaceMemberService {
             where: { id: workspaceId },
             select: { ownerId: true, createdAt: true },
         });
-        if (!workspace) throw Object.assign(new Error('Workspace not found'), { statusCode: 404 });
+        if (!workspace) throw new ApiError(404, 'Workspace not found');
 
         const [members, owner] = await Promise.all([
             prisma.workspaceMember.findMany({
@@ -63,14 +64,14 @@ export class WorkspaceMemberService {
         workspaceName: string,
     ) {
         if (memberId === 'owner') {
-            throw Object.assign(new Error('Cannot change owner role'), { statusCode: 400 });
+            throw new ApiError(400, 'Cannot change owner role');
         }
 
         const targetMember = await prisma.workspaceMember.findUnique({
             where: { id: memberId },
             include: { user: { select: { name: true, email: true } } },
         });
-        if (!targetMember) throw Object.assign(new Error('Member not found'), { statusCode: 404 });
+        if (!targetMember) throw new ApiError(404, 'Member not found');
 
         const oldRole = targetMember.role;
 
@@ -114,14 +115,14 @@ export class WorkspaceMemberService {
         workspaceName: string,
     ) {
         if (memberId === 'owner') {
-            throw Object.assign(new Error('Cannot remove owner from workspace'), { statusCode: 400 });
+            throw new ApiError(400, 'Cannot remove owner from workspace');
         }
 
         const memberToRemove = await prisma.workspaceMember.findUnique({
             where: { id: memberId },
             include: { user: { select: { name: true, email: true } } },
         });
-        if (!memberToRemove) throw Object.assign(new Error('Member not found'), { statusCode: 404 });
+        if (!memberToRemove) throw new ApiError(404, 'Member not found');
 
         await prisma.workspaceMember.delete({ where: { id: memberId } });
 

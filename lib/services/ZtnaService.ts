@@ -1,3 +1,4 @@
+import { ApiError } from '@/lib/errors';
 /**
  * ZtnaService — Zero Trust Network Access policy management.
  *
@@ -46,10 +47,7 @@ export class ZtnaService {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const existingCount = await (prisma as any).ztnaPolicy.count({ where: { workspaceId } });
         if (existingCount > 0) {
-            throw Object.assign(
-                new Error('Only one ZTNA policy object is supported per Workspace. Please update the existing policy instead.'),
-                { statusCode: 400 }
-            );
+            throw new ApiError(400, 'Only one ZTNA policy object is supported per Workspace. Please update the existing policy instead.');
         }
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -61,7 +59,7 @@ export class ZtnaService {
     static async updatePolicy(workspaceId: string, policyId: string, data: { isEnabled?: boolean; ipWhitelist?: string; action?: string }) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const policy = await (prisma as any).ztnaPolicy.findUnique({ where: { id: policyId, workspaceId } });
-        if (!policy) throw Object.assign(new Error('Zero-Trust Network Policy not found'), { statusCode: 404 });
+        if (!policy) throw new ApiError(404, 'Zero-Trust Network Policy not found');
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         return (prisma as any).ztnaPolicy.update({ where: { id: policyId }, data });
@@ -70,7 +68,7 @@ export class ZtnaService {
     static async deletePolicy(workspaceId: string, policyId: string) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const policy = await (prisma as any).ztnaPolicy.findUnique({ where: { id: policyId, workspaceId } });
-        if (!policy) throw Object.assign(new Error('Zero-Trust Network Policy not found'), { statusCode: 404 });
+        if (!policy) throw new ApiError(404, 'Zero-Trust Network Policy not found');
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         await (prisma as any).ztnaPolicy.delete({ where: { id: policyId } });

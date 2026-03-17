@@ -1,3 +1,4 @@
+import { ApiError } from '@/lib/errors';
 import { prisma } from '@/lib/db';
 import { Prisma, $Enums } from '@prisma/client';
 
@@ -48,7 +49,7 @@ export class AssetBulkService {
             where: { id: { in: assetIds }, workspace: { members: { some: { userId } } } },
         });
         if (assets.length !== assetIds.length) {
-            throw Object.assign(new Error('One or more assets not found or access denied'), { statusCode: 404 });
+            throw new ApiError(404, 'One or more assets not found or access denied');
         }
 
         const updateData: { status?: string; location?: string } = {};
@@ -69,14 +70,14 @@ export class AssetBulkService {
     static async bulkAssign(assetIds: string[], assigneeId: string, userId: string) {
         const assignee = await prisma.user.findUnique({ where: { id: assigneeId } });
         if (!assignee) {
-            throw Object.assign(new Error('Assignee not found'), { statusCode: 404 });
+            throw new ApiError(404, 'Assignee not found');
         }
 
         const assets = await prisma.asset.findMany({
             where: { id: { in: assetIds }, deletedAt: null, workspace: { members: { some: { userId } } } },
         });
         if (assets.length !== assetIds.length) {
-            throw Object.assign(new Error('One or more assets not found or access denied'), { statusCode: 400 });
+            throw new ApiError(400, 'One or more assets not found or access denied');
         }
 
         await prisma.$transaction(async (tx) => {
@@ -125,7 +126,7 @@ export class AssetBulkService {
         });
 
         if (assets.length === 0) {
-            throw Object.assign(new Error('No matching assets found in this workspace.'), { statusCode: 400 });
+            throw new ApiError(400, 'No matching assets found in this workspace.');
         }
 
         const validIds = assets.map((a) => a.id);
@@ -134,9 +135,9 @@ export class AssetBulkService {
 
         switch (action) {
             case 'update_status': {
-                if (!payload?.status) throw Object.assign(new Error('status is required for update_status action.'), { statusCode: 400 });
+                if (!payload?.status) throw new ApiError(400, 'status is required for update_status action.');
                 if (!validStatuses.includes(payload.status)) {
-                    throw Object.assign(new Error(`Invalid status. Must be one of: ${validStatuses.join(', ')}`), { statusCode: 400 });
+                    throw new ApiError(400, `Invalid status. Must be one of: ${validStatuses.join(', ')}`);
                 }
                 const result = await prisma.asset.updateMany({
                     where: { id: { in: validIds } },
@@ -151,9 +152,9 @@ export class AssetBulkService {
                 break;
             }
             case 'assign': {
-                if (!payload?.assignedToId) throw Object.assign(new Error('assignedToId is required for assign action.'), { statusCode: 400 });
+                if (!payload?.assignedToId) throw new ApiError(400, 'assignedToId is required for assign action.');
                 const member = await prisma.workspaceMember.findFirst({ where: { workspaceId, userId: payload.assignedToId } });
-                if (!member) throw Object.assign(new Error('Target user is not a member of this workspace.'), { statusCode: 400 });
+                if (!member) throw new ApiError(400, 'Target user is not a member of this workspace.');
                 const result = await prisma.asset.updateMany({ where: { id: { in: validIds } }, data: { assignedToId: payload.assignedToId } });
                 affected = result.count;
                 break;
@@ -194,11 +195,11 @@ export class AssetBulkService {
         const validTypes = Object.values(AssetType) as string[];
 
         const lines = csvText.split(/\r?\n/).filter((l) => l.trim().length > 0);
-        if (lines.length < 2) throw Object.assign(new Error('CSV must have a header row and at least one data row.'), { statusCode: 400 });
+        if (lines.length < 2) throw new ApiError(400, 'CSV must have a header row and at least one data row.');
 
         const header = AssetBulkService._parseCSVLine(lines[0]).map((h) => h.toLowerCase().trim());
         const nameIdx = header.indexOf('name');
-        if (nameIdx === -1) throw Object.assign(new Error('CSV must have a "name" column.'), { statusCode: 400 });
+        if (nameIdx === -1) throw new ApiError(400, 'CSV must have a "name" column.');
 
         const typeIdx = header.indexOf('assettype');
         const statusIdx = header.indexOf('status');

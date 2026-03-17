@@ -1,3 +1,4 @@
+import { ApiError } from '@/lib/errors';
 /**
  * AIService — OpenAI-powered assistant layer for workspace intelligence features.
  *
@@ -124,7 +125,7 @@ export class AIService {
 
     private static getClient(): OpenAI {
         if (!process.env.OPENAI_API_KEY) {
-            throw Object.assign(new Error('AI service not configured'), { statusCode: 503 });
+            throw new ApiError(503, 'AI service not configured');
         }
         if (!AIService._client) {
             AIService._client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -138,7 +139,7 @@ export class AIService {
      */
     static async processCommand(cmd: CommandInput) {
         if (!cmd.input?.trim()) {
-            throw Object.assign(new Error('Command input is required'), { statusCode: 400 });
+            throw new ApiError(400, 'Command input is required');
         }
 
         const client = AIService.getClient();

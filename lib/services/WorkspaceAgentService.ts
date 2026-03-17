@@ -1,3 +1,4 @@
+import { ApiError } from '@/lib/errors';
 /**
  * WorkspaceAgentService — Workspace-scoped RMM agent management and telemetry.
  *
@@ -74,7 +75,7 @@ export class WorkspaceAgentService {
                 installedSoftware: { orderBy: { name: 'asc' } },
             },
         });
-        if (!agent) throw Object.assign(new Error('Agent not found.'), { statusCode: 404 });
+        if (!agent) throw new ApiError(404, 'Agent not found.');
 
         const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
