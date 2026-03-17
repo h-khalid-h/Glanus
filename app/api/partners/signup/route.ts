@@ -34,11 +34,6 @@ export const POST = withErrorHandler(async (request: Request) => {
     const validation = partnerSignupSchema.safeParse(body);
     if (!validation.success) return apiError(400, 'Validation failed', validation.error.errors);
 
-    try {
-        const partner = await PartnerService.applyAsPartner({ ...validation.data, userId: user.id, userEmail: user.email! });
-        return apiSuccess({ partner, message: 'Partner application submitted successfully.' }, undefined, 201);
-    } catch (err: unknown) {
-        const e = err as { statusCode?: number; message?: string };
-        return apiError(e.statusCode || 500, e.message || 'Error');
-    }
+    const partner = await PartnerService.applyAsPartner({ ...validation.data, userId: user.id, userEmail: user.email! });
+    return apiSuccess({ partner, message: 'Partner application submitted successfully.' }, undefined, 201);
 });

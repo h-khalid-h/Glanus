@@ -12,13 +12,8 @@ export const GET = withErrorHandler(async (
     const { id } = await context.params;
     const user = await requireAuth();
 
-    try {
-        const session = await RemoteSessionService.getSessionById(id, user.id);
-        return apiSuccess(session);
-    } catch (err: unknown) {
-        const e = err as { statusCode?: number; message?: string };
-        return apiError(e.statusCode || 500, e.message || 'Error');
-    }
+    const session = await RemoteSessionService.getSessionById(id, user.id);
+    return apiSuccess(session);
 });
 
 // PUT /api/remote/sessions/[id]
@@ -35,13 +30,8 @@ export const PUT = withErrorHandler(async (
         return apiError(400, parsed.error.errors[0].message);
     }
 
-    try {
-        const session = await RemoteSessionService.updateSession(id, user.id, parsed.data as Parameters<typeof RemoteSessionService.updateSession>[2]);
-        return apiSuccess(session);
-    } catch (err: unknown) {
-        const e = err as { statusCode?: number; message?: string };
-        return apiError(e.statusCode || 500, e.message || 'Error');
-    }
+    const session = await RemoteSessionService.updateSession(id, user.id, parsed.data as Parameters<typeof RemoteSessionService.updateSession>[2]);
+    return apiSuccess(session);
 });
 
 // DELETE /api/remote/sessions/[id]
@@ -52,11 +42,6 @@ export const DELETE = withErrorHandler(async (
     const { id } = await context.params;
     const user = await requireAuth();
 
-    try {
-        await RemoteSessionService.endSession(id, user.id);
-        return apiSuccess({ message: 'Session ended successfully' });
-    } catch (err: unknown) {
-        const e = err as { statusCode?: number; message?: string };
-        return apiError(e.statusCode || 500, e.message || 'Error');
-    }
+    await RemoteSessionService.endSession(id, user.id);
+    return apiSuccess({ message: 'Session ended successfully' });
 });

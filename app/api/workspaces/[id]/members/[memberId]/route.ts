@@ -20,15 +20,10 @@ export const PATCH = withErrorHandler(async (
     const validation = updateRoleSchema.safeParse(body);
     if (!validation.success) return apiError(400, 'Validation failed', validation.error.errors);
 
-    try {
-        const member = await WorkspaceMemberService.updateMemberRole(
-            workspaceId, memberId, user.id, validation.data.role, workspace.name,
-        );
-        return apiSuccess({ member });
-    } catch (err: unknown) {
-        const e = err as { statusCode?: number; message?: string };
-        return apiError(e.statusCode || 500, e.message || 'Error');
-    }
+    const member = await WorkspaceMemberService.updateMemberRole(
+        workspaceId, memberId, user.id, validation.data.role, workspace.name,
+    );
+    return apiSuccess({ member });
 });
 
 // DELETE /api/workspaces/[id]/members/[memberId]
@@ -40,11 +35,6 @@ export const DELETE = withErrorHandler(async (
     const user = await requireAuth();
     const { workspace } = await requireWorkspaceRole(workspaceId, user.id, 'ADMIN');
 
-    try {
-        await WorkspaceMemberService.removeMember(workspaceId, memberId, user.id, workspace.name);
-        return apiSuccess({ message: 'Member removed' });
-    } catch (err: unknown) {
-        const e = err as { statusCode?: number; message?: string };
-        return apiError(e.statusCode || 500, e.message || 'Error');
-    }
+    await WorkspaceMemberService.removeMember(workspaceId, memberId, user.id, workspace.name);
+    return apiSuccess({ message: 'Member removed' });
 });

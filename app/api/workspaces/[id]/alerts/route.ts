@@ -1,4 +1,4 @@
-import { apiSuccess, apiError } from '@/lib/api/response';
+import { apiSuccess } from '@/lib/api/response';
 import { NextRequest } from 'next/server';
 import { requireAuth, requireWorkspaceAccess, requireWorkspaceRole, withErrorHandler } from '@/lib/api/withAuth';
 import { z } from 'zod';
@@ -36,11 +36,6 @@ export const POST = withErrorHandler(async (
     await requireWorkspaceRole(workspaceId, user.id, 'ADMIN');
     const body = await request.json();
     const data = alertRuleSchema.parse(body);
-    try {
-        const alertRule = await WorkspaceAlertService.createAlertRule(workspaceId, user.id, data);
-        return apiSuccess(alertRule, undefined, 201);
-    } catch (err: unknown) {
-        const e = err as { statusCode?: number; message?: string };
-        return apiError(e.statusCode || 500, e.message || 'Error');
-    }
+    const alertRule = await WorkspaceAlertService.createAlertRule(workspaceId, user.id, data);
+    return apiSuccess(alertRule, undefined, 201);
 });

@@ -1,4 +1,4 @@
-import { apiSuccess, apiError } from '@/lib/api/response';
+import { apiSuccess } from '@/lib/api/response';
 import { NextRequest } from 'next/server';
 import { requireAuth, withErrorHandler } from '@/lib/api/withAuth';
 import { WorkspaceAuditService } from '@/lib/services/WorkspaceAuditService';
@@ -11,12 +11,7 @@ export const GET = withErrorHandler(async (
     const { id: workspaceId } = await context.params;
     const user = await requireAuth();
 
-    try {
-        await WorkspaceAuditService.verifyAdminAccess(user.id, workspaceId);
-    } catch (err: unknown) {
-        const e = err as { statusCode?: number; message?: string };
-        return apiError(e.statusCode || 403, e.message || 'Access denied');
-    }
+    await WorkspaceAuditService.verifyAdminAccess(user.id, workspaceId);
 
     const { searchParams } = new URL(request.url);
     const result = await WorkspaceAuditService.getLogs(workspaceId, {

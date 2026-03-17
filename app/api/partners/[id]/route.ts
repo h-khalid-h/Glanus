@@ -10,28 +10,23 @@ export const GET = withErrorHandler(async (
 ) => {
     const params = await context.params;
 
-    try {
-        const partner = await PartnerService.getPartnerById(params.id);
+    const partner = await PartnerService.getPartnerById(params.id);
 
-        if (partner.status !== 'ACTIVE') {
-            return apiError(404, 'Partner profile not available');
-        }
-
-        const ratings = partner.assignments
-            .map((a: { rating: number | null }) => a.rating)
-            .filter((r: number | null): r is number => r !== null);
-
-        const ratingBreakdown = {
-            5: ratings.filter((r: number) => r === 5).length,
-            4: ratings.filter((r: number) => r === 4).length,
-            3: ratings.filter((r: number) => r === 3).length,
-            2: ratings.filter((r: number) => r === 2).length,
-            1: ratings.filter((r: number) => r === 1).length,
-        };
-
-        return apiSuccess({ partner, ratingBreakdown });
-    } catch (err: unknown) {
-        const e = err as { statusCode?: number; message?: string };
-        return apiError(e.statusCode || 500, e.message || 'Error');
+    if (partner.status !== 'ACTIVE') {
+        return apiError(404, 'Partner profile not available');
     }
+
+    const ratings = partner.assignments
+        .map((a: { rating: number | null }) => a.rating)
+        .filter((r: number | null): r is number => r !== null);
+
+    const ratingBreakdown = {
+        5: ratings.filter((r: number) => r === 5).length,
+        4: ratings.filter((r: number) => r === 4).length,
+        3: ratings.filter((r: number) => r === 3).length,
+        2: ratings.filter((r: number) => r === 2).length,
+        1: ratings.filter((r: number) => r === 1).length,
+    };
+
+    return apiSuccess({ partner, ratingBreakdown });
 });

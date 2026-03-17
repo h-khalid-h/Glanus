@@ -27,11 +27,6 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
 
     const { name, email, password } = parsed.data;
 
-    try {
-        const user = await AccountService.register(name, email, password);
-        return apiSuccess({ user, message: 'Account created successfully' }, undefined, 201);
-    } catch (err: unknown) {
-        const e = err as { statusCode?: number; message?: string };
-        return apiError(e.statusCode || 500, e.message || 'Registration failed');
-    }
+    const user = await AccountService.register(name, email, password);
+    return apiSuccess({ user, message: 'Account created successfully' }, undefined, 201);
 });

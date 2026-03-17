@@ -20,13 +20,8 @@ const updatePartnerSchema = z.object({
 // GET /api/partners/me
 export const GET = withErrorHandler(async () => {
     const user = await requireAuth();
-    try {
-        const partner = await PartnerService.getMyProfile(user.email!);
-        return apiSuccess({ partner });
-    } catch (err: unknown) {
-        const e = err as { statusCode?: number; message?: string };
-        return apiError(e.statusCode || 500, e.message || 'Error');
-    }
+    const partner = await PartnerService.getMyProfile(user.email!);
+    return apiSuccess({ partner });
 });
 
 // PATCH /api/partners/me
@@ -36,11 +31,6 @@ export const PATCH = withErrorHandler(async (request: Request) => {
     const validation = updatePartnerSchema.safeParse(body);
     if (!validation.success) return apiError(400, 'Validation failed', validation.error.errors);
 
-    try {
-        const partner = await PartnerService.updateMyProfile(user.email!, validation.data);
-        return apiSuccess({ partner });
-    } catch (err: unknown) {
-        const e = err as { statusCode?: number; message?: string };
-        return apiError(e.statusCode || 500, e.message || 'Error');
-    }
+    const partner = await PartnerService.updateMyProfile(user.email!, validation.data);
+    return apiSuccess({ partner });
 });

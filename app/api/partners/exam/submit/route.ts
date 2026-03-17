@@ -20,11 +20,6 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     const validation = submitExamSchema.safeParse(body);
     if (!validation.success) return apiError(400, 'Validation failed', validation.error.errors);
 
-    try {
-        const result = await PartnerExamService.submitExam(user.email!, validation.data.examId, validation.data.answers);
-        return apiSuccess(result);
-    } catch (err: unknown) {
-        const e = err as { statusCode?: number; message?: string };
-        return apiError(e.statusCode || 500, e.message || 'Error');
-    }
+    const result = await PartnerExamService.submitExam(user.email!, validation.data.examId, validation.data.answers);
+    return apiSuccess(result);
 });

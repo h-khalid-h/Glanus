@@ -1,4 +1,4 @@
-import { apiSuccess, apiError } from '@/lib/api/response';
+import { apiSuccess } from '@/lib/api/response';
 import { NextRequest } from 'next/server';
 import { requireAuth, requireWorkspaceAccess, requireWorkspaceRole, withErrorHandler } from '@/lib/api/withAuth';
 import { z } from 'zod';
@@ -23,13 +23,8 @@ export const GET = withErrorHandler(async (
     const { id: workspaceId, ruleId } = await context.params;
     const user = await requireAuth();
     await requireWorkspaceRole(workspaceId, user.id, 'ADMIN');
-    try {
-        const alertRule = await WorkspaceAlertService.getAlertRule(workspaceId, ruleId);
-        return apiSuccess(alertRule);
-    } catch (err: unknown) {
-        const e = err as { statusCode?: number; message?: string };
-        return apiError(e.statusCode || 500, e.message || 'Error');
-    }
+    const alertRule = await WorkspaceAlertService.getAlertRule(workspaceId, ruleId);
+    return apiSuccess(alertRule);
 });
 
 // PATCH /api/workspaces/[id]/alerts/[ruleId]
@@ -40,15 +35,9 @@ export const PATCH = withErrorHandler(async (
     const { id: workspaceId, ruleId } = await context.params;
     const user = await requireAuth();
     await requireWorkspaceRole(workspaceId, user.id, 'ADMIN');
-    const body = await request.json();
-    const data = updateAlertRuleSchema.parse(body);
-    try {
-        const alertRule = await WorkspaceAlertService.updateAlertRule(workspaceId, ruleId, user.id, data);
-        return apiSuccess(alertRule);
-    } catch (err: unknown) {
-        const e = err as { statusCode?: number; message?: string };
-        return apiError(e.statusCode || 500, e.message || 'Error');
-    }
+    const data = updateAlertRuleSchema.parse(await request.json());
+    const alertRule = await WorkspaceAlertService.updateAlertRule(workspaceId, ruleId, user.id, data);
+    return apiSuccess(alertRule);
 });
 
 // DELETE /api/workspaces/[id]/alerts/[ruleId]
@@ -59,16 +48,11 @@ export const DELETE = withErrorHandler(async (
     const { id: workspaceId, ruleId } = await context.params;
     const user = await requireAuth();
     await requireWorkspaceRole(workspaceId, user.id, 'ADMIN');
-    try {
-        await WorkspaceAlertService.deleteAlertRule(workspaceId, ruleId, user.id);
-        return apiSuccess({ message: 'Alert rule deleted successfully' });
-    } catch (err: unknown) {
-        const e = err as { statusCode?: number; message?: string };
-        return apiError(e.statusCode || 500, e.message || 'Error');
-    }
+    await WorkspaceAlertService.deleteAlertRule(workspaceId, ruleId, user.id);
+    return apiSuccess({ message: 'Alert rule deleted successfully' });
 });
 
-// GET /api/workspaces/[id]/alerts (also handles access-level check for non-admins)
+// HEAD /api/workspaces/[id]/alerts/[ruleId] — lightweight auth check
 export const HEAD = withErrorHandler(async (
     _request: NextRequest,
     context: { params: Promise<{ id: string; ruleId: string }> }
@@ -76,5 +60,5 @@ export const HEAD = withErrorHandler(async (
     const { id: workspaceId } = await context.params;
     const user = await requireAuth();
     await requireWorkspaceAccess(workspaceId, user.id);
-    return apiSuccess({});
+    return apiSuccess({ authorized: true });
 });

@@ -32,13 +32,8 @@ export const POST = withErrorHandler(async (
     await requireWorkspaceRole(workspaceId, user.id, 'ADMIN');
     const body = await request.json();
     const data = webhookSchema.parse(body);
-    try {
-        const { webhook, created } = await WorkspaceAlertService.upsertWebhook(workspaceId, user.id, data);
-        return apiSuccess(webhook, undefined, created ? 201 : 200);
-    } catch (err: unknown) {
-        const e = err as { statusCode?: number; message?: string };
-        return apiError(e.statusCode || 500, e.message || 'Error');
-    }
+    const { webhook, created } = await WorkspaceAlertService.upsertWebhook(workspaceId, user.id, data);
+    return apiSuccess(webhook, undefined, created ? 201 : 200);
 });
 
 // DELETE /api/workspaces/[id]/alerts/webhook?webhookId=...
@@ -51,11 +46,6 @@ export const DELETE = withErrorHandler(async (
     await requireWorkspaceRole(workspaceId, user.id, 'ADMIN');
     const webhookId = new URL(request.url).searchParams.get('webhookId');
     if (!webhookId) return apiError(400, 'Webhook ID is required');
-    try {
-        await WorkspaceAlertService.deleteWebhook(workspaceId, webhookId, user.id);
-        return apiDeleted();
-    } catch (err: unknown) {
-        const e = err as { statusCode?: number; message?: string };
-        return apiError(e.statusCode || 500, e.message || 'Error');
-    }
+    await WorkspaceAlertService.deleteWebhook(workspaceId, webhookId, user.id);
+    return apiDeleted();
 });

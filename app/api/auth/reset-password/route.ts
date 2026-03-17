@@ -25,11 +25,6 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     const parsed = resetPasswordSchema.safeParse(body);
     if (!parsed.success) return apiError(400, parsed.error.errors[0].message);
 
-    try {
-        await AccountService.resetPassword(parsed.data.token, parsed.data.password);
-        return apiSuccess({ message: 'Password has been reset successfully. You can now sign in.' });
-    } catch (err: unknown) {
-        const e = err as { statusCode?: number; message?: string };
-        return apiError(e.statusCode || 400, e.message || 'Reset failed');
-    }
+    await AccountService.resetPassword(parsed.data.token, parsed.data.password);
+    return apiSuccess({ message: 'Password has been reset successfully. You can now sign in.' });
 });

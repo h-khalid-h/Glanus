@@ -12,11 +12,6 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     const parsed = bulkAssignSchema.safeParse(body);
     if (!parsed.success) return apiError(400, parsed.error.errors[0].message);
 
-    try {
-        const result = await AssetBulkService.bulkAssign(parsed.data.assetIds, parsed.data.userId, user.id);
-        return apiSuccess(result);
-    } catch (err: unknown) {
-        const e = err as { statusCode?: number; message?: string };
-        return apiError(e.statusCode || 500, e.message || 'Error');
-    }
+    const result = await AssetBulkService.bulkAssign(parsed.data.assetIds, parsed.data.userId, user.id);
+    return apiSuccess(result);
 });
