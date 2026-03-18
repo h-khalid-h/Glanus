@@ -75,7 +75,8 @@ export class AlertEvaluator {
         if (agents.length === 0) return triggers;
 
         // ── Batch metrics: 1 SELECT instead of R×A SELECTs ────────────────────
-        const maxDuration = rules.reduce((max, r) => Math.max(max, r.duration || 0), 0);
+        // Use at least a 5-minute window so zero-duration rules still have recent data
+        const maxDuration = Math.max(rules.reduce((max, r) => Math.max(max, r.duration || 0), 0), 5);
         const metricsStartTime = new Date();
         metricsStartTime.setMinutes(metricsStartTime.getMinutes() - maxDuration);
 

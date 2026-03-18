@@ -33,10 +33,7 @@ export async function validateScriptPath(
     config: ScriptSecurityConfig = DEFAULT_CONFIG
 ): Promise<{ valid: boolean; error?: string; resolvedPath?: string }> {
     try {
-        // Resolve to absolute path
-        const resolvedPath = path.resolve(scriptPath);
-
-        // Check for path traversal attempts
+        // Check for path traversal attempts before resolution
         if (scriptPath.includes('..')) {
             return {
                 valid: false,
@@ -44,20 +41,10 @@ export async function validateScriptPath(
             };
         }
 
-        // Check if path is within allowed directories
-        const isAllowed = config.allowedDirectories.some((allowedDir) => {
-            const resolvedAllowedDir = path.resolve(allowedDir);
-            return resolvedPath.startsWith(resolvedAllowedDir);
-        });
+        // Resolve to absolute path
+        const resolvedPath = path.resolve(scriptPath);
 
-        if (!isAllowed) {
-            return {
-                valid: false,
-                error: `Script must be in one of the allowed directories: ${config.allowedDirectories.join(', ')}`,
-            };
-        }
-
-        // Check if file exists
+        // Check if file exists before realpath (realpath requires the file to exist)
         try {
             await fs.access(resolvedPath, fs.constants.F_OK);
         } catch {
@@ -67,10 +54,27 @@ export async function validateScriptPath(
             };
         }
 
+        // Resolve symlinks to get the true filesystem path, preventing
+        // symlink-based escapes from allowed directories
+        const realPath = await fs.realpath(resolvedPath);
+
+        // Check if the real path (after resolving symlinks) is within allowed directories
+        const isAllowed = config.allowedDirectories.some((allowedDir) => {
+            const resolvedAllowedDir = path.resolve(allowedDir);
+            return realPath.startsWith(resolvedAllowedDir + path.sep) || realPath === resolvedAllowedDir;
+        });
+
+        if (!isAllowed) {
+            return {
+                valid: false,
+                error: `Script must be in one of the allowed directories: ${config.allowedDirectories.join(', ')}`,
+            };
+        }
+
         // Check if file is executable (on Unix systems)
         if (process.platform !== 'win32') {
             try {
-                await fs.access(resolvedPath, fs.constants.X_OK);
+                await fs.access(realPath, fs.constants.X_OK);
             } catch {
                 // Not executable, but we can still run it with an interpreter
                 // This is not necessarily an error
@@ -79,7 +83,7 @@ export async function validateScriptPath(
 
         return {
             valid: true,
-            resolvedPath,
+            resolvedPath: realPath,
         };
     } catch (error: unknown) {
         return {

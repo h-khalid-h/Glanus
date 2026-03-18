@@ -265,7 +265,7 @@ export async function buildRiskProfile(
         return sum + (riskValue * f.weight);
     }, 0);
 
-    const riskScore = Math.round(weightedRisk / totalWeight);
+    const riskScore = totalWeight > 0 ? Math.round(weightedRisk / totalWeight) : 50;
 
     // Trend: compare agent node health to determine direction
     const agentNode = graph.nodes.find(

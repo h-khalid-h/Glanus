@@ -311,6 +311,10 @@ export async function processRecommendation(
 
     const status = consequence.requiresApproval ? 'pending' : 'executing';
 
+    // Persist cooldown timestamp so subsequent triggers are rate-limited
+    matchingRule.lastTriggeredAt = new Date();
+    await saveRule(workspaceId, matchingRule);
+
     // Persist to PostgreSQL Action Queue
     const dbItem = await prisma.actionQueueItem.create({
         data: {

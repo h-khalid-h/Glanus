@@ -158,16 +158,23 @@ export class ScriptScheduleService {
                 }
 
                 let nextRunAt: Date | null = null;
+                let disableSchedule = false;
                 try {
                     const interval = CronExpressionParser.parse(schedule.cronExpression, { currentDate: now });
                     nextRunAt = interval.next().toDate();
                 } catch (err) {
-                    logError(`[SERVICE] Invalid cron expression for schedule ${schedule.id}: ${schedule.cronExpression}`, err);
+                    logError(`[SERVICE] Invalid cron expression for schedule ${schedule.id}: ${schedule.cronExpression} — disabling schedule`, err);
+                    disableSchedule = true;
                 }
 
                 await prisma.scriptSchedule.update({
                     where: { id: schedule.id },
-                    data: { lastRunAt: now, nextRunAt, runCount: { increment: 1 } },
+                    data: {
+                        lastRunAt: now,
+                        nextRunAt,
+                        runCount: { increment: 1 },
+                        ...(disableSchedule ? { enabled: false } : {}),
+                    },
                 });
 
                 schedulesProcessed++;

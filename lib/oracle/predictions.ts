@@ -91,7 +91,11 @@ export async function forecastFailures(workspaceId: string): Promise<FailureFore
             if (trend.length < 3) continue; // Not enough data
 
             // Linear regression to predict trend
-            const prediction = linearExtrapolation(trend.map(t => t.value), thresholds[metric]);
+            const prediction = linearExtrapolation(
+                trend.map(t => t.value),
+                thresholds[metric],
+                trend.map(t => t.timestamp),
+            );
             if (!prediction) continue;
 
             forecasts.push({
@@ -141,7 +145,7 @@ export async function getCapacityIntelligence(workspaceId: string): Promise<Capa
     const recommendations: string[] = [];
 
     // Assets capacity
-    const maxAssets = sub?.maxAssets ?? 50;
+    const maxAssets = sub?.maxAssets || 50;
     const assetPercent = Math.round((workspace._count.assets / maxAssets) * 100);
     resources.push({
         resource: 'Assets',
@@ -253,6 +257,7 @@ export async function getSLOStatus(workspaceId: string): Promise<SLOStatus[]> {
 export function linearExtrapolation(
     values: number[],
     threshold: number,
+    timestamps?: Date[],
 ): { predictedValue: number; timeToThresholdMs: number; confidence: number } | null {
     if (values.length < 3) return null;
 
@@ -282,9 +287,19 @@ export function linearExtrapolation(
     const stepsToThreshold = targetStep - (n - 1);
     if (stepsToThreshold <= 0) return null;
 
-    // Assume ~1 hour per step (based on metric collection interval)
-    const hoursToThreshold = stepsToThreshold;
-    const timeToThresholdMs = hoursToThreshold * 60 * 60 * 1000;
+    // Compute actual interval per step from timestamps if available,
+    // otherwise fall back to estimating from the 24h window and point count
+    let msPerStep: number;
+    if (timestamps && timestamps.length >= 2) {
+        const totalSpanMs = timestamps[timestamps.length - 1].getTime() - timestamps[0].getTime();
+        msPerStep = totalSpanMs / (timestamps.length - 1);
+    } else {
+        // Fallback: assume data spans 24 hours
+        msPerStep = (24 * 60 * 60 * 1000) / Math.max(n - 1, 1);
+    }
+
+    const timeToThresholdMs = stepsToThreshold * msPerStep;
+    const hoursToThreshold = timeToThresholdMs / (60 * 60 * 1000);
 
     // Confidence decreases with prediction distance
     const confidence = Math.max(0.2, Math.min(0.95, 1 - (hoursToThreshold / 168))); // 168h = 1 week
