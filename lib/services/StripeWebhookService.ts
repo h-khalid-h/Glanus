@@ -87,8 +87,9 @@ export class StripeWebhookService {
                 plan: plan as never, // Prisma enum
                 status: (statusMap[subscription.status] || 'ACTIVE') as never,
                 stripeSubscriptionId: subscription.id,
+                // Stripe SDK v20: current_period_end is on the subscription object at runtime
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                currentPeriodEnd: new Date((subscription as any).current_period_end * 1000),
+                currentPeriodEnd: new Date(((subscription as any).current_period_end as number) * 1000),
             },
         });
 
@@ -105,8 +106,9 @@ export class StripeWebhookService {
                 plan: 'FREE',
                 status: 'CANCELED',
                 stripeSubscriptionId: null,
+                // Stripe SDK v20: current_period_end is on the subscription object at runtime
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                currentPeriodEnd: new Date((subscription as any).current_period_end * 1000),
+                currentPeriodEnd: new Date(((subscription as any).current_period_end as number) * 1000),
                 maxAssets: 5,
                 maxAICreditsPerMonth: 100,
                 maxStorageMB: 1024,
@@ -117,8 +119,10 @@ export class StripeWebhookService {
     }
 
     static async handlePaymentSucceeded(invoice: Stripe.Invoice): Promise<void> {
+        // Stripe SDK v20: invoice.subscription is string|Subscription at runtime but may not be
+        // directly typed on Stripe.Invoice — using as-any is the established workaround
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const subscriptionId = (invoice as any).subscription as string;
+        const subscriptionId = (invoice as any).subscription as string | null;
         if (!subscriptionId) return;
 
         const sub = await prisma.subscription.findFirst({
@@ -135,8 +139,10 @@ export class StripeWebhookService {
     }
 
     static async handlePaymentFailed(invoice: Stripe.Invoice): Promise<void> {
+        // Stripe SDK v20: invoice.subscription is string|Subscription at runtime but may not be
+        // directly typed on Stripe.Invoice — using as-any is the established workaround
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const subscriptionId = (invoice as any).subscription as string;
+        const subscriptionId = (invoice as any).subscription as string | null;
         if (!subscriptionId) return;
 
         const sub = await prisma.subscription.findFirst({
