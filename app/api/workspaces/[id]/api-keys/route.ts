@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { requireAuth, requireWorkspaceRole, withErrorHandler, ApiError } from '@/lib/api/withAuth';
 import { apiSuccess } from '@/lib/api/response';
+import { withRateLimit } from '@/lib/security/rateLimit';
 import { z } from 'zod';
 import { WorkspaceApiKeyService } from '@/lib/services/WorkspaceApiKeyService';
 
@@ -31,6 +32,9 @@ export const POST = withErrorHandler(async (
     const user = await requireAuth();
     await requireWorkspaceRole(workspaceId, user.id, 'ADMIN');
 
+    const rateLimitResponse = await withRateLimit(request, 'strict-api');
+    if (rateLimitResponse) return rateLimitResponse;
+
     const data = createKeySchema.parse(await request.json());
     const key = await WorkspaceApiKeyService.createApiKey(workspaceId, user.id, data);
     return apiSuccess({ key }, { message: 'API key generated. Copy the key now — it will not be shown again.' }, 201);
@@ -44,6 +48,9 @@ export const DELETE = withErrorHandler(async (
     const { id: workspaceId } = await context.params;
     const user = await requireAuth();
     await requireWorkspaceRole(workspaceId, user.id, 'ADMIN');
+
+    const rateLimitResponse = await withRateLimit(request, 'api');
+    if (rateLimitResponse) return rateLimitResponse;
 
     const url = new URL(request.url);
     const keyId = url.searchParams.get('keyId');
