@@ -67,8 +67,8 @@ export class WorkspaceMemberService {
             throw new ApiError(400, 'Cannot change owner role');
         }
 
-        const targetMember = await prisma.workspaceMember.findUnique({
-            where: { id: memberId },
+        const targetMember = await prisma.workspaceMember.findFirst({
+            where: { id: memberId, workspaceId },
             include: { user: { select: { name: true, email: true } } },
         });
         if (!targetMember) throw new ApiError(404, 'Member not found');
@@ -118,8 +118,8 @@ export class WorkspaceMemberService {
             throw new ApiError(400, 'Cannot remove owner from workspace');
         }
 
-        const memberToRemove = await prisma.workspaceMember.findUnique({
-            where: { id: memberId },
+        const memberToRemove = await prisma.workspaceMember.findFirst({
+            where: { id: memberId, workspaceId },
             include: { user: { select: { name: true, email: true } } },
         });
         if (!memberToRemove) throw new ApiError(404, 'Member not found');

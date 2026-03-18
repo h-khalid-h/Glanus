@@ -71,7 +71,9 @@ export class WorkspacePartnerService {
             select: { rating: true },
         });
         const totalRatings = allRatings.length;
-        const averageRating = allRatings.reduce((sum: number, r) => sum + (r.rating || 0), 0) / totalRatings;
+        const averageRating = totalRatings > 0
+            ? allRatings.reduce((sum: number, r) => sum + (r.rating || 0), 0) / totalRatings
+            : data.rating;
 
         await prisma.partner.update({
             where: { id: assignment.partnerId },

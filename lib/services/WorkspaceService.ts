@@ -98,14 +98,14 @@ export class WorkspaceService {
                 subscription: {
                     select: { plan: true, status: true, maxAssets: true, aiCreditsUsed: true, maxAICreditsPerMonth: true },
                 },
-                members: { select: { id: true, role: true } },
+                members: { select: { id: true, userId: true, role: true } },
                 _count: { select: { assets: true, members: true } },
             },
             orderBy: { createdAt: 'desc' },
         });
 
         return workspaces.map((workspace) => {
-            const membership = workspace.members.find((m) => m.id === userId);
+            const membership = workspace.members.find((m) => m.userId === userId);
             const isOwner = workspace.ownerId === userId;
             return { ...workspace, userRole: isOwner ? 'OWNER' : (membership?.role || 'VIEWER') };
         });

@@ -48,7 +48,8 @@ export class InvitationService {
         workspaceName: string,
         data: InviteInput,
     ) {
-        const { email, role } = data;
+        const { role } = data;
+        const email = data.email.toLowerCase().trim();
 
         const existingUser = await prisma.user.findUnique({ where: { email } });
         if (existingUser) {

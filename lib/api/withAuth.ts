@@ -205,7 +205,7 @@ export function withErrorHandler<T extends unknown[]>(
                 if (error.code === 'P2025') {
                     return apiError(404, 'Resource not found');
                 }
-                return apiError(400, error.message || 'Database error');
+                return apiError(400, 'Database request error');
             }
 
             // Report unexpected errors to Sentry for production monitoring

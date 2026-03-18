@@ -492,6 +492,7 @@ export class AssetService {
 
         await prisma.auditLog.create({
             data: {
+                workspaceId: existingAsset.workspaceId,
                 action: 'ASSET_UPDATED',
                 resourceType: 'Asset',
                 resourceId: asset.id,
@@ -528,6 +529,7 @@ export class AssetService {
 
         await prisma.auditLog.create({
             data: {
+                workspaceId: existingAsset.workspaceId,
                 action: 'ASSET_DELETED',
                 resourceType: 'Asset',
                 resourceId: asset.id,
