@@ -2,7 +2,7 @@
 import { ErrorState } from '@/components/ui/EmptyState';
 import { csrfFetch } from '@/lib/api/csrfFetch';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/lib/toast';
 
@@ -56,20 +56,36 @@ export default function CertificationCenterPage() {
     const [exam, setExam] = useState<Exam | null>(null);
     const [questions, setQuestions] = useState<Question[]>([]);
     const [answers, setAnswers] = useState<Record<string, number>>({});
+    const answersRef = useRef(answers);
+    answersRef.current = answers;
     const [timeRemaining, setTimeRemaining] = useState<number>(0);
     const [submitting, setSubmitting] = useState(false);
 
     // Results state
     const [result, setResult] = useState<ExamResult | null>(null);
 
-    // Timer
+    // Timer — uses answersRef to avoid stale closure when auto-submitting
     useEffect(() => {
         if (exam && timeRemaining > 0) {
             const timer = setInterval(() => {
                 setTimeRemaining((t) => {
                     if (t <= 1) {
-                        // Time's up - auto-submit
-                        handleSubmit();
+                        // Time's up - auto-submit with latest answers via ref
+                        (async () => {
+                            try {
+                                const res = await csrfFetch('/api/partners/exam/submit', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ examId: exam.id, answers: answersRef.current }),
+                                });
+                                const data = await res.json();
+                                if (!res.ok) throw new Error(data.error);
+                                setResult(data);
+                                setView('results');
+                            } catch (err: unknown) {
+                                showError('Error', err instanceof Error ? err.message : 'Auto-submit failed');
+                            }
+                        })();
                         return 0;
                     }
                     return t - 1;
@@ -78,7 +94,7 @@ export default function CertificationCenterPage() {
 
             return () => clearInterval(timer);
         }
-    }, [exam, timeRemaining]);
+    }, [exam, timeRemaining, showError]);
 
     const startExam = async (level: string) => {
         try {
@@ -413,5 +429,6 @@ export default function CertificationCenterPage() {
         );
     }
 
-    return null;
+    // Fallback for edge cases (e.g., exam view with no questions loaded)
+    return <ErrorState title="Something went wrong" description="Please try reloading the page." onRetry={() => { setView('select'); setExam(null); setQuestions([]); }} />;
 }

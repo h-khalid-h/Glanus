@@ -127,16 +127,16 @@ export default function MemberList({ workspaceId }: { workspaceId: string }) {
                 onCancel={() => setConfirmState({ open: false, memberId: null })}
             />
             <div className="bg-slate-900/50 backdrop-blur-sm rounded-xl shadow-sm border border-slate-800 overflow-hidden">
-                <div className="px-6 py-4 border-b border-slate-200 flex justify-between items-center">
+                <div className="px-6 py-4 border-b border-slate-800 flex justify-between items-center">
                     <h3 className="text-lg font-medium text-white">Team Members</h3>
                     <span className="text-sm text-slate-500">{members.length} members</span>
                 </div>
 
                 <div className="divide-y divide-slate-800">
                     {members.map((member) => (
-                        <div key={member.id} className="px-6 py-4 flex items-center justify-between hover:bg-slate-800/40/50 transition-colors">
+                        <div key={member.id} className="px-6 py-4 flex items-center justify-between hover:bg-slate-800/50 transition-colors">
                             <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-full bg-nerve/15/30 flex items-center justify-center text-nerve font-medium text-sm">
+                                <div className="w-10 h-10 rounded-full bg-nerve/15 flex items-center justify-center text-nerve font-medium text-sm">
                                     {member.user.name ? member.user.name.charAt(0).toUpperCase() : member.user.email.charAt(0).toUpperCase()}
                                 </div>
                                 <div>
@@ -159,7 +159,7 @@ export default function MemberList({ workspaceId }: { workspaceId: string }) {
                                     <div className="relative" ref={openMenuId === member.id ? menuRef : undefined}>
                                         <button type="button"
                                             onClick={() => setOpenMenuId(openMenuId === member.id ? null : member.id)}
-                                            className="p-1 rounded-md hover:bg-slate-800 text-slate-400 hover:text-slate-600 transition-colors"
+                                            className="p-1 rounded-md hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-colors"
                                             aria-expanded={openMenuId === member.id}
                                             aria-haspopup="true"
                                         >

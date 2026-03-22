@@ -155,7 +155,7 @@ function PartnerDashboardContent() {
                             }`}>
                             {partner.status}
                         </span>
-                        <span className="px-3 py-1 rounded-full text-sm font-semibold bg-purple-100 text-purple-800">
+                        <span className="px-3 py-1 rounded-full text-sm font-semibold bg-purple-500/15 text-purple-400">
                             {partner.certificationLevel}
                         </span>
                         {partner.averageRating && (

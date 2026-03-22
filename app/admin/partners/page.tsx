@@ -180,14 +180,14 @@ export default function AdminPartnersPage() {
                                                 <span className={`px-2 py-1 rounded-full text-xs font-semibold ${partner.status === 'ACTIVE' ? 'bg-health-good/15 text-health-good' :
                                                     partner.status === 'VERIFIED' ? 'bg-nerve/10 text-nerve' :
                                                         partner.status === 'PENDING' ? 'bg-health-warn/15 text-health-warn' :
-                                                            partner.status === 'SUSPENDED' ? 'bg-orange-100 text-orange-800' :
+                                                            partner.status === 'SUSPENDED' ? 'bg-orange-500/15 text-orange-400' :
                                                                 'bg-health-critical/15 text-health-critical'
                                                     }`}>
                                                     {partner.status}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4">
-                                                <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded text-xs font-semibold">
+                                                <span className="px-2 py-1 bg-purple-500/15 text-purple-400 rounded text-xs font-semibold">
                                                     {partner.certificationLevel}
                                                 </span>
                                             </td>

@@ -36,7 +36,7 @@ function SoftwareInventoryContent() {
             const res = await csrfFetch(`/api/workspaces/${workspaceId}/software`);
             if (!res.ok) throw new Error('Failed to load software inventory');
             const data = await res.json();
-            setSoftware(data.data.software || []);
+            setSoftware(data.data?.software || []);
         } catch (err: unknown) {
             setError(err instanceof Error ? err.message : 'An unexpected error occurred');
             showError('Load Error', 'Could not fetch workspace software inventory.');

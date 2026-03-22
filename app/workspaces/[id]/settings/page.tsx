@@ -644,7 +644,19 @@ export default function WorkspaceSettingsPage() {
                         </div>
 
                         <div className="mt-8 flex justify-end">
-                            <button type="button" onClick={() => toastSuccess('Preferences Saved', 'Notification preferences updated.')} className="px-6 py-2.5 bg-nerve hover:brightness-110 text-white text-sm font-medium rounded-lg transition-all">
+                            <button type="button" onClick={async () => {
+                                try {
+                                    const res = await csrfFetch(`/api/workspaces/${workspaceId}/notifications/preferences`, {
+                                        method: 'PUT',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ emailNotifs, webhookNotifs, alertSeverityFilter }),
+                                    });
+                                    if (!res.ok) throw new Error('Failed to save');
+                                    toastSuccess('Preferences Saved', 'Notification preferences updated.');
+                                } catch {
+                                    toastError('Save Failed', 'Could not save notification preferences.');
+                                }
+                            }} className="px-6 py-2.5 bg-nerve hover:brightness-110 text-white text-sm font-medium rounded-lg transition-all">
                                 Save Preferences
                             </button>
                         </div>

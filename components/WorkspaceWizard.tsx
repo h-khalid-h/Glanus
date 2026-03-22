@@ -106,7 +106,7 @@ export default function WorkspaceWizard({ onComplete, showSampleDataOption = fal
     return (
         <div className="bg-slate-900/50 backdrop-blur-sm rounded-2xl shadow-xl border border-slate-800 overflow-hidden max-w-4xl w-full mx-auto">
             {/* Progress Header */}
-            <div className="bg-slate-50 border-b border-slate-200 p-6">
+            <div className="bg-slate-800/50 border-b border-slate-700 p-6">
                 <div className="flex justify-between items-center max-w-2xl mx-auto">
                     {STEPS.map((step, index) => {
                         const Icon = step.icon;
@@ -119,7 +119,7 @@ export default function WorkspaceWizard({ onComplete, showSampleDataOption = fal
                                     className={clsx(
                                         'w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300',
                                         isActive
-                                            ? 'bg-nerve text-white ring-4 ring-blue-100'
+                                            ? 'bg-nerve text-white ring-4 ring-nerve/20'
                                             : isCompleted
                                                 ? 'bg-health-good text-white'
                                                 : 'bg-slate-700 text-slate-500'
@@ -201,7 +201,7 @@ export default function WorkspaceWizard({ onComplete, showSampleDataOption = fal
                                 Description <span className="text-slate-400 font-normal">(Optional)</span>
                             </label>
                             <textarea
-                                className="w-full rounded-lg border border-slate-300 bg-slate-900/50 backdrop-blur-sm px-4 py-2 text-sm focus:ring-2 focus:ring-nerve/50 focus:border-nerve/50 min-h-[100px] resize-none"
+                                className="w-full rounded-lg border border-slate-700 bg-slate-900/50 backdrop-blur-sm px-4 py-2 text-sm focus:ring-2 focus:ring-nerve/50 focus:border-nerve/50 min-h-[100px] resize-none"
                                 placeholder="What is this workspace for?"
                                 value={formData.description}
                                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
@@ -222,7 +222,7 @@ export default function WorkspaceWizard({ onComplete, showSampleDataOption = fal
                                 <label className="block text-sm font-medium text-slate-300 mb-2">Primary Color</label>
                                 <div className="flex items-center gap-3">
                                     <div
-                                        className="w-12 h-12 rounded-lg shadow-sm border border-slate-200"
+                                        className="w-12 h-12 rounded-lg shadow-sm border border-slate-700"
                                         style={{ backgroundColor: formData.primaryColor }}
                                     />
                                     <input
@@ -238,7 +238,7 @@ export default function WorkspaceWizard({ onComplete, showSampleDataOption = fal
                                 <label className="block text-sm font-medium text-slate-300 mb-2">Accent Color</label>
                                 <div className="flex items-center gap-3">
                                     <div
-                                        className="w-12 h-12 rounded-lg shadow-sm border border-slate-200"
+                                        className="w-12 h-12 rounded-lg shadow-sm border border-slate-700"
                                         style={{ backgroundColor: formData.accentColor }}
                                     />
                                     <input
@@ -251,8 +251,8 @@ export default function WorkspaceWizard({ onComplete, showSampleDataOption = fal
                             </div>
                         </div>
 
-                        <div className="bg-slate-50 p-6 rounded-xl border border-slate-200">
-                            <h3 className="text-sm font-medium text-slate-500 uppercase tracking-wider mb-4">Preview</h3>
+                        <div className="bg-slate-800/50 p-6 rounded-xl border border-slate-700">
+                            <h3 className="text-sm font-medium text-slate-400 uppercase tracking-wider mb-4">Preview</h3>
                             <div className="flex items-center gap-4">
                                 <button type="button"
                                     className="px-4 py-2 rounded-lg text-white font-medium shadow-sm"
@@ -309,7 +309,7 @@ export default function WorkspaceWizard({ onComplete, showSampleDataOption = fal
             </div>
 
             {/* Footer Controls */}
-            <div className="bg-slate-50 px-8 py-5 border-t border-slate-200 flex justify-between items-center">
+            <div className="bg-slate-800/50 px-8 py-5 border-t border-slate-700 flex justify-between items-center">
                 <Button
                     variant="secondary"
                     onClick={handleBack}

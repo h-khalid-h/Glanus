@@ -84,7 +84,7 @@ function Toast({ toast, onDismiss }: ToastProps) {
                                 toast.action!.onClick();
                                 handleDismiss();
                             }}
-                            className="mt-2 text-sm font-medium text-nerve hover:text-nerve"
+                            className="mt-2 text-sm font-medium text-nerve hover:text-nerve/80"
                         >
                             {toast.action.label}
                         </button>

@@ -47,7 +47,7 @@ export function WorkspaceLayout({ children }: { children: React.ReactNode }) {
         },
         {
             href: `/assets`,
-            label: 'Assets',
+            label: 'Asset Inventory',
             section: 'Operations',
             icon: (
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>

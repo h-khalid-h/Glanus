@@ -247,7 +247,7 @@ export default function AnalyticsPage() {
                                 href={`/workspaces/${workspaceId}/partner`}
                                 className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-nerve text-white hover:brightness-110 font-medium transition-all shadow-md shadow-nerve/20 w-full md:w-auto"
                             >
-                                Find a IT Partner
+                                Find an IT Partner
                                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
                                 </svg>
@@ -324,12 +324,12 @@ function IntelligenceBar({ summary, workspaceId }: { summary: IntelligenceSummar
                         </p>
                     </div>
                 </div>
-                <a
+                <Link
                     href={`/workspaces/${workspaceId}/intelligence`}
                     className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
                 >
                     View Details →
-                </a>
+                </Link>
             </div>
         </div>
     );
@@ -383,7 +383,7 @@ function EmptyWorkspaceGuide({ workspaceId }: { workspaceId: string }) {
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
                 {steps.map(s => (
-                    <a
+                    <Link
                         key={s.step}
                         href={s.href}
                         className={`flex items-start gap-3 rounded-xl border p-4 transition-colors hover:bg-accent/30 ${s.accent}`}
@@ -395,7 +395,7 @@ function EmptyWorkspaceGuide({ workspaceId }: { workspaceId: string }) {
                             </p>
                             <p className="mt-0.5 text-xs text-muted-foreground">{s.description}</p>
                         </div>
-                    </a>
+                    </Link>
                 ))}
             </div>
         </div>

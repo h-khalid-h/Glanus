@@ -71,7 +71,7 @@ export default function InvitationPage({ params: paramsPromise }: { params: Prom
 
     if (inviteState.loading || status === 'loading') {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-slate-50">
+            <div className="min-h-screen flex items-center justify-center bg-gradient-midnight">
                 <Loader2 className="w-8 h-8 animate-spin text-nerve" />
             </div>
         );
@@ -79,7 +79,7 @@ export default function InvitationPage({ params: paramsPromise }: { params: Prom
 
     if (inviteState.error) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
+            <div className="min-h-screen flex items-center justify-center bg-gradient-midnight p-4">
                 <div className="max-w-md w-full bg-slate-900/50 backdrop-blur-sm shadow-xl rounded-2xl p-8 text-center border border-slate-800">
                     <div className="w-16 h-16 bg-health-critical/10 rounded-full flex items-center justify-center mx-auto mb-4 text-health-critical">
                         <XCircle className="w-8 h-8" />
@@ -101,9 +101,9 @@ export default function InvitationPage({ params: paramsPromise }: { params: Prom
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
+        <div className="min-h-screen flex items-center justify-center bg-gradient-midnight p-4">
             <div className="max-w-md w-full bg-slate-900/50 backdrop-blur-sm shadow-xl rounded-2xl p-8 text-center border border-slate-800 animate-in zoom-in-95 duration-300">
-                <div className="w-16 h-16 bg-nerve/10/30 rounded-full flex items-center justify-center mx-auto mb-4 text-nerve">
+                <div className="w-16 h-16 bg-nerve/10 rounded-full flex items-center justify-center mx-auto mb-4 text-nerve">
                     <Mail className="w-8 h-8" />
                 </div>
 
@@ -131,8 +131,8 @@ export default function InvitationPage({ params: paramsPromise }: { params: Prom
                     </div>
                 ) : (
                     <div className="space-y-4">
-                        <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                            <p className="text-sm font-medium text-slate-300 mb-1">Signed in as</p>
+                        <div className="bg-slate-800/50 p-4 rounded-xl border border-slate-700">
+                            <p className="text-sm font-medium text-slate-400 mb-1">Signed in as</p>
                             <div className="flex items-center justify-center gap-2">
                                 {(session.user as typeof session.user & { image?: string })?.image && <Image src={(session.user as typeof session.user & { image?: string }).image!} alt="Your avatar" width={24} height={24} className="w-6 h-6 rounded-full" />}
                                 <span className="text-white font-semibold">{session.user?.email}</span>

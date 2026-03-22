@@ -108,7 +108,7 @@ export default function PublicPartnerProfilePage() {
                             </div>
                             <div className="text-sm space-y-1 opacity-90">
                                 <p>
-                                    📍 {partner.city}, {partner.region} • {partner.country}
+                                    📍 {[partner.city, partner.region, partner.country].filter(Boolean).join(', ')}
                                     {partner.remoteOnly && ' • Remote Only'}
                                 </p>
                                 {partner.website && (
@@ -206,7 +206,7 @@ export default function PublicPartnerProfilePage() {
                         <div className="rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm p-6">
                             <h3 className="text-lg font-semibold mb-4">Service Area</h3>
                             <div className="space-y-2 text-sm text-slate-300">
-                                <p><strong>Location:</strong> {partner.city}, {partner.region}</p>
+                                <p><strong>Location:</strong> {[partner.city, partner.region].filter(Boolean).join(', ') || 'Not specified'}</p>
                                 {partner.serviceRadius && !partner.remoteOnly && (
                                     <p><strong>Service Radius:</strong> {partner.serviceRadius} miles</p>
                                 )}

@@ -88,7 +88,7 @@ export default function InviteForm({ workspaceId }: { workspaceId: string }) {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="colleague@company.com"
-                        className="pl-10 block w-full rounded-lg border-slate-300 bg-slate-900/50 backdrop-blur-sm shadow-sm focus:border-nerve/50 focus:ring-nerve/50 sm:text-sm py-2.5 transition-colors"
+                        className="pl-10 block w-full rounded-lg border border-slate-700 bg-slate-900/50 backdrop-blur-sm shadow-sm focus:border-nerve/50 focus:ring-nerve/50 sm:text-sm py-2.5 text-white transition-colors"
                         required
                     />
                 </div>
@@ -96,7 +96,7 @@ export default function InviteForm({ workspaceId }: { workspaceId: string }) {
                 <div className="w-full sm:w-48 relative" ref={roleRef}>
                     <button type="button"
                         onClick={() => setIsRoleOpen(!isRoleOpen)}
-                        className="relative w-full cursor-default rounded-lg bg-slate-900/50 backdrop-blur-sm py-2.5 pl-3 pr-10 text-left border border-slate-300 focus:outline-none focus-visible:border-nerve focus-visible:ring-2 focus-visible:ring-white/75 sm:text-sm shadow-sm"
+                        className="relative w-full cursor-default rounded-lg bg-slate-900/50 backdrop-blur-sm py-2.5 pl-3 pr-10 text-left text-white border border-slate-700 focus:outline-none focus-visible:border-nerve focus-visible:ring-2 focus-visible:ring-white/75 sm:text-sm shadow-sm"
                         aria-expanded={isRoleOpen}
                         aria-haspopup="listbox"
                     >
@@ -108,7 +108,7 @@ export default function InviteForm({ workspaceId }: { workspaceId: string }) {
 
                     {isRoleOpen && (
                         <ul
-                            className="absolute mt-1 max-h-60 w-full overflow-auto rounded-md bg-slate-900/50 backdrop-blur-sm py-1 text-base shadow-lg ring-1 ring-black/5 focus:outline-none sm:text-sm z-20 border border-slate-100 animate-in fade-in duration-100"
+                            className="absolute mt-1 max-h-60 w-full overflow-auto rounded-md bg-slate-900/50 backdrop-blur-sm py-1 text-base shadow-lg ring-1 ring-black/5 focus:outline-none sm:text-sm z-20 border border-slate-700 animate-in fade-in duration-100"
                             role="listbox"
                         >
                             {ROLES.map((r) => (

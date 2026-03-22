@@ -115,7 +115,18 @@ export default function IntelligencePage() {
     const handleToggleRule = useCallback(async (ruleId: string, enabled: boolean) => {
         // Optimistic update
         setRules(prev => prev.map(r => r.id === ruleId ? { ...r, enabled } : r));
-    }, []);
+        try {
+            await csrfFetch(`/api/workspaces/${workspaceId}/intelligence/reflex?ruleId=${ruleId}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ enabled }),
+            });
+        } catch (err: unknown) {
+            // Revert on failure
+            setRules(prev => prev.map(r => r.id === ruleId ? { ...r, enabled: !enabled } : r));
+            showError('Toggle failed', err instanceof Error ? err.message : 'Could not update rule');
+        }
+    }, [workspaceId, showError]);
 
     const handleDeleteRule = useCallback(async (ruleId: string) => {
         try {
