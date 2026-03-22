@@ -30,7 +30,7 @@ export const POST = withErrorHandler(async (request: NextRequest, { params }: Ro
 
     // Offline queued — return 202 Accepted
     if ('queued' in result && result.queued) {
-        return apiSuccess({ queued: true, message: result.message }, { status: 202 });
+        return apiSuccess({ queued: true, message: result.message }, undefined, 202);
     }
 
     return apiSuccess(result);

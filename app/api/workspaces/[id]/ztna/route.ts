@@ -18,7 +18,7 @@ export const POST = withErrorHandler(async (request: NextRequest, { params }: Ro
     const user = await requireAuth();
     await requireWorkspaceRole(workspaceId, user.id, 'ADMIN', request);
 
-    const result = createZtnaSchema.parse(await request.json())
+    const result = createZtnaSchema.parse(await request.json());
 
     const policy = await ZtnaService.createPolicy(workspaceId, result);
     return apiSuccess(policy, { message: 'Zero-Trust Network Policy created.' }, 201);

@@ -10,7 +10,7 @@ export const PATCH = withErrorHandler(async (request: NextRequest, { params }: R
     const user = await requireAuth();
     await requireWorkspaceRole(workspaceId, user.id, 'ADMIN', request);
 
-    const result = updateZtnaSchema.parse(await request.json())
+    const result = updateZtnaSchema.parse(await request.json());
 
     const updated = await ZtnaService.updatePolicy(workspaceId, policyId, result);
     return apiSuccess(updated, { message: 'Zero-Trust Network Policy updated.' });

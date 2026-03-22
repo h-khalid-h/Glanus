@@ -26,7 +26,7 @@ export const PATCH = withErrorHandler(async (request: NextRequest, { params }: R
     const user = await requireAuth();
     await requireWorkspaceRole(workspaceId, user.id, 'ADMIN');
 
-    const result = updatePatchPolicySchema.parse(await request.json())
+    const result = updatePatchPolicySchema.parse(await request.json());
 
     const updated = await PatchService.updatePatchPolicy(workspaceId, patchId, result as PatchPolicyUpdateInput);
     return apiSuccess(updated);

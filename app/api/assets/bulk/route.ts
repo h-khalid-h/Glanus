@@ -12,7 +12,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     if (rateLimitResponse) return rateLimitResponse;
 
     const user = await requireAuth();
-    const parsed = bulkOpsSchema.parse(await request.json())
+    const parsed = bulkOpsSchema.parse(await request.json());
 
     const { operation, assetIds, data } = parsed;
 

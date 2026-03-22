@@ -17,5 +17,5 @@ export const POST = withErrorHandler(async (
 
     const data = createMessageSchema.parse(await request.json());
     const message = await TicketService.addMessage(workspaceId, ticketId, user, auth, data);
-    return apiSuccess({ message }, { message: 'Message sent', status: 201 });
+    return apiSuccess({ message }, { message: 'Message sent' }, 201);
 });

@@ -40,5 +40,5 @@ export const POST = withErrorHandler(async (
 
     const data = createTicketSchema.parse(await request.json());
     const ticket = await TicketService.createTicket(workspaceId, user, data);
-    return apiSuccess(ticket, { message: 'Ticket created successfully', status: 201 });
+    return apiSuccess(ticket, { message: 'Ticket created successfully' }, 201);
 });

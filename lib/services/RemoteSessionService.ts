@@ -69,8 +69,8 @@ export class RemoteSessionService {
 
     static async getSessions(filters: SessionFilters) {
         const { userId, status, assetId, filterUserId, page = 1, limit = 20 } = filters;
-        const safeLimi = Math.min(limit, 50);
-        const skip = (page - 1) * safeLimi;
+        const safeLimitt = Math.min(limit, 50);
+        const skip = (page - 1) * safeLimitt;
 
         const where: Record<string, unknown> = {
             asset: { workspace: { members: { some: { userId } } } },
@@ -88,12 +88,12 @@ export class RemoteSessionService {
                 },
                 orderBy: { createdAt: 'desc' },
                 skip,
-                take: safeLimi,
+                take: safeLimit,
             }),
             prisma.remoteSession.count({ where: where as any }), // eslint-disable-line @typescript-eslint/no-explicit-any
         ]);
 
-        return { sessions, pagination: { total, page, limit: safeLimi, pages: Math.ceil(total / safeLimi) } };
+        return { sessions, pagination: { total, page, limit: safeLimit, pages: Math.ceil(total / safeLimit) } };
     }
 
     // ========================================
