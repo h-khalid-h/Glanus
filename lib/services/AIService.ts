@@ -216,6 +216,7 @@ Respond with the most appropriate function call. If the request is a question, u
             ],
             response_format: { type: 'json_object' },
         });
-        return JSON.parse(completion.choices[0].message.content || '{}');
+        const content = completion.choices?.[0]?.message?.content;
+        return JSON.parse(content || '{}');
     }
 }

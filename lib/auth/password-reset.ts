@@ -34,7 +34,9 @@ export function verifyResetToken(token: string): { userId: string; expired: bool
 
     const decoded = Buffer.from(payload, 'base64url').toString('utf8');
     const [userId, expiryStr] = decoded.split(':');
+    if (!userId || !expiryStr) return null;
     const expiry = parseInt(expiryStr, 10);
+    if (isNaN(expiry)) return null;
 
     return { userId, expired: Date.now() > expiry };
 }
