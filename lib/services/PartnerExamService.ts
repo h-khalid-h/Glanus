@@ -105,6 +105,9 @@ export class PartnerExamService {
             return { index, question: question.question, userAnswer, correctAnswer: question.correctAnswer, isCorrect, explanation: question.explanation };
         });
 
+        if (questions.length === 0) {
+            throw new ApiError(400, 'Exam has no valid questions — cannot compute score');
+        }
         const score = Math.round((correctCount / questions.length) * 100);
         const passed = score >= exam.passingScore;
 
