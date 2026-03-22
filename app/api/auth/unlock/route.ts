@@ -19,7 +19,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     const user = await requireAuth();
 
     if (user.role !== 'ADMIN') {
-        return apiError(401, 'Unauthorized');
+        return apiError(403, 'Forbidden');
     }
 
     const { email } = unlockSchema.parse(await request.json());
