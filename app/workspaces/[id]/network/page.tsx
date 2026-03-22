@@ -56,11 +56,12 @@ function getDeviceIcon(type: string) {
 function NetworkDashboardContent() {
     const params = useParams();
     const workspaceId = params?.id as string;
-    const { error: showError } = useToast();
+    const { error: showError, success: showSuccess } = useToast();
 
     const [devices, setDevices] = useState<NetworkDevice[]>([]);
     const [scans, setScans] = useState<DiscoveryScan[]>([]);
     const [loading, setLoading] = useState(true);
+    const [sweeping, setSweeping] = useState(false);
 
     useEffect(() => {
         if (workspaceId) {
@@ -83,6 +84,26 @@ function NetworkDashboardContent() {
         }
     };
 
+    const handleSubnetSweep = async () => {
+        setSweeping(true);
+        try {
+            const res = await csrfFetch(`/api/workspaces/${workspaceId}/network/sweep`, {
+                method: 'POST',
+            });
+            if (!res.ok) {
+                const data = await res.json();
+                throw new Error(data.error?.message || data.error || 'Sweep failed');
+            }
+            showSuccess('Sweep Initiated', 'Subnet sweep dispatched to connected agents.');
+            // Refresh data after a short delay
+            setTimeout(fetchNetworkData, 2000);
+        } catch (err: unknown) {
+            showError('Sweep Failed', err instanceof Error ? err.message : 'Could not initiate subnet sweep');
+        } finally {
+            setSweeping(false);
+        }
+    };
+
     if (loading) return <PageSpinner />;
 
     return (
@@ -96,8 +117,8 @@ function NetworkDashboardContent() {
                     <Button variant="secondary" onClick={fetchNetworkData}>
                         Refresh Map
                     </Button>
-                    <Button className="gap-2">
-                        <ScanSearch size={16} /> Emit Subnet Sweep
+                    <Button className="gap-2" onClick={handleSubnetSweep} disabled={sweeping}>
+                        <ScanSearch size={16} /> {sweeping ? 'Sweeping…' : 'Emit Subnet Sweep'}
                     </Button>
                 </div>
             </div>
@@ -107,7 +128,7 @@ function NetworkDashboardContent() {
                     icon={<Network className="w-16 h-16 text-slate-600 animate-pulse" />}
                     title="No Devices Mapped"
                     description="The network topology is empty. Launch a Subnet Sweep from a managed agent to catalog routers, switches, and printers."
-                    action={{ label: 'Start Discovery Scan', onClick: () => { } }}
+                    action={{ label: 'Start Discovery Scan', onClick: handleSubnetSweep }}
                 />
             ) : (
                 <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">

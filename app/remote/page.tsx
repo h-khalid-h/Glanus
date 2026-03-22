@@ -297,9 +297,9 @@ export default function RemoteSessionsPage() {
                                                 Join
                                             </Link>
                                         ) : (
-                                            <button type="button" className="text-muted-foreground hover:text-foreground">
-                                                View Details
-                                            </button>
+                                            <span className="text-xs text-muted-foreground">
+                                                {session.status}
+                                            </span>
                                         )}
                                     </td>
                                 </tr>

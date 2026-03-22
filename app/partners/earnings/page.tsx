@@ -55,36 +55,30 @@ export default function PartnerEarningsPage() {
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        fetchEarnings();
-        fetchPayouts();
+        fetchData();
     }, []);
 
-    const fetchEarnings = async () => {
+    const fetchData = async () => {
         try {
-            const res = await csrfFetch('/api/partners/earnings');
-            const data = await res.json();
+            const [earningsRes, payoutsRes] = await Promise.all([
+                csrfFetch('/api/partners/earnings'),
+                csrfFetch('/api/partners/payouts'),
+            ]);
 
-            setSummary(data.summary);
-            setTopWorkspaces(data.topWorkspaces);
-            setStripeConnected(data.stripeConnected);
+            const earningsData = await earningsRes.json();
+            setSummary(earningsData.summary);
+            setTopWorkspaces(earningsData.topWorkspaces);
+            setStripeConnected(earningsData.stripeConnected);
+
+            const payoutsData = await payoutsRes.json();
+            setPayouts(payoutsData.payouts);
+            setPayoutStats(payoutsData.stats);
         } catch (err: unknown) {
-            showError('Failed to load earnings:', err instanceof Error ? err.message : 'An unexpected error occurred');
-            setError(err instanceof Error ? err.message : 'Something went wrong');
+            const msg = err instanceof Error ? err.message : 'An unexpected error occurred';
+            showError('Failed to load earnings', msg);
+            setError(msg);
         } finally {
             setLoading(false);
-        }
-    };
-
-    const fetchPayouts = async () => {
-        try {
-            const res = await csrfFetch('/api/partners/payouts');
-            const data = await res.json();
-
-            setPayouts(data.payouts);
-            setPayoutStats(data.stats);
-        } catch (err: unknown) {
-            showError('Failed to load payouts:', err instanceof Error ? err.message : 'An unexpected error occurred');
-            setError(err instanceof Error ? err.message : 'Something went wrong');
         }
     };
 

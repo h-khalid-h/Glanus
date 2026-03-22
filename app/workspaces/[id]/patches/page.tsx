@@ -7,6 +7,7 @@ import { PageSpinner } from '@/components/ui/Spinner';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { WorkspaceLayout } from '@/components/workspace/WorkspaceLayout';
 import { Button } from '@/components/ui/Button';
+import { ConfirmDialog } from '@/components/ui';
 import { ShieldAlert, Plus, ShieldCheck, Play, Server, Terminal, Trash2, X } from 'lucide-react';
 
 interface Script {
@@ -39,6 +40,11 @@ function PatchPoliciesContent() {
     const [scripts, setScripts] = useState<Script[]>([]);
     const [loading, setLoading] = useState(true);
     const [executingId, setExecutingId] = useState<string | null>(null);
+
+    // Confirm dialog state
+    const [confirmState, setConfirmState] = useState<{ open: boolean; title: string; message: string; onConfirm: () => void }>({
+        open: false, title: '', message: '', onConfirm: () => {},
+    });
 
     // Modal State
     const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -107,26 +113,37 @@ function PatchPoliciesContent() {
         }
     };
 
-    const handleDelete = async (id: string) => {
-        if (!confirm('Are you sure you want to delete this patch policy?')) return;
+    const handleDelete = (id: string) => {
+        setConfirmState({
+            open: true,
+            title: 'Delete Patch Policy',
+            message: 'Are you sure you want to delete this patch policy? This action cannot be undone.',
+            onConfirm: async () => {
+                setConfirmState(prev => ({ ...prev, open: false }));
+                try {
+                    const res = await csrfFetch(`/api/workspaces/${workspaceId}/patches/${id}`, {
+                        method: 'DELETE',
+                    });
+                    if (!res.ok) throw new Error('Failed to delete policy.');
+                    success('Success', 'Patch policy deleted.');
+                    setPolicies(policies.filter(p => p.id !== id));
+                } catch (err: unknown) {
+                    showError('Delete Error', err instanceof Error ? err.message : 'An error occurred.');
+                }
+            },
+        });
+    };
 
-        try {
-            const res = await csrfFetch(`/api/workspaces/${workspaceId}/patches/${id}`, {
-                method: 'DELETE',
-            });
-
-            if (!res.ok) throw new Error('Failed to delete policy.');
-
-            success('Success', 'Patch policy deleted.');
-            setPolicies(policies.filter(p => p.id !== id));
-        } catch (err: unknown) {
-            showError('Delete Error', err instanceof Error ? err.message : 'An error occurred.');
-        }
+    const requestExecute = (policy: PatchPolicy) => {
+        setConfirmState({
+            open: true,
+            title: 'Deploy Patch',
+            message: `Deploy patch "${policy.name}" to ${policy.vulnerableCount} endpoint(s)? This will execute the associated remediation script.`,
+            onConfirm: () => { setConfirmState(prev => ({ ...prev, open: false })); handleExecute(policy); },
+        });
     };
 
     const handleExecute = async (policy: PatchPolicy) => {
-        if (!confirm(`Deploy patch "${policy.name}" to ${policy.vulnerableCount} endpoints? This will execute the associated script.`)) return;
-
         setExecutingId(policy.id);
         try {
             const res = await csrfFetch(`/api/workspaces/${workspaceId}/patches/${policy.id}/execute`, {
@@ -148,6 +165,15 @@ function PatchPoliciesContent() {
 
     return (
         <div className="space-y-6">
+            <ConfirmDialog
+                open={confirmState.open}
+                title={confirmState.title}
+                message={confirmState.message}
+                confirmLabel="Confirm"
+                variant="danger"
+                onConfirm={confirmState.onConfirm}
+                onCancel={() => setConfirmState(prev => ({ ...prev, open: false }))}
+            />
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
                     <h1 className="text-2xl font-bold text-foreground">Patch Management</h1>
@@ -204,7 +230,7 @@ function PatchPoliciesContent() {
                             <div className="flex items-center justify-between border-t border-slate-800 pt-4">
                                 <span className="text-xs text-slate-500">Created: {new Date(policy.createdAt).toLocaleDateString()}</span>
                                 <Button
-                                    onClick={() => handleExecute(policy)}
+                                    onClick={() => requestExecute(policy)}
                                     disabled={!policy.vulnerableCount || policy.vulnerableCount === 0 || executingId === policy.id}
                                     className={`flex items-center gap-2 transition ${policy.vulnerableCount && policy.vulnerableCount > 0 ? 'bg-indigo-600 hover:bg-indigo-700 text-white' : 'bg-slate-800 text-slate-500'}`}
                                 >

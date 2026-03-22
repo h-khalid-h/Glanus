@@ -45,7 +45,7 @@ interface Exam {
 }
 
 function PartnerDashboardContent() {
-    const { error: showError } = useToast();
+    const { error: showError, success: showSuccess } = useToast();
     const router = useRouter();
     const { status } = useSession();
     const searchParams = useSearchParams();
@@ -314,7 +314,22 @@ function PartnerDashboardContent() {
                                     Edit Profile
                                 </Link>
                                 <button type="button"
-                                    onClick={() => setPartner({ ...partner, acceptingNew: !partner.acceptingNew })}
+                                    onClick={async () => {
+                                        const newValue = !partner.acceptingNew;
+                                        setPartner({ ...partner, acceptingNew: newValue });
+                                        try {
+                                            const res = await csrfFetch('/api/partners/me', {
+                                                method: 'PATCH',
+                                                headers: { 'Content-Type': 'application/json' },
+                                                body: JSON.stringify({ acceptingNew: newValue }),
+                                            });
+                                            if (!res.ok) throw new Error('Failed to update');
+                                            showSuccess('Updated', newValue ? 'Now accepting new requests' : 'New requests paused');
+                                        } catch {
+                                            setPartner({ ...partner, acceptingNew: !newValue });
+                                            showError('Update Failed', 'Could not update availability');
+                                        }
+                                    }}
                                     className={`block w-full px-4 py-2 rounded-md text-center transition ${partner.acceptingNew
                                         ? 'bg-slate-700 text-slate-300 hover:bg-slate-600'
                                         : 'bg-health-good text-white hover:bg-health-good/80'

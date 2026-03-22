@@ -223,7 +223,7 @@ function TicketThreadContent() {
                                         value={replyContent}
                                         onChange={(e) => setReplyContent(e.target.value)}
                                         onKeyDown={(e) => {
-                                            if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                                            if (e.key === 'Enter' && (e.ctrlKey || e.metaKey) && !sending) {
                                                 e.preventDefault();
                                                 handleSendReply();
                                             }

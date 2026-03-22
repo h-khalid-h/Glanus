@@ -6,6 +6,7 @@ import { csrfFetch } from '@/lib/api/csrfFetch';
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { Terminal, Plus, Trash2, Zap, Rocket, X, CheckCircle, XCircle, Clock, Loader2, History, Calendar } from 'lucide-react';
+import { ConfirmDialog } from '@/components/ui';
 import { PageSpinner } from '@/components/ui/Spinner';
 import { ScheduledJobsPanel } from '@/components/workspace/scripts/ScheduledJobsPanel';
 
@@ -66,6 +67,11 @@ export default function ScriptsLibraryPage() {
     const [showSchedules, setShowSchedules] = useState(false);
     const [executions, setExecutions] = useState<Execution[]>([]);
     const [loadingHistory, setLoadingHistory] = useState(false);
+
+    // Confirm dialog state
+    const [confirmState, setConfirmState] = useState<{ open: boolean; title: string; message: string; onConfirm: () => void }>({
+        open: false, title: '', message: '', onConfirm: () => {},
+    });
 
     // Form Data
     const [formData, setFormData] = useState({
@@ -138,18 +144,25 @@ export default function ScriptsLibraryPage() {
         }
     };
 
-    const handleDeleteScript = async (scriptId: string) => {
-        if (!confirm('Are you sure you want to permanently delete this script?')) return;
-        try {
-            const res = await csrfFetch(`/api/workspaces/${workspaceId}/scripts/${scriptId}`, {
-                method: 'DELETE'
-            });
-            if (!res.ok) throw new Error('Failed to delete script');
-            success('Deleted', 'Script removed from library.');
-            fetchScripts();
-        } catch (err: unknown) {
-            showError('Deletion Failed', err instanceof Error ? err.message : 'Failed to delete');
-        }
+    const handleDeleteScript = (scriptId: string) => {
+        setConfirmState({
+            open: true,
+            title: 'Delete Script',
+            message: 'Are you sure you want to permanently delete this script? This action cannot be undone.',
+            onConfirm: async () => {
+                setConfirmState(prev => ({ ...prev, open: false }));
+                try {
+                    const res = await csrfFetch(`/api/workspaces/${workspaceId}/scripts/${scriptId}`, {
+                        method: 'DELETE'
+                    });
+                    if (!res.ok) throw new Error('Failed to delete script');
+                    success('Deleted', 'Script removed from library.');
+                    fetchScripts();
+                } catch (err: unknown) {
+                    showError('Deletion Failed', err instanceof Error ? err.message : 'Failed to delete');
+                }
+            },
+        });
     };
 
     const openDeployModal = async (script: Script) => {
@@ -238,6 +251,15 @@ export default function ScriptsLibraryPage() {
 
     return (
         <>
+            <ConfirmDialog
+                open={confirmState.open}
+                title={confirmState.title}
+                message={confirmState.message}
+                confirmLabel="Delete"
+                variant="danger"
+                onConfirm={confirmState.onConfirm}
+                onCancel={() => setConfirmState(prev => ({ ...prev, open: false }))}
+            />
             <div className="flex justify-between items-center mb-8">
                 <div>
                     <h1 className="text-3xl font-bold text-foreground mb-2">Script Library</h1>

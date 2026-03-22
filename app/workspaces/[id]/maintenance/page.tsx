@@ -127,7 +127,10 @@ export default function MaintenancePage() {
         }
     };
 
+    const [changingStatus, setChangingStatus] = useState<string | null>(null);
+
     const handleStatusChange = async (windowId: string, newStatus: string) => {
+        setChangingStatus(windowId);
         try {
             const res = await csrfFetch(`/api/workspaces/${workspaceId}/maintenance?windowId=${windowId}`, {
                 method: 'PATCH',
@@ -142,6 +145,8 @@ export default function MaintenancePage() {
             fetchWindows();
         } catch (err: unknown) {
             toastError('Update Failed', err instanceof Error ? err.message : 'Unknown error');
+        } finally {
+            setChangingStatus(null);
         }
     };
 
@@ -273,12 +278,12 @@ export default function MaintenancePage() {
                                     <div className="shrink-0 flex items-center gap-1.5">
                                         {w.status === 'scheduled' && (
                                             <>
-                                                <button onClick={() => handleStatusChange(w.id, 'in_progress')} className="btn-secondary text-xs px-2 py-1" title="Start">Start</button>
-                                                <button onClick={() => handleStatusChange(w.id, 'cancelled')} className="btn-secondary text-xs px-2 py-1 text-red-400 hover:text-red-300" title="Cancel">Cancel</button>
+                                                <button onClick={() => handleStatusChange(w.id, 'in_progress')} disabled={changingStatus === w.id} className="btn-secondary text-xs px-2 py-1 disabled:opacity-50" title="Start">{changingStatus === w.id ? '…' : 'Start'}</button>
+                                                <button onClick={() => handleStatusChange(w.id, 'cancelled')} disabled={changingStatus === w.id} className="btn-secondary text-xs px-2 py-1 text-red-400 hover:text-red-300 disabled:opacity-50" title="Cancel">Cancel</button>
                                             </>
                                         )}
                                         {w.status === 'in_progress' && (
-                                            <button onClick={() => handleStatusChange(w.id, 'completed')} className="btn-secondary text-xs px-2 py-1 text-green-400 hover:text-green-300" title="Complete">Complete</button>
+                                            <button onClick={() => handleStatusChange(w.id, 'completed')} disabled={changingStatus === w.id} className="btn-secondary text-xs px-2 py-1 text-green-400 hover:text-green-300 disabled:opacity-50" title="Complete">{changingStatus === w.id ? '…' : 'Complete'}</button>
                                         )}
                                     </div>
                                 </div>

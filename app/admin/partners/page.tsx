@@ -37,6 +37,7 @@ export default function AdminPartnersPage() {
     const [filter, setFilter] = useState<string>('');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [actionLoading, setActionLoading] = useState<string | null>(null);
 
     useEffect(() => {
         fetchPartners();
@@ -62,6 +63,7 @@ export default function AdminPartnersPage() {
     const updatePartnerStatus = async (partnerId: string, action: string) => {
         const reason = prompt(`Enter reason for ${action}:`) || '';
 
+        setActionLoading(partnerId);
         try {
             const res = await csrfFetch(`/api/admin/partners/${partnerId}`, {
                 method: 'PATCH',
@@ -76,6 +78,8 @@ export default function AdminPartnersPage() {
             fetchPartners();
         } catch (err: unknown) {
             showError('Error', err instanceof Error ? err.message : 'Something went wrong');
+        } finally {
+            setActionLoading(null);
         }
     };
 
@@ -215,41 +219,46 @@ export default function AdminPartnersPage() {
                                                     {partner.status === 'PENDING' && (
                                                         <button type="button"
                                                             onClick={() => updatePartnerStatus(partner.id, 'verify')}
-                                                            className="text-xs px-3 py-1 bg-nerve text-white rounded hover:brightness-110 transition"
+                                                            disabled={actionLoading === partner.id}
+                                                            className="text-xs px-3 py-1 bg-nerve text-white rounded hover:brightness-110 transition disabled:opacity-50"
                                                         >
-                                                            Verify
+                                                            {actionLoading === partner.id ? '…' : 'Verify'}
                                                         </button>
                                                     )}
                                                     {partner.status === 'VERIFIED' && (
                                                         <button type="button"
                                                             onClick={() => updatePartnerStatus(partner.id, 'activate')}
-                                                            className="text-xs px-3 py-1 bg-health-good text-white rounded hover:bg-health-good/80 transition"
+                                                            disabled={actionLoading === partner.id}
+                                                            className="text-xs px-3 py-1 bg-health-good text-white rounded hover:bg-health-good/80 transition disabled:opacity-50"
                                                         >
-                                                            Activate
+                                                            {actionLoading === partner.id ? '…' : 'Activate'}
                                                         </button>
                                                     )}
                                                     {partner.status === 'ACTIVE' && (
                                                         <button type="button"
                                                             onClick={() => updatePartnerStatus(partner.id, 'suspend')}
-                                                            className="text-xs px-3 py-1 bg-orange-600 text-white rounded hover:bg-orange-700 transition"
+                                                            disabled={actionLoading === partner.id}
+                                                            className="text-xs px-3 py-1 bg-orange-600 text-white rounded hover:bg-orange-700 transition disabled:opacity-50"
                                                         >
-                                                            Suspend
+                                                            {actionLoading === partner.id ? '…' : 'Suspend'}
                                                         </button>
                                                     )}
                                                     {partner.status === 'SUSPENDED' && (
                                                         <button type="button"
                                                             onClick={() => updatePartnerStatus(partner.id, 'unsuspend')}
-                                                            className="text-xs px-3 py-1 bg-health-good text-white rounded hover:bg-health-good/80 transition"
+                                                            disabled={actionLoading === partner.id}
+                                                            className="text-xs px-3 py-1 bg-health-good text-white rounded hover:bg-health-good/80 transition disabled:opacity-50"
                                                         >
-                                                            Unsuspend
+                                                            {actionLoading === partner.id ? '…' : 'Unsuspend'}
                                                         </button>
                                                     )}
                                                     {partner.status !== 'BANNED' && (
                                                         <button type="button"
                                                             onClick={() => updatePartnerStatus(partner.id, 'ban')}
-                                                            className="text-xs px-3 py-1 bg-destructive text-white rounded hover:bg-destructive/80 transition"
+                                                            disabled={actionLoading === partner.id}
+                                                            className="text-xs px-3 py-1 bg-destructive text-white rounded hover:bg-destructive/80 transition disabled:opacity-50"
                                                         >
-                                                            Ban
+                                                            {actionLoading === partner.id ? '…' : 'Ban'}
                                                         </button>
                                                     )}
                                                 </div>
