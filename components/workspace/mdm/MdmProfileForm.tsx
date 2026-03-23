@@ -103,7 +103,8 @@ export function MdmProfileForm({ workspaceId, onSuccess, onCancel }: Props) {
                         <input
                             type="text"
                             required
-                            className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white placeholder:text-slate-500 focus:outline-none focus:border-nerve"
+                            disabled={loading}
+                            className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white placeholder:text-slate-500 focus:outline-none focus:border-nerve disabled:opacity-50"
                             placeholder="e.g. Enforce Device Encryption"
                             value={formData.name}
                             onChange={(e) => setFormData(p => ({ ...p, name: e.target.value }))}
@@ -113,7 +114,8 @@ export function MdmProfileForm({ workspaceId, onSuccess, onCancel }: Props) {
                     <div>
                         <label className="block text-sm font-medium text-muted-foreground mb-1">Description (Optional)</label>
                         <textarea
-                            className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white placeholder:text-slate-500 focus:outline-none focus:border-nerve h-20"
+                            disabled={loading}
+                            className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white placeholder:text-slate-500 focus:outline-none focus:border-nerve h-20 disabled:opacity-50"
                             placeholder="Provide details about what this profile enforces."
                             value={formData.description}
                             onChange={(e) => setFormData(p => ({ ...p, description: e.target.value }))}
@@ -124,7 +126,8 @@ export function MdmProfileForm({ workspaceId, onSuccess, onCancel }: Props) {
                         <div>
                             <label className="block text-sm font-medium text-muted-foreground mb-1">Platform</label>
                             <select
-                                className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-nerve [&>option]:bg-slate-900"
+                                disabled={loading}
+                                className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-nerve [&>option]:bg-slate-900 disabled:opacity-50"
                                 value={formData.platform}
                                 onChange={(e) => setFormData(p => ({ ...p, platform: e.target.value }))}
                             >
@@ -137,7 +140,8 @@ export function MdmProfileForm({ workspaceId, onSuccess, onCancel }: Props) {
                         <div>
                             <label className="block text-sm font-medium text-muted-foreground mb-1">Profile Type</label>
                             <select
-                                className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-nerve [&>option]:bg-slate-900"
+                                disabled={loading}
+                                className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-nerve [&>option]:bg-slate-900 disabled:opacity-50"
                                 value={formData.profileType}
                                 onChange={(e) => setFormData(p => ({ ...p, profileType: e.target.value }))}
                             >
@@ -240,7 +244,8 @@ export function MdmProfileForm({ workspaceId, onSuccess, onCancel }: Props) {
                         <label className="block text-sm font-medium text-muted-foreground mb-1">Configuration Payload (JSON)</label>
                         <textarea
                             required
-                            className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-muted-foreground font-mono text-xs focus:outline-none focus:border-nerve h-48"
+                            disabled={loading}
+                            className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-muted-foreground font-mono text-xs focus:outline-none focus:border-nerve h-48 disabled:opacity-50"
                             value={formData.configPayload}
                             onChange={(e) => setFormData(p => ({ ...p, configPayload: e.target.value }))}
                             spellCheck={false}

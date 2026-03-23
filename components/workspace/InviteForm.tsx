@@ -90,6 +90,7 @@ export default function InviteForm({ workspaceId }: { workspaceId: string }) {
                         placeholder="colleague@company.com"
                         className="pl-10 block w-full rounded-lg border border-slate-700 bg-slate-900/50 backdrop-blur-sm shadow-sm focus:border-nerve/50 focus:ring-nerve/50 sm:text-sm py-2.5 text-white transition-colors"
                         required
+                        disabled={isLoading}
                     />
                 </div>
 

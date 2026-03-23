@@ -61,10 +61,9 @@ export function ScheduledJobsPanel({ workspaceId, availableScripts }: { workspac
     const fetchSchedules = async () => {
         try {
             const res = await csrfFetch(`/api/workspaces/${workspaceId}/scripts/schedules`);
+            if (!res.ok) throw new Error('Failed to fetch scheduled jobs');
             const data = await res.json();
-            if (res.ok) {
-                setSchedules(data.data?.schedules || []);
-            }
+            setSchedules(data.data?.schedules || []);
         } catch {
             showError('Load Error', 'Failed to fetch scheduled jobs');
         } finally {
@@ -76,8 +75,9 @@ export function ScheduledJobsPanel({ workspaceId, availableScripts }: { workspac
         setLoadingAgents(true);
         try {
             const res = await csrfFetch(`/api/workspaces/${workspaceId}/agents`);
+            if (!res.ok) throw new Error('Failed to load target agents');
             const data = await res.json();
-            if (res.ok) setAgents(data.data?.agents || []);
+            setAgents(data.data?.agents || []);
         } catch {
             showError('Error', 'Failed to load target agents');
         } finally {
