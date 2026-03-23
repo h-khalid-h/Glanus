@@ -28,8 +28,22 @@ export interface WebhookInput {
  */
 export class WorkspaceWebhookService {
 
+    private static readonly SAFE_SELECT = {
+        id: true,
+        url: true,
+        enabled: true,
+        lastSuccess: true,
+        lastFailure: true,
+        failureCount: true,
+        createdAt: true,
+        updatedAt: true,
+    } as const;
+
     static async getWebhook(workspaceId: string) {
-        return prisma.notificationWebhook.findFirst({ where: { workspaceId } });
+        return prisma.notificationWebhook.findFirst({
+            where: { workspaceId },
+            select: WorkspaceWebhookService.SAFE_SELECT,
+        });
     }
 
     static async upsertWebhook(workspaceId: string, data: WebhookInput) {
@@ -40,6 +54,7 @@ export class WorkspaceWebhookService {
                 webhook: await prisma.notificationWebhook.update({
                     where: { id: existing.id },
                     data: { url: data.url, enabled: data.enabled ?? true, secret: data.secret },
+                    select: WorkspaceWebhookService.SAFE_SELECT,
                 }),
                 created: false,
             };
@@ -48,6 +63,7 @@ export class WorkspaceWebhookService {
         return {
             webhook: await prisma.notificationWebhook.create({
                 data: { workspaceId, url: data.url, enabled: data.enabled ?? true, secret: data.secret },
+                select: WorkspaceWebhookService.SAFE_SELECT,
             }),
             created: true,
         };
