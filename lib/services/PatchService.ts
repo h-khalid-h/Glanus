@@ -93,6 +93,10 @@ export class PatchService {
             throw new ApiError(400, 'Cannot deploy a disabled patch policy. Please enable it first.');
         }
 
+        if (!policy.actionScript) {
+            throw new ApiError(400, 'Patch policy has no associated script. Please assign a script before deploying.');
+        }
+
         // Identify vulnerable endpoints logically across the workspace
         const vulnerableAgents = await prisma.agentConnection.findMany({
             where: {

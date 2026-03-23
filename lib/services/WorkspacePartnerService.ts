@@ -61,23 +61,27 @@ export class WorkspacePartnerService {
             throw new ApiError(400, 'Can only review completed assignments');
         }
 
-        const updated = await prisma.partnerAssignment.update({
-            where: { id: assignment.id },
-            data: { rating: data.rating, review: sanitizeText(data.review), ratedAt: new Date() },
-        });
+        const updated = await prisma.$transaction(async (tx) => {
+            const txAssignment = await tx.partnerAssignment.update({
+                where: { id: assignment.id },
+                data: { rating: data.rating, review: sanitizeText(data.review), ratedAt: new Date() },
+            });
 
-        const allRatings = await prisma.partnerAssignment.findMany({
-            where: { partnerId: assignment.partnerId, rating: { not: null } },
-            select: { rating: true },
-        });
-        const totalRatings = allRatings.length;
-        const averageRating = totalRatings > 0
-            ? allRatings.reduce((sum: number, r) => sum + (r.rating || 0), 0) / totalRatings
-            : data.rating;
+            const allRatings = await tx.partnerAssignment.findMany({
+                where: { partnerId: assignment.partnerId, rating: { not: null } },
+                select: { rating: true },
+            });
+            const totalRatings = allRatings.length;
+            const averageRating = totalRatings > 0
+                ? allRatings.reduce((sum: number, r) => sum + (r.rating || 0), 0) / totalRatings
+                : data.rating;
 
-        await prisma.partner.update({
-            where: { id: assignment.partnerId },
-            data: { averageRating, totalReviews: totalRatings },
+            await tx.partner.update({
+                where: { id: assignment.partnerId },
+                data: { averageRating, totalReviews: totalRatings },
+            });
+
+            return txAssignment;
         });
 
         return { assignment: updated, message: 'Review submitted successfully. Thank you for your feedback!' };

@@ -34,9 +34,9 @@ function NewTicketContent() {
         if (workspaceId) {
             // Pre-fetch assets so users can bind tickets to computers/licenses
             csrfFetch(`/api/workspaces/${workspaceId}/assets?limit=100`)
-                .then(res => res.json())
+                .then(res => { if (!res.ok) throw new Error('Failed to fetch assets'); return res.json(); })
                 .then(data => setAssets(data.data?.assets || []))
-                .catch(err => console.error("Could not fetch assets", err));
+                .catch(() => { setAssets([]); });
         }
     }, [workspaceId]);
 

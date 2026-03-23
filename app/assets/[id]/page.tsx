@@ -85,9 +85,9 @@ export default function AssetDetailPage({ params }: { params: Promise<{ id: stri
     useEffect(() => {
         if (!assetId || !currentWorkspace?.id) return;
         csrfFetch(`/api/workspaces/${currentWorkspace.id}/maintenance?assetId=${assetId}&limit=10`)
-            .then(r => r.json())
+            .then(r => { if (!r.ok) throw new Error('Failed to fetch maintenance windows'); return r.json(); })
             .then(d => setMaintenanceWindows(d.data?.windows || []))
-            .catch(() => { });
+            .catch(() => { setMaintenanceWindows([]); });
     }, [assetId, currentWorkspace?.id]);
 
     const fetchAsset = async (id: string) => {

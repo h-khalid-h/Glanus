@@ -91,9 +91,9 @@ export default function MaintenancePage() {
     useEffect(() => {
         if (!workspaceId) return;
         csrfFetch(`/api/workspaces/${workspaceId}/assets?limit=200`)
-            .then(r => r.json())
+            .then(r => { if (!r.ok) throw new Error('Failed to fetch assets'); return r.json(); })
             .then(d => setAssets(d.data?.assets?.map((a: { id: string; name: string }) => ({ id: a.id, name: a.name })) || []))
-            .catch(() => { });
+            .catch(() => { setAssets([]); });
     }, [workspaceId]);
 
     const handleCreate = async (e: React.FormEvent) => {
