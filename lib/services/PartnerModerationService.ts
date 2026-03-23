@@ -73,10 +73,15 @@ export class PartnerModerationService {
         if (['suspend', 'ban'].includes(action)) updateData.acceptingNew = false;
 
         if (action === 'ban') {
-            await prisma.partnerAssignment.updateMany({
-                where: { partnerId: id, status: { in: ['PENDING', 'ACCEPTED'] } },
-                data: { status: 'REJECTED', review: reason || 'Partner account banned by admin' },
+            // Ban cascade and status update must be atomic to prevent inconsistent state
+            const updated = await prisma.$transaction(async (tx) => {
+                await tx.partnerAssignment.updateMany({
+                    where: { partnerId: id, status: { in: ['PENDING', 'ACCEPTED'] } },
+                    data: { status: 'REJECTED', review: reason || 'Partner account banned by admin' },
+                });
+                return tx.partner.update({ where: { id }, data: updateData });
             });
+            return { partner: updated, message: `Partner ${action}d successfully` };
         }
 
         const updated = await prisma.partner.update({ where: { id }, data: updateData });

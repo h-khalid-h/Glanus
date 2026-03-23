@@ -137,15 +137,23 @@ export class AssetActionService {
      * Poll the status of an asset action execution by ID.
      * Joins asset name and action definition name/label/type for the response.
      */
-    static async getExecution(executionId: string) {
+    static async getExecution(executionId: string, userId: string) {
         const execution = await prisma.assetActionExecution.findUnique({
             where: { id: executionId },
             include: {
-                asset: { select: { id: true, name: true } },
+                asset: { select: { id: true, name: true, workspaceId: true } },
                 actionDefinition: { select: { name: true, label: true, actionType: true } },
             },
         });
         if (!execution) throw new ApiError(404, 'Execution not found');
+
+        // Verify the caller has workspace membership for the execution's asset
+        const member = await prisma.workspaceMember.findFirst({
+            where: { workspaceId: execution.asset.workspaceId, userId },
+            select: { id: true },
+        });
+        if (!member) throw new ApiError(404, 'Execution not found');
+
         return execution;
     }
 }

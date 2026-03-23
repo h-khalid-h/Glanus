@@ -152,6 +152,17 @@ export class MdmService {
             throw new ApiError(404, 'MDM profile not found');
         }
 
+        // Validate all asset IDs belong to this workspace
+        const validAssets = await prisma.asset.findMany({
+            where: { id: { in: data.assetIds }, workspaceId },
+            select: { id: true },
+        });
+        const validAssetIds = new Set(validAssets.map(a => a.id));
+        const invalidIds = data.assetIds.filter(id => !validAssetIds.has(id));
+        if (invalidIds.length > 0) {
+            throw new ApiError(400, `Assets not found in this workspace: ${invalidIds.join(', ')}`);
+        }
+
         return Promise.all(
             data.assetIds.map(async (assetId) => {
                 return prisma.mdmAssignment.upsert({

@@ -108,19 +108,24 @@ export class AssetAnalyticsService {
             'Description', 'Created At',
         ];
 
-        const rows = assets.map((asset) => [
-            asset.id, asset.name, asset.category?.name || '', asset.manufacturer || '',
-            asset.model || '', asset.serialNumber || '', asset.status, asset.location || '',
-            asset.assignedTo?.name || '', asset.assignedTo?.email || '',
-            asset.purchaseDate ? new Date(asset.purchaseDate).toISOString().split('T')[0] : '',
-            asset.purchaseCost || '',
-            asset.warrantyUntil ? new Date(asset.warrantyUntil).toISOString().split('T')[0] : '',
-            Array.isArray(asset.tags) ? asset.tags.join('; ') : '',
-            asset.description?.replace(/"/g, '""') || '',
-            new Date(asset.createdAt).toISOString(),
-        ]);
+        /** Escape a value for safe CSV embedding. */
+        const esc = (v: string | number | null | undefined): string => {
+            const s = String(v ?? '');
+            return `"${s.replace(/"/g, '""')}"`;
+        };
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        return [headers.join(','), ...rows.map((row: any[]) => row.map((cell: any) => `"${cell}"`).join(','))].join('\n');
+        const rows = assets.map((asset) => [
+            esc(asset.id), esc(asset.name), esc(asset.category?.name || ''), esc(asset.manufacturer || ''),
+            esc(asset.model || ''), esc(asset.serialNumber || ''), esc(asset.status), esc(asset.location || ''),
+            esc(asset.assignedTo?.name || ''), esc(asset.assignedTo?.email || ''),
+            esc(asset.purchaseDate ? new Date(asset.purchaseDate).toISOString().split('T')[0] : ''),
+            esc(asset.purchaseCost || ''),
+            esc(asset.warrantyUntil ? new Date(asset.warrantyUntil).toISOString().split('T')[0] : ''),
+            esc(Array.isArray(asset.tags) ? asset.tags.join('; ') : ''),
+            esc(asset.description || ''),
+            esc(new Date(asset.createdAt).toISOString()),
+        ].join(','));
+
+        return [headers.join(','), ...rows].join('\n');
     }
 }

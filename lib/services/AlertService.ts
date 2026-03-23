@@ -40,12 +40,19 @@ export class AlertService {
                 const newForecasts = criticalForecasts.filter((f) => !recentAssetIds.has(f.assetId));
 
                 if (newForecasts.length) {
+                    // Map oracle severity levels to valid Prisma enum values
+                    const severityMap: Record<string, 'INFO' | 'WARNING' | 'CRITICAL'> = {
+                        low: 'INFO',
+                        medium: 'WARNING',
+                        high: 'WARNING',
+                        critical: 'CRITICAL',
+                    };
                     await prisma.aIInsight.createMany({
                         data: newForecasts.map((forecast) => ({
                             workspaceId: workspace.id,
                             assetId: forecast.assetId,
                             type: 'CAPACITY_FORECAST' as const,
-                            severity: forecast.severity.toUpperCase() as 'INFO' | 'WARNING' | 'CRITICAL',
+                            severity: severityMap[forecast.severity] || 'WARNING',
                             title: `Capacity Burn - ${forecast.metric.toUpperCase()}`,
                             description: `Oracle expects ${forecast.metric.toUpperCase()} exhaustion in ${forecast.timeToThreshold}.`,
                             confidence: forecast.confidence,

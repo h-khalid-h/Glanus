@@ -42,6 +42,12 @@ export interface ReportScheduleUpdateInput {
  *  - createReportSchedule / updateReportSchedule / deleteReportSchedule: CRUD with audit trail
  */
 export class WorkspaceReportService {
+    /** Escape a value for safe CSV embedding: double-quote the value and escape internal quotes. */
+    private static csvEscape(value: string | number | null | undefined): string {
+        const str = String(value ?? '');
+        return `"${str.replace(/"/g, '""')}"`;
+    }
+
     static async generateReport(workspaceId: string, type: string): Promise<Response> {
         const filename = `glanus-${type}-${workspaceId}-${new Date().toISOString().split('T')[0]}.csv`;
 
@@ -75,6 +81,7 @@ export class WorkspaceReportService {
             });
 
             const headers = 'Asset ID,Name,Category,Type,Status,Serial Number,Location,Agent Status,Last Seen,OS Platform,CPU Usage (%),RAM Usage (%),Disk Usage (%),Active ORACLE Forecast,Created At';
+            const esc = WorkspaceReportService.csvEscape;
             const rows = assets.map((asset) => {
                 const agent = asset.agentConnection;
                 const m = agent?.metrics?.[0];
@@ -84,12 +91,12 @@ export class WorkspaceReportService {
                 const ram = m?.ramUsed !== undefined && m?.ramTotal ? ((m.ramUsed / m.ramTotal) * 100).toFixed(1) : 'N/A';
                 const disk = m?.diskUsed !== undefined && m?.diskTotal ? ((m.diskUsed / m.diskTotal) * 100).toFixed(1) : 'N/A';
                 return [
-                    asset.id, `"${asset.name}"`, categoryName, asset.assetType, asset.status,
-                    `"${asset.serialNumber || 'N/A'}"`, `"${asset.location || 'N/A'}"`,
+                    asset.id, esc(asset.name), esc(categoryName), asset.assetType, asset.status,
+                    esc(asset.serialNumber || 'N/A'), esc(asset.location || 'N/A'),
                     agent?.status || 'UNMANAGED',
                     agent?.updatedAt ? agent.updatedAt.toISOString() : 'Never',
                     agent?.platform || 'Unknown', cpu, ram, disk,
-                    `"${forecast ? `${forecast.severity} Risk: ${forecast.title}` : 'Normal'}"`,
+                    esc(forecast ? `${forecast.severity} Risk: ${forecast.title}` : 'Normal'),
                     asset.createdAt.toISOString(),
                 ].join(',');
             });
@@ -120,13 +127,14 @@ export class WorkspaceReportService {
             });
 
             const headers = 'Agent ID,Linked Asset,Platform,Agent Version,Status,Last Seen,CPU (Latest),RAM (Latest),Recent Script Execution,Script Status';
+            const esc2 = WorkspaceReportService.csvEscape;
             const rows = agents.map((agent) => {
                 const latestScript = agent.scripts[0];
                 return [
-                    agent.id, `"${agent.asset?.name ?? 'N/A'}"`, agent.platform, agent.agentVersion,
+                    agent.id, esc2(agent.asset?.name ?? 'N/A'), agent.platform, agent.agentVersion,
                     agent.status, agent.lastSeen.toISOString(),
                     agent.cpuUsage?.toFixed(1) ?? 'N/A', agent.ramUsage?.toFixed(1) ?? 'N/A',
-                    `"${latestScript?.scriptName || 'None'}"`, latestScript?.status || 'N/A',
+                    esc2(latestScript?.scriptName || 'None'), latestScript?.status || 'N/A',
                 ].join(',');
             });
 
@@ -151,11 +159,12 @@ export class WorkspaceReportService {
             });
 
             const headers = 'Insight ID,Linked Asset,Type,Severity,Confidence,Title,Description,Status,Created At';
+            const esc3 = WorkspaceReportService.csvEscape;
             const rows = insights.map((i) => [
-                i.id, `"${i.asset?.name || 'Workspace Level'}"`, i.type,
+                i.id, esc3(i.asset?.name || 'Workspace Level'), i.type,
                 i.severity || 'INFO',
                 i.confidence ? `${(i.confidence * 100).toFixed(0)}%` : 'N/A',
-                `"${i.title}"`, `"${i.description}"`,
+                esc3(i.title), esc3(i.description),
                 i.acknowledged ? 'RESOLVED' : 'ACTIVE',
                 i.createdAt.toISOString(),
             ].join(','));
