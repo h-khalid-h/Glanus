@@ -240,7 +240,7 @@ function PasswordStrengthMeter({ password }: { password: string }) {
                     {checks.map((check) => (
                         <span
                             key={check.label}
-                            className={`text-[10px] transition-colors ${check.met ? 'text-slate-400' : 'text-slate-600'}`}
+                            className={`text-[10px] transition-colors ${check.met ? 'text-slate-400' : 'text-slate-500'}`}
                         >
                             {check.met ? '✓' : '○'} {check.label}
                         </span>

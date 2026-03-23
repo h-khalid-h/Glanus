@@ -160,7 +160,7 @@ export default function DownloadAgentPage() {
                         <p className="text-muted-foreground mb-6">Paste this command into your target machine's {platform === 'windows' ? 'Administrator PowerShell' : 'Terminal'}. It will silently download the agent and authenticate it to this Workspace.</p>
 
                         <div className="relative group">
-                            <pre className="bg-[#0D1117] text-slate-300 p-4 rounded-xl font-mono text-sm overflow-x-auto whitespace-pre-wrap break-all border border-slate-800">
+                            <pre className="bg-slate-950 text-slate-300 p-4 rounded-xl font-mono text-sm overflow-x-auto whitespace-pre-wrap break-all border border-slate-800">
                                 {platform === 'windows' && `Invoke-WebRequest -Uri "${window.location.origin}${downloadInfo.downloadUrl}" -OutFile "GlanusAgent.msi"\nStart-Process -Wait -FilePath "msiexec.exe" -ArgumentList "/i GlanusAgent.msi PRE_AUTH_TOKEN=${downloadInfo.preAuthToken} API_ENDPOINT=${downloadInfo.apiEndpoint} /quiet"`}
                                 {platform === 'macos' && `curl -sSL ${window.location.origin}${downloadInfo.downloadUrl} -o GlanusAgent.pkg && \\\nsudo installer -pkg GlanusAgent.pkg -target / && \\\nsudo /Library/Application\\ Support/Glanus/agent-register --token "${downloadInfo.preAuthToken}" --url "${downloadInfo.apiEndpoint}"`}
                                 {platform === 'linux' && `curl -sSL ${window.location.origin}/install-linux.sh | sudo bash -s -- --token "${downloadInfo.preAuthToken}" --url "${downloadInfo.apiEndpoint}"`}

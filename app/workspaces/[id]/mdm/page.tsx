@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { csrfFetch } from '@/lib/api/csrfFetch';
 import { useToast } from '@/lib/toast';
-import { Smartphone, Shield, Plus, XCircle, Server, ArrowRightLeft } from 'lucide-react';
+import { Smartphone, Shield, Plus, XCircle, Server, ArrowRightLeft, X } from 'lucide-react';
 import { MdmProfileForm } from '@/components/workspace/mdm/MdmProfileForm';
 import { ConfirmDialog } from '@/components/ui';
 
@@ -49,6 +49,7 @@ export default function MDMDashboardPage() {
     const [loading, setLoading] = useState(true);
     const [isCreatingProfile, setIsCreatingProfile] = useState(false);
     const [confirmState, setConfirmState] = useState<{ open: boolean; profileId: string | null }>({ open: false, profileId: null });
+    const [assignModal, setAssignModal] = useState<{ open: boolean; profile: MdmProfile | null; assetId: string }>({ open: false, profile: null, assetId: '' });
 
     useEffect(() => {
         if (params.id) {
@@ -91,9 +92,9 @@ export default function MDMDashboardPage() {
         }
     };
 
-    const handleAssignProfile = async (profile: MdmProfile) => {
-        const assetId = window.prompt(`Enter the Asset ID to deploy "${profile.name}" to:`);
-        if (!assetId?.trim()) return;
+    const handleAssignProfile = async () => {
+        const { profile, assetId } = assignModal;
+        if (!profile || !assetId.trim()) return;
 
         try {
             const res = await csrfFetch(`/api/workspaces/${params.id}/mdm/assignments`, {
@@ -106,6 +107,7 @@ export default function MDMDashboardPage() {
                 throw new Error(data.error || 'Assignment failed');
             }
             success('Profile assigned to asset successfully');
+            setAssignModal({ open: false, profile: null, assetId: '' });
             fetchData();
         } catch (err: unknown) {
             showError(err instanceof Error ? err.message : 'Assignment failed');
@@ -206,7 +208,7 @@ export default function MDMDashboardPage() {
                                         </div>
 
                                         <div className="flex justify-end border-t border-slate-800 pt-3">
-                                            <button onClick={() => handleAssignProfile(profile)} className="text-nerve hover:text-white text-sm font-medium transition-colors">
+                                            <button onClick={() => setAssignModal({ open: true, profile, assetId: '' })} className="text-nerve hover:text-white text-sm font-medium transition-colors">
                                                 Deploy to Asset &rarr;
                                             </button>
                                         </div>
@@ -282,6 +284,40 @@ export default function MDMDashboardPage() {
                 }}
                 onCancel={() => setConfirmState({ open: false, profileId: null })}
             />
+
+            {assignModal.open && assignModal.profile && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setAssignModal({ open: false, profile: null, assetId: '' })} />
+                    <div className="relative z-10 w-full max-w-md rounded-xl border border-slate-700 bg-slate-900 p-6 shadow-2xl" role="dialog" aria-modal="true" aria-labelledby="assign-modal-title">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 id="assign-modal-title" className="text-base font-semibold text-white">Deploy Profile</h3>
+                            <button onClick={() => setAssignModal({ open: false, profile: null, assetId: '' })} className="text-slate-400 hover:text-white transition" aria-label="Close">
+                                <X size={18} />
+                            </button>
+                        </div>
+                        <p className="text-sm text-slate-400 mb-4">
+                            Enter the Asset ID to deploy &ldquo;{assignModal.profile.name}&rdquo; to:
+                        </p>
+                        <input
+                            type="text"
+                            autoFocus
+                            value={assignModal.assetId}
+                            onChange={(e) => setAssignModal(prev => ({ ...prev, assetId: e.target.value }))}
+                            onKeyDown={(e) => { if (e.key === 'Enter' && assignModal.assetId.trim()) handleAssignProfile(); }}
+                            className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-nerve mb-4"
+                            placeholder="e.g. asset_01abc..."
+                        />
+                        <div className="flex justify-end gap-3">
+                            <button type="button" onClick={() => setAssignModal({ open: false, profile: null, assetId: '' })} className="rounded-lg border border-slate-700 bg-slate-800 px-4 py-2 text-sm font-medium text-slate-300 hover:bg-slate-700 transition-colors">
+                                Cancel
+                            </button>
+                            <button type="button" onClick={handleAssignProfile} disabled={!assignModal.assetId.trim()} className="rounded-lg bg-nerve px-4 py-2 text-sm font-semibold text-white hover:bg-nerve/90 transition-colors disabled:opacity-50">
+                                Deploy
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

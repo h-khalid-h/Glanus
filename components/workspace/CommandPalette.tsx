@@ -262,7 +262,7 @@ export function CommandPalette() {
                 </div>
 
                 {/* Footer */}
-                <div className="px-4 py-2 border-t border-slate-800 flex items-center justify-between text-[10px] text-slate-600">
+                <div className="px-4 py-2 border-t border-slate-800 flex items-center justify-between text-[10px] text-slate-500">
                     <div className="flex items-center gap-3">
                         <span className="flex items-center gap-1"><kbd className="px-1 rounded bg-slate-800 border border-slate-700">↑↓</kbd> navigate</span>
                         <span className="flex items-center gap-1"><kbd className="px-1 rounded bg-slate-800 border border-slate-700">↵</kbd> open</span>
