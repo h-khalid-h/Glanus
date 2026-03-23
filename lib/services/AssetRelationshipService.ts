@@ -89,8 +89,14 @@ export class AssetRelationshipService {
         }
 
         const [parentAsset, childAsset] = await Promise.all([
-            prisma.asset.findUnique({ where: { id: data.parentAssetId }, select: { id: true, name: true } }),
-            prisma.asset.findUnique({ where: { id: data.childAssetId }, select: { id: true, name: true } }),
+            prisma.asset.findFirst({
+                where: { id: data.parentAssetId, deletedAt: null, workspace: { members: { some: { userId } } } },
+                select: { id: true, name: true, workspaceId: true },
+            }),
+            prisma.asset.findFirst({
+                where: { id: data.childAssetId, deletedAt: null, workspace: { members: { some: { userId } } } },
+                select: { id: true, name: true, workspaceId: true },
+            }),
         ]);
         if (!parentAsset) throw new ApiError(404, 'Parent asset not found');
         if (!childAsset) throw new ApiError(404, 'Child asset not found');

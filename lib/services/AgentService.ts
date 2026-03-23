@@ -112,9 +112,9 @@ export class AgentService {
             throw new ApiError(404, 'Workspace not found');
         }
 
-        // Verify asset belongs to workspace
+        // Verify asset belongs to workspace and is not soft-deleted
         const asset = await prisma.asset.findFirst({
-            where: { id: data.assetId, workspaceId: data.workspaceId },
+            where: { id: data.assetId, workspaceId: data.workspaceId, deletedAt: null },
         });
         if (!asset) {
             throw new ApiError(404, 'Asset not found or does not belong to workspace');

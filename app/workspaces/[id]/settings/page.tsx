@@ -160,8 +160,9 @@ export default function WorkspaceSettingsPage() {
         setLoadingKeys(true);
         try {
             const res = await csrfFetch(`/api/workspaces/${workspaceId}/api-keys`);
+            if (!res.ok) throw new Error('Failed to fetch API keys');
             const data = await res.json();
-            if (res.ok) setApiKeys(data.data?.keys || []);
+            setApiKeys(data.data?.keys || []);
         } catch {
             toastError('Load Error', 'Failed to fetch API keys');
         } finally {
@@ -230,8 +231,9 @@ export default function WorkspaceSettingsPage() {
         setLoadingWebhooks(true);
         try {
             const res = await csrfFetch(`/api/workspaces/${workspaceId}/webhook`);
+            if (!res.ok) throw new Error('Failed to fetch webhooks');
             const data = await res.json();
-            if (res.ok) setWebhooks(Array.isArray(data.data?.webhooks) ? data.data.webhooks : data.data ? [data.data] : []);
+            setWebhooks(Array.isArray(data.data?.webhooks) ? data.data.webhooks : data.data ? [data.data] : []);
         } catch {
             toastError('Load Error', 'Failed to fetch webhooks');
         } finally {

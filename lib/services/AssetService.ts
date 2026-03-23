@@ -107,7 +107,7 @@ export class AssetService {
 
         if (data.serialNumber) {
             const existing = await prisma.asset.findFirst({
-                where: { serialNumber: data.serialNumber, workspaceId },
+                where: { serialNumber: data.serialNumber, workspaceId, deletedAt: null },
             });
             if (existing) throw new ApiError(409, 'An asset with this serial number already exists in this workspace');
         }
