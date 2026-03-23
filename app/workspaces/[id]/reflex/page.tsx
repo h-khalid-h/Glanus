@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import type { AutomationRule, ActionQueueItem } from '@/lib/reflex/automation';
 import { ReflexRuleForm } from '@/components/workspace/reflex/ReflexRuleForm';
+import { ConfirmDialog } from '@/components/ui';
 
 export default function ReflexDashboardPage() {
     const params = useParams();
@@ -21,6 +22,7 @@ export default function ReflexDashboardPage() {
     const [queue, setQueue] = useState<ActionQueueItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [isCreatingRule, setIsCreatingRule] = useState(false);
+    const [confirmState, setConfirmState] = useState<{ open: boolean; ruleId: string | null }>({ open: false, ruleId: null });
 
     useEffect(() => {
         if (params.id) {
@@ -52,8 +54,6 @@ export default function ReflexDashboardPage() {
     };
 
     const handleDeleteRule = async (ruleId: string) => {
-        if (!confirm('Are you sure you want to delete this automation rule?')) return;
-
         try {
             const res = await csrfFetch(`/api/workspaces/${params.id}/reflex/rules/${ruleId}`, {
                 method: 'DELETE',
@@ -302,7 +302,7 @@ export default function ReflexDashboardPage() {
                                                 </h3>
                                                 <p className="text-sm text-slate-500 mt-1">{rule.description}</p>
                                             </div>
-                                            <button onClick={() => handleDeleteRule(rule.id)} className="text-slate-500 hover:text-red-400">
+                                            <button onClick={() => setConfirmState({ open: true, ruleId: rule.id })} className="text-slate-500 hover:text-red-400">
                                                 <XCircle className="w-5 h-5" />
                                             </button>
                                         </div>
@@ -332,6 +332,18 @@ export default function ReflexDashboardPage() {
                     )}
                 </div>
             )}
+            <ConfirmDialog
+                open={confirmState.open}
+                title="Delete Automation Rule"
+                message="Are you sure you want to delete this automation rule?"
+                confirmLabel="Delete"
+                variant="danger"
+                onConfirm={() => {
+                    if (confirmState.ruleId) handleDeleteRule(confirmState.ruleId);
+                    setConfirmState({ open: false, ruleId: null });
+                }}
+                onCancel={() => setConfirmState({ open: false, ruleId: null })}
+            />
         </div>
     );
 }

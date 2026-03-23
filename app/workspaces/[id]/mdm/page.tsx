@@ -6,6 +6,7 @@ import { csrfFetch } from '@/lib/api/csrfFetch';
 import { useToast } from '@/lib/toast';
 import { Smartphone, Shield, Plus, XCircle, Server, ArrowRightLeft } from 'lucide-react';
 import { MdmProfileForm } from '@/components/workspace/mdm/MdmProfileForm';
+import { ConfirmDialog } from '@/components/ui';
 
 interface MdmProfile {
     id: string;
@@ -47,6 +48,7 @@ export default function MDMDashboardPage() {
     const [assignments, setAssignments] = useState<MdmAssignment[]>([]);
     const [loading, setLoading] = useState(true);
     const [isCreatingProfile, setIsCreatingProfile] = useState(false);
+    const [confirmState, setConfirmState] = useState<{ open: boolean; profileId: string | null }>({ open: false, profileId: null });
 
     useEffect(() => {
         if (params.id) {
@@ -78,7 +80,6 @@ export default function MDMDashboardPage() {
     };
 
     const handleDeleteProfile = async (profileId: string) => {
-        if (!confirm('Delete this profile? Active assignments will be orphaned.')) return;
         try {
             const res = await csrfFetch(`/api/workspaces/${params.id}/mdm/profiles/${profileId}`, { method: 'DELETE' });
             if (res.ok) {
@@ -188,7 +189,7 @@ export default function MDMDashboardPage() {
                                                 </h3>
                                                 <p className="text-sm text-slate-500 mt-1">{profile.description}</p>
                                             </div>
-                                            <button onClick={() => handleDeleteProfile(profile.id)} className="text-slate-500 hover:text-red-400">
+                                            <button onClick={() => setConfirmState({ open: true, profileId: profile.id })} className="text-slate-500 hover:text-red-400">
                                                 <XCircle className="w-5 h-5" />
                                             </button>
                                         </div>
@@ -269,6 +270,18 @@ export default function MDMDashboardPage() {
                     )}
                 </div>
             )}
+            <ConfirmDialog
+                open={confirmState.open}
+                title="Delete MDM Profile"
+                message="Delete this profile? Active assignments will be orphaned."
+                confirmLabel="Delete"
+                variant="danger"
+                onConfirm={() => {
+                    if (confirmState.profileId) handleDeleteProfile(confirmState.profileId);
+                    setConfirmState({ open: false, profileId: null });
+                }}
+                onCancel={() => setConfirmState({ open: false, profileId: null })}
+            />
         </div>
     );
 }

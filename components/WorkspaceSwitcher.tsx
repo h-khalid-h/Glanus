@@ -62,7 +62,7 @@ export default function WorkspaceSwitcher() {
             >
                 <div className="flex items-center gap-2 truncate">
                     <div
-                        className="w-5 h-5 rounded bg-nerve/15/30 flex items-center justify-center text-nerve shrink-0"
+                        className="w-5 h-5 rounded bg-nerve/15 flex items-center justify-center text-nerve shrink-0"
                         style={{ backgroundColor: currentWorkspace?.primaryColor ? `${currentWorkspace.primaryColor}20` : undefined, color: currentWorkspace?.primaryColor || undefined }}
                     >
                         {currentWorkspace?.logo ? (
@@ -111,13 +111,13 @@ export default function WorkspaceSwitcher() {
                         ))}
                     </div>
 
-                    <div className="px-1 py-1 mt-1 border-t border-slate-100">
+                    <div className="px-1 py-1 mt-1 border-t border-slate-700">
                         <button type="button"
                             onClick={() => { setIsOpen(false); router.push('/workspaces/new'); }}
                             className="group flex w-full items-center gap-2 rounded-md px-2 py-2 text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800/40 transition-colors"
                             role="menuitem"
                         >
-                            <div className="w-5 h-5 rounded border border-dashed border-slate-300 flex items-center justify-center">
+                            <div className="w-5 h-5 rounded border border-dashed border-slate-600 flex items-center justify-center">
                                 <Plus className="w-3 h-3" />
                             </div>
                             Create Workspace

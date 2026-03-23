@@ -8,6 +8,7 @@ import { PageSpinner } from '@/components/ui/Spinner';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { WorkspaceLayout } from '@/components/workspace/WorkspaceLayout';
 import { Button } from '@/components/ui/Button';
+import { ConfirmDialog } from '@/components/ui';
 import { ShieldCheck, ShieldAlert, Network, X, Key, Info, Ban, Activity } from 'lucide-react';
 
 interface ZtnaPolicy {
@@ -35,6 +36,7 @@ function ZtnaDashboardContent() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [editingPolicy, setEditingPolicy] = useState<ZtnaPolicy | null>(null);
+    const [confirmState, setConfirmState] = useState<{ open: boolean; policyId: string | null }>({ open: false, policyId: null });
     const [formData, setFormData] = useState({
         isEnabled: false,
         ipWhitelist: '',
@@ -115,8 +117,6 @@ function ZtnaDashboardContent() {
     };
 
     const handleDisableOrDelete = async (policyId: string) => {
-        if (!confirm('Are you sure you want to completely disable and delete this exact Conditional Access policy? Your workspace may become vulnerable.')) return;
-
         try {
             const res = await csrfFetch(`/api/workspaces/${workspaceId}/ztna/${policyId}`, {
                 method: 'DELETE',
@@ -204,7 +204,7 @@ function ZtnaDashboardContent() {
                         <div className="bg-slate-950/50 p-4 border-t border-slate-800 flex justify-between items-center text-sm text-slate-500">
                             <span>Last audited: {new Date(activePolicy.updatedAt).toLocaleDateString()}</span>
                             <button
-                                onClick={() => handleDisableOrDelete(activePolicy.id)}
+                                onClick={() => setConfirmState({ open: true, policyId: activePolicy.id })}
                                 className="flex items-center gap-1 hover:text-red-400 transition"
                             >
                                 <X size={14} /> Abolish Boundary
@@ -213,6 +213,19 @@ function ZtnaDashboardContent() {
                     </div>
                 </div>
             )}
+
+            <ConfirmDialog
+                open={confirmState.open}
+                title="Delete Conditional Access Policy"
+                message="Are you sure you want to completely disable and delete this Conditional Access policy? Your workspace may become vulnerable."
+                confirmLabel="Delete Policy"
+                variant="danger"
+                onConfirm={() => {
+                    if (confirmState.policyId) handleDisableOrDelete(confirmState.policyId);
+                    setConfirmState({ open: false, policyId: null });
+                }}
+                onCancel={() => setConfirmState({ open: false, policyId: null })}
+            />
 
             {/* ZTNA Configuration Modal */}
             {isModalOpen && (

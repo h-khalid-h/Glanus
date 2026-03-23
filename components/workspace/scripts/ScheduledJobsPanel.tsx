@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { csrfFetch } from '@/lib/api/csrfFetch';
 import { useToast } from '@/lib/toast';
 import { Calendar, PlayCircle, Plus, Trash2, Clock, X, Power, Loader2 } from 'lucide-react';
+import { ConfirmDialog } from '@/components/ui';
 
 interface Script {
     id: string;
@@ -41,6 +42,8 @@ export function ScheduledJobsPanel({ workspaceId, availableScripts }: { workspac
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [agents, setAgents] = useState<Agent[]>([]);
     const [loadingAgents, setLoadingAgents] = useState(false);
+
+    const [confirmState, setConfirmState] = useState<{ open: boolean; scheduleId: string | null }>({ open: false, scheduleId: null });
 
     // Form State
     const [formData, setFormData] = useState({
@@ -136,7 +139,6 @@ export function ScheduledJobsPanel({ workspaceId, availableScripts }: { workspac
     };
 
     const handleDelete = async (scheduleId: string) => {
-        if (!confirm('Permanently delete this scheduled job?')) return;
         try {
             const res = await csrfFetch(`/api/workspaces/${workspaceId}/scripts/schedules/${scheduleId}`, { method: 'DELETE' });
             if (!res.ok) throw new Error('Failed to delete schedule');
@@ -239,14 +241,14 @@ export function ScheduledJobsPanel({ workspaceId, availableScripts }: { workspac
                                             <button
                                                 onClick={() => handleToggle(schedule.id, schedule.enabled)}
                                                 className={`p-1.5 rounded transition ${schedule.enabled ? 'text-green-500 hover:bg-green-500/10' : 'text-slate-500 hover:text-white hover:bg-slate-700'}`}
-                                                title={schedule.enabled ? 'Pause Job' : 'Resume Job'}
+                                                aria-label={schedule.enabled ? 'Pause Job' : 'Resume Job'}
                                             >
                                                 <Power size={16} />
                                             </button>
                                             <button
-                                                onClick={() => handleDelete(schedule.id)}
+                                                onClick={() => setConfirmState({ open: true, scheduleId: schedule.id })}
                                                 className="p-1.5 rounded text-slate-500 hover:text-red-400 hover:bg-red-400/10 transition"
-                                                title="Delete Job"
+                                                aria-label="Delete Job"
                                             >
                                                 <Trash2 size={16} />
                                             </button>
@@ -259,12 +261,25 @@ export function ScheduledJobsPanel({ workspaceId, availableScripts }: { workspac
                 </div>
             )}
 
+            <ConfirmDialog
+                open={confirmState.open}
+                title="Delete Scheduled Job"
+                message="Permanently delete this scheduled job? This action cannot be undone."
+                confirmLabel="Delete"
+                variant="danger"
+                onConfirm={() => {
+                    if (confirmState.scheduleId) handleDelete(confirmState.scheduleId);
+                    setConfirmState({ open: false, scheduleId: null });
+                }}
+                onCancel={() => setConfirmState({ open: false, scheduleId: null })}
+            />
+
             {/* Creation Modal */}
             {isCreating && (
                 <div className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-                    <div className="bg-slate-900 border border-slate-800 rounded-xl w-full max-w-2xl overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+                    <div className="bg-slate-900 border border-slate-800 rounded-xl w-full max-w-2xl overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200" role="dialog" aria-modal="true" aria-labelledby="schedule-modal-title">
                         <div className="px-6 py-4 border-b border-slate-800 flex justify-between items-center bg-slate-900/50">
-                            <h2 className="text-xl font-semibold flex items-center gap-2 text-foreground">
+                            <h2 id="schedule-modal-title" className="text-xl font-semibold flex items-center gap-2 text-foreground">
                                 <Clock size={20} className="text-nerve" />
                                 Schedule Automation Job
                             </h2>

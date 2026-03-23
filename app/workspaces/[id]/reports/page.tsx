@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/Button';
 import { Download, FileText, Activity, Server, AlertTriangle, Plus, Trash2, Clock, Mail, ToggleLeft, ToggleRight } from 'lucide-react';
 import { useToast } from '@/lib/toast';
 import { csrfFetch } from '@/lib/api/csrfFetch';
+import { ConfirmDialog } from '@/components/ui';
 
 interface ReportSchedule {
     id: string;
@@ -50,6 +51,8 @@ export default function ReportsPage() {
     const [loadingSchedules, setLoadingSchedules] = useState(true);
     const [isCreatingSchedule, setIsCreatingSchedule] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const [confirmState, setConfirmState] = useState<{ open: boolean; scheduleId: string | null }>({ open: false, scheduleId: null });
 
     // Form state
     const [scheduleForm, setScheduleForm] = useState({
@@ -175,7 +178,6 @@ export default function ReportsPage() {
     };
 
     const handleDeleteSchedule = async (scheduleId: string) => {
-        if (!confirm('Permanently delete this delivery schedule?')) return;
         try {
             const res = await csrfFetch(`/api/workspaces/${workspaceId}/reports/schedules/${scheduleId}`, {
                 method: 'DELETE'
@@ -435,7 +437,7 @@ export default function ReportsPage() {
                                         )}
                                     </div>
                                     <button
-                                        onClick={() => handleDeleteSchedule(schedule.id)}
+                                        onClick={() => setConfirmState({ open: true, scheduleId: schedule.id })}
                                         className="p-1.5 text-slate-500 hover:text-red-400 hover:bg-red-400/10 rounded-md transition"
                                         title="Delete schedule"
                                     >
@@ -447,6 +449,19 @@ export default function ReportsPage() {
                     </div>
                 )}
             </div>
+
+            <ConfirmDialog
+                open={confirmState.open}
+                title="Delete Delivery Schedule"
+                message="Permanently delete this delivery schedule? This action cannot be undone."
+                confirmLabel="Delete"
+                variant="danger"
+                onConfirm={() => {
+                    if (confirmState.scheduleId) handleDeleteSchedule(confirmState.scheduleId);
+                    setConfirmState({ open: false, scheduleId: null });
+                }}
+                onCancel={() => setConfirmState({ open: false, scheduleId: null })}
+            />
         </div>
     );
 }

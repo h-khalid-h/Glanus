@@ -99,7 +99,7 @@ export default function GeneralSettings({ workspace }: { workspace: Workspace })
                         Description
                     </label>
                     <textarea
-                        className="w-full rounded-lg border border-slate-300 bg-slate-900/50 backdrop-blur-sm px-4 py-2 text-sm focus:ring-2 focus:ring-nerve/50 focus:border-nerve/50 min-h-[100px] resize-none"
+                        className="w-full rounded-lg border border-slate-700 bg-slate-900/50 backdrop-blur-sm px-4 py-2 text-sm focus:ring-2 focus:ring-nerve/50 focus:border-nerve/50 min-h-[100px] resize-none"
                         value={formData.description}
                         onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                         placeholder="What is this workspace for?"

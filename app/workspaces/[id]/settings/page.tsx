@@ -9,6 +9,7 @@ import {
     Key, Webhook, Bell, Plus, Trash2, Copy, Check,
     Shield, Clock, Globe, ToggleLeft, ToggleRight,
 } from 'lucide-react';
+import { ConfirmDialog } from '@/components/ui';
 
 interface WorkspaceDetails {
     id: string;
@@ -85,6 +86,7 @@ export default function WorkspaceSettingsPage() {
     const [webhookUrl, setWebhookUrl] = useState('');
     const [webhookSecret, setWebhookSecret] = useState('');
     const [addingWebhook, setAddingWebhook] = useState(false);
+    const [confirmState, setConfirmState] = useState<{ open: boolean; action: (() => void) | null; title: string; message: string }>({ open: false, action: null, title: '', message: '' });
 
     // Notification Prefs
     const [emailNotifs, setEmailNotifs] = useState(true);
@@ -191,8 +193,16 @@ export default function WorkspaceSettingsPage() {
         }
     };
 
+    const requestRevokeKey = (keyId: string) => {
+        setConfirmState({
+            open: true,
+            title: 'Revoke API Key',
+            message: 'Revoke this API key? Applications using it will lose access.',
+            action: () => handleRevokeKey(keyId),
+        });
+    };
+
     const handleRevokeKey = async (keyId: string) => {
-        if (!confirm('Revoke this API key? Applications using it will lose access.')) return;
         try {
             const res = await csrfFetch(`/api/workspaces/${workspaceId}/api-keys?keyId=${keyId}`, { method: 'DELETE' });
             if (!res.ok) throw new Error('Failed to revoke key');
@@ -251,8 +261,16 @@ export default function WorkspaceSettingsPage() {
         }
     };
 
+    const requestDeleteWebhook = (webhookId: string) => {
+        setConfirmState({
+            open: true,
+            title: 'Remove Webhook',
+            message: 'Remove this webhook endpoint?',
+            action: () => handleDeleteWebhook(webhookId),
+        });
+    };
+
     const handleDeleteWebhook = async (webhookId: string) => {
-        if (!confirm('Remove this webhook endpoint?')) return;
         try {
             const res = await csrfFetch(`/api/workspaces/${workspaceId}/webhook?webhookId=${webhookId}`, { method: 'DELETE' });
             if (!res.ok) throw new Error('Failed to delete webhook');
@@ -491,7 +509,7 @@ export default function WorkspaceSettingsPage() {
                                             </div>
                                         </div>
                                         {!key.revokedAt && (
-                                            <button onClick={() => handleRevokeKey(key.id)} className="p-2 text-slate-500 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition" title="Revoke Key">
+                                            <button onClick={() => requestRevokeKey(key.id)} className="p-2 text-slate-500 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition" title="Revoke Key">
                                                 <Trash2 size={16} />
                                             </button>
                                         )}
@@ -565,7 +583,7 @@ export default function WorkspaceSettingsPage() {
                                                 {wh.failureCount > 0 && <span className="text-red-400">{wh.failureCount} failures</span>}
                                             </div>
                                         </div>
-                                        <button onClick={() => handleDeleteWebhook(wh.id)} className="p-2 text-slate-500 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition" title="Remove">
+                                        <button onClick={() => requestDeleteWebhook(wh.id)} className="p-2 text-slate-500 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition" title="Remove">
                                             <Trash2 size={16} />
                                         </button>
                                     </div>
@@ -693,6 +711,19 @@ export default function WorkspaceSettingsPage() {
                     </div>
                 </div>
             )}
+
+            <ConfirmDialog
+                open={confirmState.open}
+                title={confirmState.title}
+                message={confirmState.message}
+                confirmLabel="Confirm"
+                variant="danger"
+                onConfirm={() => {
+                    confirmState.action?.();
+                    setConfirmState({ open: false, action: null, title: '', message: '' });
+                }}
+                onCancel={() => setConfirmState({ open: false, action: null, title: '', message: '' })}
+            />
         </div>
     );
 }

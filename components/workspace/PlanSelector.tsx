@@ -79,7 +79,7 @@ export default function PlanSelector({ selectedPlan, onChange }: PlanSelectorPro
                         'relative rounded-xl border p-6 shadow-sm transition-all duration-200 cursor-pointer hover:shadow-md',
                         selectedPlan === plan.id
                             ? 'border-blue-600 ring-2 ring-blue-600 bg-nerve/10'
-                            : 'border-slate-200 hover:border-blue-300'
+                            : 'border-slate-700 hover:border-nerve/50'
                     )}
                     onClick={() => onChange(plan.id)}
                 >

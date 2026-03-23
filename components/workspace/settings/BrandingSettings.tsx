@@ -70,7 +70,7 @@ export default function BrandingSettings({ workspace }: { workspace: Workspace }
                         <label className="block text-sm font-medium text-slate-300 mb-2">Primary Color</label>
                         <div className="flex items-center gap-3">
                             <div
-                                className="w-10 h-10 rounded-lg shadow-sm border border-slate-200"
+                                className="w-10 h-10 rounded-lg shadow-sm border border-slate-700"
                                 style={{ backgroundColor: formData.primaryColor }}
                             />
                             <input
@@ -87,7 +87,7 @@ export default function BrandingSettings({ workspace }: { workspace: Workspace }
                         <label className="block text-sm font-medium text-slate-300 mb-2">Accent Color</label>
                         <div className="flex items-center gap-3">
                             <div
-                                className="w-10 h-10 rounded-lg shadow-sm border border-slate-200"
+                                className="w-10 h-10 rounded-lg shadow-sm border border-slate-700"
                                 style={{ backgroundColor: formData.accentColor }}
                             />
                             <input
@@ -101,8 +101,8 @@ export default function BrandingSettings({ workspace }: { workspace: Workspace }
                     </div>
                 </div>
 
-                <div className="bg-slate-50 p-6 rounded-xl border border-slate-200">
-                    <h3 className="text-sm font-medium text-slate-500 uppercase tracking-wider mb-4">Preview</h3>
+                <div className="bg-slate-900 p-6 rounded-xl border border-slate-700">
+                    <h3 className="text-sm font-medium text-slate-400 uppercase tracking-wider mb-4">Preview</h3>
                     <div className="flex flex-wrap gap-4 items-center">
                         <button type="button"
                             className="px-4 py-2 rounded-lg text-white font-medium shadow-sm transition-opacity hover:opacity-90"
