@@ -95,8 +95,8 @@ export class WorkspaceAuditService {
      * Paginated audit log query with multi-field filtering.
      */
     static async getLogs(workspaceId: string, filters: AuditLogFilters) {
-        const page = filters.page ?? 1;
-        const limit = filters.limit ?? 50;
+        const page = Math.max(1, filters.page ?? 1);
+        const limit = Math.min(200, Math.max(1, filters.limit ?? 50));
         const skip = (page - 1) * limit;
         const where = WorkspaceAuditService.buildWhere(workspaceId, filters);
 

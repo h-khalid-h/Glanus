@@ -7,6 +7,7 @@
  *  - Supports HMAC-SHA256 request signing for endpoint verification
  */
 import crypto from 'crypto';
+import { isPrivateUrl } from '@/lib/security/ssrf';
 
 interface WebhookPayload {
     alert: string;
@@ -62,6 +63,10 @@ export class WebhookService {
         payload: WebhookPayload,
         secret?: string
     ): Promise<void> {
+        if (isPrivateUrl(url)) {
+            throw new Error('Webhook URL must not target private or internal networks');
+        }
+
         const body = JSON.stringify(payload);
         const headers: Record<string, string> = {
             'Content-Type': 'application/json',
