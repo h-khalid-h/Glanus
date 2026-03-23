@@ -55,6 +55,7 @@ export const POST = withErrorHandler(async (request: NextRequest, context: Route
     await requireWorkspaceRole(workspaceId, user.id, 'ADMIN', request);
 
     const data = saveRuleSchema.parse(await request.json());
+    const isUpdate = !!data.id;
 
     const rulePayload = {
         id: data.id || `rule_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
@@ -70,5 +71,5 @@ export const POST = withErrorHandler(async (request: NextRequest, context: Route
     };
 
     const rule = await saveRule(workspaceId, rulePayload);
-    return apiSuccess(rule, { message: 'Automation rule saved successfully' }, 201);
+    return apiSuccess(rule, { message: 'Automation rule saved successfully' }, isUpdate ? 200 : 201);
 });

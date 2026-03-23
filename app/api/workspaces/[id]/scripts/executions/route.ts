@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { requireAuth, requireWorkspaceRole, withErrorHandler } from '@/lib/api/withAuth';
-import { apiSuccess, apiError } from '@/lib/api/response';
+import { apiSuccess } from '@/lib/api/response';
 import { ScriptService } from '@/lib/services/ScriptService';
 
 /**
@@ -27,16 +27,12 @@ export const GET = withErrorHandler(async (
     const scriptId = url.searchParams.get('scriptId');
     const agentId = url.searchParams.get('agentId');
 
-    try {
-        const result = await ScriptService.getScriptExecutions(params.id, {
-            limit,
-            status,
-            scriptId,
-            agentId
-        });
+    const result = await ScriptService.getScriptExecutions(params.id, {
+        limit,
+        status,
+        scriptId,
+        agentId
+    });
 
-        return apiSuccess(result);
-    } catch (_error) {
-        return apiError(500, 'Failed to fetch script executions');
-    }
+    return apiSuccess(result);
 });

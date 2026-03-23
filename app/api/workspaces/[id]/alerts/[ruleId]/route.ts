@@ -52,13 +52,14 @@ export const DELETE = withErrorHandler(async (
     return apiSuccess({ message: 'Alert rule deleted successfully' });
 });
 
-// HEAD /api/workspaces/[id]/alerts/[ruleId] — lightweight auth check
+// HEAD /api/workspaces/[id]/alerts/[ruleId] — lightweight auth + existence check
 export const HEAD = withErrorHandler(async (
     _request: NextRequest,
     context: { params: Promise<{ id: string; ruleId: string }> }
 ) => {
-    const { id: workspaceId } = await context.params;
+    const { id: workspaceId, ruleId } = await context.params;
     const user = await requireAuth();
     await requireWorkspaceAccess(workspaceId, user.id);
+    await WorkspaceAlertService.getAlertRule(workspaceId, ruleId);
     return apiSuccess({ authorized: true });
 });

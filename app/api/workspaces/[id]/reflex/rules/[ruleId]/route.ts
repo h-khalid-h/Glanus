@@ -1,4 +1,4 @@
-import { apiSuccess } from '@/lib/api/response';
+import { apiDeleted } from '@/lib/api/response';
 import { NextRequest } from 'next/server';
 import { deleteRule } from '@/lib/reflex/automation';
 import { requireAuth, requireWorkspaceRole, withErrorHandler } from '@/lib/api/withAuth';
@@ -13,5 +13,5 @@ export const DELETE = withErrorHandler(async (request: NextRequest, context: Rou
     const { id: workspaceId, ruleId } = await context.params;
     await requireWorkspaceRole(workspaceId, user.id, 'ADMIN', request);
     await deleteRule(workspaceId, ruleId);
-    return apiSuccess({ deletedId: ruleId }, { message: 'Automation rule deleted successfully' }, 200);
+    return apiDeleted();
 });
