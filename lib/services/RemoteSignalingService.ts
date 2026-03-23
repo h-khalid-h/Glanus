@@ -28,7 +28,17 @@ export class RemoteSignalingService {
         userId: string | null,
         agentBearerToken: string | null,
     ): Promise<{ isAuthorized: boolean; isAgent: boolean }> {
-        if (userId) return { isAuthorized: true, isAgent: false };
+        if (userId) {
+            // Verify the user is a workspace member for the session's asset
+            const session = await prisma.remoteSession.findFirst({
+                where: {
+                    id: sessionId,
+                    asset: { workspace: { members: { some: { userId } } } },
+                },
+                select: { id: true },
+            });
+            return { isAuthorized: !!session, isAgent: false };
+        }
 
         if (agentBearerToken) {
             const hashedToken = hashAgentToken(agentBearerToken);

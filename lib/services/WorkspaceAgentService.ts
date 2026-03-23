@@ -44,9 +44,9 @@ export class WorkspaceAgentService {
             asset: agent.asset,
         }));
 
-        const onlineAgents = agents.filter((a) => a.status === 'ONLINE' && a.lastSeen > tenMinsAgo);
-        const offlineAgents = agents.filter((a) => a.status === 'OFFLINE' || a.lastSeen <= tenMinsAgo);
         const errorAgents = agents.filter((a) => a.status === 'ERROR');
+        const onlineAgents = agents.filter((a) => a.status === 'ONLINE' && a.lastSeen > tenMinsAgo);
+        const offlineAgents = agents.filter((a) => a.status !== 'ERROR' && (a.status === 'OFFLINE' || (a.status === 'ONLINE' && a.lastSeen <= tenMinsAgo)));
 
         return {
             agents: data,

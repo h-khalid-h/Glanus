@@ -44,9 +44,18 @@ export class AdminService {
      */
     static async publishAgentVersion(data: AgentVersionInput) {
         if (data.status === 'ACTIVE') {
-            await prisma.agentVersion.updateMany({
-                where: { platform: data.platform, status: 'ACTIVE' },
-                data: { status: 'DEPRECATED' },
+            // Deprecation + upsert must be atomic: if upsert fails, we must not leave
+            // the platform with zero ACTIVE versions.
+            return prisma.$transaction(async (tx) => {
+                await tx.agentVersion.updateMany({
+                    where: { platform: data.platform, status: 'ACTIVE' },
+                    data: { status: 'DEPRECATED' },
+                });
+                return tx.agentVersion.upsert({
+                    where: { version_platform: { version: data.version, platform: data.platform } },
+                    update: data,
+                    create: data,
+                });
             });
         }
 
