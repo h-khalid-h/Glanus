@@ -17,26 +17,28 @@ export class AssetBulkService {
      * Bulk soft-deletes assets scoped to the user's workspaces, with audit trail.
      */
     static async bulkDelete(assetIds: string[], userId: string, userEmail: string) {
-        const result = await prisma.asset.updateMany({
-            where: {
-                id: { in: assetIds },
-                deletedAt: null,
-                workspace: { members: { some: { userId } } },
-            },
-            data: { deletedAt: new Date(), status: 'RETIRED' },
-        });
+        const result = await prisma.$transaction(async (tx) => {
+            const deleteResult = await tx.asset.updateMany({
+                where: {
+                    id: { in: assetIds },
+                    deletedAt: null,
+                    workspace: { members: { some: { userId } } },
+                },
+                data: { deletedAt: new Date(), status: 'RETIRED' },
+            });
 
-        await Promise.all(assetIds.map(assetId =>
-            prisma.auditLog.create({
-                data: {
+            await tx.auditLog.createMany({
+                data: assetIds.map(assetId => ({
                     action: 'DELETE',
                     resourceType: 'Asset',
                     resourceId: assetId,
                     userId,
                     metadata: { message: 'Asset bulk deleted', deletedBy: userEmail },
-                },
-            })
-        ));
+                })),
+            });
+
+            return deleteResult;
+        });
 
         return { deletedCount: result.count, message: `Successfully deleted ${result.count} asset(s)` };
     }

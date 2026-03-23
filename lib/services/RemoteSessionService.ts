@@ -69,8 +69,8 @@ export class RemoteSessionService {
 
     static async getSessions(filters: SessionFilters) {
         const { userId, status, assetId, filterUserId, page = 1, limit = 20 } = filters;
-        const safeLimitt = Math.min(limit, 50);
-        const skip = (page - 1) * safeLimitt;
+        const safeLimit = Math.min(limit, 50);
+        const skip = (page - 1) * safeLimit;
 
         const where: Record<string, unknown> = {
             asset: { workspace: { members: { some: { userId } } } },

@@ -39,6 +39,8 @@ export class WorkspaceMemberService {
             }),
         ]);
 
+        if (!owner) throw new ApiError(404, 'Workspace owner not found');
+
         return [
             {
                 id: 'owner',
