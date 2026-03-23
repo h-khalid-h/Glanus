@@ -111,20 +111,25 @@ export class PartnerExamService {
         const score = Math.round((correctCount / questions.length) * 100);
         const passed = score >= exam.passingScore;
 
-        const updatedExam = await prisma.partnerExam.update({
-            where: { id: examId },
-            data: { answers: answers as object, score, status: passed ? 'PASSED' : 'FAILED', completedAt: new Date() },
-        });
-
-        let updatedPartner = dbUser.partnerProfile;
-        if (passed) {
-            const maxWorkspacesByLevel: Record<string, number> = { BRONZE: 10, SILVER: 50, GOLD: 200, PLATINUM: 1000 };
-            const newMaxWorkspaces = maxWorkspacesByLevel[exam.level];
-            updatedPartner = await prisma.partner.update({
-                where: { id: dbUser.partnerProfile.id },
-                data: { certificationLevel: exam.level, certifiedAt: new Date(), maxWorkspaces: newMaxWorkspaces, availableSlots: newMaxWorkspaces },
+        const partnerProfile = dbUser.partnerProfile;
+        const { updatedExam, updatedPartner } = await prisma.$transaction(async (tx) => {
+            const txExam = await tx.partnerExam.update({
+                where: { id: examId },
+                data: { answers: answers as object, score, status: passed ? 'PASSED' : 'FAILED', completedAt: new Date() },
             });
-        }
+
+            let txPartner = partnerProfile;
+            if (passed) {
+                const maxWorkspacesByLevel: Record<string, number> = { BRONZE: 10, SILVER: 50, GOLD: 200, PLATINUM: 1000 };
+                const newMaxWorkspaces = maxWorkspacesByLevel[exam.level];
+                txPartner = await tx.partner.update({
+                    where: { id: partnerProfile.id },
+                    data: { certificationLevel: exam.level, certifiedAt: new Date(), maxWorkspaces: newMaxWorkspaces, availableSlots: newMaxWorkspaces },
+                });
+            }
+
+            return { updatedExam: txExam, updatedPartner: txPartner };
+        });
 
         return {
             exam: updatedExam,

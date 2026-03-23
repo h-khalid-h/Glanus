@@ -116,11 +116,15 @@ export default function IntelligencePage() {
         // Optimistic update
         setRules(prev => prev.map(r => r.id === ruleId ? { ...r, enabled } : r));
         try {
-            await csrfFetch(`/api/workspaces/${workspaceId}/intelligence/reflex?ruleId=${ruleId}`, {
+            const res = await csrfFetch(`/api/workspaces/${workspaceId}/intelligence/reflex?ruleId=${ruleId}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ enabled }),
             });
+            if (!res.ok) {
+                const data = await res.json().catch(() => ({}));
+                throw new Error(data.error || 'Server returned an error');
+            }
         } catch (err: unknown) {
             // Revert on failure
             setRules(prev => prev.map(r => r.id === ruleId ? { ...r, enabled: !enabled } : r));
@@ -130,9 +134,13 @@ export default function IntelligencePage() {
 
     const handleDeleteRule = useCallback(async (ruleId: string) => {
         try {
-            await csrfFetch(`/api/workspaces/${workspaceId}/intelligence/reflex?ruleId=${ruleId}`, {
+            const res = await csrfFetch(`/api/workspaces/${workspaceId}/intelligence/reflex?ruleId=${ruleId}`, {
                 method: 'DELETE',
             });
+            if (!res.ok) {
+                const data = await res.json().catch(() => ({}));
+                throw new Error(data.error || 'Failed to delete rule');
+            }
             setRules(prev => prev.filter(r => r.id !== ruleId));
         } catch (err: unknown) {
             showError('Failed to delete rule:', err instanceof Error ? err.message : 'An unexpected error occurred');
