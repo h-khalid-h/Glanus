@@ -1,6 +1,6 @@
 import { apiSuccess } from '@/lib/api/response';
 import { NextRequest } from 'next/server';
-import { withErrorHandler } from '@/lib/api/withAuth';
+import { requireAuth, requireWorkspaceAccess, withErrorHandler } from '@/lib/api/withAuth';
 import { z } from 'zod';
 import { withRateLimit } from '@/lib/security/rateLimit';
 import { AgentService } from '@/lib/services/AgentService';
@@ -26,7 +26,10 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     const rateLimitResponse = await withRateLimit(request, 'strict-api');
     if (rateLimitResponse) return rateLimitResponse;
 
+    const user = await requireAuth();
     const data = registerSchema.parse(await request.json());
+    await requireWorkspaceAccess(data.workspaceId, user.id, request);
+
     const result = await AgentService.registerAgent({
         ...data,
         platform: data.platform as AgentPlatform,
