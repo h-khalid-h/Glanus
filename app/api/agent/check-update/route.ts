@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { withErrorHandler } from '@/lib/api/withAuth';
 import { apiSuccess } from '@/lib/api/response';
 import { AgentService } from '@/lib/services/AgentService';
+import { withRateLimit } from '@/lib/security/rateLimit';
 import { z } from 'zod';
 
 const CheckUpdateSchema = z.object({
@@ -17,6 +18,9 @@ const CheckUpdateSchema = z.object({
  * Checks if a newer version of the agent binary is available for the given platform.
  */
 export const POST = withErrorHandler(async (request: NextRequest) => {
+    const rateLimitResponse = await withRateLimit(request, 'api');
+    if (rateLimitResponse) return rateLimitResponse;
+
     const body = await request.json();
     const { current_version, platform } = CheckUpdateSchema.parse(body);
     const update = await AgentService.checkForUpdate(current_version, platform);

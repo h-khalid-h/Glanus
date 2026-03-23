@@ -18,7 +18,7 @@ const logWarn = (message: string) => console.warn(`[Middleware] ${message}`);
 const CSRF_EXEMPT_PATHS = [
     '/api/auth/',        // NextAuth handles its own CSRF
     '/api/webhooks/',    // Webhooks use signature verification
-    '/api/agent/',       // Agent endpoints use API key auth
+    '/api/agent/',       // Agent endpoints use per-request token auth (not session-based)
     '/api/health',       // Health check
     '/api/ready',        // Readiness probe
     '/api/cron',         // Cron jobs use Bearer tokens natively
