@@ -63,10 +63,11 @@ export function CommandPalette() {
     // Focus input when opened
     useEffect(() => {
         if (open) {
-            setTimeout(() => inputRef.current?.focus(), 50);
+            const focusTimer = setTimeout(() => inputRef.current?.focus(), 50);
             setQuery('');
             setResults(null);
             setSelectedIndex(0);
+            return () => clearTimeout(focusTimer);
         }
     }, [open]);
 
@@ -90,6 +91,10 @@ export function CommandPalette() {
             setLoading(false);
         }
     }, [workspaceId]);
+
+    useEffect(() => {
+        return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+    }, []);
 
     const handleQueryChange = (value: string) => {
         setQuery(value);
