@@ -103,6 +103,12 @@ export class MaintenanceService {
 
         void userId; // captured for future audit
 
+        const effectiveStart = data.scheduledStart !== undefined ? new Date(data.scheduledStart) : existing.scheduledStart;
+        const effectiveEnd = data.scheduledEnd !== undefined ? new Date(data.scheduledEnd) : existing.scheduledEnd;
+        if (effectiveEnd <= effectiveStart) {
+            throw new ApiError(400, 'Scheduled end must be after scheduled start.');
+        }
+
         return prisma.maintenanceWindow.update({
             where: { id: windowId },
             data: {

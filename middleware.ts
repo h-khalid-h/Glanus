@@ -37,8 +37,8 @@ const PUBLIC_PATHS = [
     '/api/ready',
     '/api/auth/',        // NextAuth + custom auth endpoints
     '/api/csrf',         // CSRF token endpoint
-    '/api/partners',     // Public partner directory
-    '/api/invitations',  // Invitation verification (token-based)
+    '/api/partners/signup', // Partner signup
+    '/api/invitations',    // Invitation verification (token-based)
     '/api/cron',         // Bypasses NextAuth (managed by CRON_SECRET)
 ];
 
@@ -73,7 +73,9 @@ export async function middleware(request: NextRequest) {
 
     // 1. Authentication Check (Defense-in-Depth)
     const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
-    const isPublicPath = PUBLIC_PATHS.some(path => pathname.startsWith(path) || pathname === '/');
+    const isPublicPath = PUBLIC_PATHS.some(path => pathname.startsWith(path) || pathname === '/') ||
+        pathname === '/api/partners' ||                     // Public partner directory
+        /^\/api\/partners\/[^/]+$/.test(pathname);          // Public partner profile (/api/partners/[id])
 
     if (!token && !isPublicPath) {
         logWarn(`[Auth] Unauthenticated access blocked: ${pathname} [ReqID: ${requestId}]`);
