@@ -123,6 +123,7 @@ export function SessionControls({
                         onClick={onScreenshot}
                         className="btn bg-slate-800 hover:bg-slate-700 text-white p-2"
                         title="Capture Screenshot"
+                        aria-label="Capture Screenshot"
                     >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path
@@ -145,6 +146,7 @@ export function SessionControls({
                         onClick={onFullscreen}
                         className="btn bg-slate-800 hover:bg-slate-700 text-white p-2"
                         title="Toggle Fullscreen"
+                        aria-label="Toggle Fullscreen"
                     >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path
@@ -161,6 +163,7 @@ export function SessionControls({
                         onClick={onDisconnect}
                         className="btn bg-destructive hover:bg-destructive/80 text-white px-3 py-2 text-sm"
                         title="End Session"
+                        aria-label="End Session"
                     >
                         Disconnect
                     </button>

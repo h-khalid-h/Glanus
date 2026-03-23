@@ -160,6 +160,7 @@ export default function MemberList({ workspaceId }: { workspaceId: string }) {
                                         <button type="button"
                                             onClick={() => setOpenMenuId(openMenuId === member.id ? null : member.id)}
                                             className="p-1 rounded-md hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-colors"
+                                            aria-label="Member actions"
                                             aria-expanded={openMenuId === member.id}
                                             aria-haspopup="true"
                                         >

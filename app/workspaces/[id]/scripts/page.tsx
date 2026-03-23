@@ -409,13 +409,13 @@ export default function ScriptsLibraryPage() {
             {/* Creation Modal Overlay */}
             {isCreating && (
                 <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-                    <div className="bg-slate-900 border border-slate-800 rounded-xl w-full max-w-3xl overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+                    <div className="bg-slate-900 border border-slate-800 rounded-xl w-full max-w-3xl overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200" role="dialog" aria-modal="true" aria-labelledby="create-script-title">
                         <div className="px-6 py-4 border-b border-slate-800 flex justify-between items-center bg-slate-900/50">
-                            <h2 className="text-xl font-semibold flex items-center gap-2 text-foreground">
+                            <h2 id="create-script-title" className="text-xl font-semibold flex items-center gap-2 text-foreground">
                                 <Terminal size={20} className="text-nerve" />
                                 Compose Script Payload
                             </h2>
-                            <button onClick={() => setIsCreating(false)} className="text-slate-400 hover:text-white transition">✕</button>
+                            <button onClick={() => setIsCreating(false)} className="text-slate-400 hover:text-white transition" aria-label="Close">✕</button>
                         </div>
                         <form onSubmit={handleCreateScript} className="p-6 space-y-5">
                             <div className="grid grid-cols-2 gap-4">
@@ -454,13 +454,13 @@ export default function ScriptsLibraryPage() {
             {/* Fleet Deploy Modal */}
             {deployTarget && (
                 <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-                    <div className="bg-slate-900 border border-slate-800 rounded-xl w-full max-w-2xl overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+                    <div className="bg-slate-900 border border-slate-800 rounded-xl w-full max-w-2xl overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200" role="dialog" aria-modal="true" aria-labelledby="deploy-modal-title">
                         <div className="px-6 py-4 border-b border-slate-800 flex justify-between items-center bg-slate-900/50">
-                            <h2 className="text-xl font-semibold flex items-center gap-2 text-foreground">
+                            <h2 id="deploy-modal-title" className="text-xl font-semibold flex items-center gap-2 text-foreground">
                                 <Rocket size={20} className="text-nerve" />
                                 Deploy: {deployTarget.name}
                             </h2>
-                            <button onClick={() => setDeployTarget(null)} className="text-slate-400 hover:text-white transition">
+                            <button onClick={() => setDeployTarget(null)} className="text-slate-400 hover:text-white transition" aria-label="Close">
                                 <X size={20} />
                             </button>
                         </div>

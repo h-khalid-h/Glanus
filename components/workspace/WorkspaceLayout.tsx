@@ -361,7 +361,7 @@ export function WorkspaceLayout({ children }: { children: React.ReactNode }) {
 
             {/* Mobile sidebar overlay */}
             {mobileOpen && (
-                <div className="fixed inset-0 z-50 lg:hidden">
+                <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="Navigation">
                     {/* Backdrop */}
                     <div
                         className="absolute inset-0 bg-black/50 backdrop-blur-sm"

@@ -154,7 +154,7 @@ export function CommandPalette() {
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setOpen(false)} />
 
             {/* Palette */}
-            <div className="relative w-full max-w-xl bg-slate-900 border border-slate-700 rounded-xl shadow-2xl overflow-hidden">
+            <div className="relative w-full max-w-xl bg-slate-900 border border-slate-700 rounded-xl shadow-2xl overflow-hidden" role="dialog" aria-modal="true" aria-label="Command Palette">
                 {/* Search Input */}
                 <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-800">
                     <Search size={18} className={loading ? 'text-nerve animate-pulse' : 'text-slate-500'} />
