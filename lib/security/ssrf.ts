@@ -29,6 +29,12 @@ export function isPrivateUrl(urlString: string): boolean {
             if (a === 0) return true;                            // 0.0.0.0/8
         }
 
+        // Block private/reserved IPv6 ranges (strip brackets for bracketed IPv6)
+        const bare = hostname.replace(/^\[|\]$/g, '');
+        if (isPrivateIPv6(bare)) {
+            return true;
+        }
+
         // Block common metadata endpoints
         if (hostname === 'metadata.google.internal' || hostname === 'metadata.google') {
             return true;
@@ -38,4 +44,26 @@ export function isPrivateUrl(urlString: string): boolean {
     } catch {
         return true; // Invalid URL — block
     }
+}
+
+/**
+ * Check if an IPv6 address is in a private/reserved range.
+ */
+function isPrivateIPv6(addr: string): boolean {
+    const lower = addr.toLowerCase();
+    if (lower === '::1') return true;                    // Loopback
+    if (lower.startsWith('fe80')) return true;           // Link-local (fe80::/10)
+    if (lower.startsWith('fc') || lower.startsWith('fd')) return true; // ULA (fc00::/7)
+    if (lower.startsWith('ff')) return true;             // Multicast (ff00::/8)
+    if (lower === '::') return true;                     // Unspecified address
+    // IPv4-mapped IPv6 (::ffff:x.x.x.x) — delegate to IPv4 check
+    const v4mapped = lower.match(/^::ffff:(\d+)\.(\d+)\.(\d+)\.(\d+)$/);
+    if (v4mapped) {
+        const [, a, b] = v4mapped.map(Number);
+        if (a === 127 || a === 10 || a === 0) return true;
+        if (a === 172 && b >= 16 && b <= 31) return true;
+        if (a === 192 && b === 168) return true;
+        if (a === 169 && b === 254) return true;
+    }
+    return false;
 }

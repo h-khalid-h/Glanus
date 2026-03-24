@@ -403,12 +403,12 @@ model Asset {
   name          String
   manufacturer  String?
   model         String?
-  serialNumber  String?     @unique
+  serialNumber  String?
   status        AssetStatus @default(AVAILABLE)
   location      String?
   description   String?     @db.Text
   purchaseDate  DateTime?
-  purchaseCost  Float?
+  purchaseCost  Decimal?
   warrantyUntil DateTime?
   tags          String[]
   qrCode        String?     @db.Text
@@ -456,12 +456,14 @@ model Asset {
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 
+  @@unique([workspaceId, serialNumber])
   @@index([status])
   @@index([assignedToId])
   @@index([assetType])
   @@index([deletedAt])
   @@index([categoryId])
   @@index([workspaceId])
+  @@index([workspaceId, name])
 }
 
 model PhysicalAsset {
@@ -1556,7 +1558,7 @@ model MaintenanceWindow {
 
   // Notes & outcomes
   notes       String?  @db.Text
-  cost        Float?
+  cost        Decimal?
 
   // Relations
   assetId     String

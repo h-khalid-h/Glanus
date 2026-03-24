@@ -11,10 +11,23 @@ function escapeHtml(str: string): string {
     .replace(/'/g, '&#39;');
 }
 
+/**
+ * Sanitize a URL for use in href attributes.
+ * Only allows http: and https: schemes to prevent javascript: injection.
+ */
+function sanitizeHrefUrl(url: string): string {
+  const escaped = escapeHtml(url);
+  // Validate scheme after unescaping (escapeHtml doesn't change the scheme prefix)
+  if (/^https?:\/\//i.test(url)) {
+    return escaped;
+  }
+  return '#';
+}
+
 export const getInvitationEmailTemplate = (inviterName: string, workspaceName: string, inviteUrl: string) => {
   const eName = escapeHtml(inviterName);
   const eWorkspace = escapeHtml(workspaceName);
-  const eInviteUrl = escapeHtml(inviteUrl);
+  const eInviteUrl = sanitizeHrefUrl(inviteUrl);
   return `
 <!DOCTYPE html>
 <html>
@@ -32,7 +45,7 @@ export const getInvitationEmailTemplate = (inviterName: string, workspaceName: s
 <body>
   <div class="container">
     <div class="header">
-      <a href="${process.env.NEXTAUTH_URL}" class="logo">Glanus</a>
+      <a href="${sanitizeHrefUrl(process.env.NEXTAUTH_URL || 'https://glanus.com')}" class="logo">Glanus</a>
     </div>
     <div class="content">
       <h2>You've been invited to join ${eWorkspace}</h2>
@@ -83,12 +96,12 @@ const emailWrapper = (content: string) => `
 <body>
   <div class="container">
     <div class="header">
-      <a href="${process.env.NEXTAUTH_URL || 'https://glanus.com'}" class="logo">Glanus</a>
+      <a href="${sanitizeHrefUrl(process.env.NEXTAUTH_URL || 'https://glanus.com')}" class="logo">Glanus</a>
     </div>
     ${content}
     <div class="footer">
       <p>&copy; ${new Date().getFullYear()} Glanus. All rights reserved.</p>
-      <p style="margin-top: 8px;"><a href="${process.env.NEXTAUTH_URL || 'https://glanus.com'}" style="color: #6b7280;">Visit Glanus</a></p>
+      <p style="margin-top: 8px;"><a href="${sanitizeHrefUrl(process.env.NEXTAUTH_URL || 'https://glanus.com')}" style="color: #6b7280;">Visit Glanus</a></p>
     </div>
   </div>
 </body>
@@ -114,7 +127,7 @@ export const getWelcomeEmailTemplate = (userName: string, workspaceName: string)
         <li><strong>Set up alerts</strong> — Get notified when things need attention</li>
       </ul>
       <div style="text-align: center;">
-        <a href="${process.env.NEXTAUTH_URL}/dashboard" class="button">Go to Dashboard</a>
+        <a href="${sanitizeHrefUrl((process.env.NEXTAUTH_URL || 'https://glanus.com') + '/dashboard')}" class="button">Go to Dashboard</a>
       </div>
     </div>
   `);
@@ -140,7 +153,7 @@ export const getMemberRemovedEmailTemplate = (
       <p>You will no longer be able to access assets, settings, or data within this workspace.</p>
       <p>If you believe this was a mistake, please contact your workspace administrator.</p>
       <div style="text-align: center;">
-        <a href="${process.env.NEXTAUTH_URL}/dashboard" class="button-secondary">Go to Dashboard</a>
+        <a href="${sanitizeHrefUrl((process.env.NEXTAUTH_URL || 'https://glanus.com') + '/dashboard')}" class="button-secondary">Go to Dashboard</a>
       </div>
     </div>
   `);
@@ -171,7 +184,7 @@ export const getRoleChangedEmailTemplate = (
       </div>
       <p>Your new permissions are effective immediately.</p>
       <div style="text-align: center;">
-        <a href="${process.env.NEXTAUTH_URL}/dashboard" class="button">Go to Dashboard</a>
+        <a href="${sanitizeHrefUrl((process.env.NEXTAUTH_URL || 'https://glanus.com') + '/dashboard')}" class="button">Go to Dashboard</a>
       </div>
     </div>
   `);
@@ -210,7 +223,7 @@ export const getPaymentSuccessEmailTemplate = (
         </tr>
       </table>
       <div style="text-align: center;">
-        <a href="${process.env.NEXTAUTH_URL}/dashboard" class="button-secondary">View Billing</a>
+        <a href="${sanitizeHrefUrl((process.env.NEXTAUTH_URL || 'https://glanus.com') + '/dashboard')}" class="button-secondary">View Billing</a>
       </div>
     </div>
   `);
@@ -234,7 +247,7 @@ export const getPaymentFailedEmailTemplate = (
       <p>We were unable to process your payment of <strong>${eAmount}</strong> for the <strong>${eWorkspace}</strong> workspace.</p>
       <p>Please update your payment method to avoid service interruption. Your workspace will be downgraded to the Free plan if payment is not resolved within 7 days.</p>
       <div style="text-align: center;">
-        <a href="${process.env.NEXTAUTH_URL}/dashboard" class="button">Update Payment Method</a>
+        <a href="${sanitizeHrefUrl((process.env.NEXTAUTH_URL || 'https://glanus.com') + '/dashboard')}" class="button">Update Payment Method</a>
       </div>
     </div>
   `);
@@ -261,7 +274,7 @@ export const getSubscriptionCanceledEmailTemplate = (
         <p style="margin: 0; color: #854d0e; font-size: 14px;"><strong>Note:</strong> Downgrading to Free may limit your assets to 5, AI credits to 100/month, and storage to 1 GB. Data exceeding these limits will not be deleted but will become read-only.</p>
       </div>
       <div style="text-align: center;">
-        <a href="${process.env.NEXTAUTH_URL || 'https://glanus.com'}/dashboard" class="button-secondary">Resubscribe</a>
+        <a href="${sanitizeHrefUrl((process.env.NEXTAUTH_URL || 'https://glanus.com') + '/dashboard')}" class="button-secondary">Resubscribe</a>
       </div>
     </div>
   `);
@@ -271,7 +284,7 @@ export const getSubscriptionCanceledEmailTemplate = (
  * Password reset email - sent when user requests a password reset link
  */
 export const getPasswordResetEmailTemplate = (resetUrl: string) => {
-  const eResetUrl = escapeHtml(resetUrl);
+  const eResetUrl = sanitizeHrefUrl(resetUrl);
   return emailWrapper(`
     <div class="content">
       <h2>Reset your password</h2>

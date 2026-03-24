@@ -10,7 +10,7 @@
 import { randomBytes, createHmac, timingSafeEqual } from 'crypto';
 import { cookies } from 'next/headers';
 
-const CSRF_TOKEN_LENGTH = 32;
+const CSRF_TOKEN_LENGTH = 48;
 const CSRF_COOKIE_NAME = 'csrf-token';
 let _csrfSecret: string | null = null;
 function getCSRFSecret(): string {

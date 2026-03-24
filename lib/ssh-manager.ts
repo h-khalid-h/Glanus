@@ -110,8 +110,16 @@ class SSHConnectionPool {
                 throw new Error('Private key authentication requires a key path');
             }
 
+            // Validate key path is within the allowed SSH keys directory
+            const path = await import('path');
+            const resolvedKeyPath = path.resolve(sshConfig.privateKeyPath);
+            const resolvedBasePath = path.resolve(this.config.sshKeysPath);
+            if (!resolvedKeyPath.startsWith(resolvedBasePath + path.sep) && resolvedKeyPath !== resolvedBasePath) {
+                throw new Error('Private key path must be within the configured SSH keys directory');
+            }
+
             // Read private key
-            const privateKey = await fs.readFile(sshConfig.privateKeyPath, 'utf8');
+            const privateKey = await fs.readFile(resolvedKeyPath, 'utf8');
             connectConfig.privateKey = privateKey;
 
             if (sshConfig.passphrase) {

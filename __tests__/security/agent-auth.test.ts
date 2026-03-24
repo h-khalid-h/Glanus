@@ -26,7 +26,7 @@ describe('Agent Auth Token Hashing', () => {
             expect(token.plaintext).toMatch(/^glanus_agent_/);
         });
 
-        it('hash is a valid 64-char hex string (SHA-256)', () => {
+        it('hash is a valid 64-char hex string (HMAC-SHA-256)', () => {
             const token = generateAgentToken();
             expect(token.hash).toMatch(/^[a-f0-9]{64}$/);
         });

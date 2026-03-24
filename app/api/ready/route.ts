@@ -21,19 +21,17 @@ export async function GET() {
         ready = false;
     }
 
-    // Check required env vars
+    // Check required env vars (don't expose names publicly)
     const requiredEnvs = ['DATABASE_URL', 'NEXTAUTH_SECRET', 'NEXTAUTH_URL'];
-    for (const env of requiredEnvs) {
-        if (!process.env[env]) {
-            checks[`env_${env}`] = 'missing';
-            ready = false;
-        }
+    const missingCount = requiredEnvs.filter(env => !process.env[env]).length;
+    if (missingCount > 0) {
+        checks.env = 'incomplete';
+        ready = false;
     }
 
     return apiSuccess({
         ready,
         checks,
         timestamp: new Date().toISOString(),
-    },
-        { status: ready ? 200 : 503 });
+    }, undefined, ready ? 200 : 503);
 }
