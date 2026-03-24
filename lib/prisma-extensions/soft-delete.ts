@@ -23,40 +23,52 @@ export const softDeleteExtension = Prisma.defineExtension({
     query: {
         asset: {
             async findMany({ args, query }) {
-                if (!args.where?.deletedAt) {
-                    args.where = { ...args.where, deletedAt: null };
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const where = args.where as any;
+                if (!where?.deletedAt) {
+                    args.where = { ...args.where, deletedAt: null } as typeof args.where;
                 }
                 return query(args);
             },
             async findFirst({ args, query }) {
-                if (!args.where?.deletedAt) {
-                    args.where = { ...args.where, deletedAt: null };
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const where = args.where as any;
+                if (!where?.deletedAt) {
+                    args.where = { ...args.where, deletedAt: null } as typeof args.where;
                 }
                 return query(args);
             },
             async count({ args, query }) {
-                if (!args.where?.deletedAt) {
-                    args.where = { ...args.where, deletedAt: null };
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const where = args.where as any;
+                if (!where?.deletedAt) {
+                    args.where = { ...args.where, deletedAt: null } as typeof args.where;
                 }
                 return query(args);
             },
         },
         workspace: {
             async findMany({ args, query }) {
-                if (!args.where?.deletedAt) {
-                    args.where = { ...args.where, deletedAt: null };
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const where = args.where as any;
+                if (!where?.deletedAt) {
+                    args.where = { ...args.where, deletedAt: null } as typeof args.where;
                 }
                 return query(args);
             },
             async findFirst({ args, query }) {
-                if (!args.where?.deletedAt) {
-                    args.where = { ...args.where, deletedAt: null };
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const where = args.where as any;
+                if (!where?.deletedAt) {
+                    args.where = { ...args.where, deletedAt: null } as typeof args.where;
                 }
                 return query(args);
             },
             async count({ args, query }) {
-                if (!args.where?.deletedAt) {
-                    args.where = { ...args.where, deletedAt: null };
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const where = args.where as any;
+                if (!where?.deletedAt) {
+                    args.where = { ...args.where, deletedAt: null } as typeof args.where;
                 }
                 return query(args);
             },

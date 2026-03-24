@@ -206,12 +206,20 @@ export class TicketService {
             ? new Date()
             : undefined;
 
+        const updatePayload: Prisma.TicketUpdateInput = {
+            resolvedAt,
+            ...(data.status !== undefined && { status: data.status as $Enums.TicketStatus }),
+            ...(data.priority !== undefined && { priority: data.priority as $Enums.TicketPriority }),
+            ...(data.assigneeId !== undefined && {
+                assignee: data.assigneeId === null
+                    ? { disconnect: true }
+                    : { connect: { id: data.assigneeId } }
+            }),
+        };
+
         const updatedTicket = await prisma.ticket.update({
             where: { id: ticketId },
-            data: {
-                ...data,
-                resolvedAt
-            }
+            data: updatePayload
         });
 
         return updatedTicket;
