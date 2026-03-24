@@ -1,4 +1,5 @@
 import type { ActionDefinition, ActionAsset, ActionResult, WebhookHandlerConfig } from './types';
+import { isPrivateUrl } from '@/lib/security/ssrf';
 
 /**
  * Webhook Handler - Sends POST to configured webhook URL with HMAC signature
@@ -13,6 +14,11 @@ export async function handleWebhookAction(
 
     if (!webhookUrl) {
         return { status: 'FAILED', error: 'Webhook handler missing webhookUrl configuration' };
+    }
+
+    // SSRF protection: block requests to private/internal networks
+    if (isPrivateUrl(webhookUrl)) {
+        return { status: 'FAILED', error: 'Webhook URL must not target private or internal networks' };
     }
 
     try {

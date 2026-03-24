@@ -152,24 +152,25 @@ export class InvitationService {
             throw new ApiError(403, 'This invitation was sent to a different email address');
         }
 
-        if (invitation.status !== 'PENDING') {
-            throw new ApiError(400, 'Invitation already used or revoked');
-        }
-
-        if (new Date() > invitation.expiresAt) {
-            await prisma.workspaceInvitation.update({ where: { id: invitation.id }, data: { status: 'EXPIRED' } });
-            throw new ApiError(400, 'Invitation expired');
-        }
-
         const user = await prisma.user.findUnique({ where: { email: invitation.email } });
         if (!user) throw new ApiError(404, 'Account not found. Please sign up first.');
 
-        const existingMembership = await prisma.workspaceMember.findUnique({
-            where: { workspaceId_userId: { workspaceId: invitation.workspaceId, userId: user.id } },
-        });
-        if (existingMembership) throw new ApiError(409, 'Already a member of this workspace');
-
+        // Use a transaction with re-read to prevent TOCTOU race conditions
         const result = await prisma.$transaction(async (tx) => {
+            const current = await tx.workspaceInvitation.findUnique({ where: { id: invitation.id } });
+            if (!current || current.status !== 'PENDING') {
+                throw new ApiError(400, 'Invitation already used or revoked');
+            }
+            if (new Date() > current.expiresAt) {
+                await tx.workspaceInvitation.update({ where: { id: current.id }, data: { status: 'EXPIRED' } });
+                throw new ApiError(400, 'Invitation expired');
+            }
+
+            const existingMembership = await tx.workspaceMember.findUnique({
+                where: { workspaceId_userId: { workspaceId: invitation.workspaceId, userId: user.id } },
+            });
+            if (existingMembership) throw new ApiError(409, 'Already a member of this workspace');
+
             const membership = await tx.workspaceMember.create({
                 data: { workspaceId: invitation.workspaceId, userId: user.id, role: invitation.role },
             });

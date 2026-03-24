@@ -13,7 +13,7 @@ export function isPrivateUrl(urlString: string): boolean {
         const hostname = parsed.hostname;
 
         // Block localhost and loopback
-        if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1' || hostname === '[::1]') {
+        if (hostname === 'localhost' || hostname === '::1' || hostname === '[::1]') {
             return true;
         }
 
@@ -21,10 +21,11 @@ export function isPrivateUrl(urlString: string): boolean {
         const ipv4Match = hostname.match(/^(\d+)\.(\d+)\.(\d+)\.(\d+)$/);
         if (ipv4Match) {
             const [, a, b] = ipv4Match.map(Number);
-            if (a === 10) return true;                          // 10.0.0.0/8
+            if (a === 127) return true;                          // 127.0.0.0/8 (loopback)
+            if (a === 10) return true;                           // 10.0.0.0/8
             if (a === 172 && b >= 16 && b <= 31) return true;   // 172.16.0.0/12
             if (a === 192 && b === 168) return true;             // 192.168.0.0/16
-            if (a === 169 && b === 254) return true;             // 169.254.0.0/16 (link-local)
+            if (a === 169 && b === 254) return true;             // 169.254.0.0/16 (link-local / cloud metadata)
             if (a === 0) return true;                            // 0.0.0.0/8
         }
 

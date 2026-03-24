@@ -188,7 +188,12 @@ Respond with the most appropriate function call. If the request is a question, u
 
         if (message?.tool_calls && message.tool_calls.length > 0) {
             const toolCall = message.tool_calls[0];
-            const args = JSON.parse(toolCall.function.arguments);
+            let args: Record<string, unknown>;
+            try {
+                args = JSON.parse(toolCall.function.arguments);
+            } catch {
+                throw new ApiError(502, 'AI returned invalid response');
+            }
             return { type: toolCall.function.name, ...args, rawInput: cmd.input };
         }
 
@@ -217,6 +222,10 @@ Respond with the most appropriate function call. If the request is a question, u
             response_format: { type: 'json_object' },
         });
         const content = completion.choices?.[0]?.message?.content;
-        return JSON.parse(content || '{}');
+        try {
+            return JSON.parse(content || '{}');
+        } catch {
+            return {};
+        }
     }
 }

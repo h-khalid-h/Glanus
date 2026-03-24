@@ -70,16 +70,20 @@ export class AssetBulkService {
      * Bulk assigns assets to a user. Creates assignment history records atomically.
      */
     static async bulkAssign(assetIds: string[], assigneeId: string, userId: string) {
-        const assignee = await prisma.user.findUnique({ where: { id: assigneeId } });
-        if (!assignee) {
-            throw new ApiError(404, 'Assignee not found');
-        }
-
         const assets = await prisma.asset.findMany({
             where: { id: { in: assetIds }, deletedAt: null, workspace: { members: { some: { userId } } } },
         });
         if (assets.length !== assetIds.length) {
             throw new ApiError(400, 'One or more assets not found or access denied');
+        }
+
+        // Verify assignee is a member of the workspace these assets belong to
+        const workspaceId = assets[0].workspaceId;
+        const assignee = await prisma.user.findFirst({
+            where: { id: assigneeId, workspaceMemberships: { some: { workspaceId: workspaceId! } } },
+        });
+        if (!assignee) {
+            throw new ApiError(404, 'Assignee not found or not a member of this workspace');
         }
 
         await prisma.$transaction(async (tx) => {

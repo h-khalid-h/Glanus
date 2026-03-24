@@ -18,8 +18,10 @@ export class AssetAssignmentService {
         });
         if (!asset) throw new ApiError(404, 'Asset not found');
 
-        const targetUser = await prisma.user.findUnique({ where: { id: assigneeId } });
-        if (!targetUser) throw new ApiError(404, 'User not found');
+        const targetUser = await prisma.user.findFirst({
+            where: { id: assigneeId, workspaceMemberships: { some: { workspaceId: asset.workspaceId! } } },
+        });
+        if (!targetUser) throw new ApiError(404, 'User not found or not a member of this workspace');
 
         // Close previous open assignment
         if (asset.assignedToId) {
