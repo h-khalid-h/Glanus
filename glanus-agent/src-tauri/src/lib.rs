@@ -9,6 +9,8 @@ mod executor;
 mod commands;
 mod updater;
 mod input;
+mod software;
+mod inventory;
 
 use std::sync::Mutex;
 use monitor::{SystemMonitor, SystemMetrics};
@@ -178,6 +180,32 @@ fn start_heartbeat_loop(config: AgentConfig) {
     });
 }
 
+/// Start software inventory sync loop in background (every 6 hours)
+fn start_inventory_sync(config: AgentConfig) {
+    use inventory::InventoryManager;
+
+    tokio::spawn(async move {
+        // Wait for registration
+        while !RegistrationManager::is_registered(&config) {
+            tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
+        }
+
+        // Initial delay: wait 2 minutes after startup before first sync
+        tokio::time::sleep(tokio::time::Duration::from_secs(120)).await;
+
+        let manager = InventoryManager::new(config.server.api_url.clone());
+
+        // Sync once immediately, then loop every 6 hours
+        if let Err(e) = manager.sync_software().await {
+            log::error!("Initial software inventory sync failed: {}", e);
+        }
+
+        if let Err(e) = manager.start_loop(6 * 3600).await {
+            log::error!("Inventory sync loop failed: {}", e);
+        }
+    });
+}
+
 /// Start update checker loop in background (check every 24 hours)
 fn start_update_checker(config: AgentConfig) {
     use updater::AutoUpdater;
@@ -221,6 +249,7 @@ pub fn run() {
 
     // Start background tasks
     start_heartbeat_loop(config.clone());
+    start_inventory_sync(config.clone());
     start_update_checker(config.clone());
 
     tauri::Builder::default()

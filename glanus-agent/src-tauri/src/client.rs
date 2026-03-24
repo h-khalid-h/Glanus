@@ -137,6 +137,66 @@ pub struct CommandResultRequest {
 }
 
 // ============================================
+// Software inventory types
+// ============================================
+
+#[derive(Debug, Serialize)]
+pub struct SoftwareInventoryRequest {
+    #[serde(rename = "authToken")]
+    pub auth_token: String,
+    pub software: Vec<SoftwareItem>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct SoftwareItem {
+    pub name: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub version: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub publisher: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none", rename = "installDate")]
+    pub install_date: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none", rename = "sizeMB")]
+    pub size_mb: Option<f64>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct SoftwareInventoryResponseData {
+    pub count: usize,
+}
+
+// ============================================
+// Network discovery types
+// ============================================
+
+#[derive(Debug, Serialize)]
+pub struct DiscoveryRequest {
+    #[serde(rename = "authToken")]
+    pub auth_token: String,
+    pub subnet: String,
+    pub devices: Vec<DiscoveryDevice>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct DiscoveryDevice {
+    #[serde(rename = "ipAddress")]
+    pub ip_address: String,
+    #[serde(skip_serializing_if = "Option::is_none", rename = "macAddress")]
+    pub mac_address: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub hostname: Option<String>,
+    #[serde(rename = "deviceType")]
+    pub device_type: String,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct DiscoveryResponseData {
+    #[serde(rename = "scanId")]
+    pub scan_id: String,
+    pub count: usize,
+}
+
+// ============================================
 // API Client
 // ============================================
 
@@ -224,6 +284,54 @@ impl ApiClient {
         }
 
         Ok(())
+    }
+
+    /// Sync software inventory with backend
+    pub async fn sync_software(&self, request: SoftwareInventoryRequest) -> Result<SoftwareInventoryResponseData> {
+        let url = format!("{}/api/agent/software", self.base_url);
+
+        let response = self.client
+            .post(&url)
+            .json(&request)
+            .send()
+            .await
+            .context("Failed to send software inventory")?;
+
+        if !response.status().is_success() {
+            let status = response.status();
+            let error_text = response.text().await.unwrap_or_else(|_| "Unknown error".to_string());
+            anyhow::bail!("Software sync failed with status {}: {}", status, error_text);
+        }
+
+        let envelope = response.json::<ApiResponse<SoftwareInventoryResponseData>>()
+            .await
+            .context("Failed to parse software sync response")?;
+
+        Ok(envelope.data)
+    }
+
+    /// Submit network discovery results to backend
+    pub async fn submit_discovery(&self, request: DiscoveryRequest) -> Result<DiscoveryResponseData> {
+        let url = format!("{}/api/agent/discovery", self.base_url);
+
+        let response = self.client
+            .post(&url)
+            .json(&request)
+            .send()
+            .await
+            .context("Failed to send discovery results")?;
+
+        if !response.status().is_success() {
+            let status = response.status();
+            let error_text = response.text().await.unwrap_or_else(|_| "Unknown error".to_string());
+            anyhow::bail!("Discovery submission failed with status {}: {}", status, error_text);
+        }
+
+        let envelope = response.json::<ApiResponse<DiscoveryResponseData>>()
+            .await
+            .context("Failed to parse discovery response")?;
+
+        Ok(envelope.data)
     }
 }
 
