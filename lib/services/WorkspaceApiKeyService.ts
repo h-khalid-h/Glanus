@@ -72,6 +72,40 @@ export class WorkspaceApiKeyService {
         return { ...apiKey, rawKey };
     }
 
+    /**
+     * Validate a bearer token from an inbound API request.
+     * Returns the workspace ID and scopes if valid, or null if invalid/expired/revoked.
+     */
+    static async validateApiKey(rawKey: string): Promise<{
+        workspaceId: string;
+        scopes: string[];
+        keyId: string;
+    } | null> {
+        if (!rawKey || !rawKey.startsWith('glns_')) return null;
+
+        const keyHash = crypto.createHash('sha256').update(rawKey).digest('hex');
+        const apiKey = await prisma.apiKey.findFirst({
+            where: { keyHash },
+            select: { id: true, workspaceId: true, scopes: true, expiresAt: true, revokedAt: true },
+        });
+
+        if (!apiKey) return null;
+        if (apiKey.revokedAt) return null;
+        if (apiKey.expiresAt && apiKey.expiresAt < new Date()) return null;
+
+        // Update usage stats (fire-and-forget)
+        prisma.apiKey.update({
+            where: { id: apiKey.id },
+            data: { lastUsedAt: new Date(), usageCount: { increment: 1 } },
+        }).catch(() => {});
+
+        return {
+            workspaceId: apiKey.workspaceId,
+            scopes: apiKey.scopes as string[],
+            keyId: apiKey.id,
+        };
+    }
+
     static async revokeApiKey(workspaceId: string, keyId: string, userId: string) {
         const existing = await prisma.apiKey.findUnique({ where: { id: keyId, workspaceId } });
         if (!existing) throw new ApiError(404, 'API key not found');
