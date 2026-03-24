@@ -65,11 +65,19 @@ export class PartnerAssignmentService {
         if (assignment.partnerId !== partner.id) throw new ApiError(403, 'Unauthorized');
         if (assignment.status !== 'PENDING') throw new ApiError(400, 'Can only reject pending assignments');
 
-        const [updated] = await prisma.$transaction([
-            prisma.partnerAssignment.update({ where: { id: assignmentId }, data: { status: 'REJECTED' } }),
-            prisma.partner.update({ where: { id: partner.id }, data: { availableSlots: { increment: 1 } } }),
-        ]);
-        return updated;
+        return prisma.$transaction(async (tx) => {
+            // Re-read inside transaction to prevent TOCTOU double-increment
+            const current = await tx.partnerAssignment.findUnique({ where: { id: assignmentId } });
+            if (!current || current.status !== 'PENDING') {
+                throw new ApiError(409, 'Assignment is no longer pending');
+            }
+            const updated = await tx.partnerAssignment.update({ where: { id: assignmentId }, data: { status: 'REJECTED' } });
+            await tx.partner.update({
+                where: { id: partner.id },
+                data: { availableSlots: { increment: 1 } },
+            });
+            return updated;
+        });
     }
 
     /**
@@ -86,10 +94,21 @@ export class PartnerAssignmentService {
             throw new ApiError(400, 'Can only complete ACCEPTED or ACTIVE assignments');
         }
 
-        const [updated] = await prisma.$transaction([
-            prisma.partnerAssignment.update({ where: { id: assignmentId }, data: { status: 'COMPLETED', completedAt: new Date() } }),
-            prisma.partner.update({ where: { id: partner.id }, data: { availableSlots: { increment: 1 } } }),
-        ]);
-        return updated;
+        return prisma.$transaction(async (tx) => {
+            // Re-read inside transaction to prevent TOCTOU double-increment
+            const current = await tx.partnerAssignment.findUnique({ where: { id: assignmentId } });
+            if (!current || (current.status !== 'ACCEPTED' && current.status !== 'ACTIVE')) {
+                throw new ApiError(409, 'Assignment can no longer be completed');
+            }
+            const updated = await tx.partnerAssignment.update({
+                where: { id: assignmentId },
+                data: { status: 'COMPLETED', completedAt: new Date() },
+            });
+            await tx.partner.update({
+                where: { id: partner.id },
+                data: { availableSlots: { increment: 1 } },
+            });
+            return updated;
+        });
     }
 }

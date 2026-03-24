@@ -13,7 +13,7 @@ const createWorkspaceSchema = z.object({
     description: z.string().max(500).optional(),
     primaryColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/).optional(),
     accentColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/).optional(),
-    plan: z.enum(['FREE', 'PERSONAL', 'TEAM', 'ENTERPRISE']).default('FREE'),
+    plan: z.enum(['FREE']).default('FREE'),  // Paid plans are set via Stripe checkout, not user input
     createSampleData: z.boolean().optional().default(false),
 });
 

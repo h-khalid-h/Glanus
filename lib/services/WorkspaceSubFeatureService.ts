@@ -60,7 +60,7 @@ export class WorkspaceSubFeatureService {
                     asset.assetType, asset.status,
                     `"${String(asset.manufacturer || '').replace(/"/g, '""')}"`,
                     `"${String(asset.model || '').replace(/"/g, '""')}"`,
-                    asset.serialNumber || '',
+                    `"${String(asset.serialNumber || '').replace(/"/g, '""')}"`,
                     `"${String(asset.location || '').replace(/"/g, '""')}"`,
                     `"${String((asset.category as Record<string, unknown>)?.name || '').replace(/"/g, '""')}"`,
                     `"${String((asset.assignedTo as Record<string, unknown>)?.email || '').replace(/"/g, '""')}"`,

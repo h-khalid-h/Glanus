@@ -93,17 +93,21 @@ export async function enforceQuota(
 /**
  * Increment AI credit usage for a workspace.
  * Call after each AI operation.
+ * Uses a conditional update to prevent exceeding maxAICreditsPerMonth.
  */
 export async function incrementAICredits(
     workspaceId: string,
     credits: number = 1
 ): Promise<void> {
-    await prisma.subscription.update({
-        where: { workspaceId },
-        data: {
-            aiCreditsUsed: { increment: credits },
-        },
-    });
+    const result = await prisma.$executeRaw`
+        UPDATE "Subscription"
+        SET "aiCreditsUsed" = "aiCreditsUsed" + ${credits}
+        WHERE "workspaceId" = ${workspaceId}
+          AND "aiCreditsUsed" + ${credits} <= "maxAICreditsPerMonth"
+    `;
+    if (result === 0) {
+        throw new QuotaExceededError('ai_credits', 0, 0);
+    }
 }
 
 /**

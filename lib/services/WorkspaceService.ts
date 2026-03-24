@@ -118,7 +118,9 @@ export class WorkspaceService {
     static async createWorkspace(userId: string, data: CreateWorkspaceInput) {
         const sanitizedName = sanitizeText(data.name);
         const sanitizedDescription = data.description ? sanitizeText(data.description) : null;
-        const planLimits = PLAN_LIMITS[data.plan] ?? PLAN_LIMITS.FREE;
+        // New workspaces always start on FREE — paid plans are activated via Stripe checkout
+        const safePlan = 'FREE' as const;
+        const planLimits = PLAN_LIMITS[safePlan];
 
         // Slug uniqueness — fast-fail before starting the transaction
         const existingSlug = await prisma.workspace.findUnique({ where: { slug: data.slug } });
@@ -137,7 +139,7 @@ export class WorkspaceService {
             });
 
             await tx.subscription.create({
-                data: { workspaceId: newWorkspace.id, plan: data.plan, status: 'ACTIVE', ...planLimits },
+                data: { workspaceId: newWorkspace.id, plan: safePlan, status: 'ACTIVE', ...planLimits },
             });
 
             await tx.workspaceMember.create({
