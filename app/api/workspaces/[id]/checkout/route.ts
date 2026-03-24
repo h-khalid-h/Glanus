@@ -1,5 +1,5 @@
-import { apiSuccess } from '@/lib/api/response';
-import { stripe } from '@/lib/stripe/client';
+import { apiSuccess, apiError } from '@/lib/api/response';
+import { stripe, PLAN_PRICE_IDS } from '@/lib/stripe/client';
 import { requireAuth, requireWorkspaceRole, withErrorHandler } from '@/lib/api/withAuth';
 import { checkoutSchema } from '@/lib/schemas/workspace.schemas';
 import { withRateLimit } from '@/lib/security/rateLimit';
@@ -18,6 +18,12 @@ export const POST = withErrorHandler(async (
     await requireWorkspaceRole(workspaceId, user.id, 'ADMIN');
 
     const { priceId } = checkoutSchema.parse(await request.json());
+
+    // Validate priceId is one of the configured plan prices
+    const allowedPriceIds = Object.values(PLAN_PRICE_IDS).filter(Boolean);
+    if (!allowedPriceIds.includes(priceId)) {
+        return apiError(400, 'Invalid price ID');
+    }
 
     const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
 

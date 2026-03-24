@@ -174,6 +174,16 @@ export class RemoteSessionService {
     // ========================================
 
     static async updateSession(sessionId: string, userId: string, updates: UpdateSessionInput) {
+        // Verify the user has access to this session's workspace
+        const accessCheck = await prisma.remoteSession.findFirst({
+            where: {
+                id: sessionId,
+                asset: { workspace: { members: { some: { userId } } } },
+            },
+            select: { id: true },
+        });
+        if (!accessCheck) throw new ApiError(404, 'Session not found');
+
         const { quality, notes, status, metadata, averageLatency, averageFPS, offer, answer, iceCandidates } = updates;
 
         const updateData: Record<string, unknown> = {};
@@ -237,8 +247,12 @@ export class RemoteSessionService {
     // ========================================
 
     static async endSession(sessionId: string, userId: string) {
-        const session = await prisma.remoteSession.findUnique({
-            where: { id: sessionId },
+        // Verify the user has access to this session's workspace
+        const session = await prisma.remoteSession.findFirst({
+            where: {
+                id: sessionId,
+                asset: { workspace: { members: { some: { userId } } } },
+            },
             select: { startedAt: true, assetId: true },
         });
         if (!session) {
