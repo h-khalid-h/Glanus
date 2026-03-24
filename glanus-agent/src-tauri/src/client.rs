@@ -4,7 +4,21 @@ use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
-// Request/Response types matching Glanus backend API
+// ============================================
+// Shared API response envelope
+// ============================================
+
+/// Standard wrapper returned by every Glanus platform endpoint:
+/// `{ success: bool, data: T, meta: { timestamp: String } }`
+#[derive(Debug, Deserialize)]
+pub struct ApiResponse<T> {
+    pub success: bool,
+    pub data: T,
+}
+
+// ============================================
+// Registration types
+// ============================================
 
 #[derive(Debug, Serialize)]
 pub struct RegisterRequest {
@@ -25,23 +39,23 @@ pub struct RegisterRequest {
 #[derive(Debug, Serialize)]
 pub struct SystemInfo {
     pub cpu: String,
-    pub ram: u64, // GB
+    pub ram: u64,  // GB
     pub disk: u64, // GB
+    pub os: String,
 }
 
+/// Matches platform's `AgentService.registerAgent()` return shape.
 #[derive(Debug, Deserialize)]
-pub struct RegisterResponse {
+pub struct RegisterResponseData {
+    #[serde(rename = "agentId")]
+    pub agent_id: String,
     #[serde(rename = "authToken")]
     pub auth_token: String,
-    pub agent: AgentData,
 }
 
-#[derive(Debug, Deserialize)]
-pub struct AgentData {
-    pub id: String,
-    #[serde(rename = "assetId")]
-    pub asset_id: String,
-}
+// ============================================
+// Heartbeat types
+// ============================================
 
 #[derive(Debug, Serialize)]
 pub struct HeartbeatRequest {
@@ -70,35 +84,61 @@ pub struct HeartbeatMetrics {
     #[serde(rename = "networkDown")]
     pub network_down: f32,
     #[serde(rename = "topProcesses")]
-    pub top_processes: String, // JSON string
+    pub top_processes: Vec<ProcessInfo>,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ProcessInfo {
+    pub name: String,
+    pub cpu: f32,
+    pub ram: f32,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub pid: Option<u32>,
+}
+
+/// Matches platform's heartbeat response: `{ status, agentId, commands }`
 #[derive(Debug, Deserialize)]
-pub struct HeartbeatResponse {
+pub struct HeartbeatResponseData {
     pub commands: Vec<Command>,
 }
 
+/// Matches platform's command shape from `AgentService.processHeartbeat()`:
+/// `{ type, id, scriptName, script, language }`
 #[derive(Debug, Clone, Deserialize)]
 pub struct Command {
     pub id: String,
-    #[serde(rename = "scriptType")]
-    pub script_type: String,
+    #[serde(rename = "type")]
+    pub command_type: String,
+    #[serde(rename = "scriptName")]
+    pub script_name: String,
     pub script: String,
-    pub timeout: Option<u64>,
+    pub language: String,
 }
+
+// ============================================
+// Command result types
+// ============================================
 
 #[derive(Debug, Serialize)]
 pub struct CommandResultRequest {
     #[serde(rename = "authToken")]
     pub auth_token: String,
-    #[serde(rename = "commandId")]
-    pub command_id: String,
+    /// Maps to platform's `executionId` (this is the ScriptExecution ID)
+    #[serde(rename = "executionId")]
+    pub execution_id: String,
+    /// Platform expects lowercase: "completed", "failed", "timeout"
     pub status: String,
     pub output: Option<String>,
     pub error: Option<String>,
     #[serde(rename = "exitCode")]
     pub exit_code: Option<i32>,
+    /// Execution duration in milliseconds
+    pub duration: Option<u64>,
 }
+
+// ============================================
+// API Client
+// ============================================
 
 pub struct ApiClient {
     client: Client,
@@ -115,10 +155,12 @@ impl ApiClient {
         Self { client, base_url }
     }
 
-    /// Register agent with backend
-    pub async fn register(&self, request: RegisterRequest, pre_auth_token: &str) -> Result<RegisterResponse> {
+    /// Register agent with backend.
+    /// The platform requires a logged-in user session (NextAuth cookie).
+    /// The `pre_auth_token` is sent as a Bearer header for workspace access verification.
+    pub async fn register(&self, request: RegisterRequest, pre_auth_token: &str) -> Result<RegisterResponseData> {
         let url = format!("{}/api/agent/register", self.base_url);
-        
+
         let response = self.client
             .post(&url)
             .header("Authorization", format!("Bearer {}", pre_auth_token))
@@ -133,17 +175,17 @@ impl ApiClient {
             anyhow::bail!("Registration failed with status {}: {}", status, error_text);
         }
 
-        let result = response.json::<RegisterResponse>()
+        let envelope = response.json::<ApiResponse<RegisterResponseData>>()
             .await
             .context("Failed to parse registration response")?;
 
-        Ok(result)
+        Ok(envelope.data)
     }
 
     /// Send heartbeat to backend
-    pub async fn heartbeat(&self, request: HeartbeatRequest) -> Result<HeartbeatResponse> {
+    pub async fn heartbeat(&self, request: HeartbeatRequest) -> Result<HeartbeatResponseData> {
         let url = format!("{}/api/agent/heartbeat", self.base_url);
-        
+
         let response = self.client
             .post(&url)
             .json(&request)
@@ -157,17 +199,17 @@ impl ApiClient {
             anyhow::bail!("Heartbeat failed with status {}: {}", status, error_text);
         }
 
-        let result = response.json::<HeartbeatResponse>()
+        let envelope = response.json::<ApiResponse<HeartbeatResponseData>>()
             .await
             .context("Failed to parse heartbeat response")?;
 
-        Ok(result)
+        Ok(envelope.data)
     }
 
     /// Report command execution result
     pub async fn report_command_result(&self, request: CommandResultRequest) -> Result<()> {
         let url = format!("{}/api/agent/command-result", self.base_url);
-        
+
         let response = self.client
             .post(&url)
             .json(&request)
@@ -202,6 +244,12 @@ pub fn get_platform() -> String {
     } else {
         "LINUX".to_string()
     }
+}
+
+/// Get OS name and version
+pub fn get_os_info() -> String {
+    sysinfo::System::long_os_version()
+        .unwrap_or_else(|| std::env::consts::OS.to_string())
 }
 
 /// Get local IP address (best effort)

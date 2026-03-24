@@ -3,7 +3,7 @@ use anyhow::{Result, Context};
 use std::time::Duration;
 use std::sync::Arc;
 use tokio::time;
-use crate::client::{ApiClient, HeartbeatRequest, HeartbeatMetrics, Command};
+use crate::client::{ApiClient, HeartbeatRequest, HeartbeatMetrics, ProcessInfo, Command};
 use crate::monitor::SystemMonitor;
 use crate::storage::SecureStorage;
 use crate::config::AgentConfig;
@@ -71,8 +71,12 @@ impl HeartbeatManager {
             disk_total: metrics.disk_total_gb,
             network_up: metrics.network_up_kbps,
             network_down: metrics.network_down_kbps,
-            top_processes: serde_json::to_string(&metrics.top_processes)
-                .unwrap_or_else(|_| "[]".to_string()),
+            top_processes: metrics.top_processes.iter().map(|p| ProcessInfo {
+                name: p.name.clone(),
+                cpu: p.cpu,
+                ram: p.ram_mb,
+                pid: Some(p.pid),
+            }).collect(),
         };
 
         // Send heartbeat

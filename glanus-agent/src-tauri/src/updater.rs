@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use reqwest::Client;
 use chrono::Timelike;
+use crate::client::ApiResponse;
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct UpdateInfo {
@@ -55,11 +56,11 @@ impl AutoUpdater {
             anyhow::bail!("Update check failed with status: {}", response.status());
         }
 
-        let update_info: Option<UpdateInfo> = response.json()
+        let envelope = response.json::<ApiResponse<Option<UpdateInfo>>>()
             .await
             .context("Failed to parse update response")?;
 
-        Ok(update_info)
+        Ok(envelope.data)
     }
 
     /// Download installer to temp directory

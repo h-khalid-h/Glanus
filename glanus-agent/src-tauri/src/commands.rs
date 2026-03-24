@@ -60,13 +60,13 @@ impl CommandQueue {
 
     /// Execute a single command and report result to backend
     async fn execute_and_report(&self, command: Command) -> Result<()> {
-        log::info!("Executing command {}: {} script", command.id, command.script_type);
+        log::info!("Executing command {}: {} script ({})", command.id, command.language, command.script_name);
 
-        // Execute script
+        // Execute script using the language field as script type
         let result = ScriptExecutor::execute(
-            &command.script_type,
+            &command.language,
             &command.script,
-            command.timeout,
+            None, // Platform does not send timeout; use default
         ).await
         .context("Failed to execute script")?;
 
@@ -79,18 +79,27 @@ impl CommandQueue {
     }
 
     /// Report execution result to backend
-    async fn report_result(&self, command_id: String, result: ExecutionResult) -> Result<()> {
+    async fn report_result(&self, execution_id: String, result: ExecutionResult) -> Result<()> {
         let auth_token = SecureStorage::get_token()
             .context("Failed to get auth token")?
             .context("Auth token not found")?;
 
+        // Map agent status values to platform-expected lowercase values
+        let platform_status = match result.status.as_str() {
+            "SUCCESS" => "completed",
+            "ERROR" => "failed",
+            "TIMEOUT" => "timeout",
+            other => other,
+        };
+
         let request = CommandResultRequest {
             auth_token,
-            command_id,
-            status: result.status,
+            execution_id,
+            status: platform_status.to_string(),
             output: result.output,
             error: result.error,
             exit_code: result.exit_code,
+            duration: Some(result.duration_ms),
         };
 
         self.api_client.report_command_result(request)

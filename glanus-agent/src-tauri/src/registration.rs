@@ -1,6 +1,6 @@
 // Agent registration module
 use anyhow::{Result, Context};
-use crate::client::{ApiClient, RegisterRequest, SystemInfo, get_hostname, get_platform, get_local_ip};
+use crate::client::{ApiClient, RegisterRequest, SystemInfo, get_hostname, get_platform, get_local_ip, get_os_info};
 use crate::config::AgentConfig;
 use crate::storage::SecureStorage;
 use sysinfo::System;
@@ -35,6 +35,7 @@ impl RegistrationManager {
             cpu: Self::get_cpu_info(&sys),
             ram: (sys.total_memory() / 1_073_741_824) as u64, // Convert to GB
             disk: Self::get_total_disk_size() as u64,
+            os: get_os_info(),
         };
 
         // Build registration request
@@ -64,7 +65,7 @@ impl RegistrationManager {
         updated_config.save()
             .context("Failed to save updated config")?;
 
-        log::info!("Agent registered successfully: {}", response.agent.id);
+        log::info!("Agent registered successfully: {}", response.agent_id);
         Ok(())
     }
 
