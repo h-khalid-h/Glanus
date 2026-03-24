@@ -30,12 +30,12 @@ const PUBLIC_PATHS = [
     '/signup',
     '/forgot-password',
     '/reset-password',
-    '/_next',
+    '/_next/',           // Next.js internals (prefix match via trailing slash)
     '/favicon.ico',
     '/monitoring',       // Sentry
     '/api/health',
     '/api/ready',
-    '/api/auth/',        // NextAuth + custom auth endpoints
+    '/api/auth/',        // NextAuth + custom auth endpoints (prefix match)
     '/api/csrf',         // CSRF token endpoint
     '/api/partners/signup', // Partner signup
     '/api/invitations',    // Invitation verification (token-based)
@@ -73,7 +73,8 @@ export async function middleware(request: NextRequest) {
 
     // 1. Authentication Check (Defense-in-Depth)
     const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
-    const isPublicPath = PUBLIC_PATHS.some(path => pathname.startsWith(path) || pathname === '/') ||
+    const isPublicPath = pathname === '/' ||
+        PUBLIC_PATHS.some(path => pathname === path || (path.endsWith('/') && pathname.startsWith(path))) ||
         pathname === '/api/partners' ||                     // Public partner directory
         /^\/api\/partners\/[^/]+$/.test(pathname);          // Public partner profile (/api/partners/[id])
 

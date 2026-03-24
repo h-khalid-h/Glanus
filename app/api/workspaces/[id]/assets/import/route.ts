@@ -21,6 +21,8 @@ export const POST = withErrorHandler(async (
 
     if (!file) return apiError(400, 'No file provided. Upload a CSV file.');
     if (!file.name.endsWith('.csv')) return apiError(400, 'File must be a .csv file.');
+    const allowedMimeTypes = ['text/csv', 'application/csv', 'text/plain', 'application/vnd.ms-excel'];
+    if (file.type && !allowedMimeTypes.includes(file.type)) return apiError(400, 'Invalid file type. Only CSV files are accepted.');
     if (file.size > 5 * 1024 * 1024) return apiError(400, 'File size exceeds 5MB limit.');
 
     const csvText = await file.text();

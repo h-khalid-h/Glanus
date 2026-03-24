@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { requireAuth, withErrorHandler } from '@/lib/api/withAuth';
 import { WorkspaceAuditService } from '@/lib/services/WorkspaceAuditService';
+import { withRateLimit } from '@/lib/security/rateLimit';
 
 // GET /api/workspaces/[id]/audit/export
 export const GET = withErrorHandler(async (
@@ -9,6 +10,9 @@ export const GET = withErrorHandler(async (
 ) => {
     const { id: workspaceId } = await context.params;
     const user = await requireAuth();
+
+    const rateLimitResponse = await withRateLimit(request, 'api');
+    if (rateLimitResponse) return rateLimitResponse;
 
     await WorkspaceAuditService.verifyAdminAccess(user.id, workspaceId);
 

@@ -43,6 +43,14 @@ export function enforceBodySize(
                 `Request body too large. Maximum size is ${limitMB} MB.`
             );
         }
+    } else if (request.headers.get('transfer-encoding')) {
+        // Chunked requests without Content-Length: reject if no length declared
+        // to prevent unbounded streaming payloads
+        const limitMB = (limit / (1024 * 1024)).toFixed(1);
+        return apiError(
+            411,
+            `Content-Length header is required. Maximum size is ${limitMB} MB.`
+        );
     }
 
     return null;

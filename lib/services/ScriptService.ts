@@ -193,45 +193,47 @@ export class ScriptService {
     // ========================================
 
     static async deployScript(workspaceId: string, scriptId: string, userId: string, targetAgentIds: string[]) {
-        const script = await prisma.script.findUnique({ where: { id: scriptId, workspaceId } });
-        if (!script) throw new ApiError(404, 'Script template not found.');
+        return prisma.$transaction(async (tx) => {
+            const script = await tx.script.findUnique({ where: { id: scriptId, workspaceId } });
+            if (!script) throw new ApiError(404, 'Script template not found.');
 
-        const targetAgents = await prisma.agentConnection.findMany({
-            where: { id: { in: targetAgentIds }, workspaceId, status: 'ONLINE' },
-            select: { id: true, assetId: true, hostname: true },
+            const targetAgents = await tx.agentConnection.findMany({
+                where: { id: { in: targetAgentIds }, workspaceId, status: 'ONLINE' },
+                select: { id: true, assetId: true, hostname: true },
+            });
+
+            if (targetAgents.length === 0) {
+                throw new ApiError(400, 'None of the provided agents are currently ONLINE or available in this workspace.');
+            }
+
+            const executionsData = targetAgents.map((agent) => ({
+                workspaceId, agentId: agent.id, assetId: agent.assetId,
+                scriptId: script.id, scriptName: script.name,
+                scriptBody: script.content, language: script.language,
+                status: 'PENDING' as const, createdBy: userId,
+            }));
+
+            await tx.scriptExecution.createMany({ data: executionsData });
+
+            const spawnedExecutions = await tx.scriptExecution.findMany({
+                where: { scriptId: script.id, agentId: { in: targetAgents.map((a) => a.id) }, status: 'PENDING' },
+                orderBy: { createdAt: 'desc' },
+                take: targetAgents.length,
+            });
+
+            await tx.auditLog.create({
+                data: {
+                    workspaceId, userId, action: 'script.deployed',
+                    resourceType: 'script', resourceId: script.id,
+                    details: { name: script.name, language: script.language, targetCount: targetAgents.length, targetAgents: targetAgents.map((a) => a.hostname) },
+                },
+            });
+
+            return {
+                deployedCount: targetAgents.length,
+                skippedCount: targetAgentIds.length - targetAgents.length,
+                executions: spawnedExecutions,
+            };
         });
-
-        if (targetAgents.length === 0) {
-            throw new ApiError(400, 'None of the provided agents are currently ONLINE or available in this workspace.');
-        }
-
-        const executionsData = targetAgents.map((agent) => ({
-            workspaceId, agentId: agent.id, assetId: agent.assetId,
-            scriptId: script.id, scriptName: script.name,
-            scriptBody: script.content, language: script.language,
-            status: 'PENDING' as const, createdBy: userId,
-        }));
-
-        await prisma.scriptExecution.createMany({ data: executionsData });
-
-        const spawnedExecutions = await prisma.scriptExecution.findMany({
-            where: { scriptId: script.id, agentId: { in: targetAgents.map((a) => a.id) }, status: 'PENDING' },
-            orderBy: { createdAt: 'desc' },
-            take: targetAgents.length,
-        });
-
-        await prisma.auditLog.create({
-            data: {
-                workspaceId, userId, action: 'script.deployed',
-                resourceType: 'script', resourceId: script.id,
-                details: { name: script.name, language: script.language, targetCount: targetAgents.length, targetAgents: targetAgents.map((a) => a.hostname) },
-            },
-        });
-
-        return {
-            deployedCount: targetAgents.length,
-            skippedCount: targetAgentIds.length - targetAgents.length,
-            executions: spawnedExecutions,
-        };
     }
 }

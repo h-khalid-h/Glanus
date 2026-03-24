@@ -89,9 +89,18 @@ export class WorkspaceApiKeyService {
             select: { id: true, workspaceId: true, scopes: true, expiresAt: true, revokedAt: true },
         });
 
-        if (!apiKey) return null;
-        if (apiKey.revokedAt) return null;
-        if (apiKey.expiresAt && apiKey.expiresAt < new Date()) return null;
+        if (!apiKey) {
+            console.warn(`[API Key] Validation failed: key not found (prefix: ${rawKey.slice(0, 13)})`);
+            return null;
+        }
+        if (apiKey.revokedAt) {
+            console.warn(`[API Key] Validation failed: revoked key used (id: ${apiKey.id})`);
+            return null;
+        }
+        if (apiKey.expiresAt && apiKey.expiresAt < new Date()) {
+            console.warn(`[API Key] Validation failed: expired key used (id: ${apiKey.id})`);
+            return null;
+        }
 
         // Update usage stats (fire-and-forget)
         prisma.apiKey.update({

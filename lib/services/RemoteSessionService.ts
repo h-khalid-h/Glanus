@@ -77,7 +77,14 @@ export class RemoteSessionService {
         };
         if (status) where.status = status;
         if (assetId) where.assetId = assetId;
-        if (filterUserId) where.userId = filterUserId;
+        // Only allow filtering by users who share workspace membership with the caller
+        if (filterUserId) {
+            where.userId = filterUserId;
+            where.asset = {
+                workspace: { members: { some: { userId: filterUserId } } },
+                ...(typeof where.asset === 'object' ? where.asset as Record<string, unknown> : {}),
+            };
+        }
 
         const [sessions, total] = await Promise.all([
             prisma.remoteSession.findMany({

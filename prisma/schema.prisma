@@ -1330,6 +1330,7 @@ model ScriptExecution {
   @@index([assetId, createdAt])
   @@index([workspaceId, createdAt])
   @@index([status])
+  @@index([createdBy])
 }
 
 model AlertRule {
@@ -1356,6 +1357,7 @@ model AlertRule {
 
   @@index([workspaceId, enabled])
   @@index([metric])
+  @@index([createdBy])
 }
 
 model NotificationWebhook {
@@ -1500,6 +1502,7 @@ model ReportSchedule {
 
   @@index([workspaceId, enabled])
   @@index([frequency])
+  @@index([createdBy])
 }
 
 // ============================================
@@ -1569,6 +1572,7 @@ model MaintenanceWindow {
   @@index([workspaceId])
   @@index([scheduledStart])
   @@index([status])
+  @@index([createdById])
 }
 
 // ============================================

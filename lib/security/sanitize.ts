@@ -92,8 +92,12 @@ const ALLOWED_SSH_COMMANDS = [
 export function sanitizeSSHCommand(command: string): string | null {
     const trimmed = command.trim();
 
+    // Reject excessively long commands
+    if (trimmed.length > 200) return null;
+
     // Extract the base command (first word)
-    const baseCommand = trimmed.split(/\s+/)[0];
+    const parts = trimmed.split(/\s+/);
+    const baseCommand = parts[0];
 
     // Check if command is whitelisted
     if (!ALLOWED_SSH_COMMANDS.includes(baseCommand)) {
@@ -113,6 +117,18 @@ export function sanitizeSSHCommand(command: string): string | null {
             return null;
         }
     }
+
+    // Block arguments that start with / to prevent reading sensitive paths
+    const args = parts.slice(1);
+    for (const arg of args) {
+        if (arg.startsWith('/etc') || arg.startsWith('/proc') || arg.startsWith('/sys') ||
+            arg.startsWith('/root') || arg.startsWith('/var/log')) {
+            return null;
+        }
+    }
+
+    // Limit number of arguments to prevent abuse
+    if (args.length > 5) return null;
 
     return trimmed;
 }

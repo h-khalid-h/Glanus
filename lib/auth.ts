@@ -89,8 +89,15 @@ async function isAccountLocked(email: string): Promise<boolean> {
  * Record failed login attempt
  */
 async function recordFailedAttempt(email: string): Promise<number> {
-    const redis = await getLockoutRedis();
+    // Always update in-memory as a backstop, then try Redis
+    const memAttempts = memoryLockout.get(email) || { count: 0 };
+    memAttempts.count += 1;
+    if (memAttempts.count >= MAX_LOGIN_ATTEMPTS) {
+        memAttempts.lockedUntil = Date.now() + LOCKOUT_DURATION_MS;
+    }
+    memoryLockout.set(email, memAttempts);
 
+    const redis = await getLockoutRedis();
     if (redis) {
         try {
             const data = await redis.get(redisKey(email));
@@ -104,20 +111,14 @@ async function recordFailedAttempt(email: string): Promise<number> {
             }
 
             await redis.set(redisKey(email), JSON.stringify(current), { EX: LOCKOUT_DURATION_S });
-            return current.count;
+            // Return the higher count (defense in depth)
+            return Math.max(current.count, memAttempts.count);
         } catch {
-            // Fall through to in-memory
+            // Redis failed; in-memory already updated above
         }
     }
 
-    // In-memory fallback
-    const attempts = memoryLockout.get(email) || { count: 0 };
-    attempts.count += 1;
-    if (attempts.count >= MAX_LOGIN_ATTEMPTS) {
-        attempts.lockedUntil = Date.now() + LOCKOUT_DURATION_MS;
-    }
-    memoryLockout.set(email, attempts);
-    return attempts.count;
+    return memAttempts.count;
 }
 
 /**

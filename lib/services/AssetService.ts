@@ -251,23 +251,13 @@ export class AssetService {
      * Fetch a specific Asset by ID, verifying workspace access.
      */
     static async getAssetById(assetId: string, userId: string) {
-        // Verify workspace membership
-        const accessCheck = await prisma.asset.findFirst({
+        // Single query: fetch asset with includes AND workspace membership check
+        const asset = await prisma.asset.findFirst({
             where: {
                 id: assetId,
                 deletedAt: null,
-                workspace: {
-                    members: { some: { userId } },
-                },
+                workspace: { members: { some: { userId } } },
             },
-        });
-
-        if (!accessCheck) {
-            throw new ApiError(404, 'Asset not found');
-        }
-
-        const asset = await prisma.asset.findFirst({
-            where: { id: assetId, deletedAt: null },
             include: {
                 physicalAsset: true,
                 digitalAsset: true,

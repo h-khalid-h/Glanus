@@ -7,10 +7,9 @@ const nextConfig = {
     serverExternalPackages: ['ssh2', 'node-ssh', 'isomorphic-dompurify', 'jsdom'],
     images: {
         remotePatterns: [
-            {
-                protocol: 'https',
-                hostname: '**',
-            },
+            { protocol: 'https', hostname: '*.googleusercontent.com' },
+            { protocol: 'https', hostname: '*.githubusercontent.com' },
+            { protocol: 'https', hostname: '*.gravatar.com' },
         ],
     },
     experimental: {
