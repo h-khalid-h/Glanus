@@ -1721,6 +1721,7 @@ model DiscoveryScan {
 enum TicketStatus {
   OPEN
   IN_PROGRESS
+  ON_HOLD
   WAITING_ON_CUSTOMER
   RESOLVED
   CLOSED

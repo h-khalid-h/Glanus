@@ -18,7 +18,7 @@ const baseAssetSchema = z.object({
 
     location: z.string().max(255).optional(),
     status: z.enum(['AVAILABLE', 'ASSIGNED', 'MAINTENANCE', 'RETIRED', 'LOST']).optional(),
-    description: z.string().optional(),
+    description: z.string().max(5000, 'Description is too long').optional(),
     tags: z.array(z.string()).optional(),
 
     // Dynamic field payloads

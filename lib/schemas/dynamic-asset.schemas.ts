@@ -85,7 +85,7 @@ export const createCategorySchema = z.object({
         .max(255)
         .regex(/^[a-z0-9-]+$/, 'Slug must be lowercase alphanumeric with hyphens')
         .optional(),
-    description: z.string().optional(),
+    description: z.string().max(5000, 'Description is too long').optional(),
     icon: z.string().default('📦'),
     parentId: z.string().cuid().optional(),
     assetTypeValue: z.enum(['PHYSICAL', 'DIGITAL']),
@@ -118,7 +118,7 @@ export const createFieldDefinitionSchema = z.object({
         .min(1)
         .max(255)
         .regex(/^[a-z0-9_]+$/, 'Slug must be lowercase alphanumeric with underscores'),
-    description: z.string().optional(),
+    description: z.string().max(5000, 'Description is too long').optional(),
     fieldType: fieldTypeEnum,
     categoryId: z.string().cuid(),
     isRequired: z.boolean().default(false),
@@ -161,7 +161,7 @@ export const createActionDefinitionSchema = z.object({
         .min(1)
         .max(255)
         .regex(/^[a-z0-9-]+$/, 'Slug must be lowercase alphanumeric with hyphens'),
-    description: z.string().optional(),
+    description: z.string().max(5000, 'Description is too long').optional(),
     icon: z.string().optional(),
     categoryId: z.string().cuid(),
     actionType: actionTypeEnum,
@@ -255,7 +255,7 @@ export const relationshipQuerySchema = z.object({
 export const createDynamicAssetSchema = z.object({
     categoryId: z.string().cuid('Category is required'),
     name: z.string().min(1, 'Name is required').max(255),
-    description: z.string().optional(),
+    description: z.string().max(5000, 'Description is too long').optional(),
     status: z.enum(['AVAILABLE', 'ASSIGNED', 'MAINTENANCE', 'RETIRED', 'LOST']).optional(),
     assignedToId: z.string().uuid().optional(),
     tags: z.array(z.string()).optional(),

@@ -4,6 +4,23 @@ import { logInfo, logWarn } from '@/lib/logger';
 import Stripe from 'stripe';
 
 /**
+ * Valid subscription status transitions.
+ * Each key maps to the set of statuses it is allowed to transition to.
+ */
+const VALID_STATUS_TRANSITIONS: Record<string, Set<string>> = {
+    ACTIVE:   new Set(['PAST_DUE', 'CANCELED', 'UNPAID']),
+    TRIALING: new Set(['ACTIVE', 'PAST_DUE', 'CANCELED']),
+    PAST_DUE: new Set(['ACTIVE', 'CANCELED', 'UNPAID']),
+    CANCELED: new Set(['ACTIVE', 'TRIALING']),  // Allow reactivation
+    UNPAID:   new Set(['ACTIVE', 'CANCELED']),
+};
+
+function isValidTransition(from: string, to: string): boolean {
+    if (from === to) return true; // No-op transition is always valid
+    return VALID_STATUS_TRANSITIONS[from]?.has(to) ?? false;
+}
+
+/**
  * StripeWebhookService — Domain layer for all Stripe webhook event handling.
  *
  * Responsibilities:
@@ -81,11 +98,24 @@ export class StripeWebhookService {
             trialing: 'TRIALING',
         };
 
+        const newStatus = statusMap[subscription.status] || 'ACTIVE';
+
+        // Validate status transition
+        const current = await prisma.subscription.findUnique({
+            where: { workspaceId },
+            select: { status: true },
+        });
+
+        if (current && !isValidTransition(current.status, newStatus)) {
+            logWarn(`[STRIPE] Invalid status transition ${current.status} → ${newStatus} for workspace ${workspaceId}, skipping`);
+            return;
+        }
+
         await prisma.subscription.update({
             where: { workspaceId },
             data: {
                 plan: plan as never, // Prisma enum
-                status: (statusMap[subscription.status] || 'ACTIVE') as never,
+                status: newStatus as never,
                 stripeSubscriptionId: subscription.id,
                 // Stripe SDK v20: current_period_end is on the subscription object at runtime
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -93,7 +123,7 @@ export class StripeWebhookService {
             },
         });
 
-        logInfo(`[STRIPE] Subscription updated for workspace ${workspaceId}: ${plan}`);
+        logInfo(`[STRIPE] Subscription updated for workspace ${workspaceId}: ${plan} (${newStatus})`);
     }
 
     static async handleSubscriptionCanceled(subscription: Stripe.Subscription): Promise<void> {
@@ -130,6 +160,10 @@ export class StripeWebhookService {
         });
 
         if (sub) {
+            if (!isValidTransition(sub.status, 'ACTIVE')) {
+                logWarn(`[STRIPE] Invalid status transition ${sub.status} → ACTIVE on payment success for ${subscriptionId}, skipping`);
+                return;
+            }
             await prisma.subscription.update({
                 where: { id: sub.id },
                 data: { aiCreditsUsed: 0, status: 'ACTIVE' },
@@ -150,6 +184,10 @@ export class StripeWebhookService {
         });
 
         if (sub) {
+            if (!isValidTransition(sub.status, 'PAST_DUE')) {
+                logWarn(`[STRIPE] Invalid status transition ${sub.status} → PAST_DUE on payment failure for ${subscriptionId}, skipping`);
+                return;
+            }
             await prisma.subscription.update({
                 where: { id: sub.id },
                 data: { status: 'PAST_DUE' },
