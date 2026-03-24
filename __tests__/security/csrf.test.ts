@@ -11,7 +11,7 @@ describe('CSRF Token', () => {
             const parts = token.split('.');
 
             expect(parts).toHaveLength(2);
-            expect(parts[0].length).toBe(64); // 32 bytes = 64 hex chars
+            expect(parts[0].length).toBe(96); // 48 bytes = 96 hex chars
             expect(parts[1].length).toBe(64); // SHA-256 = 64 hex chars
         });
 

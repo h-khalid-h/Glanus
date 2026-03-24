@@ -1,9 +1,9 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
 import './globals.css';
 import { Providers } from './providers';
 
-const inter = Inter({ subsets: ['latin'] });
+// System font stack matching Inter metrics for offline/CI builds
+const interClassName = 'font-sans';
 
 export const metadata: Metadata = {
     title: {
@@ -32,7 +32,7 @@ export default function RootLayout({
 }>) {
     return (
         <html lang="en" className="h-full dark">
-            <body className={`${inter.className} h-full antialiased`}>
+            <body className={`${interClassName} h-full antialiased`}>
                 <Providers>{children}</Providers>
             </body>
         </html>

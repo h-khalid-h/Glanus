@@ -22,8 +22,9 @@ describe('DashboardNav', () => {
         render(<DashboardNav />)
 
         expect(screen.getByText('Dashboard')).toBeInTheDocument()
-        expect(screen.getByText('Assets')).toBeInTheDocument()
+        expect(screen.getByText('Mission Control')).toBeInTheDocument()
         expect(screen.getByText('Remote')).toBeInTheDocument()
+        expect(screen.getByText('Insights')).toBeInTheDocument()
     })
 
     it('renders user name when authenticated', () => {

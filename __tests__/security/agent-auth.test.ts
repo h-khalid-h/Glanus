@@ -5,6 +5,9 @@
  * Agent Auth Token Hashing — Unit Tests
  */
 
+// Ensure HMAC secret is available for tests
+process.env.NEXTAUTH_SECRET = process.env.NEXTAUTH_SECRET || 'test-secret-for-agent-auth-tests';
+
 import {
     generateAgentToken,
     hashAgentToken,
