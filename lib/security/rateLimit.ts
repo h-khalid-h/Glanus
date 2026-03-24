@@ -71,10 +71,18 @@ const memoryStrictApiLimiter = new RateLimiterMemory({
     duration: 15 * 60,
 });
 
+// Agent endpoints: tighter limit keyed by agent ID to prevent brute-force
+const memoryAgentLimiter = new RateLimiterMemory({
+    points: 300,
+    duration: 15 * 60,
+    blockDuration: 15 * 60,
+});
+
 // Redis-backed limiters (created lazily when Redis is available)
 let redisLoginLimiter: RateLimiterRedis | null = null;
 let redisApiLimiter: RateLimiterRedis | null = null;
 let redisStrictApiLimiter: RateLimiterRedis | null = null;
+let redisAgentLimiter: RateLimiterRedis | null = null;
 
 async function initRedisLimiters(): Promise<boolean> {
     const client = await getRedisClient();
@@ -103,6 +111,14 @@ async function initRedisLimiters(): Promise<boolean> {
             duration: 15 * 60,
         });
 
+        redisAgentLimiter = new RateLimiterRedis({
+            storeClient: client,
+            keyPrefix: 'rl:agent',
+            points: 300,
+            duration: 15 * 60,
+            blockDuration: 15 * 60,
+        });
+
         return true;
     } catch {
         return false;
@@ -122,7 +138,7 @@ function ensureInit(): Promise<boolean> {
 // Public API
 // ============================================
 
-export type RateLimitType = 'login' | 'api' | 'strict-api';
+export type RateLimitType = 'login' | 'api' | 'strict-api' | 'agent';
 
 /**
  * Get the appropriate rate limiter (Redis if available, memory fallback)
@@ -134,6 +150,7 @@ async function getRateLimiter(type: RateLimitType) {
         switch (type) {
             case 'login': return redisLoginLimiter!;
             case 'strict-api': return redisStrictApiLimiter!;
+            case 'agent': return redisAgentLimiter!;
             case 'api': default: return redisApiLimiter!;
         }
     }
@@ -142,6 +159,7 @@ async function getRateLimiter(type: RateLimitType) {
     switch (type) {
         case 'login': return memoryLoginLimiter;
         case 'strict-api': return memoryStrictApiLimiter;
+        case 'agent': return memoryAgentLimiter;
         case 'api': default: return memoryApiLimiter;
     }
 }
@@ -226,7 +244,7 @@ export async function withRateLimit(
                 headers: {
                     'Content-Type': 'application/json',
                     'Retry-After': result.retryAfter?.toString() || '900',
-                    'X-RateLimit-Limit': type === 'login' ? '5' : type === 'strict-api' ? '100' : '1000',
+                    'X-RateLimit-Limit': type === 'login' ? '5' : type === 'agent' ? '300' : type === 'strict-api' ? '100' : '1000',
                     'X-RateLimit-Remaining': '0',
                     'X-RateLimit-Reset': result.resetAt.toISOString(),
                 },
@@ -245,7 +263,13 @@ export function getRateLimitHeaders(
     remaining: number,
     resetAt: Date
 ): Record<string, string> {
-    const limit = type === 'login' ? '5' : type === 'strict-api' ? '100' : '1000';
+    const limitMap: Record<RateLimitType, string> = {
+        'login': '5',
+        'strict-api': '100',
+        'agent': '300',
+        'api': '1000',
+    };
+    const limit = limitMap[type] || '1000';
 
     return {
         'X-RateLimit-Limit': limit,

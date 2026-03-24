@@ -18,7 +18,7 @@ const CheckUpdateSchema = z.object({
  * Checks if a newer version of the agent binary is available for the given platform.
  */
 export const POST = withErrorHandler(async (request: NextRequest) => {
-    const rateLimitResponse = await withRateLimit(request, 'api');
+    const rateLimitResponse = await withRateLimit(request, 'agent');
     if (rateLimitResponse) return rateLimitResponse;
 
     const body = await request.json();

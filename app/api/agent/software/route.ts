@@ -22,7 +22,7 @@ const softwareSchema = z.object({
 });
 
 export const POST = withErrorHandler(async (request: NextRequest) => {
-    const rateLimitResponse = await withRateLimit(request, 'api');
+    const rateLimitResponse = await withRateLimit(request, 'agent');
     if (rateLimitResponse) return rateLimitResponse;
 
     const data = softwareSchema.parse(await request.json());

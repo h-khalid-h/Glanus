@@ -18,7 +18,7 @@ const discoverySchema = z.object({
 });
 
 export const POST = withErrorHandler(async (request: NextRequest) => {
-    const rateLimitResponse = await withRateLimit(request, 'api');
+    const rateLimitResponse = await withRateLimit(request, 'agent');
     if (rateLimitResponse) return rateLimitResponse;
 
     const data = discoverySchema.parse(await request.json());

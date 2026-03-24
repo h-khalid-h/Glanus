@@ -1,6 +1,26 @@
-import { logError, logInfo } from '@/lib/logger';
-import { Server as HTTPServer } from 'http';
+import { logError, logInfo, logWarn } from '@/lib/logger';
+import { Server as HTTPServer, IncomingMessage } from 'http';
 import { Server as SocketIOServer, Socket } from 'socket.io';
+
+/**
+ * Validate that the WebSocket upgrade request Origin matches allowed origins.
+ * Prevents cross-site WebSocket hijacking (CSWSH).
+ */
+function validateOrigin(req: IncomingMessage): boolean {
+    const allowedOrigin = process.env.NEXTAUTH_URL || 'http://localhost:3000';
+    const origin = req.headers.origin;
+
+    // Agent connections may not send an Origin header (non-browser clients)
+    if (!origin) return true;
+
+    try {
+        const allowed = new URL(allowedOrigin);
+        const incoming = new URL(origin);
+        return allowed.origin === incoming.origin;
+    } catch {
+        return false;
+    }
+}
 
 /** Protocol types for WebSocket event payloads */
 interface ScreenFrame {
@@ -53,6 +73,16 @@ export class WebSocketServer {
             },
             pingTimeout: 60000,
             pingInterval: 25000,
+            allowRequest: (req, callback) => {
+                if (validateOrigin(req)) {
+                    callback(null, true);
+                } else {
+                    logWarn('[WebSocket] Rejected connection: invalid origin', {
+                        origin: req.headers.origin,
+                    });
+                    callback('ORIGIN_NOT_ALLOWED', false);
+                }
+            },
         });
 
         this.setupEventHandlers();

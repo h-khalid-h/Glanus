@@ -7,7 +7,7 @@ import { withRateLimit } from '@/lib/security/rateLimit';
 // GET /api/agent/remote/active
 // Called by the Tauri Agent Webview to check for pending remote sessions.
 export const GET = withErrorHandler(async (request: NextRequest) => {
-    const rateLimitResponse = await withRateLimit(request, 'api');
+    const rateLimitResponse = await withRateLimit(request, 'agent');
     if (rateLimitResponse) return rateLimitResponse;
 
     const authHeader = request.headers.get('Authorization');
