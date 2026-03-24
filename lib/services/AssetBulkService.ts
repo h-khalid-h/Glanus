@@ -153,7 +153,11 @@ export class AssetBulkService {
                 break;
             }
             case 'delete': {
-                const result = await prisma.asset.deleteMany({ where: { id: { in: validIds } } });
+                // Soft-delete to match bulkDelete behavior and preserve audit trail
+                const result = await prisma.asset.updateMany({
+                    where: { id: { in: validIds }, deletedAt: null },
+                    data: { deletedAt: new Date(), status: 'RETIRED' as $Enums.AssetStatus },
+                });
                 affected = result.count;
                 break;
             }

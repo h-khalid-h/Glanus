@@ -43,8 +43,18 @@ export class DynamicFieldService {
                 if (rules.max && value.length > rules.max) {
                     return { valid: false, error: `Maximum length is ${rules.max}` };
                 }
-                if (rules.pattern && !new RegExp(rules.pattern).test(value)) {
-                    return { valid: false, error: 'Value does not match pattern' };
+                if (rules.pattern) {
+                    try {
+                        // Limit pattern length to prevent ReDoS from overly complex regexes
+                        if (typeof rules.pattern === 'string' && rules.pattern.length > 500) {
+                            return { valid: false, error: 'Validation pattern is too long' };
+                        }
+                        if (!new RegExp(rules.pattern).test(value)) {
+                            return { valid: false, error: 'Value does not match pattern' };
+                        }
+                    } catch {
+                        return { valid: false, error: 'Invalid validation pattern' };
+                    }
                 }
                 break;
 

@@ -101,15 +101,13 @@ export class MaintenanceService {
         const existing = await prisma.maintenanceWindow.findFirst({ where: { id: windowId, workspaceId } });
         if (!existing) throw new ApiError(404, 'Maintenance window not found.');
 
-        void userId; // captured for future audit
-
         const effectiveStart = data.scheduledStart !== undefined ? new Date(data.scheduledStart) : existing.scheduledStart;
         const effectiveEnd = data.scheduledEnd !== undefined ? new Date(data.scheduledEnd) : existing.scheduledEnd;
         if (effectiveEnd <= effectiveStart) {
             throw new ApiError(400, 'Scheduled end must be after scheduled start.');
         }
 
-        return prisma.maintenanceWindow.update({
+        const updated = await prisma.maintenanceWindow.update({
             where: { id: windowId },
             data: {
                 ...(data.title !== undefined && { title: data.title }),
@@ -126,6 +124,16 @@ export class MaintenanceService {
             },
             include: { asset: { select: { id: true, name: true } } },
         });
+
+        await prisma.auditLog.create({
+            data: {
+                workspaceId, userId, action: 'maintenance.updated',
+                resourceType: 'maintenanceWindow', resourceId: windowId,
+                details: { title: updated.title, status: updated.status, changes: Object.keys(data) },
+            },
+        });
+
+        return updated;
     }
 
     static async deleteMaintenanceWindow(workspaceId: string, userId: string, windowId: string) {
