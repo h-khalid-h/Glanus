@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { Camera } from 'lucide-react';
 
@@ -16,47 +16,86 @@ export function WebRTCManager({ apiUrl }: WebRTCManagerProps) {
     const pollIntervalRef = useRef<number | null>(null);
     const icePollIntervalRef = useRef<number | null>(null);
 
-    // Poll for new sessions
-    useEffect(() => {
-        pollIntervalRef.current = window.setInterval(pollActiveSession, 3000);
-        return () => {
-            if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
-            stopSession();
-        };
-    }, [status]); // Re-bind when status changes
-
-    const getAuthHeader = async (): Promise<Record<string, string>> => {
+    const getAuthHeader = useCallback(async (): Promise<Record<string, string>> => {
         try {
             const token = await invoke<string>('get_auth_token');
             return { Authorization: `Bearer ${token}` };
         } catch {
             return {};
         }
-    };
+    }, []);
 
-    const pollActiveSession = async () => {
-        if (status !== 'IDLE') return;
-
-        try {
-            const headers = await getAuthHeader();
-            // Remove trailing slash if present
-            const baseApi = apiUrl.replace(/\/$/, "");
-            const res = await fetch(`${baseApi}/api/agent/remote/active`, { headers });
-
-            if (!res.ok) return;
-
-            const data = await res.json();
-            const session = data.data?.session || data.session;
-
-            if (session && session.offer && !session.answer) {
-                startSession(session.id, session.offer, baseApi);
-            }
-        } catch (err) {
-            console.error('Failed to poll active sessions:', err);
+    const stopSession = useCallback(async () => {
+        if (icePollIntervalRef.current) {
+            clearInterval(icePollIntervalRef.current);
+            icePollIntervalRef.current = null;
         }
-    };
 
-    const startSession = async (sessionId: string, offer: RTCSessionDescriptionInit, baseApi: string) => {
+        if (streamRef.current) {
+            streamRef.current.getTracks().forEach(t => t.stop());
+            streamRef.current = null;
+        }
+
+        if (pcRef.current) {
+            pcRef.current.close();
+            pcRef.current = null;
+        }
+
+        if (activeSessionId) {
+            try {
+                const headers = await getAuthHeader();
+                const baseApi = apiUrl.replace(/\/$/, "");
+                await fetch(`${baseApi}/api/remote/sessions/${activeSessionId}/signaling`, {
+                    method: 'PATCH',
+                    headers: { ...headers, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: 'ENDED' })
+                });
+            } catch { /* ignore */ }
+        }
+
+        setActiveSessionId(null);
+        setStatus('IDLE');
+    }, [activeSessionId, apiUrl, getAuthHeader]);
+
+    const pollIceCandidates = useCallback((sessionId: string, pc: RTCPeerConnection, baseApi: string) => {
+        let lastCandidateCount = 0;
+
+        icePollIntervalRef.current = window.setInterval(async () => {
+            if (pc.connectionState === 'closed') {
+                if (icePollIntervalRef.current) clearInterval(icePollIntervalRef.current);
+                return;
+            }
+
+            try {
+                const headers = await getAuthHeader();
+                const res = await fetch(`${baseApi}/api/remote/sessions/${sessionId}/signaling`, { headers });
+                if (!res.ok) return;
+
+                const data = await res.json();
+                const session = data.data || data;
+
+                if (session.status === 'ENDED' || session.status === 'FAILED') {
+                    stopSession();
+                    return;
+                }
+
+                const candidates: RTCIceCandidateInit[] = session.iceCandidates || [];
+                if (candidates.length > lastCandidateCount) {
+                    for (let i = lastCandidateCount; i < candidates.length; i++) {
+                        const c = candidates[i] as RTCIceCandidateInit & { source?: string };
+                        if (c.source === 'admin') {
+                            await pc.addIceCandidate(new RTCIceCandidate(c));
+                        }
+                    }
+                    lastCandidateCount = candidates.length;
+                }
+            } catch {
+                // Ignore poll errors
+            }
+        }, 2000);
+    }, [getAuthHeader, stopSession]);
+
+    const startSession = useCallback(async (sessionId: string, offer: RTCSessionDescriptionInit, baseApi: string) => {
         setStatus('CONNECTING');
         setActiveSessionId(sessionId);
 
@@ -151,78 +190,37 @@ export function WebRTCManager({ apiUrl }: WebRTCManagerProps) {
             console.error('Failed to start WebRTC session:', err);
             stopSession();
         }
-    };
+    }, [getAuthHeader, stopSession, pollIceCandidates]);
 
-    const pollIceCandidates = (sessionId: string, pc: RTCPeerConnection, baseApi: string) => {
-        let lastCandidateCount = 0;
+    const pollActiveSession = useCallback(async () => {
+        if (status !== 'IDLE') return;
 
-        icePollIntervalRef.current = window.setInterval(async () => {
-            if (pc.connectionState === 'closed') {
-                if (icePollIntervalRef.current) clearInterval(icePollIntervalRef.current);
-                return;
+        try {
+            const headers = await getAuthHeader();
+            const baseApi = apiUrl.replace(/\/$/, "");
+            const res = await fetch(`${baseApi}/api/agent/remote/active`, { headers });
+
+            if (!res.ok) return;
+
+            const data = await res.json();
+            const session = data.data?.session || data.session;
+
+            if (session && session.offer && !session.answer) {
+                startSession(session.id, session.offer, baseApi);
             }
-
-            try {
-                const headers = await getAuthHeader();
-                const res = await fetch(`${baseApi}/api/remote/sessions/${sessionId}/signaling`, { headers });
-                if (!res.ok) return;
-
-                const data = await res.json();
-                const session = data.data || data;
-
-                if (session.status === 'ENDED' || session.status === 'FAILED') {
-                    stopSession();
-                    return;
-                }
-
-                const candidates: any[] = session.iceCandidates || [];
-                if (candidates.length > lastCandidateCount) {
-                    // Add new candidates from Admin
-                    for (let i = lastCandidateCount; i < candidates.length; i++) {
-                        const c = candidates[i];
-                        if (c.source === 'admin') {
-                            await pc.addIceCandidate(new RTCIceCandidate(c));
-                        }
-                    }
-                    lastCandidateCount = candidates.length;
-                }
-            } catch (e) {
-                // Ignore poll errors
-            }
-        }, 2000);
-    };
-
-    const stopSession = async () => {
-        if (icePollIntervalRef.current) {
-            clearInterval(icePollIntervalRef.current);
-            icePollIntervalRef.current = null;
+        } catch (err) {
+            console.error('Failed to poll active sessions:', err);
         }
+    }, [status, apiUrl, getAuthHeader, startSession]);
 
-        if (streamRef.current) {
-            streamRef.current.getTracks().forEach(t => t.stop());
-            streamRef.current = null;
-        }
-
-        if (pcRef.current) {
-            pcRef.current.close();
-            pcRef.current = null;
-        }
-
-        if (activeSessionId) {
-            try {
-                const headers = await getAuthHeader();
-                const baseApi = apiUrl.replace(/\/$/, "");
-                await fetch(`${baseApi}/api/remote/sessions/${activeSessionId}/signaling`, {
-                    method: 'PATCH',
-                    headers: { ...headers, 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ status: 'ENDED' })
-                });
-            } catch (e) { /* ignore */ }
-        }
-
-        setActiveSessionId(null);
-        setStatus('IDLE');
-    };
+    // Poll for new sessions
+    useEffect(() => {
+        pollIntervalRef.current = window.setInterval(pollActiveSession, 3000);
+        return () => {
+            if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
+            stopSession();
+        };
+    }, [pollActiveSession, stopSession]);
 
     if (status === 'IDLE') return null;
 

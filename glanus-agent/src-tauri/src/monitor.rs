@@ -96,7 +96,6 @@ impl SystemMonitor {
         // For production, we might need platform-specific implementations
         #[cfg(target_os = "linux")]
         {
-            use sysinfo::ComponentExt;
             let components = sysinfo::Components::new_with_refreshed_list();
             components
                 .iter()

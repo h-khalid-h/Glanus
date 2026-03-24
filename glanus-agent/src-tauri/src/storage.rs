@@ -49,6 +49,7 @@ mod tests {
     use super::*;
 
     #[test]
+    #[ignore] // Requires OS keychain (D-Bus secret service on Linux)
     fn test_token_storage() {
         let test_token = "test_token_123";
         
