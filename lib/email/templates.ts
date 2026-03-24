@@ -14,6 +14,7 @@ function escapeHtml(str: string): string {
 export const getInvitationEmailTemplate = (inviterName: string, workspaceName: string, inviteUrl: string) => {
   const eName = escapeHtml(inviterName);
   const eWorkspace = escapeHtml(workspaceName);
+  const eInviteUrl = escapeHtml(inviteUrl);
   return `
 <!DOCTYPE html>
 <html>
@@ -39,10 +40,10 @@ export const getInvitationEmailTemplate = (inviterName: string, workspaceName: s
       <p><strong>${eName}</strong> has invited you to join the <strong>${eWorkspace}</strong> workspace on Glanus.</p>
       <p>Accepting this invitation will give you access to the workspace's assets and resources based on your assigned role.</p>
       <div style="text-align: center;">
-        <a href="${inviteUrl}" class="button">Accept Invitation</a>
+        <a href="${eInviteUrl}" class="button">Accept Invitation</a>
       </div>
       <p style="margin-top: 30px; font-size: 14px;">Or copy and paste this link into your browser:</p>
-      <p style="font-size: 12px; color: #6b7280; word-break: break-all;">${inviteUrl}</p>
+      <p style="font-size: 12px; color: #6b7280; word-break: break-all;">${eInviteUrl}</p>
     </div>
     <div class="footer">
       <p>&copy; ${new Date().getFullYear()} Glanus. All rights reserved.</p>
@@ -260,26 +261,30 @@ export const getSubscriptionCanceledEmailTemplate = (
         <p style="margin: 0; color: #854d0e; font-size: 14px;"><strong>Note:</strong> Downgrading to Free may limit your assets to 5, AI credits to 100/month, and storage to 1 GB. Data exceeding these limits will not be deleted but will become read-only.</p>
       </div>
       <div style="text-align: center;">
+        <a href="${process.env.NEXTAUTH_URL || 'https://glanus.com'}/dashboard" class="button-secondary">Resubscribe</a>
       </div>
+    </div>
   `);
 };
 
 /**
  * Password reset email - sent when user requests a password reset link
  */
-export const getPasswordResetEmailTemplate = (resetUrl: string) =>
-  emailWrapper(`
+export const getPasswordResetEmailTemplate = (resetUrl: string) => {
+  const eResetUrl = escapeHtml(resetUrl);
+  return emailWrapper(`
     <div class="content">
       <h2>Reset your password</h2>
       <p>We received a request to reset your Glanus password.</p>
       <p>Click the button below to set a new password. This link expires in <strong>1 hour</strong>.</p>
       <div style="text-align: center;">
-        <a href="${resetUrl}" class="button">Reset Password</a>
+        <a href="${eResetUrl}" class="button">Reset Password</a>
       </div>
       <p style="font-size: 13px; color: #6b7280; margin-top: 24px;">
         If you didn't request a password reset, you can safely ignore this email. Your password will not change.
       </p>
-      <p style="font-size: 12px; color: #9ca3af; word-break: break-all;">Or copy this link: ${resetUrl}</p>
+      <p style="font-size: 12px; color: #9ca3af; word-break: break-all;">Or copy this link: ${eResetUrl}</p>
     </div>
   `);
+};
 

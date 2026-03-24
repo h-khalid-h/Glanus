@@ -11,6 +11,8 @@
  * Note: actual delivery on events is handled by WebhookNotificationService.
  */
 import { prisma } from '@/lib/db';
+import { isPrivateUrl } from '@/lib/security/ssrf';
+import { ApiError } from '@/lib/errors';
 
 export interface WebhookInput {
     url: string;
@@ -47,6 +49,11 @@ export class WorkspaceWebhookService {
     }
 
     static async upsertWebhook(workspaceId: string, data: WebhookInput) {
+        // SSRF protection: reject private/internal network URLs at storage time
+        if (isPrivateUrl(data.url)) {
+            throw new ApiError(400, 'Webhook URL must not target private or internal networks');
+        }
+
         const existing = await prisma.notificationWebhook.findFirst({ where: { workspaceId } });
 
         if (existing) {

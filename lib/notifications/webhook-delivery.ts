@@ -9,6 +9,7 @@
 import { prisma } from '@/lib/db';
 import crypto from 'crypto';
 import { logError } from '@/lib/logger';
+import { isPrivateUrl } from '@/lib/security/ssrf';
 
 // ─── Types ───────────────────────────────────────────────
 
@@ -68,6 +69,12 @@ export async function deliverWebhook(
 
     if (!webhook) {
         return null; // No active webhook configured
+    }
+
+    // SSRF protection: block requests to private/internal networks
+    if (isPrivateUrl(webhook.url)) {
+        logError(`[Webhook] Blocked delivery to private URL for workspace ${workspaceId}`);
+        return { success: false, statusCode: null, duration: 0, error: 'Webhook URL must not target private or internal networks', retries: 0 };
     }
 
     // 2. Build the event payload
