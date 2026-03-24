@@ -119,7 +119,7 @@ export class AssetAnalyticsService {
             esc(asset.model || ''), esc(asset.serialNumber || ''), esc(asset.status), esc(asset.location || ''),
             esc(asset.assignedTo?.name || ''), esc(asset.assignedTo?.email || ''),
             esc(asset.purchaseDate ? new Date(asset.purchaseDate).toISOString().split('T')[0] : ''),
-            esc(asset.purchaseCost || ''),
+            esc(asset.purchaseCost?.toString() || ''),
             esc(asset.warrantyUntil ? new Date(asset.warrantyUntil).toISOString().split('T')[0] : ''),
             esc(Array.isArray(asset.tags) ? asset.tags.join('; ') : ''),
             esc(asset.description || ''),

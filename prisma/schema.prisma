@@ -252,11 +252,13 @@ model Workspace {
   discoveryScans   DiscoveryScan[]       // Phase 33: Network Discovery
   tickets          Ticket[]              // Phase 34: Helpdesk & Support Ticketing
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
 
   @@index([slug])
   @@index([ownerId])
+  @@index([deletedAt])
 }
 
 model WorkspaceMember {
@@ -393,6 +395,13 @@ model User {
   // Phase 34: Helpdesk & Support Ticketing
   ticketsCreated Ticket[]        @relation("TicketCreator")
   ticketMessages TicketMessage[] @relation("TicketMessageSender")
+
+  // Audit: reverse relations for createdBy fields
+  createdScriptExecutions ScriptExecution[]  @relation("ScriptExecutionCreator")
+  createdAlertRules       AlertRule[]        @relation("AlertRuleCreator")
+  createdReportSchedules  ReportSchedule[]   @relation("ReportScheduleCreator")
+  createdApiKeys          ApiKey[]           @relation("ApiKeyCreator")
+  createdMaintenanceWindows MaintenanceWindow[] @relation("MaintenanceWindowCreator")
 
   @@index([email])
 }
@@ -682,6 +691,7 @@ model AuditLog {
   createdAt    DateTime   @default(now())
 
   @@index([workspaceId, createdAt])
+  @@index([workspaceId, action, createdAt])
   @@index([userId])
   @@index([assetId])
   @@index([action])
@@ -1325,8 +1335,9 @@ model ScriptExecution {
   completedAt DateTime?
 
   // Creator
-  createdAt DateTime @default(now())
-  createdBy String // User ID
+  createdAt    DateTime @default(now())
+  createdBy    String
+  createdByUser User    @relation("ScriptExecutionCreator", fields: [createdBy], references: [id])
 
   @@index([agentId, status])
   @@index([assetId, createdAt])
@@ -1353,9 +1364,10 @@ model AlertRule {
   notifyWebhook Boolean @default(false)
 
   // Metadata
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  createdBy String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  createdBy    String?
+  createdByUser User?   @relation("AlertRuleCreator", fields: [createdBy], references: [id])
 
   @@index([workspaceId, enabled])
   @@index([metric])
@@ -1499,6 +1511,7 @@ model ReportSchedule {
 
   // Audit
   createdBy    String
+  createdByUser User     @relation("ReportScheduleCreator", fields: [createdBy], references: [id])
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
@@ -1531,12 +1544,14 @@ model ApiKey {
   expiresAt   DateTime?                    // Optional expiration
   revokedAt   DateTime?                    // Soft-revoke timestamp
   createdBy   String                       // User ID who created the key
+  createdByUser User   @relation("ApiKeyCreator", fields: [createdBy], references: [id])
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   @@index([workspaceId])
   @@index([prefix])
+  @@index([createdBy])
 }
 
 // ─── Phase 16: Asset Maintenance Windows ────────────────────
@@ -1566,6 +1581,7 @@ model MaintenanceWindow {
   workspaceId String
   workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   createdById String
+  createdBy   User      @relation("MaintenanceWindowCreator", fields: [createdById], references: [id])
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
