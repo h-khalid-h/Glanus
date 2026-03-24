@@ -88,7 +88,11 @@ export async function deliverWebhook(
 
     const payloadString = JSON.stringify(event);
 
-    // 3. Generate HMAC signature if a secret is configured
+    // 3. Generate HMAC signature — always sign if a secret exists;
+    //    log a warning if webhook has no secret (should be set during creation)
+    if (!webhook.secret) {
+        logError(`[Webhook] Webhook ${webhook.id} for workspace ${workspaceId} has no signing secret configured — delivery will be unsigned`);
+    }
     const signature = webhook.secret
         ? generateSignature(payloadString, webhook.secret)
         : null;

@@ -178,7 +178,7 @@ export function sanitizeEnvironment(
     ];
 
     Object.entries(env).forEach(([key, value]) => {
-        if (allowedKeys.includes(key) || key.startsWith('GLANUS_')) {
+        if (allowedKeys.includes(key)) {
             sanitized[key] = value;
         }
     });

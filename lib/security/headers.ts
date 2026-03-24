@@ -27,6 +27,7 @@ export function getCSPHeader(): string {
         "frame-src 'self' https://*.stripe.com", // Stripe checkout iframe
         "base-uri 'self'",
         "form-action 'self'",
+        "upgrade-insecure-requests",
     ];
 
     return directives.join('; ');

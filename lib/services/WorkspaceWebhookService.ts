@@ -10,6 +10,7 @@
  *
  * Note: actual delivery on events is handled by WebhookNotificationService.
  */
+import crypto from 'crypto';
 import { prisma } from '@/lib/db';
 import { isPrivateUrl } from '@/lib/security/ssrf';
 import { ApiError } from '@/lib/errors';
@@ -54,13 +55,16 @@ export class WorkspaceWebhookService {
             throw new ApiError(400, 'Webhook URL must not target private or internal networks');
         }
 
+        // Auto-generate a signing secret if none provided (ensures all webhooks are signed)
+        const secret = data.secret || `whsec_${crypto.randomBytes(32).toString('hex')}`;
+
         const existing = await prisma.notificationWebhook.findFirst({ where: { workspaceId } });
 
         if (existing) {
             return {
                 webhook: await prisma.notificationWebhook.update({
                     where: { id: existing.id },
-                    data: { url: data.url, enabled: data.enabled ?? true, secret: data.secret },
+                    data: { url: data.url, enabled: data.enabled ?? true, secret: data.secret ?? existing.secret ?? secret },
                     select: WorkspaceWebhookService.SAFE_SELECT,
                 }),
                 created: false,
@@ -69,7 +73,7 @@ export class WorkspaceWebhookService {
 
         return {
             webhook: await prisma.notificationWebhook.create({
-                data: { workspaceId, url: data.url, enabled: data.enabled ?? true, secret: data.secret },
+                data: { workspaceId, url: data.url, enabled: data.enabled ?? true, secret },
                 select: WorkspaceWebhookService.SAFE_SELECT,
             }),
             created: true,

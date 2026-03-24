@@ -38,5 +38,9 @@ export function verifyResetToken(token: string): { userId: string; expired: bool
     const expiry = parseInt(expiryStr, 10);
     if (isNaN(expiry)) return null;
 
-    return { userId, expired: Date.now() > expiry };
+    if (Date.now() > expiry) {
+        return null; // Expired tokens are rejected outright — callers cannot bypass expiry
+    }
+
+    return { userId, expired: false };
 }

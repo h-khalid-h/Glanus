@@ -190,7 +190,9 @@ export function withErrorHandler<T extends unknown[]>(
             }
 
             if (error instanceof ZodError) {
-                return apiError(400, 'Validation failed', error.errors);
+                // Only expose field-level validation details in development
+                const details = process.env.NODE_ENV === 'development' ? error.errors : undefined;
+                return apiError(400, 'Validation failed', details);
             }
 
             // Handle Prisma validation errors (invalid enum values, invalid arguments)

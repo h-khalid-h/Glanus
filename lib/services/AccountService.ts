@@ -66,8 +66,7 @@ export class AccountService {
      */
     static async resetPassword(token: string, newPassword: string) {
         const result = verifyResetToken(token);
-        if (!result) throw new ApiError(400, 'Invalid or tampered reset link. Please request a new one.');
-        if (result.expired) throw new ApiError(400, 'This reset link has expired. Please request a new one.');
+        if (!result) throw new ApiError(400, 'Invalid or expired reset link. Please request a new one.');
 
         const user = await prisma.user.findUnique({ where: { id: result.userId } });
         if (!user) throw new ApiError(400, 'Invalid reset link.');
