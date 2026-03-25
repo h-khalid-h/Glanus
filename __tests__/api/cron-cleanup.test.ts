@@ -12,6 +12,7 @@ jest.mock('@/lib/db', () => ({
         agentMetric: { deleteMany: (...args: any[]) => mockDeleteMany(...args) },
         auditLog: { deleteMany: (...args: any[]) => mockDeleteMany(...args) },
         aIInsight: { deleteMany: (...args: any[]) => mockDeleteMany(...args) },
+        remoteSession: { deleteMany: (...args: any[]) => mockDeleteMany(...args) },
     },
 }));
 
@@ -82,8 +83,8 @@ describe('POST /api/cron/cleanup', () => {
         await POST(makeRequest('test-cron-secret'));
         const after = Date.now();
 
-        // 3 deleteMany calls (metrics, audit, alerts)
-        expect(mockDeleteMany).toHaveBeenCalledTimes(3);
+        // 4 deleteMany calls (metrics, audit, alerts, remote sessions)
+        expect(mockDeleteMany).toHaveBeenCalledTimes(4);
 
         // Verify 90-day cutoff for metrics
         const metricsArg = mockDeleteMany.mock.calls[0][0];

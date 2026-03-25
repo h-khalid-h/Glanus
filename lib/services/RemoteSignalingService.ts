@@ -97,12 +97,32 @@ export class RemoteSignalingService {
         }
 
         if (body.iceCandidate) {
+            // Validate ICE candidate structure to prevent injection of malformed data
+            const candidate = body.iceCandidate as Record<string, unknown>;
+            if (typeof candidate !== 'object' || candidate === null ||
+                (candidate.candidate !== undefined && typeof candidate.candidate !== 'string') ||
+                (candidate.sdpMid !== undefined && typeof candidate.sdpMid !== 'string') ||
+                (candidate.sdpMLineIndex !== undefined && typeof candidate.sdpMLineIndex !== 'number')) {
+                throw new ApiError(400, 'Invalid ICE candidate format');
+            }
+
             const session = await prisma.remoteSession.findUnique({
                 where: { id: sessionId },
                 select: { iceCandidates: true },
             });
             const existing = (session?.iceCandidates as unknown[]) || [];
-            updateData.iceCandidates = [...existing, { ...body.iceCandidate as object, source: isAgent ? 'agent' : 'admin' }];
+
+            // Cap ICE candidates to prevent unbounded growth
+            if (existing.length >= 50) {
+                throw new ApiError(400, 'Maximum ICE candidates reached for this session');
+            }
+
+            updateData.iceCandidates = [...existing, {
+                candidate: candidate.candidate,
+                sdpMid: candidate.sdpMid,
+                sdpMLineIndex: candidate.sdpMLineIndex,
+                source: isAgent ? 'agent' : 'admin',
+            }];
         }
 
         if (Object.keys(updateData).length === 0) {

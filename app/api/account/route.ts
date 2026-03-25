@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { requireAuth, withErrorHandler } from '@/lib/api/withAuth';
 import { apiSuccess } from '@/lib/api/response';
 import { AccountService } from '@/lib/services/AccountService';
+import { withRateLimit } from '@/lib/security/rateLimit';
 import { z } from 'zod';
 
 const updateProfileSchema = z.object({
@@ -40,6 +41,9 @@ export const PATCH = withErrorHandler(async (request: NextRequest) => {
  * Change the current user's password.
  */
 export const POST = withErrorHandler(async (request: NextRequest) => {
+    const rateLimitResponse = await withRateLimit(request, 'strict-api');
+    if (rateLimitResponse) return rateLimitResponse;
+
     const user = await requireAuth();
     const { currentPassword, newPassword } = changePasswordSchema.parse(await request.json());
     const result = await AccountService.changePassword(user.id, currentPassword, newPassword);

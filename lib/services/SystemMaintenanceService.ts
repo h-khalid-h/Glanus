@@ -7,16 +7,20 @@ export class SystemMaintenanceService {
      * - Agent metrics older than 90 days
      * - Audit logs older than 365 days
      * - Resolved alerts older than 90 days
+     * - Ended/failed remote sessions older than 7 days
      */
     static async executeDataCleanup() {
         const now = new Date();
         const ninetyDaysAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
         const oneYearAgo = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
 
+        const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
         const results = {
             metricsDeleted: 0,
             auditLogsDeleted: 0,
             alertsDeleted: 0,
+            remoteSessionsDeleted: 0,
         };
 
         try {
@@ -44,6 +48,15 @@ export class SystemMaintenanceService {
                 },
             });
             results.alertsDeleted = alertsResult.count;
+
+            // 4. Clean up ended/failed remote sessions older than 7 days
+            const sessionsResult = await prisma.remoteSession.deleteMany({
+                where: {
+                    status: { in: ['ENDED', 'FAILED'] },
+                    endedAt: { lt: sevenDaysAgo },
+                },
+            });
+            results.remoteSessionsDeleted = sessionsResult.count;
 
             logInfo('[SERVICE] Data cleanup completed', results);
 

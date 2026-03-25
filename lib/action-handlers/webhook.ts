@@ -47,11 +47,17 @@ export async function handleWebhookAction(
             headers['X-Webhook-Signature'] = signature;
         }
 
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10_000);
+
         const response = await fetch(webhookUrl, {
             method: 'POST',
             headers,
             body: JSON.stringify(payload),
+            signal: controller.signal,
         });
+
+        clearTimeout(timeoutId);
 
         const data = await response.text();
 
