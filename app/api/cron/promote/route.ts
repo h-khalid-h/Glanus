@@ -1,22 +1,30 @@
 import { NextRequest } from 'next/server';
 import { apiSuccess, apiError } from '@/lib/api/response';
 import { prisma } from '@/lib/db';
+import { withErrorHandler } from '@/lib/api/withAuth';
+import { withRateLimit } from '@/lib/security/rateLimit';
+import crypto from 'crypto';
 
 /**
- * POST /api/admin/promote
+ * POST /api/cron/promote
  * One-time admin promotion endpoint, protected by CRON_SECRET.
- * 
- * Usage: curl -X POST https://glanus.datac.com/api/admin/promote \
+ *
+ * Usage: curl -X POST https://glanus.datac.com/api/cron/promote \
  *   -H "Authorization: Bearer <CRON_SECRET>" \
  *   -H "Content-Type: application/json" \
  *   -d '{"email":"h.khalid@datac.com"}'
  */
-export async function POST(request: NextRequest) {
-    // Verify CRON_SECRET authorization
-    const authHeader = request.headers.get('authorization');
-    const token = authHeader?.replace('Bearer ', '');
+export const POST = withErrorHandler(async (request: NextRequest) => {
+    const rateLimited = await withRateLimit(request, 'strict-api');
+    if (rateLimited) return rateLimited;
 
-    if (!token || token !== process.env.CRON_SECRET) {
+    // Verify CRON_SECRET authorization (timing-safe)
+    const authHeader = request.headers.get('authorization');
+    const token = authHeader?.replace('Bearer ', '') || '';
+    const secret = process.env.CRON_SECRET || '';
+
+    if (!token || !secret || token.length !== secret.length ||
+        !crypto.timingSafeEqual(Buffer.from(token), Buffer.from(secret))) {
         return apiError(401, 'Unauthorized');
     }
 
@@ -43,4 +51,4 @@ export async function POST(request: NextRequest) {
     });
 
     return apiSuccess({ message: 'User promoted to ADMIN', user: updated });
-}
+});
