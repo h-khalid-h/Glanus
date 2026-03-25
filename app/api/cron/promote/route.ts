@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { apiSuccess, apiError } from '@/lib/api/response';
-import { prisma } from '@/lib/prisma';
+import { prisma } from '@/lib/db';
 
 /**
  * POST /api/admin/promote
