@@ -2,6 +2,7 @@ import { apiSuccess } from '@/lib/api/response';
 import { NextRequest } from 'next/server';
 import { requireAuth, requireWorkspaceAccess, withErrorHandler } from '@/lib/api/withAuth';
 import { downloadAgentSchema } from '@/lib/schemas/workspace.schemas';
+import { storePreAuthToken } from '@/lib/security/preauth-store';
 import crypto from 'crypto';
 
 // POST - Generate download link with embedded token
@@ -15,10 +16,11 @@ export const POST = withErrorHandler(async (
 
     const { platform } = downloadAgentSchema.parse(await request.json());
 
-    // Generate pre-auth token (valid for 7 days)
+    // Generate pre-auth token (valid for 7 days) and store for validation
     const preAuthToken = crypto.randomBytes(32).toString('hex');
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 7);
+    storePreAuthToken(preAuthToken, workspaceId);
 
     const downloadInfo = {
         platform,

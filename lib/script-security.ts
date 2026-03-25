@@ -115,7 +115,16 @@ export function validateInterpreter(
 }
 
 /**
- * Substitute placeholders in arguments with actual values
+ * Escape a value for safe shell interpolation by removing dangerous characters.
+ * Allows alphanumeric, hyphens, underscores, dots, slashes, spaces, colons, and @.
+ */
+function shellEscape(value: string): string {
+    return value.replace(/[^a-zA-Z0-9\-_./: @]/g, '');
+}
+
+/**
+ * Substitute placeholders in arguments with actual values.
+ * All substituted values are shell-escaped to prevent command injection.
  * Supports: {assetId}, {assetName}, {param:key}, etc.
  */
 export function substituteParameters(
@@ -130,22 +139,22 @@ export function substituteParameters(
         let result = arg;
 
         // Replace {assetId}
-        result = result.replace(/{assetId}/g, context.assetId);
+        result = result.replace(/{assetId}/g, shellEscape(context.assetId));
 
         // Replace {assetName}
         if (context.assetName) {
-            result = result.replace(/{assetName}/g, context.assetName);
+            result = result.replace(/{assetName}/g, shellEscape(context.assetName));
         }
 
         // Replace {param:key} with parameter values
-        result = result.replace(/{param:(\w+)}/g, (match, key) => {
-            return context.parameters[key]?.toString() || '';
+        result = result.replace(/{param:(\w+)}/g, (_match, key) => {
+            return shellEscape(context.parameters[key]?.toString() || '');
         });
 
         // Replace {key} for direct parameter access
         Object.entries(context.parameters).forEach(([key, value]) => {
-            const placeholder = new RegExp(`{${key}}`, 'g');
-            result = result.replace(placeholder, value?.toString() || '');
+            const placeholder = new RegExp(`\\{${key}\\}`, 'g');
+            result = result.replace(placeholder, shellEscape(value?.toString() || ''));
         });
 
         return result;

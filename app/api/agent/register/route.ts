@@ -3,6 +3,7 @@ import { NextRequest } from 'next/server';
 import { withErrorHandler } from '@/lib/api/withAuth';
 import { z } from 'zod';
 import { withRateLimit } from '@/lib/security/rateLimit';
+import { consumePreAuthToken } from '@/lib/security/preauth-store';
 import { AgentService } from '@/lib/services/AgentService';
 import { AgentPlatform } from '@prisma/client';
 
@@ -43,8 +44,14 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     if (!authHeader?.startsWith('Bearer ')) {
         return apiError(401, 'Missing or invalid Authorization header');
     }
+    const preAuthToken = authHeader.substring(7);
 
     const data = registerSchema.parse(await request.json());
+
+    // Validate the pre-auth token was issued for this workspace
+    if (!consumePreAuthToken(preAuthToken, data.workspaceId)) {
+        return apiError(401, 'Invalid or expired pre-auth token');
+    }
 
     // AgentService validates workspace existence and asset-workspace relationship
     const result = await AgentService.registerAgent({
