@@ -46,7 +46,7 @@ const PUBLIC_API_PATHS = [
     '/api/csrf',         // CSRF token endpoint
     '/api/partners/signup', // Partner signup
     '/api/invitations',    // Invitation verification (token-based)
-    '/api/cron',         // Bypasses NextAuth (managed by CRON_SECRET)
+    '/api/cron/',        // Cron jobs use Bearer tokens (prefix match)
     '/api/agent/',       // Agent endpoints (use their own token auth)
 ];
 
