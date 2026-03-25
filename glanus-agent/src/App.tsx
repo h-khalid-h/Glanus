@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { Activity, ShieldCheck, Cpu, HardDrive, Network } from 'lucide-react';
 import { WebRTCManager } from './WebRTCManager';
+import Settings from './Settings';
 
 interface SystemMetrics {
   cpu_usage: number;
@@ -23,9 +24,26 @@ interface AgentConfig {
     api_url: string;
     heartbeat_interval: number;
   };
+  remote?: {
+    enabled: boolean;
+  };
 }
 
 export default function App() {
+  const view = useMemo(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('view') || 'main';
+  }, []);
+
+  // Route to settings view if requested
+  if (view === 'settings') {
+    return <Settings />;
+  }
+
+  return <MainView />;
+}
+
+function MainView() {
   const [loading, setLoading] = useState(true);
   const [config, setConfig] = useState<AgentConfig | null>(null);
   const [assetId, setAssetId] = useState('');
@@ -191,7 +209,9 @@ export default function App() {
             </div>
           )}
 
-          <WebRTCManager apiUrl={config.server.api_url} />
+          {config.remote?.enabled !== false && (
+            <WebRTCManager apiUrl={config.server.api_url} />
+          )}
         </div>
       )}
     </div>
