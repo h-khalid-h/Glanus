@@ -1,6 +1,7 @@
 import { apiSuccess } from '@/lib/api/response';
 import { NextRequest } from 'next/server';
 import { requireAuth, requireWorkspaceRole, withErrorHandler } from '@/lib/api/withAuth';
+import { withRateLimit } from '@/lib/security/rateLimit';
 import { MdmService } from '@/lib/services/MdmService';
 import { z } from 'zod';
 
@@ -18,6 +19,9 @@ const CreateProfileSchema = z.object({
 
 // GET /api/workspaces/[id]/mdm/profiles
 export const GET = withErrorHandler(async (req: NextRequest, context: RouteContext) => {
+    const rateLimited = await withRateLimit(req, 'api');
+    if (rateLimited) return rateLimited;
+
     const user = await requireAuth();
     const { id: workspaceId } = await context.params;
     await requireWorkspaceRole(workspaceId, user.id, 'MEMBER', req);
@@ -30,6 +34,9 @@ export const GET = withErrorHandler(async (req: NextRequest, context: RouteConte
 
 // POST /api/workspaces/[id]/mdm/profiles
 export const POST = withErrorHandler(async (req: NextRequest, context: RouteContext) => {
+    const rateLimited = await withRateLimit(req, 'strict-api');
+    if (rateLimited) return rateLimited;
+
     const user = await requireAuth();
     const { id: workspaceId } = await context.params;
     await requireWorkspaceRole(workspaceId, user.id, 'ADMIN', req);

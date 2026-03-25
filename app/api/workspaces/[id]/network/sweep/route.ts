@@ -1,12 +1,16 @@
 import { NextRequest } from 'next/server';
 import { requireAuth, requireWorkspaceRole, withErrorHandler } from '@/lib/api/withAuth';
 import { apiSuccess, apiError } from '@/lib/api/response';
+import { withRateLimit } from '@/lib/security/rateLimit';
 import { prisma } from '@/lib/db';
 
 type RouteContext = { params: Promise<{ id: string }> };
 
 // POST /api/workspaces/[id]/network/sweep - Trigger subnet sweep on all online agents
-export const POST = withErrorHandler(async (_request: NextRequest, { params }: RouteContext) => {
+export const POST = withErrorHandler(async (request: NextRequest, { params }: RouteContext) => {
+    const rateLimited = await withRateLimit(request, 'strict-api');
+    if (rateLimited) return rateLimited;
+
     const { id: workspaceId } = await params;
     const user = await requireAuth();
     await requireWorkspaceRole(workspaceId, user.id, 'MEMBER');

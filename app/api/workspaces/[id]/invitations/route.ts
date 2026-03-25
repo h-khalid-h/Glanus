@@ -1,6 +1,7 @@
 import { apiSuccess } from '@/lib/api/response';
 import { NextRequest } from 'next/server';
 import { requireAuth, requireWorkspaceRole, withErrorHandler } from '@/lib/api/withAuth';
+import { withRateLimit } from '@/lib/security/rateLimit';
 import { InvitationService } from '@/lib/services/InvitationService';
 import { z } from 'zod';
 
@@ -12,7 +13,10 @@ const inviteSchema = z.object({
 type RouteContext = { params: Promise<{ id: string }> };
 
 // GET /api/workspaces/[id]/invitations - List pending invitations
-export const GET = withErrorHandler(async (_request: NextRequest, { params }: RouteContext) => {
+export const GET = withErrorHandler(async (request: NextRequest, { params }: RouteContext) => {
+    const rateLimited = await withRateLimit(request, 'api');
+    if (rateLimited) return rateLimited;
+
     const { id: workspaceId } = await params;
     const user = await requireAuth();
     await requireWorkspaceRole(workspaceId, user.id, 'ADMIN');
@@ -22,6 +26,9 @@ export const GET = withErrorHandler(async (_request: NextRequest, { params }: Ro
 
 // POST /api/workspaces/[id]/invitations - Send invitation (ADMIN or higher)
 export const POST = withErrorHandler(async (request: NextRequest, { params }: RouteContext) => {
+    const rateLimited = await withRateLimit(request, 'strict-api');
+    if (rateLimited) return rateLimited;
+
     const { id: workspaceId } = await params;
     const user = await requireAuth();
     const { workspace } = await requireWorkspaceRole(workspaceId, user.id, 'ADMIN');

@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { requireAuth, requireWorkspaceRole, withErrorHandler } from '@/lib/api/withAuth';
 import { apiSuccess } from '@/lib/api/response';
+import { withRateLimit } from '@/lib/security/rateLimit';
 import { approveAction, rejectAction } from '@/lib/reflex/automation';
 import { z } from 'zod';
 
@@ -19,6 +20,9 @@ export const PUT = withErrorHandler(async (
     request: NextRequest,
     context: { params: Promise<{ id: string }> }
 ) => {
+    const rateLimited = await withRateLimit(request, 'strict-api');
+    if (rateLimited) return rateLimited;
+
     const params = await context.params;
     const user = await requireAuth();
     await requireWorkspaceRole(params.id, user.id, 'MEMBER');

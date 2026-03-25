@@ -281,7 +281,7 @@ export const authOptions: NextAuthOptions = {
     },
     session: {
         strategy: 'jwt',
-        maxAge: parseInt(process.env.SESSION_TIMEOUT_HOURS || '24') * 60 * 60, // 24 hours default
+        maxAge: Math.max(1, Math.min(8760, parseInt(process.env.SESSION_TIMEOUT_HOURS || '24') || 24)) * 60 * 60, // 1h–8760h (1yr), default 24h
     },
     secret: process.env.NEXTAUTH_SECRET,
 };

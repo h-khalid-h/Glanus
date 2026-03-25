@@ -1,5 +1,7 @@
 import { apiSuccess } from '@/lib/api/response';
+import { NextRequest } from 'next/server';
 import { requireAuth, requireWorkspaceRole, withErrorHandler } from '@/lib/api/withAuth';
+import { withRateLimit } from '@/lib/security/rateLimit';
 import { z } from 'zod';
 import { WorkspaceMemberService } from '@/lib/services/WorkspaceMemberService';
 
@@ -9,9 +11,12 @@ const updateRoleSchema = z.object({
 
 // PATCH /api/workspaces/[id]/members/[memberId]
 export const PATCH = withErrorHandler(async (
-    request: Request,
+    request: NextRequest,
     context: { params: Promise<{ id: string; memberId: string }> }
 ) => {
+    const rateLimited = await withRateLimit(request, 'strict-api');
+    if (rateLimited) return rateLimited;
+
     const { id: workspaceId, memberId } = await context.params;
     const user = await requireAuth();
     const { workspace } = await requireWorkspaceRole(workspaceId, user.id, 'ADMIN');
@@ -27,9 +32,12 @@ export const PATCH = withErrorHandler(async (
 
 // DELETE /api/workspaces/[id]/members/[memberId]
 export const DELETE = withErrorHandler(async (
-    _request: Request,
+    request: NextRequest,
     context: { params: Promise<{ id: string; memberId: string }> }
 ) => {
+    const rateLimited = await withRateLimit(request, 'strict-api');
+    if (rateLimited) return rateLimited;
+
     const { id: workspaceId, memberId } = await context.params;
     const user = await requireAuth();
     const { workspace } = await requireWorkspaceRole(workspaceId, user.id, 'ADMIN');

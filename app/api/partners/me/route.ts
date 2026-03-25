@@ -1,5 +1,7 @@
 import { apiSuccess } from '@/lib/api/response';
+import { NextRequest } from 'next/server';
 import { requireAuth, withErrorHandler } from '@/lib/api/withAuth';
+import { withRateLimit } from '@/lib/security/rateLimit';
 import { z } from 'zod';
 import { PartnerService } from '@/lib/services/PartnerService';
 
@@ -18,14 +20,20 @@ const updatePartnerSchema = z.object({
 });
 
 // GET /api/partners/me
-export const GET = withErrorHandler(async () => {
+export const GET = withErrorHandler(async (request: NextRequest) => {
+    const rateLimited = await withRateLimit(request, 'api');
+    if (rateLimited) return rateLimited;
+
     const user = await requireAuth();
     const partner = await PartnerService.getMyProfile(user.email!);
     return apiSuccess({ partner });
 });
 
 // PATCH /api/partners/me
-export const PATCH = withErrorHandler(async (request: Request) => {
+export const PATCH = withErrorHandler(async (request: NextRequest) => {
+    const rateLimited = await withRateLimit(request, 'strict-api');
+    if (rateLimited) return rateLimited;
+
     const user = await requireAuth();
     const validation = updatePartnerSchema.parse(await request.json());
     const partner = await PartnerService.updateMyProfile(user.email!, validation);

@@ -58,8 +58,8 @@ export default function InvitationPage({ params: paramsPromise }: { params: Prom
                 throw new Error(data.error || 'Failed to accept invitation');
             }
 
-            // Success
-            router.push(`/workspaces/${data.workspaceId}/dashboard`);
+            // Success — redirect to workspace analytics (main workspace page)
+            router.push(`/workspaces/${data.workspaceId}/analytics`);
         } catch (err: unknown) {
             setInviteState(prev => ({
                 ...prev,

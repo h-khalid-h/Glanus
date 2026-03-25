@@ -22,7 +22,7 @@ export default function OnboardingPage() {
         try {
             await csrfFetch('/api/onboarding/complete', { method: 'POST' });
             if (workspaceId) {
-                router.push(`/workspaces/${workspaceId}/dashboard`);
+                router.push(`/workspaces/${workspaceId}/analytics`);
             } else {
                 router.push('/dashboard');
             }
@@ -138,7 +138,15 @@ export default function OnboardingPage() {
         );
     }
 
-    return null;
+    // Fallback while redirecting
+    return (
+        <div className="min-h-screen flex items-center justify-center bg-gradient-midnight">
+            <div className="text-center">
+                <div className="mb-4 inline-block h-12 w-12 animate-spin rounded-full border-4 border-nerve/30 border-t-nerve" />
+                <p className="text-slate-400">Redirecting...</p>
+            </div>
+        </div>
+    );
 }
 
 function FeatureCard({

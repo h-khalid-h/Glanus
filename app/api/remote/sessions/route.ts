@@ -1,11 +1,15 @@
 import { apiSuccess, apiError } from '@/lib/api/response';
 import { NextRequest } from 'next/server';
 import { requireAuth, withErrorHandler } from '@/lib/api/withAuth';
+import { withRateLimit } from '@/lib/security/rateLimit';
 import { createRemoteSessionSchema } from '@/lib/schemas/remote-session.schemas';
 import { RemoteSessionService } from '@/lib/services/RemoteSessionService';
 
 // GET /api/remote/sessions
 export const GET = withErrorHandler(async (request: NextRequest) => {
+    const rateLimited = await withRateLimit(request, 'api');
+    if (rateLimited) return rateLimited;
+
     const user = await requireAuth();
     const { searchParams } = new URL(request.url);
 
@@ -23,6 +27,9 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 
 // POST /api/remote/sessions
 export const POST = withErrorHandler(async (request: NextRequest) => {
+    const rateLimited = await withRateLimit(request, 'strict-api');
+    if (rateLimited) return rateLimited;
+
     const user = await requireAuth();
 
     if (user.role !== 'ADMIN' && user.role !== 'IT_STAFF') {
