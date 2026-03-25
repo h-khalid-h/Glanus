@@ -203,6 +203,7 @@ export async function checkRateLimit(
  * Get client identifier from request (IP address)
  */
 export function getClientIdentifier(request: Request): string {
+    // Try standard proxy headers first
     const cfConnectingIp = request.headers.get('cf-connecting-ip');
     const realIp = request.headers.get('x-real-ip');
     const forwarded = request.headers.get('x-forwarded-for');
@@ -214,7 +215,15 @@ export function getClientIdentifier(request: Request): string {
         return ips[0].trim();
     }
 
-    return 'unknown-client';
+    // Try NextRequest's ip property (set by Next.js from connection info)
+    if ('ip' in request && typeof (request as Record<string, unknown>).ip === 'string') {
+        return (request as Record<string, unknown>).ip as string;
+    }
+
+    // Fallback: use a per-request random key so we don't block all users
+    // This means rate limiting won't work for unidentifiable clients,
+    // but it's better than blocking everyone
+    return `anon-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 }
 
 /**
