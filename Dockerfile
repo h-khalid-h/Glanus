@@ -54,8 +54,9 @@ RUN mkdir -p /app/logs && chown -R nextjs:nodejs /app/logs
 
 USER nextjs
 
-EXPOSE 3000
+EXPOSE 8055
 
+ENV PORT=8055
 ENV HOSTNAME="0.0.0.0"
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
