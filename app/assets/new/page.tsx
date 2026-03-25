@@ -161,7 +161,7 @@ export default function DynamicAssetCreatePage() {
                     <h1 className="text-3xl font-bold text-foreground">Create Asset</h1>
                     <p className="text-slate-400 mt-2">Provision a new tracked resource in this Workspace.</p>
                 </div>
-                <Link href="/settings/classes" className="btn-secondary text-sm flex items-center gap-2">
+                <Link href="/admin/categories" className="btn-secondary text-sm flex items-center gap-2">
                     <ExternalLink size={16} /> Manage Categories
                 </Link>
             </div>
