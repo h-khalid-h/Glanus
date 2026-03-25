@@ -30,6 +30,8 @@ const PUBLIC_PATHS = [
     '/signup',
     '/forgot-password',
     '/reset-password',
+    '/terms',            // Terms of Service page
+    '/privacy',          // Privacy Policy page
     '/_next/',           // Next.js internals (prefix match via trailing slash)
     '/favicon.ico',
     '/monitoring',       // Sentry
