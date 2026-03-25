@@ -45,3 +45,13 @@ glanus-agent
 .prettierrc
 tsconfig.tsbuildinfo
 logs
+
+# CI/CD
+.github
+.gitlab-ci.yml
+
+# Sentry config (source maps uploaded separately)
+sentry.properties
+
+# Tauri (desktop app, not needed in Docker)
+src-tauri

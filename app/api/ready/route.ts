@@ -1,18 +1,21 @@
-import { apiSuccess } from '@/lib/api/response';
 /**
  * Readiness Probe Endpoint
- * 
+ *
  * Returns whether the application is ready to accept traffic.
- * Checks all critical dependencies.
+ * Checks all critical dependencies. Returns 503 if not ready.
  */
 
+import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export async function GET() {
     const checks: Record<string, string> = {};
     let ready = true;
 
-    // Check database
+    // Check database (critical — app cannot function without it)
     try {
         await prisma.$queryRaw`SELECT 1`;
         checks.database = 'ready';
@@ -29,9 +32,17 @@ export async function GET() {
         ready = false;
     }
 
-    return apiSuccess({
-        ready,
-        checks,
-        timestamp: new Date().toISOString(),
-    }, undefined, ready ? 200 : 503);
+    const status = ready ? 200 : 503;
+    return NextResponse.json(
+        {
+            success: ready,
+            data: { ready, checks, timestamp: new Date().toISOString() },
+        },
+        {
+            status,
+            headers: {
+                'Cache-Control': 'no-cache, no-store, must-revalidate',
+            },
+        }
+    );
 }

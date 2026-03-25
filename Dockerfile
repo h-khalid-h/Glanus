@@ -33,7 +33,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-# Install prisma CLI globally (resolves all transitive deps: effect, fast-check, @prisma/config, etc.)
+# Install prisma CLI globally for runtime migrations
 RUN npm install -g prisma@6.19.2
 
 # Copy built application
@@ -52,11 +52,15 @@ RUN chmod +x ./docker-entrypoint.sh
 # Create directory for logs with proper permissions
 RUN mkdir -p /app/logs && chown -R nextjs:nodejs /app/logs
 
+# Drop to non-root
 USER nextjs
 
 EXPOSE 8055
 
 ENV PORT=8055
 ENV HOSTNAME="0.0.0.0"
+
+# Signal handling: use tini-like exec in entrypoint
+STOPSIGNAL SIGTERM
 
 CMD ["./docker-entrypoint.sh"]
