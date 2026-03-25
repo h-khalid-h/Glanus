@@ -72,7 +72,7 @@ export default function DynamicAssetCreatePage() {
         // Reset dynamic state on switch
         const initialCustom: Record<string, any> = {};
         if (category) {
-            category.fieldDefinitions.forEach(def => {
+            (category.fieldDefinitions || []).forEach(def => {
                 initialCustom[def.name] = def.defaultValue || '';
                 if (def.fieldType === 'BOOLEAN') initialCustom[def.name] = def.defaultValue === 'true';
             });
@@ -344,11 +344,11 @@ export default function DynamicAssetCreatePage() {
                                 <span className="text-sm px-3 py-1 bg-nerve/20 text-nerve rounded-full">{selectedCategory.icon} {selectedCategory.name}</span>
                             </h2>
 
-                            {selectedCategory.fieldDefinitions.length === 0 ? (
+                            {(selectedCategory.fieldDefinitions || []).length === 0 ? (
                                 <p className="text-slate-500 italic">No custom tracking fields required for this Class.</p>
                             ) : (
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    {selectedCategory.fieldDefinitions.map((def) => (
+                                    {(selectedCategory.fieldDefinitions || []).map((def) => (
                                         <div key={def.id} className={def.fieldType === 'JSON' ? 'md:col-span-2' : ''}>
                                             <label className="block text-sm font-medium text-slate-300 mb-2">
                                                 {def.label} {def.required && <span className="text-red-400">*</span>}

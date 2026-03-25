@@ -1,21 +1,26 @@
 import { apiSuccess } from '@/lib/api/response';
 import { NextRequest } from 'next/server';
-import { validateRequest, validateQuery } from '@/lib/validation';
-import { createCategorySchema, categoryQuerySchema } from '@/lib/schemas/dynamic-asset.schemas';
+import { validateRequest } from '@/lib/validation';
+import { createCategorySchema } from '@/lib/schemas/dynamic-asset.schemas';
 import { withErrorHandler, requireAuth } from '@/lib/api/withAuth';
-import { AssetCategoryAdminService, CategoryQueryInput, CreateCategoryInput } from '@/lib/services/AssetCategoryAdminService';
+import { AssetCategoryAdminService, CreateCategoryInput } from '@/lib/services/AssetCategoryAdminService';
 import { withRateLimit } from '@/lib/security/rateLimit';
 
 // GET /api/assets/categories — list categories for the workspace
-// Reuses the admin service but only requires authentication (not admin role)
+// Always includes fieldDefinitions since the Create Asset form depends on them
 export const GET = withErrorHandler(async (request: NextRequest) => {
     const rateLimited = await withRateLimit(request, 'api');
     if (rateLimited) return rateLimited;
 
     await requireAuth();
-    const { searchParams } = new URL(request.url);
-    const params = await validateQuery(searchParams, categoryQuerySchema);
-    const result = await AssetCategoryAdminService.listCategories(params as CategoryQueryInput);
+
+    // Always include fields + children for the Create Asset form
+    const result = await AssetCategoryAdminService.listCategories({
+        includeFields: true,
+        includeActions: false,
+        includeChildren: true,
+    });
+
     // Frontend expects data.data to be a flat array of categories
     return apiSuccess(result.categories);
 });
