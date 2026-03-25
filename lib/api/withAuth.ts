@@ -190,24 +190,35 @@ export function withErrorHandler<T extends unknown[]>(
             }
 
             if (error instanceof ZodError) {
-                // Only expose field-level validation details in development
-                const details = process.env.NODE_ENV === 'development' ? error.errors : undefined;
-                return apiError(400, 'Validation failed', details);
+                // Build a user-friendly message from the first validation error
+                const firstIssue = error.errors[0];
+                const fieldName = firstIssue?.path?.join('.') || 'input';
+                const friendlyMessage = firstIssue?.message || 'Please check your input';
+                // e.g. "Password must contain at least one uppercase letter"
+                const userMessage = fieldName && fieldName !== 'input'
+                    ? `${friendlyMessage}`
+                    : friendlyMessage;
+                return apiError(400, userMessage);
             }
 
             // Handle Prisma validation errors (invalid enum values, invalid arguments)
             if (error instanceof Prisma.PrismaClientValidationError) {
-                return apiError(400, 'Invalid data provided');
+                return apiError(400, 'Please check your input and try again');
             }
 
             if (error instanceof Prisma.PrismaClientKnownRequestError) {
                 if (error.code === 'P2002') {
-                    return apiError(409, 'Resource already exists');
+                    // Extract the field name from the meta if available
+                    const target = (error.meta?.target as string[] | undefined);
+                    if (target?.includes('email')) {
+                        return apiError(409, 'An account with this email already exists');
+                    }
+                    return apiError(409, 'This record already exists');
                 }
                 if (error.code === 'P2025') {
-                    return apiError(404, 'Resource not found');
+                    return apiError(404, 'The requested resource was not found');
                 }
-                return apiError(400, 'Database request error');
+                return apiError(400, 'Unable to process your request');
             }
 
             // Report unexpected errors to Sentry for production monitoring
