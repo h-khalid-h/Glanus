@@ -227,13 +227,15 @@ export default function WebhooksPage() {
                             <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1">
                                 <button onClick={() => setShowSecret(!showSecret)}
                                     className="p-1.5 text-muted-foreground hover:text-foreground rounded transition-colors"
-                                    title={showSecret ? 'Hide' : 'Show'}>
+                                    title={showSecret ? 'Hide' : 'Show'}
+                                    aria-label={showSecret ? 'Hide webhook secret' : 'Show webhook secret'}>
                                     {showSecret ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                                 </button>
                                 {secret && (
                                     <button onClick={copySecret}
                                         className="p-1.5 text-muted-foreground hover:text-foreground rounded transition-colors"
-                                        title="Copy">
+                                        title="Copy"
+                                        aria-label="Copy webhook secret">
                                         {copied ? <CheckCircle2 className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
                                     </button>
                                 )}

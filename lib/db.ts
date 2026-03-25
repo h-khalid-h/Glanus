@@ -10,9 +10,10 @@ function createPrismaClient() {
     // connection_limit: max concurrent connections per Prisma Client instance.
     // pool_timeout: seconds to wait for a free connection before throwing.
     const baseUrl = process.env.DATABASE_URL || '';
+    const separator = baseUrl.includes('?') ? '&' : '?';
     const datasourceUrl = baseUrl.includes('connection_limit')
         ? baseUrl
-        : `${baseUrl}${baseUrl.includes('?') ? '&' : '?'}connection_limit=10&pool_timeout=20`;
+        : `${baseUrl}${separator}connection_limit=10&pool_timeout=20&statement_timeout=30000`;
 
     return new PrismaClient({
         datasourceUrl,

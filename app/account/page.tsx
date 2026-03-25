@@ -280,7 +280,7 @@ export default function AccountSettingsPage() {
                                         className="w-full bg-slate-800 border border-slate-700 text-white rounded-lg px-4 py-2.5 pr-10 outline-none focus:ring-2 focus:ring-nerve/50 focus:border-nerve"
                                         placeholder="Enter current password"
                                     />
-                                    <button type="button" onClick={() => setShowCurrentPw(!showCurrentPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white">
+                                    <button type="button" onClick={() => setShowCurrentPw(!showCurrentPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white" aria-label={showCurrentPw ? 'Hide password' : 'Show password'}>
                                         {showCurrentPw ? <EyeOff size={16} /> : <Eye size={16} />}
                                     </button>
                                 </div>
@@ -298,7 +298,7 @@ export default function AccountSettingsPage() {
                                         className="w-full bg-slate-800 border border-slate-700 text-white rounded-lg px-4 py-2.5 pr-10 outline-none focus:ring-2 focus:ring-nerve/50 focus:border-nerve"
                                         placeholder="Enter new password (min 8 characters)"
                                     />
-                                    <button type="button" onClick={() => setShowNewPw(!showNewPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white">
+                                    <button type="button" onClick={() => setShowNewPw(!showNewPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white" aria-label={showNewPw ? 'Hide new password' : 'Show new password'}>
                                         {showNewPw ? <EyeOff size={16} /> : <Eye size={16} />}
                                     </button>
                                 </div>

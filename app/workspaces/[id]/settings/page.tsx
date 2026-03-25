@@ -511,7 +511,7 @@ export default function WorkspaceSettingsPage() {
                                             </div>
                                         </div>
                                         {!key.revokedAt && (
-                                            <button onClick={() => requestRevokeKey(key.id)} className="p-2 text-slate-500 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition" title="Revoke Key">
+                                            <button onClick={() => requestRevokeKey(key.id)} className="p-2 text-slate-500 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition" title="Revoke Key" aria-label="Revoke API key">
                                                 <Trash2 size={16} />
                                             </button>
                                         )}

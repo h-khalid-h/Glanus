@@ -235,7 +235,7 @@ export class AssetBulkService {
 
         for (let batch = 0; batch < dataLines.length; batch += batchSize) {
             const chunk = dataLines.slice(batch, batch + batchSize);
-            const createOps: Promise<void>[] = [];
+            const batchData: { rowNum: number; data: Parameters<typeof prisma.asset.create>[0]['data'] }[] = [];
 
             for (let i = 0; i < chunk.length; i++) {
                 const rowNum = batch + i + 2;
@@ -268,15 +268,30 @@ export class AssetBulkService {
 
                 if (serialNumber) existingSerials.add(serialNumber);
 
-                createOps.push(
-                    prisma.asset.create({
-                        data: { name, assetType, status, manufacturer, model, serialNumber, location, workspaceId, ...(categoryId ? { categoryId } : {}) },
-                    }).then((asset) => { imported.push({ name: asset.name, id: asset.id }); })
-                        .catch((err) => { errors.push({ row: rowNum, error: err instanceof Error ? err.message : 'Unknown error' }); })
-                );
+                batchData.push({
+                    rowNum,
+                    data: { name, assetType, status, manufacturer, model, serialNumber, location, workspaceId, ...(categoryId ? { categoryId } : {}) } as Parameters<typeof prisma.asset.create>[0]['data'],
+                });
             }
 
-            await Promise.all(createOps);
+            if (batchData.length > 0) {
+                try {
+                    const results = await prisma.$transaction(
+                        batchData.map(({ data }) => prisma.asset.create({ data }))
+                    );
+                    results.forEach((asset) => { imported.push({ name: asset.name, id: asset.id }); });
+                } catch (err) {
+                    // If the batch transaction fails, fall back to individual creates so partial success is captured
+                    for (const { rowNum, data } of batchData) {
+                        try {
+                            const asset = await prisma.asset.create({ data });
+                            imported.push({ name: asset.name, id: asset.id });
+                        } catch (innerErr) {
+                            errors.push({ row: rowNum, error: innerErr instanceof Error ? innerErr.message : 'Unknown error' });
+                        }
+                    }
+                }
+            }
         }
 
         await prisma.auditLog.create({

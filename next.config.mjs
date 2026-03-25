@@ -18,7 +18,7 @@ const nextConfig = {
         },
     },
     eslint: {
-        ignoreDuringBuilds: true,
+        ignoreDuringBuilds: !!process.env.CI_SKIP_LINT,
     },
 }
 
