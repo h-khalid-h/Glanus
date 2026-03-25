@@ -7,7 +7,9 @@ use anyhow::Result;
 pub struct AgentConfig {
     pub agent: AgentSettings,
     pub server: ServerSettings,
+    #[serde(default)]
     pub monitoring: MonitoringSettings,
+    #[serde(default)]
     pub updates: UpdateSettings,
     #[serde(default)]
     pub inventory: InventorySettings,
@@ -39,11 +41,32 @@ pub struct MonitoringSettings {
     pub max_processes: usize,
 }
 
+impl Default for MonitoringSettings {
+    fn default() -> Self {
+        Self {
+            enabled: true,
+            interval: 10,
+            include_processes: true,
+            max_processes: 5,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UpdateSettings {
     pub enabled: bool,
     pub check_interval: u64, // seconds
     pub auto_install: bool,
+}
+
+impl Default for UpdateSettings {
+    fn default() -> Self {
+        Self {
+            enabled: true,
+            check_interval: 86400,
+            auto_install: false,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -104,17 +127,8 @@ impl Default for AgentConfig {
                 api_url: "https://api.glanus.com".to_string(),
                 heartbeat_interval: 60,
             },
-            monitoring: MonitoringSettings {
-                enabled: true,
-                interval: 10,
-                include_processes: true,
-                max_processes: 5,
-            },
-            updates: UpdateSettings {
-                enabled: true,
-                check_interval: 86400,
-                auto_install: false,
-            },
+            monitoring: MonitoringSettings::default(),
+            updates: UpdateSettings::default(),
             inventory: InventorySettings::default(),
             discovery: DiscoverySettings::default(),
             remote: RemoteSettings::default(),
