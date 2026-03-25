@@ -1,8 +1,8 @@
 /**
  * Environment Variable Validation
- * 
+ *
  * Validates all required environment variables at startup.
- * Import this at the top of your app to fail fast on missing config.
+ * Called from instrumentation.ts register() to fail fast on missing config.
  */
 import { logWarn } from '@/lib/logger';
 
@@ -16,6 +16,12 @@ const productionRequiredEnvVars = [
     'STRIPE_SECRET_KEY',
     'STRIPE_WEBHOOK_SECRET',
     'CSRF_SECRET',
+    'CRON_SECRET',
+] as const;
+
+const productionRecommendedEnvVars = [
+    'REDIS_URL',
+    'SENTRY_DSN',
 ] as const;
 
 interface EnvValidationResult {
@@ -35,8 +41,9 @@ export function validateEnv(): EnvValidationResult {
         }
     }
 
-    // Check production-required vars
     const isProduction = process.env.NODE_ENV === 'production';
+
+    // Check production-required vars
     for (const envVar of productionRequiredEnvVars) {
         if (!process.env[envVar]) {
             if (isProduction) {
@@ -47,10 +54,25 @@ export function validateEnv(): EnvValidationResult {
         }
     }
 
+    // Check production-recommended vars (warn but don't block startup)
+    if (isProduction) {
+        for (const envVar of productionRecommendedEnvVars) {
+            if (!process.env[envVar]) {
+                warnings.push(`${envVar} not set — recommended for production (rate limiting uses in-memory fallback without Redis)`);
+            }
+        }
+    }
+
     // Validate CSRF_SECRET length
     const csrfSecret = process.env.CSRF_SECRET;
     if (csrfSecret && csrfSecret.length < 32) {
         warnings.push('CSRF_SECRET should be at least 32 characters');
+    }
+
+    // Validate CRON_SECRET length
+    const cronSecret = process.env.CRON_SECRET;
+    if (cronSecret && cronSecret.length < 16) {
+        warnings.push('CRON_SECRET should be at least 16 characters');
     }
 
     // Validate NEXTAUTH_SECRET is not the default
@@ -62,6 +84,12 @@ export function validateEnv(): EnvValidationResult {
         }
     }
 
+    // Validate DATABASE_URL format
+    const dbUrl = process.env.DATABASE_URL;
+    if (dbUrl && !dbUrl.startsWith('postgresql://') && !dbUrl.startsWith('postgres://')) {
+        warnings.push('DATABASE_URL does not look like a PostgreSQL connection string');
+    }
+
     return {
         valid: missing.length === 0,
         missing,
@@ -71,7 +99,7 @@ export function validateEnv(): EnvValidationResult {
 
 /**
  * Run env validation and throw if critical vars missing.
- * Call this at startup.
+ * Called at startup from instrumentation.ts register().
  */
 export function assertEnvValid(): void {
     const result = validateEnv();

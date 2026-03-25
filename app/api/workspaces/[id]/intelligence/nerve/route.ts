@@ -3,6 +3,7 @@ import { requireAuth, requireWorkspaceRole, withErrorHandler } from '@/lib/api/w
 import { apiSuccess } from '@/lib/api/response';
 import { enrichMetric } from '@/lib/nerve/enrichment';
 import { prisma } from '@/lib/db';
+import { withRateLimit } from '@/lib/security/rateLimit';
 
 /**
  * GET /api/workspaces/[id]/intelligence/nerve
@@ -16,6 +17,9 @@ export const GET = withErrorHandler(async (
     request: NextRequest,
     context: { params: Promise<{ id: string }> }
 ) => {
+    const rateLimited = await withRateLimit(request, 'api');
+    if (rateLimited) return rateLimited;
+
     const params = await context.params;
     const user = await requireAuth();
     await requireWorkspaceRole(params.id, user.id, 'MEMBER');

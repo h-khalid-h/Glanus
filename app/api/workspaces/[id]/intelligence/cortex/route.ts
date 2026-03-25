@@ -6,6 +6,7 @@ import { enrichMetric } from '@/lib/nerve/enrichment';
 import { buildOperationalGraph } from '@/lib/nerve/operational-graph';
 import { enforceQuota, incrementAICredits } from '@/lib/workspace/quotas';
 import { cortexQuerySchema } from '@/lib/schemas/workspace.schemas';
+import { withRateLimit } from '@/lib/security/rateLimit';
 
 /**
  * POST /api/workspaces/[id]/intelligence/cortex
@@ -18,6 +19,9 @@ export const POST = withErrorHandler(async (
     request: NextRequest,
     context: { params: Promise<{ id: string }> }
 ) => {
+    const rateLimited = await withRateLimit(request, 'strict-api');
+    if (rateLimited) return rateLimited;
+
     const params = await context.params;
     const user = await requireAuth();
     await requireWorkspaceRole(params.id, user.id, 'MEMBER');
@@ -58,6 +62,9 @@ export const GET = withErrorHandler(async (
     request: NextRequest,
     context: { params: Promise<{ id: string }> }
 ) => {
+    const rateLimited = await withRateLimit(request, 'api');
+    if (rateLimited) return rateLimited;
+
     const params = await context.params;
     const user = await requireAuth();
     await requireWorkspaceRole(params.id, user.id, 'MEMBER');

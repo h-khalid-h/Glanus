@@ -2,9 +2,13 @@ import { apiSuccess } from '@/lib/api/response';
 import { NextRequest } from 'next/server';
 import { requireAdmin, withErrorHandler } from '@/lib/api/withAuth';
 import { PartnerModerationService } from '@/lib/services/PartnerModerationService';
+import { withRateLimit } from '@/lib/security/rateLimit';
 
 // GET /api/admin/partners
 export const GET = withErrorHandler(async (request: NextRequest) => {
+    const rateLimited = await withRateLimit(request, 'api');
+    if (rateLimited) return rateLimited;
+
     await requireAdmin();
     const { searchParams } = new URL(request.url);
     const result = await PartnerModerationService.listPartners({

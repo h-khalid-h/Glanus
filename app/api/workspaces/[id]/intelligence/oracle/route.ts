@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { requireAuth, requireWorkspaceRole, withErrorHandler } from '@/lib/api/withAuth';
 import { apiSuccess, apiError } from '@/lib/api/response';
 import { forecastFailures, getCapacityIntelligence, getSLOStatus } from '@/lib/oracle/predictions';
+import { withRateLimit } from '@/lib/security/rateLimit';
 
 /**
  * GET /api/workspaces/[id]/intelligence/oracle?type=failures|capacity|slo
@@ -12,6 +13,9 @@ export const GET = withErrorHandler(async (
     request: NextRequest,
     context: { params: Promise<{ id: string }> }
 ) => {
+    const rateLimited = await withRateLimit(request, 'api');
+    if (rateLimited) return rateLimited;
+
     const params = await context.params;
     const user = await requireAuth();
     await requireWorkspaceRole(params.id, user.id, 'MEMBER');

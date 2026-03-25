@@ -4,9 +4,13 @@ import { validateRequest, validateQuery } from '@/lib/validation';
 import { createCategorySchema, categoryQuerySchema } from '@/lib/schemas/dynamic-asset.schemas';
 import { withErrorHandler, requireAdmin, requireAuth } from '@/lib/api/withAuth';
 import { AssetCategoryAdminService, CategoryQueryInput, CreateCategoryInput } from '@/lib/services/AssetCategoryAdminService';
+import { withRateLimit } from '@/lib/security/rateLimit';
 
 // GET /api/admin/categories
 export const GET = withErrorHandler(async (request: NextRequest) => {
+    const rateLimited = await withRateLimit(request, 'api');
+    if (rateLimited) return rateLimited;
+
     await requireAdmin();
     const { searchParams } = new URL(request.url);
     const params = await validateQuery(searchParams, categoryQuerySchema);
@@ -16,6 +20,9 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 
 // POST /api/admin/categories
 export const POST = withErrorHandler(async (request: NextRequest) => {
+    const rateLimited = await withRateLimit(request, 'strict-api');
+    if (rateLimited) return rateLimited;
+
     await requireAdmin();
     const user = await requireAuth();
     const data = await validateRequest(request, createCategorySchema);

@@ -4,6 +4,7 @@ import { apiSuccess, apiError } from '@/lib/api/response';
 import { getRules, saveRule, deleteRule, getActionQueue } from '@/lib/reflex/automation';
 import { auditLog } from '@/lib/workspace/auditLog';
 import { reflexRuleSchema } from '@/lib/schemas/workspace.schemas';
+import { withRateLimit } from '@/lib/security/rateLimit';
 
 /**
  * GET /api/workspaces/[id]/intelligence/reflex
@@ -15,6 +16,9 @@ export const GET = withErrorHandler(async (
     request: NextRequest,
     context: { params: Promise<{ id: string }> }
 ) => {
+    const rateLimited = await withRateLimit(request, 'api');
+    if (rateLimited) return rateLimited;
+
     const params = await context.params;
     const user = await requireAuth();
     await requireWorkspaceRole(params.id, user.id, 'MEMBER');
@@ -41,6 +45,9 @@ export const POST = withErrorHandler(async (
     request: NextRequest,
     context: { params: Promise<{ id: string }> }
 ) => {
+    const rateLimited = await withRateLimit(request, 'strict-api');
+    if (rateLimited) return rateLimited;
+
     const params = await context.params;
     const user = await requireAuth();
     await requireWorkspaceRole(params.id, user.id, 'ADMIN');
@@ -75,6 +82,9 @@ export const DELETE = withErrorHandler(async (
     request: NextRequest,
     context: { params: Promise<{ id: string }> }
 ) => {
+    const rateLimited = await withRateLimit(request, 'strict-api');
+    if (rateLimited) return rateLimited;
+
     const params = await context.params;
     const user = await requireAuth();
     await requireWorkspaceRole(params.id, user.id, 'ADMIN');
