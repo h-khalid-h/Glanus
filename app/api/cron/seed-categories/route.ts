@@ -2,8 +2,9 @@ import { NextRequest } from 'next/server';
 import { apiSuccess, apiError } from '@/lib/api/response';
 import { prisma } from '@/lib/db';
 import { withErrorHandler } from '@/lib/api/withAuth';
+import { AssetType } from '@prisma/client';
 
-const DEFAULT_CATEGORIES = [
+const DEFAULT_CATEGORIES: Array<{ name: string; slug: string; icon: string; description: string; assetTypeValue: AssetType; sortOrder: number }> = [
     { name: 'Servers', slug: 'servers', icon: '🖥️', description: 'Physical and virtual server infrastructure', assetTypeValue: 'PHYSICAL', sortOrder: 1 },
     { name: 'Workstations', slug: 'workstations', icon: '💻', description: 'Employee laptops and desktops', assetTypeValue: 'PHYSICAL', sortOrder: 2 },
     { name: 'Network Equipment', slug: 'network-equipment', icon: '🌐', description: 'Switches, routers, firewalls, and access points', assetTypeValue: 'PHYSICAL', sortOrder: 3 },
