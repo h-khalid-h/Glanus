@@ -21,8 +21,8 @@ export function getCSPHeader(): string {
         "style-src 'self' 'unsafe-inline'",
         "img-src 'self' data: https:",
         "font-src 'self' data: https:",
-        // WebSocket (dev HMR), Stripe, Sentry
-        `connect-src 'self' ws: wss: https://*.stripe.com https://*.sentry.io${isDev ? ' http://localhost:*' : ''}`,
+        // WebSocket: allow ws:/wss: in dev for HMR; production only allows wss: for real-time features
+        `connect-src 'self'${isDev ? ' ws: wss: http://localhost:*' : ' wss:'} https://*.stripe.com https://*.sentry.io`,
         "frame-ancestors 'none'",
         "frame-src 'self' https://*.stripe.com", // Stripe checkout iframe
         "base-uri 'self'",
