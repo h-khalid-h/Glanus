@@ -1,8 +1,8 @@
 #!/bin/sh
 set -e
 
-echo "Pushing database schema..."
-prisma db push --accept-data-loss
+echo "Applying database migrations..."
+prisma migrate deploy || prisma db push --skip-generate
 
 echo "Starting Glanus server..."
 exec node server.js

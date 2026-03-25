@@ -557,10 +557,11 @@ model AssignmentHistory {
   notes        String?
 
   asset Asset @relation(fields: [assetId], references: [id], onDelete: Cascade)
-  user  User  @relation(fields: [userId], references: [id])
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([assetId])
   @@index([userId])
+  @@index([unassignedAt])
 }
 
 model RemoteSession {
@@ -1119,6 +1120,7 @@ model PartnerExam {
 
   @@index([partnerId, level])
   @@index([status])
+  @@index([completedAt])
 }
 
 model ExamQuestion {
@@ -1301,6 +1303,7 @@ model AgentMetric {
 
   @@index([agentId, timestamp])
   @@index([assetId, timestamp])
+  @@index([timestamp])
 }
 
 model ScriptExecution {

@@ -100,9 +100,12 @@ export class AssetRelationshipService {
         ]);
         if (!parentAsset) throw new ApiError(404, 'Parent asset not found');
         if (!childAsset) throw new ApiError(404, 'Child asset not found');
+        if (parentAsset.workspaceId !== childAsset.workspaceId) {
+            throw new ApiError(400, 'Cannot create relationships between assets in different workspaces');
+        }
 
-        // BFS circular check
-        const isCircular = await AssetRelationshipService._checkCircularRelationship(data.parentAssetId, data.childAssetId);
+        // BFS circular check (scoped to workspace)
+        const isCircular = await AssetRelationshipService._checkCircularRelationship(data.parentAssetId, data.childAssetId, parentAsset.workspaceId);
         if (isCircular) {
             throw new ApiError(400, 'Cannot create relationship: would create a circular dependency');
         }
@@ -194,8 +197,8 @@ export class AssetRelationshipService {
         return { message: 'Relationship deleted successfully', deletedRelationship: relationship };
     }
 
-    /** BFS cycle detection for asset relationship graphs. */
-    static async _checkCircularRelationship(parentAssetId: string, childAssetId: string): Promise<boolean> {
+    /** BFS cycle detection for asset relationship graphs, scoped to workspace. */
+    static async _checkCircularRelationship(parentAssetId: string, childAssetId: string, workspaceId?: string): Promise<boolean> {
         const visited = new Set<string>();
         const queue = [parentAssetId];
         while (queue.length > 0) {
@@ -204,7 +207,11 @@ export class AssetRelationshipService {
             visited.add(currentId);
             if (currentId === childAssetId) return true;
             const parents = await prisma.assetRelationship.findMany({
-                where: { childAssetId: currentId }, select: { parentAssetId: true },
+                where: {
+                    childAssetId: currentId,
+                    ...(workspaceId && { parentAsset: { workspaceId } }),
+                },
+                select: { parentAssetId: true },
             });
             for (const rel of parents) {
                 if (!visited.has(rel.parentAssetId)) queue.push(rel.parentAssetId);

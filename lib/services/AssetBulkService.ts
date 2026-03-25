@@ -93,22 +93,20 @@ export class AssetBulkService {
             });
         });
 
-        await Promise.all(assetIds.map(assetId =>
-            prisma.auditLog.create({
-                data: {
-                    action: 'UPDATE',
-                    resourceType: 'Asset',
-                    resourceId: assetId,
-                    userId,
-                    metadata: {
-                        message: `Asset bulk assigned to ${assignee.name}`,
-                        assigneeId,
-                        assigneeName: assignee.name,
-                        assigneeEmail: assignee.email,
-                    },
+        await prisma.auditLog.createMany({
+            data: assetIds.map(assetId => ({
+                action: 'UPDATE',
+                resourceType: 'Asset',
+                resourceId: assetId,
+                userId,
+                metadata: {
+                    message: `Asset bulk assigned to ${assignee.name}`,
+                    assigneeId,
+                    assigneeName: assignee.name,
+                    assigneeEmail: assignee.email,
                 },
-            })
-        ));
+            })),
+        });
 
         return { assignedCount: assetIds.length, message: `Successfully assigned ${assetIds.length} asset(s) to ${assignee.name}` };
     }

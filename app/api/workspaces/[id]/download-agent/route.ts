@@ -33,7 +33,7 @@ export const POST = withErrorHandler(async (
         config: {
             workspaceId,
             preAuthToken,
-            apiEndpoint: process.env.NEXT_PUBLIC_API_URL || 'https://api.glanus.com',
+            apiEndpoint: process.env.NEXT_PUBLIC_API_URL || process.env.NEXTAUTH_URL || 'http://localhost:3000',
         },
     };
 
