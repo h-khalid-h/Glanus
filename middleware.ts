@@ -24,17 +24,22 @@ const CSRF_EXEMPT_PATHS = [
     '/api/cron',         // Cron jobs use Bearer tokens natively
 ];
 
-// Public routes (no authentication required)
-const PUBLIC_PATHS = [
+// Public page routes (no authentication required)
+const PUBLIC_PAGE_PATHS = [
+    '/',                 // Landing page
     '/login',
     '/signup',
     '/forgot-password',
     '/reset-password',
-    '/terms',            // Terms of Service page
-    '/privacy',          // Privacy Policy page
-    '/_next/',           // Next.js internals (prefix match via trailing slash)
-    '/favicon.ico',
-    '/monitoring',       // Sentry
+    '/terms',            // Terms of Service
+    '/privacy',          // Privacy Policy
+    '/partners',         // Public partner directory
+    '/invitations',      // Invitation verification (token-based)
+    '/download-agent',   // Agent download page
+];
+
+// Public API routes (no authentication required)
+const PUBLIC_API_PATHS = [
     '/api/health',
     '/api/ready',
     '/api/auth/',        // NextAuth + custom auth endpoints (prefix match)
@@ -42,6 +47,17 @@ const PUBLIC_PATHS = [
     '/api/partners/signup', // Partner signup
     '/api/invitations',    // Invitation verification (token-based)
     '/api/cron',         // Bypasses NextAuth (managed by CRON_SECRET)
+    '/api/agent/',       // Agent endpoints (use their own token auth)
+];
+
+// Static/SEO files served by Next.js (not static assets)
+const STATIC_FILES = [
+    '/robots.txt',
+    '/sitemap.xml',
+    '/sitemap-0.xml',
+    '/manifest.json',
+    '/manifest.webmanifest',
+    '/favicon.ico',
 ];
 
 /**
@@ -60,40 +76,67 @@ function safeCompare(a: string, b: string): boolean {
     return result === 0;
 }
 
+/**
+ * Check if a path is public (no auth required)
+ */
+function isPublicPath(pathname: string): boolean {
+    // Static/SEO files
+    if (STATIC_FILES.includes(pathname)) return true;
+
+    // Static assets (images, fonts, etc.)
+    if (/\.(ico|png|jpg|jpeg|svg|gif|webp|css|js|woff|woff2|ttf|eot|txt|xml|json|map)$/.test(pathname)) return true;
+
+    // Next.js internals
+    if (pathname.startsWith('/_next/')) return true;
+
+    // Sentry/monitoring
+    if (pathname.startsWith('/monitoring')) return true;
+
+    // Public page routes (exact match)
+    if (PUBLIC_PAGE_PATHS.includes(pathname)) return true;
+
+    // Public page routes that are prefix-based (e.g. /partners/[id], /invitations/[token])
+    if (pathname.startsWith('/partners/') || pathname.startsWith('/invitations/')) return true;
+
+    // Public API routes
+    if (PUBLIC_API_PATHS.some(path =>
+        pathname === path || (path.endsWith('/') && pathname.startsWith(path))
+    )) return true;
+
+    return false;
+}
+
 export async function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl;
     const requestId = crypto.randomUUID();
 
-    // Skip middleware for Next.js internal routes and static files
+    // Skip middleware entirely for Next.js internal routes and static files
     if (
         pathname.startsWith('/_next') ||
-        pathname.startsWith('/favicon.ico') ||
-        pathname.match(/\.(ico|png|jpg|jpeg|svg|css|js)$/)
+        /\.(ico|png|jpg|jpeg|svg|gif|webp|css|js|woff|woff2|ttf|eot|map)$/.test(pathname)
     ) {
         return NextResponse.next();
     }
 
     // 1. Authentication Check (Defense-in-Depth)
-    const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
-    const isPublicPath = pathname === '/' ||
-        PUBLIC_PATHS.some(path => pathname === path || (path.endsWith('/') && pathname.startsWith(path))) ||
-        pathname === '/api/partners' ||                     // Public partner directory
-        /^\/api\/partners\/[^/]+$/.test(pathname);          // Public partner profile (/api/partners/[id])
+    if (!isPublicPath(pathname)) {
+        const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
 
-    if (!token && !isPublicPath) {
-        logWarn(`[Auth] Unauthenticated access blocked: ${pathname} [ReqID: ${requestId}]`);
+        if (!token) {
+            logWarn(`[Auth] Unauthenticated access blocked: ${pathname} [ReqID: ${requestId}]`);
 
-        // Return 401 JSON for API routes instead of redirecting to login page
-        if (pathname.startsWith('/api/')) {
-            return NextResponse.json(
-                { error: 'Unauthorized' },
-                { status: 401, headers: { 'X-Request-Id': requestId } }
-            );
+            // Return 401 JSON for API routes instead of redirecting to login page
+            if (pathname.startsWith('/api/')) {
+                return NextResponse.json(
+                    { error: 'Unauthorized' },
+                    { status: 401, headers: { 'X-Request-Id': requestId } }
+                );
+            }
+
+            const loginUrl = new URL('/login', request.url);
+            loginUrl.searchParams.set('callbackUrl', pathname);
+            return NextResponse.redirect(loginUrl);
         }
-
-        const loginUrl = new URL('/login', request.url);
-        loginUrl.searchParams.set('callbackUrl', pathname);
-        return NextResponse.redirect(loginUrl);
     }
 
     // Create response with security headers
@@ -138,7 +181,7 @@ export const config = {
          * - _next/static (static files)
          * - _next/image (image optimization files)
          * - favicon.ico (favicon file)
-         * - public folder files
+         * - public folder static assets
          */
         '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
     ],
