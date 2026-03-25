@@ -13,7 +13,6 @@ import { ApiError } from '@/lib/errors';
  *  - RemoteSignalingService → verifySignalingAccess / getSignalingState / patchSignalingState
  */
 import { prisma } from '@/lib/db';
-import { hashAgentToken } from '@/lib/security/agent-auth';
 
 // ============================================
 // INPUT TYPES

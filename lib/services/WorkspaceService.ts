@@ -12,9 +12,6 @@ import { ApiError } from '@/lib/errors';
  */
 import { prisma } from '@/lib/db';
 import { logError } from '@/lib/logger';
-import { auditLog } from '@/lib/workspace/auditLog';
-import { sendEmail } from '@/lib/email/sendgrid';
-import { getRoleChangedEmailTemplate, getMemberRemovedEmailTemplate } from '@/lib/email/templates';
 import { sanitizeText } from '@/lib/security/sanitize';
 import { createSampleWorkspaceData } from '@/lib/seed/sampleWorkspaceData';
 

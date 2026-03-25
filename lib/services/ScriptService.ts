@@ -13,10 +13,7 @@ import { ApiError } from '@/lib/errors';
  *                            deleteSchedule / evaluateSchedules / getCronStatus
  */
 import { prisma } from '@/lib/db';
-import { Prisma } from '@prisma/client';
 import { z } from 'zod';
-import { logInfo, logError } from '@/lib/logger';
-import { CronExpressionParser } from 'cron-parser';
 
 export const createScriptSchema = z.object({
     name: z.string().min(1, 'Name is required').max(100),

@@ -1,0 +1,47 @@
+# Dependencies
+node_modules
+npm-debug.log*
+
+# Built output
+.next
+dist
+build
+
+# Git
+.git
+.gitignore
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Testing
+__tests__
+e2e
+test-results
+playwright-report
+coverage
+jest.config.js
+jest.setup.js
+playwright.config.ts
+
+# IDE / OS
+.vscode
+.idea
+.DS_Store
+*.swp
+
+# Documentation
+docs
+*.md
+!README.md
+
+# Agent binary
+glanus-agent
+
+# Development files
+.eslintrc.json
+.prettierrc
+tsconfig.tsbuildinfo
+logs
