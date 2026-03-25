@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { requireAuth, requireWorkspaceAccess, withErrorHandler } from '@/lib/api/withAuth';
 import { apiSuccess } from '@/lib/api/response';
+import { withRateLimit } from '@/lib/security/rateLimit';
 import { TicketService, createTicketSchema } from '@/lib/services/TicketService';
 
 /**
@@ -11,6 +12,9 @@ export const GET = withErrorHandler(async (
     request: NextRequest,
     context: { params: Promise<{ id: string }> }
 ) => {
+    const rateLimited = await withRateLimit(request, 'api');
+    if (rateLimited) return rateLimited;
+
     const user = await requireAuth();
     const { id: workspaceId } = await context.params;
     const auth = await requireWorkspaceAccess(workspaceId, user.id, request);
@@ -34,6 +38,9 @@ export const POST = withErrorHandler(async (
     request: NextRequest,
     context: { params: Promise<{ id: string }> }
 ) => {
+    const rateLimited = await withRateLimit(request, 'strict-api');
+    if (rateLimited) return rateLimited;
+
     const user = await requireAuth();
     const { id: workspaceId } = await context.params;
     await requireWorkspaceAccess(workspaceId, user.id, request);

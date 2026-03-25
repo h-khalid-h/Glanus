@@ -1,9 +1,13 @@
 import { apiSuccess, apiError } from '@/lib/api/response';
 import { NextRequest } from 'next/server';
 import { withErrorHandler, requireAuth, requireWorkspaceRole } from '@/lib/api/withAuth';
+import { withRateLimit } from '@/lib/security/rateLimit';
 import { DashboardService } from '@/lib/services/DashboardService';
 
 export const GET = withErrorHandler(async (request: NextRequest) => {
+    const rateLimited = await withRateLimit(request, 'api');
+    if (rateLimited) return rateLimited;
+
     const user = await requireAuth();
     const { searchParams } = new URL(request.url);
     const workspaceId = searchParams.get('workspaceId');

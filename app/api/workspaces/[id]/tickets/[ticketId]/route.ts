@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { requireAuth, requireWorkspaceAccess, withErrorHandler } from '@/lib/api/withAuth';
 import { apiSuccess, apiDeleted } from '@/lib/api/response';
+import { withRateLimit } from '@/lib/security/rateLimit';
 import { TicketService, updateTicketSchema } from '@/lib/services/TicketService';
 
 /**
@@ -11,6 +12,9 @@ export const GET = withErrorHandler(async (
     request: NextRequest,
     context: { params: Promise<{ id: string; ticketId: string }> }
 ) => {
+    const rateLimited = await withRateLimit(request, 'api');
+    if (rateLimited) return rateLimited;
+
     const user = await requireAuth();
     const { id: workspaceId, ticketId } = await context.params;
     const auth = await requireWorkspaceAccess(workspaceId, user.id, request);
@@ -27,6 +31,9 @@ export const PATCH = withErrorHandler(async (
     request: NextRequest,
     context: { params: Promise<{ id: string; ticketId: string }> }
 ) => {
+    const rateLimited = await withRateLimit(request, 'strict-api');
+    if (rateLimited) return rateLimited;
+
     const user = await requireAuth();
     const { id: workspaceId, ticketId } = await context.params;
     const auth = await requireWorkspaceAccess(workspaceId, user.id, request);
@@ -44,6 +51,9 @@ export const DELETE = withErrorHandler(async (
     request: NextRequest,
     context: { params: Promise<{ id: string; ticketId: string }> }
 ) => {
+    const rateLimited = await withRateLimit(request, 'strict-api');
+    if (rateLimited) return rateLimited;
+
     const user = await requireAuth();
     const { id: workspaceId, ticketId } = await context.params;
     const auth = await requireWorkspaceAccess(workspaceId, user.id, request);

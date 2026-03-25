@@ -2,13 +2,17 @@ import { requireAuth, withErrorHandler } from '@/lib/api/withAuth';
 import { apiSuccess } from '@/lib/api/response';
 import { ApiError } from '@/lib/errors';
 import { NextRequest } from 'next/server';
+import { withRateLimit } from '@/lib/security/rateLimit';
 import { AssetActionService } from '@/lib/services/AssetActionService';
 import { prisma } from '@/lib/db';
 
 type RouteContext = { params: Promise<{ id: string }> };
 
 // GET /api/assets/[id]/actions - List available actions for an asset
-export const GET = withErrorHandler(async (_request: NextRequest, { params }: RouteContext) => {
+export const GET = withErrorHandler(async (request: NextRequest, { params }: RouteContext) => {
+    const rateLimited = await withRateLimit(request, 'api');
+    if (rateLimited) return rateLimited;
+
     const user = await requireAuth();
     const { id: assetId } = await params;
 

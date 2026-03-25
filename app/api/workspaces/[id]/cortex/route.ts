@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { requireAuth, requireWorkspaceAccess, withErrorHandler } from '@/lib/api/withAuth';
 import { apiSuccess, apiError } from '@/lib/api/response';
+import { withRateLimit } from '@/lib/security/rateLimit';
 import { buildRiskProfile } from '@/lib/cortex/reasoning';
 import { buildOperationalGraph } from '@/lib/nerve/operational-graph';
 
@@ -9,6 +10,9 @@ export const GET = withErrorHandler(async (
     request: NextRequest,
     context: { params: Promise<{ id: string }> }
 ) => {
+    const rateLimited = await withRateLimit(request, 'api');
+    if (rateLimited) return rateLimited;
+
     const { id: workspaceId } = await context.params;
     const user = await requireAuth();
     await requireWorkspaceAccess(workspaceId, user.id);
