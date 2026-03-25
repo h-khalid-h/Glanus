@@ -174,11 +174,19 @@ impl AgentConfig {
         }
     }
 
-    /// Save config to file
+    /// Save config to file with restrictive permissions (0600 on Unix)
     pub fn save(&self) -> Result<()> {
         let path = Self::config_path()?;
         let content = toml::to_string_pretty(self)?;
         std::fs::write(&path, content)?;
+
+        // Restrict file permissions to owner-only on Unix systems
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o600))?;
+        }
+
         Ok(())
     }
 }

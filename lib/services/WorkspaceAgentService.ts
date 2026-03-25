@@ -12,16 +12,28 @@ import { prisma } from '@/lib/db';
 
 export class WorkspaceAgentService {
     /**
-     * List all agent connections for a workspace with online/offline/error statistics.
+     * List agent connections for a workspace with online/offline/error statistics.
+     * Supports pagination (default 100 per page). Stats reflect full workspace counts.
      */
-    static async listWorkspaceAgents(workspaceId: string) {
-        const [agents, activeVersions] = await Promise.all([
+    static async listWorkspaceAgents(workspaceId: string, page = 1, limit = 100) {
+        const safeLimit = Math.min(Math.max(limit, 1), 200);
+        const skip = (Math.max(page, 1) - 1) * safeLimit;
+
+        const [agents, total, activeVersions, statusCounts] = await Promise.all([
             prisma.agentConnection.findMany({
                 where: { workspaceId },
                 include: { asset: { select: { id: true, name: true, model: true, serialNumber: true } } },
                 orderBy: { lastSeen: 'desc' },
+                skip,
+                take: safeLimit,
             }),
+            prisma.agentConnection.count({ where: { workspaceId } }),
             prisma.agentVersion.findMany({ where: { status: 'ACTIVE' }, take: 10 }),
+            prisma.agentConnection.groupBy({
+                by: ['status'],
+                where: { workspaceId },
+                _count: true,
+            }),
         ]);
 
         const versionByPlatform = new Map(activeVersions.map((v) => [v.platform, v.version]));
@@ -44,18 +56,17 @@ export class WorkspaceAgentService {
             asset: agent.asset,
         }));
 
-        const errorAgents = agents.filter((a) => a.status === 'ERROR');
-        const onlineAgents = agents.filter((a) => a.status === 'ONLINE' && a.lastSeen > tenMinsAgo);
-        const offlineAgents = agents.filter((a) => a.status !== 'ERROR' && (a.status === 'OFFLINE' || (a.status === 'ONLINE' && a.lastSeen <= tenMinsAgo)));
+        const statusMap = new Map(statusCounts.map((s) => [s.status, s._count]));
 
         return {
             agents: data,
             stats: {
-                total: agents.length,
-                online: onlineAgents.length,
-                offline: offlineAgents.length,
-                error: errorAgents.length,
+                total,
+                online: statusMap.get('ONLINE') || 0,
+                offline: statusMap.get('OFFLINE') || 0,
+                error: statusMap.get('ERROR') || 0,
             },
+            pagination: { page: Math.max(page, 1), limit: safeLimit, total, totalPages: Math.ceil(total / safeLimit) },
         };
     }
 

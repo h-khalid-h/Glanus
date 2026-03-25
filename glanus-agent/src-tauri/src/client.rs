@@ -4,6 +4,12 @@ use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
+/// Error indicating the agent's auth token has been rejected (HTTP 401).
+/// Callers should trigger re-registration when this is returned.
+#[derive(Debug, thiserror::Error)]
+#[error("Agent authentication rejected (HTTP 401) — re-registration required")]
+pub struct AuthRejectedError;
+
 // ============================================
 // Shared API response envelope
 // ============================================
@@ -242,7 +248,8 @@ impl ApiClient {
         Ok(envelope.data)
     }
 
-    /// Send heartbeat to backend
+    /// Send heartbeat to backend.
+    /// Returns `AuthRejectedError` on HTTP 401 so callers can trigger re-registration.
     pub async fn heartbeat(&self, request: HeartbeatRequest) -> Result<HeartbeatResponseData> {
         let url = format!("{}/api/agent/heartbeat", self.base_url);
 
@@ -255,6 +262,9 @@ impl ApiClient {
 
         if !response.status().is_success() {
             let status = response.status();
+            if status.as_u16() == 401 {
+                return Err(AuthRejectedError.into());
+            }
             let error_text = response.text().await.unwrap_or_else(|_| "Unknown error".to_string());
             anyhow::bail!("Heartbeat failed with status {}: {}", status, error_text);
         }
@@ -266,7 +276,8 @@ impl ApiClient {
         Ok(envelope.data)
     }
 
-    /// Report command execution result
+    /// Report command execution result.
+    /// Returns `AuthRejectedError` on HTTP 401 so callers can trigger re-registration.
     pub async fn report_command_result(&self, request: CommandResultRequest) -> Result<()> {
         let url = format!("{}/api/agent/command-result", self.base_url);
 
@@ -279,6 +290,9 @@ impl ApiClient {
 
         if !response.status().is_success() {
             let status = response.status();
+            if status.as_u16() == 401 {
+                return Err(AuthRejectedError.into());
+            }
             let error_text = response.text().await.unwrap_or_else(|_| "Unknown error".to_string());
             anyhow::bail!("Command result reporting failed with status {}: {}", status, error_text);
         }
@@ -286,7 +300,8 @@ impl ApiClient {
         Ok(())
     }
 
-    /// Sync software inventory with backend
+    /// Sync software inventory with backend.
+    /// Returns `AuthRejectedError` on HTTP 401 so callers can trigger re-registration.
     pub async fn sync_software(&self, request: SoftwareInventoryRequest) -> Result<SoftwareInventoryResponseData> {
         let url = format!("{}/api/agent/software", self.base_url);
 
@@ -299,6 +314,9 @@ impl ApiClient {
 
         if !response.status().is_success() {
             let status = response.status();
+            if status.as_u16() == 401 {
+                return Err(AuthRejectedError.into());
+            }
             let error_text = response.text().await.unwrap_or_else(|_| "Unknown error".to_string());
             anyhow::bail!("Software sync failed with status {}: {}", status, error_text);
         }
@@ -310,7 +328,8 @@ impl ApiClient {
         Ok(envelope.data)
     }
 
-    /// Submit network discovery results to backend
+    /// Submit network discovery results to backend.
+    /// Returns `AuthRejectedError` on HTTP 401 so callers can trigger re-registration.
     pub async fn submit_discovery(&self, request: DiscoveryRequest) -> Result<DiscoveryResponseData> {
         let url = format!("{}/api/agent/discovery", self.base_url);
 
@@ -323,6 +342,9 @@ impl ApiClient {
 
         if !response.status().is_success() {
             let status = response.status();
+            if status.as_u16() == 401 {
+                return Err(AuthRejectedError.into());
+            }
             let error_text = response.text().await.unwrap_or_else(|_| "Unknown error".to_string());
             anyhow::bail!("Discovery submission failed with status {}: {}", status, error_text);
         }
