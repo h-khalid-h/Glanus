@@ -9,6 +9,12 @@ pub struct AgentConfig {
     pub server: ServerSettings,
     pub monitoring: MonitoringSettings,
     pub updates: UpdateSettings,
+    #[serde(default)]
+    pub inventory: InventorySettings,
+    #[serde(default)]
+    pub discovery: DiscoverySettings,
+    #[serde(default)]
+    pub remote: RemoteSettings,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -40,6 +46,51 @@ pub struct UpdateSettings {
     pub auto_install: bool,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct InventorySettings {
+    pub enabled: bool,
+    pub sync_interval: u64, // seconds (default: 6 hours)
+}
+
+impl Default for InventorySettings {
+    fn default() -> Self {
+        Self {
+            enabled: true,
+            sync_interval: 21600, // 6 hours
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DiscoverySettings {
+    pub enabled: bool,
+    pub subnet: Option<String>,    // e.g. "192.168.1.0/24"
+    pub scan_interval: u64,        // seconds (default: 1 hour)
+}
+
+impl Default for DiscoverySettings {
+    fn default() -> Self {
+        Self {
+            enabled: false,
+            subnet: None,
+            scan_interval: 3600, // 1 hour
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RemoteSettings {
+    pub enabled: bool,
+}
+
+impl Default for RemoteSettings {
+    fn default() -> Self {
+        Self {
+            enabled: true,
+        }
+    }
+}
+
 impl Default for AgentConfig {
     fn default() -> Self {
         Self {
@@ -64,6 +115,9 @@ impl Default for AgentConfig {
                 check_interval: 86400,
                 auto_install: false,
             },
+            inventory: InventorySettings::default(),
+            discovery: DiscoverySettings::default(),
+            remote: RemoteSettings::default(),
         }
     }
 }

@@ -2,5 +2,8 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 fn main() {
-  app_lib::run();
+    if let Err(e) = std::panic::catch_unwind(app_lib::run) {
+        eprintln!("Glanus Agent crashed: {:?}", e);
+        std::process::exit(1);
+    }
 }

@@ -1,10 +1,10 @@
 [package]
 name = "app"
 version = "0.1.0"
-description = "A Tauri App"
-authors = ["you"]
-license = ""
-repository = ""
+description = "Glanus Agent - Desktop system monitoring and management agent"
+authors = ["Glanus"]
+license = "MIT"
+repository = "https://github.com/h-khalid-h/Glanus"
 edition = "2021"
 rust-version = "1.77.2"
 

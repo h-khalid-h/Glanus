@@ -11,6 +11,7 @@ mod updater;
 mod input;
 mod software;
 mod inventory;
+mod discovery;
 
 use std::sync::Mutex;
 use monitor::{SystemMonitor, SystemMetrics};
@@ -107,6 +108,26 @@ fn show_metrics_window(app: AppHandle) -> Result<(), String> {
     Ok(())
 }
 
+#[tauri::command]
+fn show_settings_window(app: AppHandle) -> Result<(), String> {
+    if let Some(window) = app.get_webview_window("settings") {
+        window.show().map_err(|e| e.to_string())?;
+        window.set_focus().map_err(|e| e.to_string())?;
+    } else {
+        tauri::WebviewWindowBuilder::new(
+            &app,
+            "settings",
+            tauri::WebviewUrl::App("index.html?view=settings".into())
+        )
+        .title("Glanus Agent - Settings")
+        .inner_size(600.0, 500.0)
+        .resizable(true)
+        .build()
+        .map_err(|e| e.to_string())?;
+    }
+    Ok(())
+}
+
 fn setup_system_tray(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
     // Build menu
     let show_metrics = MenuItemBuilder::with_id("show_metrics", "View Metrics").build(app)?;
@@ -133,8 +154,9 @@ fn setup_system_tray(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> 
                     }
                 }
                 "settings" => {
-                    // TODO: Open settings window
-                    println!("Settings clicked");
+                    if let Err(e) = show_settings_window(app.clone()) {
+                        eprintln!("Failed to show settings window: {}", e);
+                    }
                 }
                 "quit" => {
                     app.exit(0);
@@ -180,9 +202,14 @@ fn start_heartbeat_loop(config: AgentConfig) {
     });
 }
 
-/// Start software inventory sync loop in background (every 6 hours)
+/// Start software inventory sync loop in background
 fn start_inventory_sync(config: AgentConfig) {
     use inventory::InventoryManager;
+
+    if !config.inventory.enabled {
+        log::info!("Software inventory sync disabled");
+        return;
+    }
 
     tokio::spawn(async move {
         // Wait for registration
@@ -195,13 +222,48 @@ fn start_inventory_sync(config: AgentConfig) {
 
         let manager = InventoryManager::new(config.server.api_url.clone());
 
-        // Sync once immediately, then loop every 6 hours
+        // Sync once immediately, then loop at configured interval
         if let Err(e) = manager.sync_software().await {
             log::error!("Initial software inventory sync failed: {}", e);
         }
 
-        if let Err(e) = manager.start_loop(6 * 3600).await {
+        if let Err(e) = manager.start_loop(config.inventory.sync_interval).await {
             log::error!("Inventory sync loop failed: {}", e);
+        }
+    });
+}
+
+/// Start network discovery loop in background
+fn start_discovery_loop(config: AgentConfig) {
+    use discovery::DiscoveryManager;
+
+    if !config.discovery.enabled {
+        log::info!("Network discovery disabled");
+        return;
+    }
+
+    tokio::spawn(async move {
+        // Wait for registration
+        while !RegistrationManager::is_registered(&config) {
+            tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
+        }
+
+        // Initial delay: wait 3 minutes after startup before first scan
+        tokio::time::sleep(tokio::time::Duration::from_secs(180)).await;
+
+        let manager = DiscoveryManager::new(
+            config.server.api_url.clone(),
+            config.discovery.clone(),
+        );
+
+        // Run initial scan
+        if let Err(e) = manager.run_scan().await {
+            log::error!("Initial discovery scan failed: {}", e);
+        }
+
+        // Start loop
+        if let Err(e) = manager.start_loop().await {
+            log::error!("Discovery loop failed: {}", e);
         }
     });
 }
@@ -250,6 +312,7 @@ pub fn run() {
     // Start background tasks
     start_heartbeat_loop(config.clone());
     start_inventory_sync(config.clone());
+    start_discovery_loop(config.clone());
     start_update_checker(config.clone());
 
     tauri::Builder::default()
@@ -280,6 +343,7 @@ pub fn run() {
             is_registered,
             get_auth_token,
             show_metrics_window,
+            show_settings_window,
             input::simulate_input
         ])
         .run(tauri::generate_context!())
