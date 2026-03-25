@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { requireAuth, requireWorkspaceAccess, withErrorHandler } from '@/lib/api/withAuth';
+import { requireAuth, requireWorkspaceRole, withErrorHandler } from '@/lib/api/withAuth';
 import { apiSuccess, apiError } from '@/lib/api/response';
 import { prisma } from '@/lib/db';
 
@@ -9,7 +9,7 @@ type RouteContext = { params: Promise<{ id: string }> };
 export const POST = withErrorHandler(async (_request: NextRequest, { params }: RouteContext) => {
     const { id: workspaceId } = await params;
     const user = await requireAuth();
-    await requireWorkspaceAccess(workspaceId, user.id, 'MEMBER');
+    await requireWorkspaceRole(workspaceId, user.id, 'MEMBER');
 
     // Find all online agents in this workspace
     const agents = await prisma.agentConnection.findMany({
