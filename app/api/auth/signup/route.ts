@@ -18,7 +18,7 @@ const signupSchema = z.object({
 });
 
 export const POST = withErrorHandler(async (request: NextRequest) => {
-    const rateLimitResponse = await withRateLimit(request, 'strict-api');
+    const rateLimitResponse = await withRateLimit(request, 'api');
     if (rateLimitResponse) return rateLimitResponse;
 
     const body = await request.json();
