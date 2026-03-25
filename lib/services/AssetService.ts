@@ -158,7 +158,7 @@ export class AssetService {
         const asset = await prisma.asset.create({
             data: {
                 workspaceId,
-                assetType: (data.assetType || 'PHYSICAL') as AssetType,
+                assetType: ((data.assetType === 'DYNAMIC' ? 'DIGITAL' : data.assetType) || 'PHYSICAL') as AssetType,
                 name: data.name,
                 categoryId: data.categoryId,
                 manufacturer: data.manufacturer || null,

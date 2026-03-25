@@ -28,7 +28,7 @@ export class AssetAnalyticsService {
         }
 
         const asset = await prisma.asset.findFirst({
-            where: { id: assetId, workspace: { members: { some: { userId } } } },
+            where: { id: assetId, deletedAt: null, workspace: { members: { some: { userId } } } },
         });
         if (!asset) throw new ApiError(404, 'Asset not found or access denied');
 
@@ -45,8 +45,8 @@ export class AssetAnalyticsService {
      * for an asset. Returns the asset, category, fields with current values, and available actions.
      */
     static async getSchema(assetId: string) {
-        const asset = await prisma.asset.findUnique({
-            where: { id: assetId },
+        const asset = await prisma.asset.findFirst({
+            where: { id: assetId, deletedAt: null },
             include: {
                 category: {
                     select: {

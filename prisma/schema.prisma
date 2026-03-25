@@ -583,7 +583,7 @@ model RemoteSession {
   iceCandidates Json? // Array of ICE candidates
 
   // Connection Quality
-  quality        String? @default("high")
+  quality        String? @default("HIGH")
   averageLatency Float?
   averageFPS     Float?
   metadata       Json?

@@ -48,7 +48,7 @@ export class AssetBulkService {
      */
     static async bulkUpdate(assetIds: string[], userId: string, data: { status?: string; location?: string }) {
         const assets = await prisma.asset.findMany({
-            where: { id: { in: assetIds }, workspace: { members: { some: { userId } } } },
+            where: { id: { in: assetIds }, deletedAt: null, workspace: { members: { some: { userId } } } },
         });
         if (assets.length !== assetIds.length) {
             throw new ApiError(404, 'One or more assets not found or access denied');
@@ -59,7 +59,7 @@ export class AssetBulkService {
         if (data.location) updateData.location = data.location;
 
         const result = await prisma.asset.updateMany({
-            where: { id: { in: assetIds } },
+            where: { id: { in: assetIds }, deletedAt: null },
             data: updateData as Parameters<typeof prisma.asset.updateMany>[0]['data'],
         });
 

@@ -16,7 +16,7 @@ export const createRemoteSessionSchema = z.object({
 export const updateRemoteSessionSchema = z.object({
     quality: z.enum(['LOW', 'MEDIUM', 'HIGH', 'ULTRA']).optional(),
     notes: z.string().max(1000).optional(),
-    status: z.enum(['ACTIVE', 'ENDED', 'INTERRUPTED']).optional(),
+    status: z.enum(['ACTIVE', 'ENDED', 'FAILED']).optional(),
     averageLatency: z.number().nonnegative().optional(),
     averageFPS: z.number().nonnegative().optional(),
     metadata: z.record(z.unknown()).optional(),
@@ -29,7 +29,7 @@ export const updateRemoteSessionSchema = z.object({
  * Remote session query parameters
  */
 export const remoteSessionQuerySchema = z.object({
-    status: z.enum(['ACTIVE', 'ENDED', 'INTERRUPTED']).optional(),
+    status: z.enum(['ACTIVE', 'ENDED', 'FAILED']).optional(),
     assetId: z.string().uuid().optional(),
     userId: z.string().uuid().optional(),
     page: z.coerce.number().int().positive().default(1),

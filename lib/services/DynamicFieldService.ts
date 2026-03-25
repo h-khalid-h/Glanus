@@ -163,9 +163,9 @@ export class DynamicFieldService {
                 if (typeof value !== 'string') {
                     return { valid: false, error: 'Asset reference must be a string (asset ID)' };
                 }
-                // Verify asset exists
-                const asset = await prisma.asset.findUnique({
-                    where: { id: value as string },
+                // Verify asset exists and is not soft-deleted
+                const asset = await prisma.asset.findFirst({
+                    where: { id: value as string, deletedAt: null },
                     select: { id: true, categoryId: true },
                 });
                 if (!asset) {

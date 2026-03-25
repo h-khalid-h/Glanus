@@ -1,6 +1,7 @@
 'use client';
 import { csrfFetch } from '@/lib/api/csrfFetch';
 import { useToast } from '@/lib/toast';
+import { PageSpinner } from '@/components/ui/Spinner';
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -80,11 +81,7 @@ export default function FieldsPage({ params }: { params: Promise<{ id: string }>
     };
 
     if (loading) {
-        return (
-            <div className="container mx-auto px-4 py-8">
-                <p className="text-slate-400">Loading fields...</p>
-            </div>
-        );
+        return <PageSpinner text="Loading fields..." />;
     }
 
     if (error) {
@@ -141,8 +138,8 @@ export default function FieldsPage({ params }: { params: Promise<{ id: string }>
                     </Link>
                 </div>
             ) : (
-                <div className="rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm overflow-hidden">
-                    <table className="w-full">
+                <div className="rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm overflow-hidden overflow-x-auto">
+                    <table className="w-full min-w-[640px]">
                         <thead className="bg-slate-900/30 border-b border-slate-800">
                             <tr>
                                 <th className="w-12 px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">

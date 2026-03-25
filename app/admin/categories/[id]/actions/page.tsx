@@ -1,6 +1,7 @@
 'use client';
 import { csrfFetch } from '@/lib/api/csrfFetch';
 import { useToast } from '@/lib/toast';
+import { PageSpinner } from '@/components/ui/Spinner';
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -77,7 +78,7 @@ export default function ActionsPage({ params }: { params: Promise<{ id: string }
         }
     };
 
-    if (loading) return <div className="container mx-auto px-4 py-8"><p className="text-slate-400">Loading actions...</p></div>;
+    if (loading) return <PageSpinner text="Loading actions..." />;
     if (error) return <div className="container mx-auto px-4 py-8"><p className="text-health-critical">Error: {error}</p></div>;
 
     return (

@@ -514,7 +514,7 @@ export default function AssetsPage() {
                 </div>
             ) : (
                 <>
-                    <div className="card overflow-hidden">
+                    <div className="card overflow-hidden overflow-x-auto">
                         <table className="min-w-full divide-y divide-border">
                             <thead className="bg-muted/50">
                                 <tr>
