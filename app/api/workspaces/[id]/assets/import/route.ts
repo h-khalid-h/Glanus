@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { requireAuth, requireWorkspaceAccess, withErrorHandler } from '@/lib/api/withAuth';
 import { apiSuccess, apiError } from '@/lib/api/response';
 import { AssetBulkService } from '@/lib/services/AssetBulkService';
+import { withRateLimit } from '@/lib/security/rateLimit';
 
 /**
  * POST /api/workspaces/[id]/assets/import
@@ -12,6 +13,9 @@ export const POST = withErrorHandler(async (
     request: NextRequest,
     context: { params: Promise<{ id: string }> }
 ) => {
+    const rateLimited = await withRateLimit(request, 'strict-api');
+    if (rateLimited) return rateLimited;
+
     const params = await context.params;
     const user = await requireAuth();
     await requireWorkspaceAccess(params.id, user.id);

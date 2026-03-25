@@ -1,6 +1,7 @@
 import { apiSuccess, apiError, apiDeleted } from '@/lib/api/response';
 import { NextRequest } from 'next/server';
 import { requireAuth, requireWorkspaceAccess, requireWorkspaceRole, withErrorHandler } from '@/lib/api/withAuth';
+import { withRateLimit } from '@/lib/security/rateLimit';
 import { z } from 'zod';
 import { WorkspaceAlertService } from '@/lib/services/WorkspaceAlertService';
 
@@ -12,9 +13,12 @@ const webhookSchema = z.object({
 
 // GET /api/workspaces/[id]/alerts/webhook
 export const GET = withErrorHandler(async (
-    _request: NextRequest,
+    request: NextRequest,
     context: { params: Promise<{ id: string }> }
 ) => {
+    const rateLimited = await withRateLimit(request, 'api');
+    if (rateLimited) return rateLimited;
+
     const { id: workspaceId } = await context.params;
     const user = await requireAuth();
     await requireWorkspaceAccess(workspaceId, user.id);
@@ -27,6 +31,9 @@ export const POST = withErrorHandler(async (
     request: NextRequest,
     context: { params: Promise<{ id: string }> }
 ) => {
+    const rateLimited = await withRateLimit(request, 'strict-api');
+    if (rateLimited) return rateLimited;
+
     const { id: workspaceId } = await context.params;
     const user = await requireAuth();
     await requireWorkspaceRole(workspaceId, user.id, 'ADMIN');
@@ -41,6 +48,9 @@ export const DELETE = withErrorHandler(async (
     request: NextRequest,
     context: { params: Promise<{ id: string }> }
 ) => {
+    const rateLimited = await withRateLimit(request, 'strict-api');
+    if (rateLimited) return rateLimited;
+
     const { id: workspaceId } = await context.params;
     const user = await requireAuth();
     await requireWorkspaceRole(workspaceId, user.id, 'ADMIN');

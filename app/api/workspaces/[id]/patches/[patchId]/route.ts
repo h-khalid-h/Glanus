@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { requireAuth, requireWorkspaceRole, withErrorHandler } from '@/lib/api/withAuth';
 import { apiSuccess, apiDeleted } from '@/lib/api/response';
 import { PatchService, PatchPolicyUpdateInput } from '@/lib/services/PatchService';
+import { withRateLimit } from '@/lib/security/rateLimit';
 import { z } from 'zod';
 
 const updatePatchPolicySchema = z.object({
@@ -13,7 +14,10 @@ const updatePatchPolicySchema = z.object({
 
 type RouteContext = { params: Promise<{ id: string; patchId: string }> };
 
-export const DELETE = withErrorHandler(async (_request: NextRequest, { params }: RouteContext) => {
+export const DELETE = withErrorHandler(async (request: NextRequest, { params }: RouteContext) => {
+    const rateLimited = await withRateLimit(request, 'strict-api');
+    if (rateLimited) return rateLimited;
+
     const { id: workspaceId, patchId } = await params;
     const user = await requireAuth();
     await requireWorkspaceRole(workspaceId, user.id, 'ADMIN');
@@ -22,6 +26,9 @@ export const DELETE = withErrorHandler(async (_request: NextRequest, { params }:
 });
 
 export const PATCH = withErrorHandler(async (request: NextRequest, { params }: RouteContext) => {
+    const rateLimited = await withRateLimit(request, 'strict-api');
+    if (rateLimited) return rateLimited;
+
     const { id: workspaceId, patchId } = await params;
     const user = await requireAuth();
     await requireWorkspaceRole(workspaceId, user.id, 'ADMIN');

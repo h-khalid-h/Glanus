@@ -2,10 +2,14 @@ import { NextRequest } from 'next/server';
 import { requireAuth, requireWorkspaceRole, withErrorHandler } from '@/lib/api/withAuth';
 import { apiSuccess } from '@/lib/api/response';
 import { ZtnaService, createZtnaSchema } from '@/lib/services/ZtnaService';
+import { withRateLimit } from '@/lib/security/rateLimit';
 
 type RouteContext = { params: Promise<{ id: string }> };
 
 export const GET = withErrorHandler(async (request: NextRequest, { params }: RouteContext) => {
+    const rateLimited = await withRateLimit(request, 'api');
+    if (rateLimited) return rateLimited;
+
     const { id: workspaceId } = await params;
     const user = await requireAuth();
     await requireWorkspaceRole(workspaceId, user.id, 'ADMIN', request);
@@ -14,6 +18,9 @@ export const GET = withErrorHandler(async (request: NextRequest, { params }: Rou
 });
 
 export const POST = withErrorHandler(async (request: NextRequest, { params }: RouteContext) => {
+    const rateLimited = await withRateLimit(request, 'strict-api');
+    if (rateLimited) return rateLimited;
+
     const { id: workspaceId } = await params;
     const user = await requireAuth();
     await requireWorkspaceRole(workspaceId, user.id, 'ADMIN', request);

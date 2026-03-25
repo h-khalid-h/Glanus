@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { requireAuth, requireWorkspaceRole, withErrorHandler } from '@/lib/api/withAuth';
 import { apiSuccess } from '@/lib/api/response';
 import { ScriptService } from '@/lib/services/ScriptService';
+import { withRateLimit } from '@/lib/security/rateLimit';
 
 /**
  * GET /api/workspaces/[id]/scripts/[scriptId]
@@ -11,6 +12,9 @@ export const GET = withErrorHandler(async (
     request: NextRequest,
     context: { params: Promise<{ id: string; scriptId: string }> },
 ) => {
+    const rateLimited = await withRateLimit(request, 'api');
+    if (rateLimited) return rateLimited;
+
     const params = await context.params;
     const user = await requireAuth();
     await requireWorkspaceRole(params.id, user.id, 'MEMBER');
@@ -26,6 +30,9 @@ export const DELETE = withErrorHandler(async (
     request: NextRequest,
     context: { params: Promise<{ id: string; scriptId: string }> },
 ) => {
+    const rateLimited = await withRateLimit(request, 'strict-api');
+    if (rateLimited) return rateLimited;
+
     const params = await context.params;
     const user = await requireAuth();
     await requireWorkspaceRole(params.id, user.id, 'ADMIN');

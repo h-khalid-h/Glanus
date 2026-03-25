@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { requireAuth, requireWorkspaceRole, withErrorHandler } from '@/lib/api/withAuth';
 import { apiSuccess } from '@/lib/api/response';
 import { ScriptService, createScriptSchema } from '@/lib/services/ScriptService';
+import { withRateLimit } from '@/lib/security/rateLimit';
 
 /**
  * GET /api/workspaces/[id]/scripts
@@ -11,6 +12,9 @@ export const GET = withErrorHandler(async (
     request: NextRequest,
     context: { params: Promise<{ id: string }> }
 ) => {
+    const rateLimited = await withRateLimit(request, 'api');
+    if (rateLimited) return rateLimited;
+
     const params = await context.params;
     const user = await requireAuth();
     await requireWorkspaceRole(params.id, user.id, 'MEMBER');
@@ -30,9 +34,12 @@ export const POST = withErrorHandler(async (
     request: NextRequest,
     context: { params: Promise<{ id: string }> }
 ) => {
+    const rateLimited = await withRateLimit(request, 'strict-api');
+    if (rateLimited) return rateLimited;
+
     const params = await context.params;
     const user = await requireAuth();
-    // Only IT_STAFF level (ADMIN/OWNER roles usually) should author global scripts 
+    // Only IT_STAFF level (ADMIN/OWNER roles usually) should author global scripts
     await requireWorkspaceRole(params.id, user.id, 'ADMIN');
 
     const data = createScriptSchema.parse(await request.json());

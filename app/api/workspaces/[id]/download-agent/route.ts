@@ -3,6 +3,7 @@ import { NextRequest } from 'next/server';
 import { requireAuth, requireWorkspaceAccess, withErrorHandler } from '@/lib/api/withAuth';
 import { downloadAgentSchema } from '@/lib/schemas/workspace.schemas';
 import { storePreAuthToken } from '@/lib/security/preauth-store';
+import { withRateLimit } from '@/lib/security/rateLimit';
 import crypto from 'crypto';
 
 // POST - Generate download link with embedded token
@@ -10,6 +11,9 @@ export const POST = withErrorHandler(async (
     request: NextRequest,
     context: { params: Promise<{ id: string }> }
 ) => {
+    const rateLimited = await withRateLimit(request, 'strict-api');
+    if (rateLimited) return rateLimited;
+
     const { id: workspaceId } = await context.params;
     const user = await requireAuth();
     await requireWorkspaceAccess(workspaceId, user.id);

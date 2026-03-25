@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { apiSuccess } from '@/lib/api/response';
 import { getRules, saveRule, AutomationRule } from '@/lib/reflex/automation';
 import { requireAuth, requireWorkspaceRole, withErrorHandler } from '@/lib/api/withAuth';
+import { withRateLimit } from '@/lib/security/rateLimit';
 
 const triggerSchema = z.object({
     type: z.enum(['metric_threshold', 'alert_fired', 'pattern_detected', 'schedule']),
@@ -39,6 +40,9 @@ type RouteContext = { params: Promise<{ id: string }> };
  * GET /api/workspaces/[id]/reflex/rules — List automation rules for a workspace.
  */
 export const GET = withErrorHandler(async (request: NextRequest, context: RouteContext) => {
+    const rateLimited = await withRateLimit(request, 'api');
+    if (rateLimited) return rateLimited;
+
     const user = await requireAuth();
     const { id: workspaceId } = await context.params;
     await requireWorkspaceRole(workspaceId, user.id, 'MEMBER', request);
@@ -50,6 +54,9 @@ export const GET = withErrorHandler(async (request: NextRequest, context: RouteC
  * POST /api/workspaces/[id]/reflex/rules — Create or update an automation rule.
  */
 export const POST = withErrorHandler(async (request: NextRequest, context: RouteContext) => {
+    const rateLimited = await withRateLimit(request, 'strict-api');
+    if (rateLimited) return rateLimited;
+
     const user = await requireAuth();
     const { id: workspaceId } = await context.params;
     await requireWorkspaceRole(workspaceId, user.id, 'ADMIN', request);
