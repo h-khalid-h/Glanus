@@ -59,7 +59,4 @@ EXPOSE 8055
 ENV PORT=8055
 ENV HOSTNAME="0.0.0.0"
 
-HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
-    CMD sh -c "wget --no-verbose --tries=1 --spider http://localhost:\${PORT:-3000}/api/health || exit 1"
-
 CMD ["./docker-entrypoint.sh"]
