@@ -95,8 +95,13 @@ function isPublicPath(pathname: string): boolean {
     // Public page routes (exact match)
     if (PUBLIC_PAGE_PATHS.includes(pathname)) return true;
 
-    // Public page routes that are prefix-based (e.g. /partners/[id], /invitations/[token])
-    if (pathname.startsWith('/partners/') || pathname.startsWith('/invitations/')) return true;
+    // Public page routes that are prefix-based (e.g. /invitations/[token])
+    if (pathname.startsWith('/invitations/')) return true;
+
+    // Public partner routes: /partners/signup and /partners/[uuid] (profiles)
+    // Private: /partners/me, /partners/dashboard, /partners/earnings, /partners/certification
+    if (pathname === '/partners/signup') return true;
+    if (pathname.startsWith('/partners/') && /^\/partners\/[0-9a-f-]{36}$/.test(pathname)) return true;
 
     // Public API routes
     if (PUBLIC_API_PATHS.some(path =>
