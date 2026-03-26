@@ -111,6 +111,7 @@ export class RemoteSessionService {
         const asset = await prisma.asset.findFirst({
             where: {
                 id: input.assetId,
+                deletedAt: null,
                 workspace: { members: { some: { userId: input.userId } } },
             },
         });

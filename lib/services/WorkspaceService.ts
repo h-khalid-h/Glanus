@@ -86,6 +86,7 @@ export class WorkspaceService {
     static async listWorkspaces(userId: string) {
         const workspaces = await prisma.workspace.findMany({
             where: {
+                deletedAt: null,
                 OR: [
                     { ownerId: userId },
                     { members: { some: { userId } } },

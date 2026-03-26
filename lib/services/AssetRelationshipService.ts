@@ -18,7 +18,7 @@ export class AssetRelationshipService {
         direction: 'parent' | 'child' | 'both',
         relationshipType?: string | null
     ) {
-        const asset = await prisma.asset.findUnique({ where: { id: assetId }, select: { id: true, name: true } });
+        const asset = await prisma.asset.findFirst({ where: { id: assetId, deletedAt: null }, select: { id: true, name: true } });
         if (!asset) throw new ApiError(404, 'Asset not found');
 
         const filter: Prisma.AssetRelationshipWhereInput = {

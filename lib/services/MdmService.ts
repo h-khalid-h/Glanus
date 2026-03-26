@@ -154,7 +154,7 @@ export class MdmService {
 
         // Validate all asset IDs belong to this workspace
         const validAssets = await prisma.asset.findMany({
-            where: { id: { in: data.assetIds }, workspaceId },
+            where: { id: { in: data.assetIds }, workspaceId, deletedAt: null },
             select: { id: true },
         });
         const validAssetIds = new Set(validAssets.map(a => a.id));

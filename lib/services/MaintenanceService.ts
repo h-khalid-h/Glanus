@@ -69,7 +69,7 @@ export class MaintenanceService {
     }
 
     static async createMaintenanceWindow(workspaceId: string, userId: string, data: MaintenanceCreateInput) {
-        const asset = await prisma.asset.findFirst({ where: { id: data.assetId, workspaceId } });
+        const asset = await prisma.asset.findFirst({ where: { id: data.assetId, workspaceId, deletedAt: null } });
         if (!asset) throw new ApiError(400, 'Asset not found in this workspace.');
 
         if (new Date(data.scheduledEnd) <= new Date(data.scheduledStart)) {

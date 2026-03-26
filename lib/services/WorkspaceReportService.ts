@@ -53,7 +53,7 @@ export class WorkspaceReportService {
 
         if (type === 'asset_inventory') {
             const assets = await prisma.asset.findMany({
-                where: { workspaceId },
+                where: { workspaceId, deletedAt: null },
                 select: {
                     id: true, name: true, assetType: true, status: true,
                     serialNumber: true, location: true, createdAt: true,

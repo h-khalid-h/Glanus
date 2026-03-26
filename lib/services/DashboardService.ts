@@ -50,7 +50,7 @@ export class DashboardService {
     static async getCrossWorkspaceInsights(userId: string) {
         const [memberships, ownedWorkspaces] = await Promise.all([
             prisma.workspaceMember.findMany({ where: { userId }, select: { workspaceId: true } }),
-            prisma.workspace.findMany({ where: { ownerId: userId }, select: { id: true } }),
+            prisma.workspace.findMany({ where: { ownerId: userId, deletedAt: null }, select: { id: true } }),
         ]);
 
         const workspaceIds = [...new Set([

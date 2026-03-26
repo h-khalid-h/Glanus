@@ -19,8 +19,8 @@ export class AssetActionService {
      * List all action definitions available for an asset (from its category).
      */
     static async listActions(assetId: string) {
-        const asset = await prisma.asset.findUnique({
-            where: { id: assetId },
+        const asset = await prisma.asset.findFirst({
+            where: { id: assetId, deletedAt: null },
             include: {
                 category: {
                     include: { actionDefinitions: { orderBy: { sortOrder: 'asc' } } },
@@ -51,8 +51,8 @@ export class AssetActionService {
      * Fetch a specific action definition by its slug (and all sibling actions for context).
      */
     static async getActionBySlug(assetId: string, actionSlug: string) {
-        const asset = await prisma.asset.findUnique({
-            where: { id: assetId }, select: { id: true, name: true, categoryId: true },
+        const asset = await prisma.asset.findFirst({
+            where: { id: assetId, deletedAt: null }, select: { id: true, name: true, categoryId: true },
         });
         if (!asset) throw new ApiError(404, 'Asset not found');
         if (!asset.categoryId) throw new ApiError(400, 'Asset does not have a dynamic category');
@@ -82,8 +82,8 @@ export class AssetActionService {
         actionSlug: string,
         data: { parameters?: Record<string, unknown>; confirm?: boolean },
     ) {
-        const asset = await prisma.asset.findUnique({
-            where: { id: assetId }, select: { id: true, name: true, categoryId: true },
+        const asset = await prisma.asset.findFirst({
+            where: { id: assetId, deletedAt: null }, select: { id: true, name: true, categoryId: true },
         });
         if (!asset) throw new ApiError(404, 'Asset not found');
         if (!asset.categoryId) throw new ApiError(400, 'Asset does not have a dynamic category');

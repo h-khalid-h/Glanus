@@ -91,7 +91,7 @@ export class TicketService {
         let asset = null;
         if (data.assetId) {
             asset = await prisma.asset.findFirst({
-                where: { id: data.assetId, workspaceId },
+                where: { id: data.assetId, workspaceId, deletedAt: null },
                 select: { id: true }
             });
             if (!asset) throw new ApiError(400, 'Invalid asset selection');
