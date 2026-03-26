@@ -32,9 +32,10 @@ export class WorkspaceSubFeatureService {
         };
 
         const queries: Promise<void>[] = [];
-        if (includeAssets) queries.push(prisma.asset.findMany({ where: { workspaceId }, include: { category: { select: { name: true, icon: true } }, assignedTo: { select: { name: true, email: true } } }, orderBy: { createdAt: 'desc' } }).then(assets => { exportData.assets = assets; }));
-        if (includeAgents) queries.push(prisma.agentConnection.findMany({ where: { workspaceId }, include: { asset: { select: { name: true } } }, orderBy: { lastSeen: 'desc' } }).then(agents => { exportData.agents = agents; }));
-        if (includeAlerts) queries.push(prisma.alertRule.findMany({ where: { workspaceId }, orderBy: { createdAt: 'desc' } }).then(alerts => { exportData.alertRules = alerts; }));
+        const EXPORT_LIMIT = 5000;
+        if (includeAssets) queries.push(prisma.asset.findMany({ where: { workspaceId, deletedAt: null }, include: { category: { select: { name: true, icon: true } }, assignedTo: { select: { name: true, email: true } } }, orderBy: { createdAt: 'desc' }, take: EXPORT_LIMIT }).then(assets => { exportData.assets = assets; }));
+        if (includeAgents) queries.push(prisma.agentConnection.findMany({ where: { workspaceId }, include: { asset: { select: { name: true } } }, orderBy: { lastSeen: 'desc' }, take: EXPORT_LIMIT }).then(agents => { exportData.agents = agents; }));
+        if (includeAlerts) queries.push(prisma.alertRule.findMany({ where: { workspaceId }, orderBy: { createdAt: 'desc' }, take: EXPORT_LIMIT }).then(alerts => { exportData.alertRules = alerts; }));
         if (includeAudit) queries.push(prisma.auditLog.findMany({ where: { workspaceId }, include: { user: { select: { name: true, email: true } } }, orderBy: { createdAt: 'desc' }, take: 1000 }).then(logs => { exportData.auditLogs = logs; }));
 
         await Promise.all(queries);

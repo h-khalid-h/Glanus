@@ -51,37 +51,39 @@ export class InvitationService {
         const { role } = data;
         const email = data.email.toLowerCase().trim();
 
-        const existingUser = await prisma.user.findUnique({ where: { email } });
-        if (existingUser) {
-            const existingMembership = await prisma.workspaceMember.findUnique({
-                where: { workspaceId_userId: { workspaceId, userId: existingUser.id } },
-            });
-            if (existingMembership) {
-                throw new ApiError(409, 'User is already a member of this workspace');
+        const invitation = await prisma.$transaction(async (tx) => {
+            const existingUser = await tx.user.findUnique({ where: { email } });
+            if (existingUser) {
+                const existingMembership = await tx.workspaceMember.findUnique({
+                    where: { workspaceId_userId: { workspaceId, userId: existingUser.id } },
+                });
+                if (existingMembership) {
+                    throw new ApiError(409, 'User is already a member of this workspace');
+                }
             }
-        }
 
-        const existingInvitation = await prisma.workspaceInvitation.findFirst({
-            where: { workspaceId, email, status: 'PENDING' },
-        });
-        if (existingInvitation) {
-            throw new ApiError(409, 'Invitation already sent to this email');
-        }
+            const existingInvitation = await tx.workspaceInvitation.findFirst({
+                where: { workspaceId, email, status: 'PENDING' },
+            });
+            if (existingInvitation) {
+                throw new ApiError(409, 'Invitation already sent to this email');
+            }
 
-        const token = randomBytes(32).toString('hex');
-        const expiresAt = new Date();
-        expiresAt.setDate(expiresAt.getDate() + 7);
+            const token = randomBytes(32).toString('hex');
+            const expiresAt = new Date();
+            expiresAt.setDate(expiresAt.getDate() + 7);
 
-        const invitation = await prisma.workspaceInvitation.create({
-            data: { workspaceId, email, role, token, invitedBy: userId, expiresAt },
-            include: {
-                workspace: { select: { name: true } },
-                inviter: { select: { name: true, email: true } },
-            },
+            return tx.workspaceInvitation.create({
+                data: { workspaceId, email, role, token, invitedBy: userId, expiresAt },
+                include: {
+                    workspace: { select: { name: true } },
+                    inviter: { select: { name: true, email: true } },
+                },
+            });
         });
 
         const inviterName = invitation.inviter?.name || invitation.inviter?.email || 'Someone';
-        const inviteUrl = `${process.env.NEXTAUTH_URL}/invitations/${token}`;
+        const inviteUrl = `${process.env.NEXTAUTH_URL}/invitations/${invitation.token}`;
         sendEmail({
             to: email,
             subject: `You've been invited to join ${workspaceName} on Glanus`,

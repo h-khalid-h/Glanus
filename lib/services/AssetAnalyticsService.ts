@@ -99,6 +99,7 @@ export class AssetAnalyticsService {
                 category: { select: { name: true } },
             },
             orderBy: { createdAt: 'desc' },
+            take: 10000,
         });
 
         const headers = [
