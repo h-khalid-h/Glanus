@@ -74,7 +74,7 @@ export class AssetBulkService {
             where: { id: { in: assetIds }, deletedAt: null, workspace: { members: { some: { userId } } } },
         });
         if (assets.length !== assetIds.length) {
-            throw new ApiError(400, 'One or more assets not found or access denied');
+            throw new ApiError(404, 'One or more assets not found or access denied');
         }
 
         // Verify assignee is a member of the workspace these assets belong to

@@ -15,7 +15,7 @@ export const GET = withErrorHandler(async (request: NextRequest, { params }: Rou
     await requireWorkspaceAccess(workspaceId, user.id);
 
     const url = new URL(request.url);
-    const limit = Math.min(200, Math.max(1, parseInt(url.searchParams.get('limit') || '100')));
+    const limit = Math.min(200, Math.max(1, parseInt(url.searchParams.get('limit') || '100', 10) || 100));
 
     const notifications = await WorkspaceNotificationService.getNotifications(workspaceId, limit);
     return apiSuccess({ notifications });

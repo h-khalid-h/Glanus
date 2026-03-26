@@ -18,7 +18,7 @@ export const GET = withErrorHandler(async (
 
     const url = new URL(request.url);
     const result = await WorkspaceService.getActivity(workspaceId, {
-        limit: Math.min(parseInt(url.searchParams.get('limit') || '50') || 50, 200),
+        limit: Math.min(parseInt(url.searchParams.get('limit') || '50', 10) || 50, 200),
         cursor: url.searchParams.get('cursor') || undefined,
         types: url.searchParams.get('types'),
     });

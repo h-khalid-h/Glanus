@@ -26,7 +26,7 @@ export const GET = withErrorHandler(async (
     await requireWorkspaceRole(params.id, user.id, 'MEMBER');
 
     const url = new URL(request.url);
-    const limit = Math.min(parseInt(url.searchParams.get('limit') || '50') || 50, 200);
+    const limit = Math.min(parseInt(url.searchParams.get('limit') || '50', 10) || 50, 200);
     const status = url.searchParams.get('status');
     const scriptId = url.searchParams.get('scriptId');
     const agentId = url.searchParams.get('agentId');

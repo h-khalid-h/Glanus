@@ -20,7 +20,7 @@ export const GET = withErrorHandler(async (request: NextRequest, { params }: Rou
 
     const url = new URL(request.url);
     const q = url.searchParams.get('q') || '';
-    const limit = parseInt(url.searchParams.get('limit') || '5');
+    const limit = Math.min(parseInt(url.searchParams.get('limit') || '5', 10) || 5, 50);
 
     const result = await WorkspaceSearchService.search(workspaceId, q, limit);
     return apiSuccess(result);

@@ -33,7 +33,7 @@ interface Pagination {
     total: number;
     page: number;
     limit: number;
-    pages: number;
+    totalPages: number;
 }
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; icon: typeof Wifi }> = {
@@ -275,7 +275,7 @@ export default function RemoteSessionsPage() {
             )}
 
             {/* Pagination */}
-            {pagination && pagination.pages > 1 && (
+            {pagination && pagination.totalPages > 1 && (
                 <div className="bg-surface-1 border border-border rounded-xl px-6 py-4 flex items-center justify-between">
                     <span className="text-sm text-muted-foreground">
                         Showing <span className="font-medium text-white">{((pagination.page - 1) * pagination.limit) + 1}</span> to{' '}
@@ -288,9 +288,9 @@ export default function RemoteSessionsPage() {
                             <ChevronLeft className="w-4 h-4" />
                         </button>
                         <span className="px-3 py-1.5 text-sm font-medium text-muted-foreground">
-                            {pagination.page} / {pagination.pages}
+                            {pagination.page} / {pagination.totalPages}
                         </span>
-                        <button onClick={() => setPage(p => Math.min(pagination.pages, p + 1))} disabled={pagination.page === pagination.pages}
+                        <button onClick={() => setPage(p => Math.min(pagination.totalPages, p + 1))} disabled={pagination.page === pagination.totalPages}
                             className="px-3 py-1.5 text-sm font-medium bg-surface-2 border border-border rounded-md hover:bg-surface-3 transition-colors disabled:opacity-50">
                             <ChevronRight className="w-4 h-4" />
                         </button>

@@ -99,7 +99,7 @@ export class RemoteSessionService {
             prisma.remoteSession.count({ where: where as any }), // eslint-disable-line @typescript-eslint/no-explicit-any
         ]);
 
-        return { sessions, pagination: { total, page, limit: safeLimit, pages: Math.ceil(total / safeLimit) } };
+        return { sessions, pagination: { total, page, limit: safeLimit, totalPages: Math.ceil(total / safeLimit) } };
     }
 
     // ========================================

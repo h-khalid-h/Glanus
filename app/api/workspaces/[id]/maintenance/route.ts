@@ -46,7 +46,7 @@ export const GET = withErrorHandler(async (request: NextRequest, { params }: Rou
         assetId: url.searchParams.get('assetId'),
         status: url.searchParams.get('status'),
         upcoming: url.searchParams.get('upcoming') === 'true',
-        limit: Math.min(parseInt(url.searchParams.get('limit') || '50') || 50, 200),
+        limit: Math.min(parseInt(url.searchParams.get('limit') || '50', 10) || 50, 200),
     });
     return apiSuccess({ windows });
 });
