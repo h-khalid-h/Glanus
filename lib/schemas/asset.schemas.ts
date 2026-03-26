@@ -4,7 +4,7 @@ import { z } from 'zod';
  * Base asset schema - shared validation rules
  */
 const baseAssetSchema = z.object({
-    assetType: z.enum(['PHYSICAL', 'DIGITAL', 'DYNAMIC']).default('DYNAMIC'),
+    assetType: z.enum(['PHYSICAL', 'DIGITAL', 'DYNAMIC']).default('DIGITAL'),
     name: z.string().min(1, 'Name is required').max(255),
     categoryId: z.string().min(1, 'Category ID is required'),
     manufacturer: z.string().max(255).optional(),

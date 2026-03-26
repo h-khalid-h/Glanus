@@ -43,7 +43,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
 
     const asset = await AssetService.createAsset(workspaceId, user.id, {
         ...data,
-        assetType: data.assetType ?? 'DYNAMIC',
+        assetType: data.assetType ?? 'DIGITAL',
     });
     return apiSuccess(asset, undefined, 201);
 });
