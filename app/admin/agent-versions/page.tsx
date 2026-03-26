@@ -97,10 +97,6 @@ export default async function AgentVersionsPage() {
                                                 Download
                                             </Button>
                                         </a>
-                                        {/* Future edit capability */}
-                                        <Link href={`/admin/agent-versions/${version.id}/edit`}>
-                                            <Button variant="secondary" size="sm">Edit</Button>
-                                        </Link>
                                     </div>
                                 </Card>
                             ))

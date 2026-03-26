@@ -222,8 +222,8 @@ export default function RemoteSessionsPage() {
                 <EmptyState icon="🖥️" title="No remote sessions" description="Remote sessions will appear here once you connect to agents." />
 
             ) : (
-                <div className="card overflow-hidden">
-                    <table className="min-w-full divide-y divide-border">
+                <div className="card overflow-hidden overflow-x-auto">
+                    <table className="min-w-[800px] divide-y divide-border">
                         <thead className="bg-muted/50">
                             <tr>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">

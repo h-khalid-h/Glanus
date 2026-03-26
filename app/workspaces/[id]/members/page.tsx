@@ -262,8 +262,8 @@ export default function WorkspaceMembersPage() {
             )}
 
             {/* Member List */}
-            <div className="bg-slate-900/50 border border-slate-800 rounded-xl overflow-hidden backdrop-blur-sm">
-                <table className="w-full text-left border-collapse">
+            <div className="bg-slate-900/50 border border-slate-800 rounded-xl overflow-hidden overflow-x-auto backdrop-blur-sm">
+                <table className="w-full min-w-[640px] text-left border-collapse">
                     <thead>
                         <tr className="border-b border-slate-800 text-xs font-semibold text-slate-400 tracking-wider">
                             <th className="px-6 py-4 pb-3 w-1/2">User</th>
