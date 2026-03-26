@@ -148,7 +148,7 @@ export class AlertEvaluator {
             case 'DISK': currentValue = agent.diskUsage; break;
         }
 
-        if (currentValue === null || currentValue <= threshold) return null;
+        if (currentValue === null || !Number.isFinite(currentValue) || currentValue <= threshold) return null;
 
         // Check duration via pre-loaded metrics (synchronous — no DB call)
         if (duration > 0) {
@@ -193,7 +193,7 @@ export class AlertEvaluator {
 
         if (agentMetrics.length === 0) {
             // No history — use live volatile value (Prism Deduplication dropped history < 5% variance)
-            return typeof currentVolatileValue === 'number' && currentVolatileValue > threshold;
+            return typeof currentVolatileValue === 'number' && Number.isFinite(currentVolatileValue) && currentVolatileValue > threshold;
         }
 
         const field = metric === 'CPU' ? 'cpuUsage' : metric === 'RAM' ? 'ramUsage' : 'diskUsage';
@@ -202,7 +202,7 @@ export class AlertEvaluator {
             return typeof val === 'number' && val > threshold;
         });
 
-        return sustainedHistory && typeof currentVolatileValue === 'number' && currentVolatileValue > threshold;
+        return sustainedHistory && typeof currentVolatileValue === 'number' && Number.isFinite(currentVolatileValue) && currentVolatileValue > threshold;
     }
 
     /**

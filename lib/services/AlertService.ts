@@ -14,7 +14,7 @@ export class AlertService {
         let aiErrors = 0;
 
         // Fetch all workspaces natively to ensure Oracle evaluates environments regardless of manual alert rules
-        const allWorkspaces = await prisma.workspace.findMany({ select: { id: true } });
+        const allWorkspaces = await prisma.workspace.findMany({ where: { deletedAt: null }, select: { id: true }, take: 1000 });
 
         for (const workspace of allWorkspaces) {
             try {
