@@ -220,7 +220,7 @@ model Workspace {
 
   // Owner
   ownerId String
-  owner   User   @relation("WorkspaceOwner", fields: [ownerId], references: [id])
+  owner   User   @relation("WorkspaceOwner", fields: [ownerId], references: [id], onDelete: Cascade)
 
   // Relations
   members      WorkspaceMember[]
@@ -288,7 +288,7 @@ model WorkspaceInvitation {
   token       String           @unique
   status      InvitationStatus @default(PENDING)
   invitedBy   String
-  inviter     User             @relation("SentInvitations", fields: [invitedBy], references: [id])
+  inviter     User             @relation("SentInvitations", fields: [invitedBy], references: [id], onDelete: Cascade)
 
   expiresAt  DateTime
   acceptedAt DateTime?
@@ -422,7 +422,7 @@ model Asset {
   tags          String[]
   qrCode        String?     @db.Text
   assignedToId  String?
-  assignedTo    User?       @relation(fields: [assignedToId], references: [id])
+  assignedTo    User?       @relation(fields: [assignedToId], references: [id], onDelete: SetNull)
 
   // Workspace (Glanus 2.0) — required for multi-tenant isolation
   workspaceId String
@@ -430,7 +430,7 @@ model Asset {
 
   // NEW: Dynamic category system
   categoryId String?
-  category   AssetCategory? @relation("AssetCategory", fields: [categoryId], references: [id])
+  category   AssetCategory? @relation("AssetCategory", fields: [categoryId], references: [id], onDelete: SetNull)
 
   // NEW: Dynamic fields and relationships
   fieldValues         AssetFieldValue[]      @relation("AssetFieldValues")
@@ -569,7 +569,7 @@ model RemoteSession {
   assetId   String
   asset     Asset         @relation(fields: [assetId], references: [id], onDelete: Cascade)
   userId    String
-  user      User          @relation(fields: [userId], references: [id])
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   status    SessionStatus @default(ACTIVE)
   startedAt DateTime      @default(now())
   endedAt   DateTime?
@@ -593,6 +593,7 @@ model RemoteSession {
 
   @@index([assetId])
   @@index([userId])
+  @@index([userId, createdAt])
   @@index([status])
   @@index([createdAt])
 }
@@ -678,14 +679,14 @@ model ActionQueueItem {
 model AuditLog {
   id           String     @id @default(cuid())
   workspaceId  String?
-  workspace    Workspace? @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspace    Workspace? @relation(fields: [workspaceId], references: [id], onDelete: SetNull)
   userId       String?
-  user         User?      @relation(fields: [userId], references: [id])
+  user         User?      @relation(fields: [userId], references: [id], onDelete: SetNull)
   action       String // e.g., "workspace.updated", "member.invited"
   resourceType String? // e.g., "asset", "member"
   resourceId   String?
   assetId      String?
-  asset        Asset?     @relation(fields: [assetId], references: [id])
+  asset        Asset?     @relation(fields: [assetId], references: [id], onDelete: SetNull)
   metadata     Json?
   details      Json       @default("{}")
   ipAddress    String?
@@ -695,6 +696,7 @@ model AuditLog {
   @@index([workspaceId, action, createdAt])
   @@index([userId])
   @@index([assetId])
+  @@index([assetId, createdAt])
   @@index([action])
 }
 
@@ -708,7 +710,7 @@ model AIInsight {
   metadata    Json?
 
   userId  String?
-  user    User?   @relation(fields: [userId], references: [id])
+  user    User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
   assetId String?
   asset   Asset?  @relation(fields: [assetId], references: [id], onDelete: Cascade)
 
@@ -723,6 +725,7 @@ model AIInsight {
   @@index([assetId])
   @@index([acknowledged])
   @@index([workspaceId])
+  @@index([userId, createdAt])
 }
 
 // ============================================
@@ -964,7 +967,7 @@ model AssetActionExecution {
   actionDefinitionId String
   actionDefinition   AssetActionDefinition @relation(fields: [actionDefinitionId], references: [id])
   userId             String?
-  user               User?                 @relation("UserActionExecutions", fields: [userId], references: [id])
+  user               User?                 @relation("UserActionExecutions", fields: [userId], references: [id], onDelete: SetNull)
 
   // Execution details
   status      ExecutionStatus @default(PENDING)
@@ -1014,7 +1017,7 @@ model AssetRelationship {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   createdById String?
-  createdBy   User?    @relation("UserAssetRelationships", fields: [createdById], references: [id])
+  createdBy   User?    @relation("UserAssetRelationships", fields: [createdById], references: [id], onDelete: SetNull)
 
   @@unique([parentAssetId, childAssetId, relationshipType])
   @@index([parentAssetId])
@@ -1313,10 +1316,10 @@ model ScriptExecution {
   agent   AgentConnection @relation(fields: [agentId], references: [id], onDelete: Cascade)
 
   assetId String
-  asset   Asset  @relation("AssetScripts", fields: [assetId], references: [id])
+  asset   Asset  @relation("AssetScripts", fields: [assetId], references: [id], onDelete: Cascade)
 
   workspaceId String
-  workspace   Workspace @relation("WorkspaceScripts", fields: [workspaceId], references: [id])
+  workspace   Workspace @relation("WorkspaceScripts", fields: [workspaceId], references: [id], onDelete: Cascade)
 
   // Optional link if spawned from the Script Library (mass deployment) 
   scriptId    String?
@@ -1340,11 +1343,12 @@ model ScriptExecution {
   // Creator
   createdAt    DateTime @default(now())
   createdBy    String
-  createdByUser User    @relation("ScriptExecutionCreator", fields: [createdBy], references: [id])
+  createdByUser User    @relation("ScriptExecutionCreator", fields: [createdBy], references: [id], onDelete: Cascade)
 
   @@index([agentId, status])
   @@index([assetId, createdAt])
   @@index([workspaceId, createdAt])
+  @@index([workspaceId, status])
   @@index([status])
   @@index([createdBy])
 }
@@ -1370,7 +1374,7 @@ model AlertRule {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   createdBy    String?
-  createdByUser User?   @relation("AlertRuleCreator", fields: [createdBy], references: [id])
+  createdByUser User?   @relation("AlertRuleCreator", fields: [createdBy], references: [id], onDelete: SetNull)
 
   @@index([workspaceId, enabled])
   @@index([metric])
@@ -1514,7 +1518,7 @@ model ReportSchedule {
 
   // Audit
   createdBy    String
-  createdByUser User     @relation("ReportScheduleCreator", fields: [createdBy], references: [id])
+  createdByUser User     @relation("ReportScheduleCreator", fields: [createdBy], references: [id], onDelete: Cascade)
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
@@ -1547,7 +1551,7 @@ model ApiKey {
   expiresAt   DateTime?                    // Optional expiration
   revokedAt   DateTime?                    // Soft-revoke timestamp
   createdBy   String                       // User ID who created the key
-  createdByUser User   @relation("ApiKeyCreator", fields: [createdBy], references: [id])
+  createdByUser User   @relation("ApiKeyCreator", fields: [createdBy], references: [id], onDelete: Cascade)
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -1584,7 +1588,7 @@ model MaintenanceWindow {
   workspaceId String
   workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   createdById String
-  createdBy   User      @relation("MaintenanceWindowCreator", fields: [createdById], references: [id])
+  createdBy   User      @relation("MaintenanceWindowCreator", fields: [createdById], references: [id], onDelete: Cascade)
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -1753,7 +1757,7 @@ model Ticket {
   asset       Asset?         @relation("AssetTickets", fields: [assetId], references: [id], onDelete: SetNull)
 
   creatorId   String
-  creator     User           @relation("TicketCreator", fields: [creatorId], references: [id])
+  creator     User           @relation("TicketCreator", fields: [creatorId], references: [id], onDelete: Cascade)
 
   assigneeId  String?
   assignee    WorkspaceMember? @relation("TicketAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
@@ -1777,7 +1781,7 @@ model TicketMessage {
   ticket     Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
 
   senderId   String
-  sender     User     @relation("TicketMessageSender", fields: [senderId], references: [id])
+  sender     User     @relation("TicketMessageSender", fields: [senderId], references: [id], onDelete: Cascade)
 
   content    String   @db.Text
   isInternal Boolean  @default(false)
