@@ -134,7 +134,7 @@ export default function DynamicAssetCreatePage() {
 
             if (!response.ok) {
                 const data = await response.json();
-                throw new Error(data.error || 'Failed to create asset');
+                throw new Error(data.error?.message || data.error || 'Failed to create asset');
             }
 
             const newAsset = await response.json();
