@@ -283,7 +283,7 @@ export function ScheduledJobsPanel({ workspaceId, availableScripts }: { workspac
                                 <Clock size={20} className="text-nerve" />
                                 Schedule Automation Job
                             </h2>
-                            <button onClick={() => setIsCreating(false)} className="text-slate-400 hover:text-white transition"><X size={20} /></button>
+                            <button onClick={() => setIsCreating(false)} aria-label="Close" className="text-slate-400 hover:text-white transition"><X size={20} /></button>
                         </div>
 
                         <form onSubmit={handleCreateSubmit} className="p-6 space-y-5">

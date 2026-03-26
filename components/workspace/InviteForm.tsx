@@ -21,6 +21,7 @@ export default function InviteForm({ workspaceId }: { workspaceId: string }) {
     const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
     const { currentWorkspace } = useWorkspaceStore();
     const roleRef = useRef<HTMLDivElement>(null);
+    const messageClearRef = useRef<NodeJS.Timeout | null>(null);
 
     // Close role dropdown on outside click
     useEffect(() => {
@@ -60,7 +61,8 @@ export default function InviteForm({ workspaceId }: { workspaceId: string }) {
             window.dispatchEvent(new Event('refresh-invitations'));
 
             // Clear success message after 3s
-            setTimeout(() => setMessage(null), 3000);
+            if (messageClearRef.current) clearTimeout(messageClearRef.current);
+            messageClearRef.current = setTimeout(() => setMessage(null), 3000);
 
         } catch (error: unknown) {
             setMessage({ type: 'error', text: error instanceof Error ? error.message : 'Something went wrong' });
