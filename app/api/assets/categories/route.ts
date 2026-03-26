@@ -7,11 +7,8 @@ import { AssetCategoryAdminService, CreateCategoryInput } from '@/lib/services/A
 import { withRateLimit } from '@/lib/security/rateLimit';
 
 // GET /api/assets/categories — list categories for the workspace
-// Always includes fieldDefinitions since the Create Asset form depends on them
-export const GET = withErrorHandler(async (request: NextRequest) => {
-    const rateLimited = await withRateLimit(request, 'api');
-    if (rateLimited) return rateLimited;
-
+// Read-only endpoint used by asset creation form; no rate limiting needed
+export const GET = withErrorHandler(async (_request: NextRequest) => {
     await requireAuth();
 
     // Always include fields + children for the Create Asset form
