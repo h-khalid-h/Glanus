@@ -67,7 +67,7 @@ const memoryApiLimiter = new RateLimiterMemory({
 });
 
 const memoryStrictApiLimiter = new RateLimiterMemory({
-    points: 100,
+    points: 500,
     duration: 15 * 60,
 });
 
@@ -107,7 +107,7 @@ async function initRedisLimiters(): Promise<boolean> {
         redisStrictApiLimiter = new RateLimiterRedis({
             storeClient: client,
             keyPrefix: 'rl:strict',
-            points: 100,
+            points: 500,
             duration: 15 * 60,
         });
 
@@ -253,7 +253,7 @@ export async function withRateLimit(
                 headers: {
                     'Content-Type': 'application/json',
                     'Retry-After': result.retryAfter?.toString() || '900',
-                    'X-RateLimit-Limit': type === 'login' ? '5' : type === 'agent' ? '300' : type === 'strict-api' ? '100' : '1000',
+                    'X-RateLimit-Limit': type === 'login' ? '5' : type === 'agent' ? '300' : type === 'strict-api' ? '500' : '1000',
                     'X-RateLimit-Remaining': '0',
                     'X-RateLimit-Reset': result.resetAt.toISOString(),
                 },

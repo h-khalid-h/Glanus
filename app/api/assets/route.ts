@@ -3,7 +3,6 @@ import { NextRequest } from 'next/server';
 import { requireAuth, requireWorkspaceAccess, withErrorHandler } from '@/lib/api/withAuth';
 import { validateQuery, validateRequest } from '@/lib/validation';
 import { assetQuerySchema, createAssetSchema } from '@/lib/schemas/asset.schemas';
-import { withRateLimit, getClientIdentifier } from '@/lib/security/rateLimit';
 import { AssetService } from '@/lib/services/AssetService';
 
 // GET /api/assets - List assets with filtering and pagination
@@ -25,11 +24,8 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     return apiSuccess(data);
 });
 
-// POST /api/assets - Create new asset
+// POST /api/assets - Create new asset (auth-protected, no separate rate limit needed)
 export const POST = withErrorHandler(async (request: NextRequest) => {
-    const rateLimitResponse = await withRateLimit(request, 'strict-api', `${getClientIdentifier(request)}:asset-create`);
-    if (rateLimitResponse) return rateLimitResponse;
-
     const user = await requireAuth();
 
     const data = await validateRequest(request, createAssetSchema);
