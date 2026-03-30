@@ -2,6 +2,7 @@ import { apiSuccess } from '@/lib/api/response';
 import { NextRequest } from 'next/server';
 import { approveAction, rejectAction } from '@/lib/reflex/automation';
 import { requireAuth, requireWorkspaceRole, withErrorHandler } from '@/lib/api/withAuth';
+import { withRateLimit } from '@/lib/security/rateLimit';
 import { z } from 'zod';
 
 interface RouteContext {
@@ -16,6 +17,8 @@ const ReflexQueueActionSchema = z.object({
 
 // PATCH /api/workspaces/[id]/reflex/queue/[itemId] - Approve or Reject an Action
 export const PATCH = withErrorHandler(async (request: NextRequest, context: RouteContext) => {
+    const rateLimited = await withRateLimit(request, 'strict-api');
+    if (rateLimited) return rateLimited;
     const user = await requireAuth();
     const { id: workspaceId, itemId } = await context.params;
     await requireWorkspaceRole(workspaceId, user.id, 'ADMIN', request);

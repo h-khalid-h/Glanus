@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { requireAuth, requireWorkspaceRole, withErrorHandler } from '@/lib/api/withAuth';
+import { withRateLimit } from '@/lib/security/rateLimit';
 import { apiSuccess } from '@/lib/api/response';
 import { WorkspaceReportService, ReportScheduleUpdateInput } from '@/lib/services/WorkspaceReportService';
 import { z } from 'zod';
@@ -26,6 +27,8 @@ export const GET = withErrorHandler(async (_request: NextRequest, { params }: Ro
 });
 
 export const PATCH = withErrorHandler(async (request: NextRequest, { params }: RouteContext) => {
+    const rateLimited = await withRateLimit(request, 'strict-api');
+    if (rateLimited) return rateLimited;
     const { id: workspaceId, scheduleId } = await params;
     const user = await requireAuth();
     await requireWorkspaceRole(workspaceId, user.id, 'ADMIN');
@@ -34,7 +37,9 @@ export const PATCH = withErrorHandler(async (request: NextRequest, { params }: R
     return apiSuccess({ schedule });
 });
 
-export const DELETE = withErrorHandler(async (_request: NextRequest, { params }: RouteContext) => {
+export const DELETE = withErrorHandler(async (request: NextRequest, { params }: RouteContext) => {
+    const rateLimited = await withRateLimit(request, 'strict-api');
+    if (rateLimited) return rateLimited;
     const { id: workspaceId, scheduleId } = await params;
     const user = await requireAuth();
     await requireWorkspaceRole(workspaceId, user.id, 'ADMIN');

@@ -1,6 +1,7 @@
 import { apiSuccess } from '@/lib/api/response';
 import { NextRequest } from 'next/server';
 import { requireAuth, requireWorkspaceRole, withErrorHandler } from '@/lib/api/withAuth';
+import { withRateLimit } from '@/lib/security/rateLimit';
 import { ScriptScheduleService } from '@/lib/services/ScriptScheduleService';
 import { z } from 'zod';
 
@@ -25,6 +26,8 @@ export const GET = withErrorHandler(async (_request: NextRequest, { params }: Ro
 
 // POST - Create a new script schedule
 export const POST = withErrorHandler(async (request: NextRequest, { params }: RouteContext) => {
+    const rateLimited = await withRateLimit(request, 'strict-api');
+    if (rateLimited) return rateLimited;
     const { id: workspaceId } = await params;
     const user = await requireAuth();
     await requireWorkspaceRole(workspaceId, user.id, 'ADMIN');

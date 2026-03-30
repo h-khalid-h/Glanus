@@ -1,6 +1,7 @@
 import { apiSuccess, apiError } from '@/lib/api/response';
+import { NextRequest } from 'next/server';
 import { requireAuth, withErrorHandler } from '@/lib/api/withAuth';
-import { checkRateLimit } from '@/lib/security/rateLimit';
+import { checkRateLimit, withRateLimit } from '@/lib/security/rateLimit';
 import { WorkspaceService, CreateWorkspaceInput } from '@/lib/services/WorkspaceService';
 import { z } from 'zod';
 
@@ -25,7 +26,9 @@ export const GET = withErrorHandler(async () => {
 });
 
 // POST /api/workspaces - Create a new workspace
-export const POST = withErrorHandler(async (request: Request) => {
+export const POST = withErrorHandler(async (request: NextRequest) => {
+    const rateLimited = await withRateLimit(request, 'strict-api');
+    if (rateLimited) return rateLimited;
     const user = await requireAuth();
 
     // Rate limiting

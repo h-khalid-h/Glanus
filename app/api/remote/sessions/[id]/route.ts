@@ -1,6 +1,7 @@
 import { apiSuccess } from '@/lib/api/response';
 import { NextRequest } from 'next/server';
 import { requireAuth, withErrorHandler } from '@/lib/api/withAuth';
+import { withRateLimit } from '@/lib/security/rateLimit';
 import { updateRemoteSessionSchema } from '@/lib/schemas/remote-session.schemas';
 import { RemoteSessionService } from '@/lib/services/RemoteSessionService';
 
@@ -21,6 +22,8 @@ export const PUT = withErrorHandler(async (
     request: NextRequest,
     context: { params: Promise<{ id: string }> }
 ) => {
+    const rateLimited = await withRateLimit(request, 'strict-api');
+    if (rateLimited) return rateLimited;
     const { id } = await context.params;
     const user = await requireAuth();
 
@@ -31,9 +34,11 @@ export const PUT = withErrorHandler(async (
 
 // DELETE /api/remote/sessions/[id]
 export const DELETE = withErrorHandler(async (
-    _request: NextRequest,
+    request: NextRequest,
     context: { params: Promise<{ id: string }> }
 ) => {
+    const rateLimited = await withRateLimit(request, 'strict-api');
+    if (rateLimited) return rateLimited;
     const { id } = await context.params;
     const user = await requireAuth();
 

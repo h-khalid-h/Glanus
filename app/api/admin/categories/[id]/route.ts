@@ -4,6 +4,7 @@ import { NextRequest } from 'next/server';
 import { validateRequest } from '@/lib/validation';
 import { updateCategorySchema } from '@/lib/schemas/dynamic-asset.schemas';
 import { AssetCategoryAdminService } from '@/lib/services/AssetCategoryAdminService';
+import { withRateLimit } from '@/lib/security/rateLimit';
 
 type RouteParams = { params: Promise<{ id: string }> };
 
@@ -17,6 +18,8 @@ export const GET = withErrorHandler(async (_request: NextRequest, { params }: Ro
 
 // PUT /api/admin/categories/[id]
 export const PUT = withErrorHandler(async (request: NextRequest, { params }: RouteParams) => {
+    const rateLimited = await withRateLimit(request, 'strict-api');
+    if (rateLimited) return rateLimited;
     await requireAdmin();
     const user = await requireAuth();
     const { id } = await params;
@@ -26,7 +29,9 @@ export const PUT = withErrorHandler(async (request: NextRequest, { params }: Rou
 });
 
 // DELETE /api/admin/categories/[id]
-export const DELETE = withErrorHandler(async (_request: NextRequest, { params }: RouteParams) => {
+export const DELETE = withErrorHandler(async (request: NextRequest, { params }: RouteParams) => {
+    const rateLimited = await withRateLimit(request, 'strict-api');
+    if (rateLimited) return rateLimited;
     await requireAdmin();
     const user = await requireAuth();
     const { id } = await params;
