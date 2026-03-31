@@ -1,0 +1,40 @@
+# IT Infrastructure Management System Rules
+
+You are an expert full-stack developer, security engineer, and system architect. When writing code or proposing changes for this project, you must strictly follow these rules:
+
+## Technology Stack
+- **Frontend:** Next.js (App Router), React 18+, TypeScript, Tailwind CSS, shadcn/ui.
+- **Backend:** NestJS (TypeScript).
+- **Database:** PostgreSQL with Prisma ORM.
+
+---
+
+## 1. Architectural Rules
+- **Strict Separation of Concerns:** Frontend code must only handle UI, real-time WebSocket consumption, and state. Backend code handles all business logic, authorization, and direct database execution. 
+- **Modularity:** In NestJS, build completely isolated domains into distinct Modules (e.g., `UsersModule`, `AssetsModule`, `TelemetryModule`). Never cross-couple controllers directly; rely on shared services or Event-Driven architectures.
+- **Multi-Tenancy First:** Ensure every single database query and REST/WebSocket endpoint strictly enforces tenant isolation contexts. Protect against cross-tenant data bleeding inherently in your logic.
+
+## 2. Frontend Rules (Next.js & UI)
+- **App Router Paradigms:** Use the Next.js App Router (`app/` directory). Favor Server Components by default to maximize load speed and limit JS bundle sizes.
+- **Client Components:** Only use `"use client"` when interactivity (`useState`, `useEffect`), WebSockets, or browser APIs are required.
+- **Data & Telemetry:** Use Next.js native server-fetching for static layouts, TanStack Query for dynamic client-side pagination/filtering, and Socket.io for all live metrics to avoid HTTP polling.
+- **Forms & Validation:** Rely exclusively on `zod` parsing combined with `react-hook-form` to capture client inputs safely.
+
+## 3. Backend Rules (NestJS)
+- **Dependency Injection:** Utilize NestJS DI heavily. Avoid manual class instantiations (`new Service()`).
+- **Data Transfer Objects (DTOs):** Every endpoint must use explicitly typed DTOs validated via NestJS `ValidationPipe` and `class-validator`. Never trust raw client request bodies.
+- **Guards & Interceptors:** Keep authorization logic (RBAC parsing, JWT verification, and Tenant assignment) strictly inside NestJS Guards. Keep standardizations (like wrapping all responses in `{ data: ... }`) strictly inside Interceptors.
+- **Real-Time Data:** Implement real-time infrastructure event streams exclusively through NestJS WebSockets/Gateways, segregated logically from standard CRUD REST controllers.
+
+## 4. Database Rules (PostgreSQL + Prisma)
+- **Schema Migrations:** Never mutate the database schema manually. Always structure abstractions explicitly in `schema.prisma` first.
+- **Type Safety & Queries:** Always rely on Prisma's auto-generated, type-safe clients. When raw SQL is required for advanced reporting/aggregations, abstract it tightly behind a strongly typed database service.
+- **Indexing & Structure:** Prioritize normalized schema layouts with targeted indexing (B-Tree, GiST) on relationships and heavy read targets.
+
+## 5. Security & DevSecOps Rules (Mandatory)
+- **No Hardcoded Secrets:** Never hardcode credentials, JWT salts, or DB connection URIs anywhere. Use strict `.env` loading and validation.
+- **Sanitization & Escaping:** Prevent Injection vulnerabilities by rigorously typing Prisma inputs and preventing untrusted payload reflections.
+- **Least Privilege Constraints:** Assure that default backend queries rely on the lowest access role permissible and validate higher-order permissions per request.
+- **Audit Logging:** If making destructive mutational changes to structural models, log the prior state, mutation diff, timestamp, and Actor ID immutably.
+
+Follow these rules unconditionally whenever planning, analyzing, executing, or debugging code on this repository.

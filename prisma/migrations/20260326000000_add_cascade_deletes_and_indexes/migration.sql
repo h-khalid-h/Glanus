@@ -136,14 +136,14 @@ ALTER TABLE "TicketMessage" ADD CONSTRAINT "TicketMessage_senderId_fkey"
 -- ============================================================
 -- 17. Compound indexes for common query patterns
 -- ============================================================
-CREATE INDEX CONCURRENTLY IF NOT EXISTS "RemoteSession_userId_createdAt_idx"
+CREATE INDEX IF NOT EXISTS "RemoteSession_userId_createdAt_idx"
   ON "RemoteSession"("userId", "createdAt");
 
-CREATE INDEX CONCURRENTLY IF NOT EXISTS "AuditLog_assetId_createdAt_idx"
+CREATE INDEX IF NOT EXISTS "AuditLog_assetId_createdAt_idx"
   ON "AuditLog"("assetId", "createdAt");
 
-CREATE INDEX CONCURRENTLY IF NOT EXISTS "AIInsight_userId_createdAt_idx"
+CREATE INDEX IF NOT EXISTS "AIInsight_userId_createdAt_idx"
   ON "AIInsight"("userId", "createdAt");
 
-CREATE INDEX CONCURRENTLY IF NOT EXISTS "ScriptExecution_workspaceId_status_idx"
+CREATE INDEX IF NOT EXISTS "ScriptExecution_workspaceId_status_idx"
   ON "ScriptExecution"("workspaceId", "status");
