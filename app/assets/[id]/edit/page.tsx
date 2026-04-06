@@ -216,28 +216,29 @@ export default function EditAssetPage({ params }: { params: Promise<{ id: string
     if (loading) return <PageSpinner text="Booting Dynamic Editor..." />;
 
     return (
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <div className="flex items-center gap-4 mb-8">
-                <Link href={`/assets/${id}`} className="text-slate-400 hover:text-white transition-colors">
-                    <svg className="w-6 h-6" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+        <div className="max-w-4xl mx-auto animate-fade-in">
+            <div className="flex items-center gap-3 mb-6">
+                <Link href={`/assets/${id}`} className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+                    <svg className="w-4 h-4" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
                         <path d="M15 19l-7-7 7-7" />
                     </svg>
+                    Back
                 </Link>
-                <div>
-                    <h1 className="text-3xl font-bold text-foreground">Edit Parameters</h1>
-                    <p className="text-slate-400 mt-1">Configure asset node details and custom tracking variables.</p>
-                </div>
+            </div>
+            <div className="mb-6">
+                <h1 className="text-xl font-semibold text-foreground">Edit Parameters</h1>
+                <p className="text-sm text-muted-foreground mt-0.5">Configure asset node details and custom tracking variables.</p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
 
                 {/* 1. Core Platform Configuration */}
-                <div className="card">
-                    <h2 className="text-xl font-bold text-foreground mb-6 border-b border-border pb-4">1. Core Configuration</h2>
+                <div className="detail-panel">
+                    <h2 className="detail-panel-title">1. Core Configuration</h2>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div className="md:col-span-2">
-                            <label className="block text-sm font-medium text-slate-300 mb-2">Asset Name *</label>
+                            <label className="block text-sm font-medium text-foreground mb-1.5">Asset Name *</label>
                             <input
                                 type="text"
                                 required
@@ -249,7 +250,7 @@ export default function EditAssetPage({ params }: { params: Promise<{ id: string
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-slate-300 mb-2">Node Status</label>
+                            <label className="block text-sm font-medium text-foreground mb-1.5">Node Status</label>
                             <select
                                 value={formData.status}
                                 onChange={(e) => updateField('status', e.target.value)}
@@ -273,35 +274,35 @@ export default function EditAssetPage({ params }: { params: Promise<{ id: string
                                     <option key={cat.id} value={cat.id}>{cat.icon} {cat.name}</option>
                                 ))}
                             </select>
-                            <p className="text-xs text-slate-500 mt-1">Warning: Changing the Class will erase existing custom variables on Save.</p>
+                            <p className="text-xs text-muted-foreground mt-1">Warning: Changing the Class will erase existing custom variables on Save.</p>
                         </div>
 
                         <div className="md:col-span-2">
-                            <label className="block text-sm font-medium text-slate-300 mb-2">Asset Type Track *</label>
-                            <div className="grid grid-cols-3 gap-4">
+                            <label className="block text-sm font-medium text-foreground mb-1.5">Asset Type Track *</label>
+                            <div className="grid grid-cols-3 gap-3">
                                 <button
                                     type="button"
-                                    className={`p-4 border rounded-lg text-center transition-all ${formData.assetType === 'PHYSICAL' ? 'border-nerve bg-nerve/10 text-nerve' : 'border-slate-800 text-slate-400 hover:bg-slate-800'}`}
+                                    className={`p-3.5 border rounded-xl text-center transition-all duration-150 ${formData.assetType === 'PHYSICAL' ? 'border-primary bg-primary/[0.06] text-primary' : 'border-border text-muted-foreground hover:bg-surface-2 hover:text-foreground'}`}
                                     onClick={() => updateField('assetType', 'PHYSICAL')}
                                 >
-                                    <div className="font-bold mb-1">Physical Hardware</div>
+                                    <div className="text-sm font-semibold mb-0.5">Physical</div>
                                     <div className="text-xs opacity-70">Laptops, Servers, Network</div>
                                 </button>
                                 <button
                                     type="button"
-                                    className={`p-4 border rounded-lg text-center transition-all ${formData.assetType === 'DIGITAL' ? 'border-nerve bg-nerve/10 text-nerve' : 'border-slate-800 text-slate-400 hover:bg-slate-800'}`}
+                                    className={`p-3.5 border rounded-xl text-center transition-all duration-150 ${formData.assetType === 'DIGITAL' ? 'border-primary bg-primary/[0.06] text-primary' : 'border-border text-muted-foreground hover:bg-surface-2 hover:text-foreground'}`}
                                     onClick={() => updateField('assetType', 'DIGITAL')}
                                 >
-                                    <div className="font-bold mb-1">Digital Asset</div>
+                                    <div className="text-sm font-semibold mb-0.5">Digital</div>
                                     <div className="text-xs opacity-70">SaaS, Licenses, Domains</div>
                                 </button>
                                 <button
                                     type="button"
-                                    className={`p-4 border rounded-lg text-center transition-all ${formData.assetType === 'DYNAMIC' ? 'border-nerve bg-nerve/10 text-nerve' : 'border-slate-800 text-slate-400 hover:bg-slate-800'}`}
+                                    className={`p-3.5 border rounded-xl text-center transition-all duration-150 ${formData.assetType === 'DYNAMIC' ? 'border-primary bg-primary/[0.06] text-primary' : 'border-border text-muted-foreground hover:bg-surface-2 hover:text-foreground'}`}
                                     onClick={() => updateField('assetType', 'DYNAMIC')}
                                 >
-                                    <div className="font-bold mb-1">Custom / Other</div>
-                                    <div className="text-xs opacity-70">Pure dynamic matrix</div>
+                                    <div className="text-sm font-semibold mb-0.5">Custom</div>
+                                    <div className="text-xs opacity-70">Dynamic matrix</div>
                                 </button>
                             </div>
                         </div>
@@ -310,11 +311,11 @@ export default function EditAssetPage({ params }: { params: Promise<{ id: string
 
                 {/* Step 1.5: Hardware / Software Specifics */}
                 {formData.assetType === 'PHYSICAL' && (
-                    <div className="card">
-                        <h2 className="text-xl font-bold text-foreground mb-6 border-b border-border pb-4">Hardware Specifications</h2>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="detail-panel">
+                        <h2 className="detail-panel-title">Hardware Specifications</h2>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                             <div>
-                                <label className="block text-sm font-medium text-slate-300 mb-2">Hardware Category</label>
+                                <label className="block text-sm font-medium text-foreground mb-1.5">Hardware Category</label>
                                 <select className="input w-full" value={physicalAsset.category || 'LAPTOP'} onChange={e => setPhysicalAsset({ ...physicalAsset, category: e.target.value })}>
                                     <option value="LAPTOP">Laptop</option>
                                     <option value="DESKTOP">Desktop</option>
@@ -325,23 +326,23 @@ export default function EditAssetPage({ params }: { params: Promise<{ id: string
                                 </select>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-slate-300 mb-2">MAC Address</label>
+                                <label className="block text-sm font-medium text-foreground mb-1.5">MAC Address</label>
                                 <input type="text" className="input w-full" placeholder="00:00:00:00:00:00" value={physicalAsset.macAddress || ''} onChange={e => setPhysicalAsset({ ...physicalAsset, macAddress: e.target.value })} />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-slate-300 mb-2">IP Address / Host</label>
+                                <label className="block text-sm font-medium text-foreground mb-1.5">IP Address / Host</label>
                                 <input type="text" className="input w-full" placeholder="192.168.1.100" value={physicalAsset.ipAddress || ''} onChange={e => setPhysicalAsset({ ...physicalAsset, ipAddress: e.target.value })} />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-slate-300 mb-2">OS Version</label>
+                                <label className="block text-sm font-medium text-foreground mb-1.5">OS Version</label>
                                 <input type="text" className="input w-full" placeholder="Windows 11 Pro" value={physicalAsset.osVersion || ''} onChange={e => setPhysicalAsset({ ...physicalAsset, osVersion: e.target.value })} />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-slate-300 mb-2">RAM (GB)</label>
+                                <label className="block text-sm font-medium text-foreground mb-1.5">RAM (GB)</label>
                                 <input type="number" className="input w-full" placeholder="16" value={physicalAsset.ram || ''} onChange={e => setPhysicalAsset({ ...physicalAsset, ram: e.target.value })} />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-slate-300 mb-2">Storage Array (GB)</label>
+                                <label className="block text-sm font-medium text-foreground mb-1.5">Storage (GB)</label>
                                 <input type="number" className="input w-full" placeholder="512" value={physicalAsset.storage || ''} onChange={e => setPhysicalAsset({ ...physicalAsset, storage: e.target.value })} />
                             </div>
                         </div>
@@ -349,11 +350,11 @@ export default function EditAssetPage({ params }: { params: Promise<{ id: string
                 )}
 
                 {formData.assetType === 'DIGITAL' && (
-                    <div className="card">
-                        <h2 className="text-xl font-bold text-foreground mb-6 border-b border-border pb-4">Software & License Metrics</h2>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="detail-panel">
+                        <h2 className="detail-panel-title">Software &amp; License Metrics</h2>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                             <div>
-                                <label className="block text-sm font-medium text-slate-300 mb-2">Software Category</label>
+                                <label className="block text-sm font-medium text-foreground mb-1.5">Software Category</label>
                                 <select className="input w-full" value={digitalAsset.category || 'SAAS_SUBSCRIPTION'} onChange={e => setDigitalAsset({ ...digitalAsset, category: e.target.value })}>
                                     <option value="SAAS_SUBSCRIPTION">SaaS Subscription</option>
                                     <option value="LICENSE">License Key</option>
@@ -363,11 +364,11 @@ export default function EditAssetPage({ params }: { params: Promise<{ id: string
                                 </select>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-slate-300 mb-2">Vendor / Provider</label>
+                                <label className="block text-sm font-medium text-foreground mb-1.5">Vendor / Provider</label>
                                 <input type="text" className="input w-full" placeholder="e.g. Microsoft, AWS" value={digitalAsset.vendor || ''} onChange={e => setDigitalAsset({ ...digitalAsset, vendor: e.target.value })} />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-slate-300 mb-2">License Type</label>
+                                <label className="block text-sm font-medium text-foreground mb-1.5">License Type</label>
                                 <select className="input w-full" value={digitalAsset.licenseType || 'SUBSCRIPTION'} onChange={e => setDigitalAsset({ ...digitalAsset, licenseType: e.target.value })}>
                                     <option value="SUBSCRIPTION">Recurring Subscription</option>
                                     <option value="PERPETUAL">Perpetual (One-time)</option>
@@ -376,19 +377,19 @@ export default function EditAssetPage({ params }: { params: Promise<{ id: string
                                 </select>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-slate-300 mb-2">Seat Count / Licenses</label>
+                                <label className="block text-sm font-medium text-foreground mb-1.5">Seat Count / Licenses</label>
                                 <input type="number" className="input w-full" placeholder="50" value={digitalAsset.seatCount || ''} onChange={e => setDigitalAsset({ ...digitalAsset, seatCount: e.target.value })} />
                             </div>
                             <div className="md:col-span-2">
-                                <label className="block text-sm font-medium text-slate-300 mb-2">License Key / Access Token</label>
+                                <label className="block text-sm font-medium text-foreground mb-1.5">License Key / Access Token</label>
                                 <input type="text" className="input w-full font-mono text-xs" placeholder="XXXX-XXXX-XXXX-XXXX" value={digitalAsset.licenseKey || ''} onChange={e => setDigitalAsset({ ...digitalAsset, licenseKey: e.target.value })} />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-slate-300 mb-2">Monthly Cost</label>
-                                <input type="number" step="0.01" className="input w-full" placeholder="$0.00" value={digitalAsset.monthlyRecurringCost || ''} onChange={e => setDigitalAsset({ ...digitalAsset, monthlyRecurringCost: e.target.value })} />
+                                <label className="block text-sm font-medium text-foreground mb-1.5">Monthly Cost</label>
+                                <input type="number" step="0.01" className="input w-full" placeholder="0.00" value={digitalAsset.monthlyRecurringCost || ''} onChange={e => setDigitalAsset({ ...digitalAsset, monthlyRecurringCost: e.target.value })} />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-slate-300 mb-2">Renewal Date</label>
+                                <label className="block text-sm font-medium text-foreground mb-1.5">Renewal Date</label>
                                 <input type="date" className="input w-full" value={digitalAsset.renewalDate || ''} onChange={e => setDigitalAsset({ ...digitalAsset, renewalDate: e.target.value })} />
                             </div>
                         </div>
@@ -397,31 +398,31 @@ export default function EditAssetPage({ params }: { params: Promise<{ id: string
 
                 {/* 2. Dynamic Schema UI */}
                 {category && (
-                    <div className="card border-nerve/30">
-                        <h2 className="text-xl font-bold text-foreground mb-6 flex items-center gap-3 border-b border-border pb-4">
-                            <span>2. Custom Matrix Data</span>
-                            <span className="text-sm px-3 py-1 bg-nerve/20 text-nerve rounded-full">{category.icon} {category.name}</span>
-                        </h2>
+                    <div className="detail-panel border-primary/20">
+                        <div className="flex items-center justify-between mb-3 pb-2 border-b border-border/60">
+                            <h2 className="text-sm font-semibold text-foreground">2. Custom Matrix Data</h2>
+                            <span className="badge text-[11px] px-2.5 py-1 bg-primary/10 text-primary rounded-lg">{category.icon} {category.name}</span>
+                        </div>
 
                         {category.fieldDefinitions.length === 0 ? (
-                            <p className="text-slate-500 italic">No custom tracking fields required for this Class.</p>
+                            <p className="text-sm text-muted-foreground/70 italic">No custom tracking fields required for this Class.</p>
                         ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                 {category.fieldDefinitions.map((def) => (
                                     <div key={def.id} className={def.fieldType === 'JSON' ? 'md:col-span-2' : ''}>
-                                        <label className="block text-sm font-medium text-slate-300 mb-2">
-                                            {def.label} {def.required && <span className="text-red-400">*</span>}
+                                        <label className="block text-sm font-medium text-foreground mb-1.5">
+                                            {def.label} {def.required && <span className="text-destructive">*</span>}
                                         </label>
 
                                         {def.fieldType === 'BOOLEAN' ? (
-                                            <div className="flex items-center gap-3 mt-3">
+                                            <div className="flex items-center gap-2.5 mt-2">
                                                 <input
                                                     type="checkbox"
-                                                    className="w-5 h-5 rounded border-slate-700 text-nerve focus:ring-nerve"
+                                                    className="h-4 w-4 rounded border-border accent-primary"
                                                     checked={customFields[def.name] === true || customFields[def.name] === 'true'}
                                                     onChange={e => handleCustomFieldChange(def.name, e.target.checked)}
                                                 />
-                                                <span className="text-sm text-slate-400">Enable</span>
+                                                <span className="text-sm text-muted-foreground">Enable</span>
                                             </div>
                                         ) : def.fieldType === 'DATE' ? (
                                             <input
@@ -457,16 +458,18 @@ export default function EditAssetPage({ params }: { params: Promise<{ id: string
                 )}
 
                 {/* Actions */}
-                <div className="flex items-center justify-end gap-3 pt-4">
-                    <Link href={`/assets/${id}`} className="btn-secondary">
+                <div className="flex items-center justify-end gap-2.5 pt-2">
+                    <Link href={`/assets/${id}`} className="btn-secondary h-9 text-sm px-4">
                         Discard
                     </Link>
                     <button
                         type="submit"
                         disabled={submitting}
-                        className="btn-primary flex items-center gap-2"
+                        className="btn-primary h-9 text-sm px-4 inline-flex items-center gap-2"
                     >
-                        {submitting ? <PageSpinner /> : 'Save Parameters'}
+                        {submitting
+                            ? <><div className="animate-spin rounded-full h-3.5 w-3.5 border-2 border-primary-foreground border-t-transparent" /> Saving…</>
+                            : 'Save Parameters'}
                     </button>
                 </div>
             </form>

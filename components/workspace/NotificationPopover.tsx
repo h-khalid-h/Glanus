@@ -143,7 +143,7 @@ export function NotificationPopover() {
 
                     <div className="border-t border-border bg-surface-2 p-2">
                         <Link
-                            href={`/workspaces/${workspace?.id}/notifications`}
+                            href={`/workspaces/notifications`}
                             onClick={() => setIsOpen(false)}
                             className="flex w-full items-center justify-center rounded-lg px-2.5 py-1.5 text-xs font-semibold text-nerve hover:bg-nerve/10 transition-colors"
                         >

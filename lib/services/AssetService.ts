@@ -10,6 +10,7 @@ import { ApiError } from '@/lib/errors';
  *  - bulkCreateAssets: CSV / batch ingestion with dynamic field mapping
  */
 import { prisma } from '@/lib/db';
+import { withCurrentRLSSession as withRLS } from '@/lib/rls-session';
 import { Prisma, AssetType, AssetStatus, HardwareCategory, SoftwareCategory, LicenseType, HostType } from '@prisma/client';
 import { generateAssetQRCode } from '@/lib/generateQRCode';
 import { logError } from '@/lib/logger';
@@ -105,19 +106,20 @@ export class AssetService {
         // Enforce Quota Constraints limit
         await enforceQuota(workspaceId, 'assets');
 
-        if (data.serialNumber) {
-            const existing = await prisma.asset.findFirst({
-                where: { serialNumber: data.serialNumber, workspaceId, deletedAt: null },
+        return await withRLS(async (tx) => {
+            if (data.serialNumber) {
+                const existing = await tx.asset.findFirst({
+                    where: { serialNumber: data.serialNumber, workspaceId, deletedAt: null },
+                });
+                if (existing) throw new ApiError(409, 'An asset with this serial number already exists in this workspace');
+            }
+
+            const selectedCategory = await tx.assetCategory.findUnique({
+                where: { id: data.categoryId },
+                include: { fieldDefinitions: true }
             });
-            if (existing) throw new ApiError(409, 'An asset with this serial number already exists in this workspace');
-        }
 
-        const selectedCategory = await prisma.assetCategory.findUnique({
-            where: { id: data.categoryId },
-            include: { fieldDefinitions: true }
-        });
-
-        if (!selectedCategory) throw new ApiError(404, 'The specified Asset Category does not exist.');
+            if (!selectedCategory) throw new ApiError(404, 'The specified Asset Category does not exist.');
 
         // Build Payload
         const fieldValuesPayload = [];
@@ -155,7 +157,7 @@ export class AssetService {
             }
         }
 
-        const asset = await prisma.asset.create({
+        const asset = await tx.asset.create({
             data: {
                 workspaceId,
                 assetType: ((data.assetType === 'DYNAMIC' ? 'DIGITAL' : data.assetType) || 'PHYSICAL') as AssetType,
@@ -226,25 +228,26 @@ export class AssetService {
             },
         });
 
-        // Async QR Code Generation and Subsystem Side Effects
-        try {
-            const qrCode = await generateAssetQRCode(asset.id, asset.name);
-            await prisma.asset.update({ where: { id: asset.id }, data: { qrCode } });
-            asset.qrCode = qrCode;
-        } catch (qrError) {
-            logError('QR code generation failed', qrError, { assetId: asset.id });
-        }
+            // Async QR Code Generation and Subsystem Side Effects
+            try {
+                const qrCode = await generateAssetQRCode(asset.id, asset.name);
+                await tx.asset.update({ where: { id: asset.id }, data: { qrCode } });
+                asset.qrCode = qrCode;
+            } catch (qrError) {
+                logError('QR code generation failed', qrError, { assetId: asset.id });
+            }
 
-        await auditLog({
-            workspaceId,
-            userId,
-            action: 'asset.created',
-            resourceType: 'Asset',
-            resourceId: asset.id,
-            details: { assetType: asset.assetType, name: asset.name, category: selectedCategory.name },
+            await auditLog({
+                workspaceId,
+                userId,
+                action: 'asset.created',
+                resourceType: 'Asset',
+                resourceId: asset.id,
+                details: { assetType: asset.assetType, name: asset.name, category: selectedCategory.name },
+            });
+
+            return asset;
         });
-
-        return asset;
     }
 
     /**
@@ -299,7 +302,7 @@ export class AssetService {
         userId: string,
         data: z.infer<typeof updateAssetSchema>
     ) {
-        // Verify workspace membership and get current state
+        // Verify workspace membership and get current state first to obtain workspaceId
         const existingAsset = await prisma.asset.findFirst({
             where: {
                 id: assetId,
@@ -320,8 +323,12 @@ export class AssetService {
             throw new ApiError(404, 'Asset not found');
         }
 
-        if (data.serialNumber && data.serialNumber !== existingAsset.serialNumber) {
-            const duplicate = await prisma.asset.findFirst({
+        return await withRLS(async (tx) => {
+            // Re-fetch locally inside the transaction if needed, or just use existingAsset.
+            // But existingAsset is already secure since we verified membership above.
+
+        if (data.serialNumber && data.serialNumber !== existingAsset?.serialNumber) {
+            const duplicate = await tx.asset.findFirst({
                 where: {
                     serialNumber: data.serialNumber,
                     workspaceId: existingAsset.workspaceId,
@@ -344,7 +351,7 @@ export class AssetService {
                             throw new ApiError(400, `Missing required custom field: ${def.label}`);
                         }
                         if (existingValueRecord) {
-                            await prisma.assetFieldValue.delete({ where: { id: existingValueRecord.id } });
+                            await tx.assetFieldValue.delete({ where: { id: existingValueRecord.id } });
                         }
                     } else {
                         // 1. Enforce rigorous Architectural validation
@@ -367,12 +374,12 @@ export class AssetService {
                         const mappedData = DynamicFieldService.serializeFieldValue(incomingValue, def.fieldType as FieldType);
 
                         if (existingValueRecord) {
-                            await prisma.assetFieldValue.update({
+                            await tx.assetFieldValue.update({
                                 where: { id: existingValueRecord.id },
                                 data: mappedData
                             });
                         } else {
-                            await prisma.assetFieldValue.create({
+                            await tx.assetFieldValue.create({
                                 data: {
                                     assetId,
                                     fieldDefinitionId: def.id,
@@ -385,7 +392,7 @@ export class AssetService {
             }
         }
 
-        const asset = await prisma.asset.update({
+        const asset = await tx.asset.update({
             where: { id: assetId },
             data: {
                 ...(data.name !== undefined && { name: data.name }),
@@ -480,19 +487,18 @@ export class AssetService {
             },
         });
 
-        await prisma.auditLog.create({
-            data: {
-                workspaceId: existingAsset.workspaceId,
-                action: 'ASSET_UPDATED',
-                resourceType: 'Asset',
-                resourceId: asset.id,
-                userId,
-                metadata: { assetName: asset.name, changes: data },
-            },
+        await auditLog({
+            workspaceId: existingAsset.workspaceId,
+            userId,
+            action: 'asset.updated',
+            resourceType: 'Asset',
+            resourceId: asset.id,
+            details: { assetName: asset.name, changes: data },
         });
 
         return asset;
-    }
+    });
+}
 
     /**
      * Soft-delete an asset.
@@ -512,24 +518,23 @@ export class AssetService {
             throw new ApiError(404, 'Asset not found');
         }
 
-        const asset = await prisma.asset.update({
-            where: { id: assetId },
-            data: { deletedAt: new Date(), status: 'RETIRED' },
-        });
+        return await withRLS(async (tx) => {
+            const asset = await tx.asset.update({
+                where: { id: assetId },
+                data: { deletedAt: new Date(), status: 'RETIRED' },
+            });
 
-        await prisma.auditLog.create({
-            data: {
+            await auditLog({
                 workspaceId: existingAsset.workspaceId,
-                action: 'ASSET_DELETED',
+                userId,
+                action: 'asset.deleted',
                 resourceType: 'Asset',
                 resourceId: asset.id,
-                userId,
-                assetId: asset.id,
-                metadata: { assetName: asset.name },
-            },
-        });
+                details: { assetName: asset.name },
+            });
 
-        return asset;
+            return asset;
+        });
     }
 
 }

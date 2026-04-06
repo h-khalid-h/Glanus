@@ -1,12 +1,13 @@
 import { logError, logInfo, logWarn } from '@/lib/logger';
 import sgMail from '@sendgrid/mail';
 import { sendEmailViaBrevo } from '@/lib/email/brevo';
+import { sendEmailViaSMTP } from '@/lib/email/smtp';
 
-// Initialize SendGrid with API key from environment variables
+// Initialize SendGrid if key is present
 if (process.env.SENDGRID_API_KEY) {
     sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 } else {
-    logWarn('SENDGRID_API_KEY is not set. Emails will use Brevo or be logged to console only.');
+    logWarn('SENDGRID_API_KEY is not set. Primary SMTP will be used first, then Brevo as last resort.');
 }
 
 type EmailData = {
@@ -17,11 +18,12 @@ type EmailData = {
 };
 
 export const sendEmail = async (data: EmailData): Promise<void> => {
+    const hasSMTP = !!process.env.SMTP_HOST;
     const hasSendGrid = !!process.env.SENDGRID_API_KEY;
     const hasBrevo = !!process.env.BREVO_API_KEY;
 
     // No providers configured — mock send
-    if (!hasSendGrid && !hasBrevo) {
+    if (!hasSMTP && !hasSendGrid && !hasBrevo) {
         logInfo('Mock email send (no email provider configured)', {
             to: data.to,
             subject: data.subject,
@@ -30,7 +32,17 @@ export const sendEmail = async (data: EmailData): Promise<void> => {
         return;
     }
 
-    // Try SendGrid first (primary)
+    // Tier 1: SMTP (primary)
+    if (hasSMTP) {
+        try {
+            await sendEmailViaSMTP(data);
+            return; // Success — done
+        } catch (smtpError: unknown) {
+            logError('SMTP email failed, attempting SendGrid failover', smtpError);
+        }
+    }
+
+    // Tier 2: SendGrid
     if (hasSendGrid) {
         try {
             const msg = {
@@ -47,20 +59,20 @@ export const sendEmail = async (data: EmailData): Promise<void> => {
             if (error && typeof error === 'object' && 'response' in error) {
                 logError('SendGrid API response', (error as { response: { body: unknown } }).response.body);
             }
-
-            // If Brevo is available, fail over — otherwise throw
-            if (!hasBrevo) {
-                throw new Error('Failed to send email via SendGrid (no failover configured)');
-            }
         }
     }
 
-    // Brevo failover (or primary if no SendGrid)
-    try {
-        await sendEmailViaBrevo(data);
-    } catch (brevoError: unknown) {
-        logError('Brevo email failover also failed', brevoError);
-        throw new Error('Failed to send email via both SendGrid and Brevo');
+    // Tier 3: Brevo (last resort)
+    if (hasBrevo) {
+        try {
+            await sendEmailViaBrevo(data);
+            return; // Success — done
+        } catch (brevoError: unknown) {
+            logError('Brevo email failover also failed', brevoError);
+            throw new Error('Failed to send email via all providers (SMTP, SendGrid, Brevo)');
+        }
     }
+
+    throw new Error('Failed to send email: no configured provider succeeded');
 };
 

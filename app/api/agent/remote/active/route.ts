@@ -1,6 +1,6 @@
 import { apiSuccess } from '@/lib/api/response';
 import { NextRequest } from 'next/server';
-import { withErrorHandler, ApiError } from '@/lib/api/withAuth';
+import { withErrorHandler, ApiError, requireAgentContext, runWithWorkspaceRLS } from '@/lib/api/withAuth';
 import { AgentService } from '@/lib/services/AgentService';
 import { withRateLimit } from '@/lib/security/rateLimit';
 
@@ -16,6 +16,11 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     }
 
     const token = authHeader.substring(7);
-    const session = await AgentService.getActiveRemoteSession(token);
+    const agent = await requireAgentContext(token);
+    const session = await runWithWorkspaceRLS(
+        agent.workspaceId,
+        { id: agent.id, role: 'USER' },
+        () => AgentService.getActiveRemoteSession(token)
+    );
     return apiSuccess({ session });
 });

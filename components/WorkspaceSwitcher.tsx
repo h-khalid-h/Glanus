@@ -42,7 +42,7 @@ export default function WorkspaceSwitcher() {
     const handleSelect = (workspace: Workspace) => {
         setCurrentWorkspace(workspace);
         setIsOpen(false);
-        router.push(`/workspaces/${workspace.id}/dashboard`);
+        router.push(`/workspaces/analytics`);
         router.refresh();
     };
 

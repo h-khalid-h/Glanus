@@ -1,6 +1,6 @@
 import { apiSuccess } from '@/lib/api/response';
 import { NextRequest } from 'next/server';
-import { requireAuth, withErrorHandler } from '@/lib/api/withAuth';
+import { requireAuth, runWithWorkspaceRLS, withErrorHandler } from '@/lib/api/withAuth';
 import { withRateLimit } from '@/lib/security/rateLimit';
 import { WorkspaceAuditService } from '@/lib/services/WorkspaceAuditService';
 
@@ -15,6 +15,7 @@ export const GET = withErrorHandler(async (
     const { id: workspaceId } = await context.params;
     const user = await requireAuth();
 
+    return runWithWorkspaceRLS(workspaceId, user, async () => {
     await WorkspaceAuditService.verifyAdminAccess(user.id, workspaceId);
 
     const { searchParams } = new URL(request.url);
@@ -30,4 +31,5 @@ export const GET = withErrorHandler(async (
     });
 
     return apiSuccess(result);
+    });
 });

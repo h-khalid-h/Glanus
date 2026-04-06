@@ -1,10 +1,12 @@
 import { apiSuccess } from '@/lib/api/response';
-import { requireAuth, withErrorHandler } from '@/lib/api/withAuth';
+import { requireAuth, withErrorHandler, runWithUserRLS } from '@/lib/api/withAuth';
 import { PartnerAssignmentService } from '@/lib/services/PartnerAssignmentService';
 
 // GET /api/partners/assignments
 export const GET = withErrorHandler(async () => {
     const user = await requireAuth();
-    const assignments = await PartnerAssignmentService.getAssignments(user.email!);
-    return apiSuccess({ assignments });
+    return runWithUserRLS(user, async () => {
+        const assignments = await PartnerAssignmentService.getAssignments(user.email!);
+        return apiSuccess({ assignments });
+    });
 });

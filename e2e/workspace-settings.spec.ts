@@ -104,7 +104,7 @@ test.describe('Workspace Settings — UI', () => {
         const workspaceId = href?.match(/\/workspaces\/([^/]+)/)?.[1];
         if (!workspaceId) { test.skip(); return; }
 
-        await page.goto(`/workspaces/${workspaceId}/settings`);
+        await page.goto(`/workspaces/settings`);
         await page.waitForLoadState('networkidle');
         await page.waitForSelector('text=/Settings|Workspace|General/i', { timeout: 20000 }).catch(() => { });
 
@@ -125,7 +125,7 @@ test.describe('Workspace Settings — UI', () => {
         const workspaceId = href?.match(/\/workspaces\/([^/]+)/)?.[1];
         if (!workspaceId) { test.skip(); return; }
 
-        await page.goto(`/workspaces/${workspaceId}/members`);
+        await page.goto(`/workspaces/members`);
         await page.waitForLoadState('networkidle');
         await page.waitForSelector('text=/Member|Admin|Owner|Team/i', { timeout: 20000 }).catch(() => { });
 

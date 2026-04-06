@@ -1,6 +1,6 @@
 import { apiSuccess } from '@/lib/api/response';
 import { NextRequest } from 'next/server';
-import { withErrorHandler } from '@/lib/api/withAuth';
+import { withErrorHandler, requireAgentContext, runWithWorkspaceRLS } from '@/lib/api/withAuth';
 import { z } from 'zod';
 import { withRateLimit } from '@/lib/security/rateLimit';
 import { AgentService } from '@/lib/services/AgentService';
@@ -22,7 +22,12 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     if (rateLimitResponse) return rateLimitResponse;
 
     const data = discoverySchema.parse(await request.json());
-    const result = await AgentService.processDiscovery(data.authToken, data.subnet, data.devices);
+    const agent = await requireAgentContext(data.authToken);
+    const result = await runWithWorkspaceRLS(
+        agent.workspaceId,
+        { id: agent.id, role: 'USER' },
+        () => AgentService.processDiscovery(data.authToken, data.subnet, data.devices)
+    );
     return apiSuccess(
         { scanId: result.scanId, count: result.count },
         { message: 'Network discovery topology synchronized' },

@@ -26,20 +26,29 @@ export const POST = withErrorHandler(async (
     expiresAt.setDate(expiresAt.getDate() + 7);
     storePreAuthToken(preAuthToken, workspaceId);
 
+    const apiEndpoint = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+
+    const queryParams = `token=${preAuthToken}&url=${encodeURIComponent(apiEndpoint)}&workspaceId=${workspaceId}`;
+
     const downloadInfo = {
         platform,
         workspaceId,
         preAuthToken,
         expiresAt,
         downloadUrl: ({
-            windows: `/downloads/glanus-agent-${workspaceId}.msi`,
-            macos: `/downloads/glanus-agent-${workspaceId}.pkg`,
-            linux: `/downloads/glanus-agent-${workspaceId}.deb`,
+            windows: `/api/downloads/glanus-agent-${workspaceId}.msi`,
+            macos: `/api/downloads/glanus-agent-${workspaceId}.pkg`,
+            linux: `/api/downloads/glanus-agent-${workspaceId}.deb`,
+        } as Record<string, string>)[platform],
+        installScriptUrl: ({
+            windows: `/api/install-windows?${queryParams}`,
+            macos: `/api/install-macos?${queryParams}`,
+            linux: `/api/install-linux?${queryParams}`,
         } as Record<string, string>)[platform],
         config: {
             workspaceId,
             preAuthToken,
-            apiEndpoint: process.env.NEXT_PUBLIC_API_URL || process.env.NEXTAUTH_URL || 'http://localhost:3000',
+            apiEndpoint,
         },
     };
 

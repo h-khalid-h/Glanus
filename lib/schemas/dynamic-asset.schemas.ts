@@ -93,6 +93,7 @@ export const createCategorySchema = z.object({
     isActive: z.boolean().default(true),
     sortOrder: z.number().int().default(0),
     metadata: z.record(z.unknown()).optional(),
+    workspaceId: z.string().optional(),
 });
 
 export const updateCategorySchema = createCategorySchema.partial();
@@ -140,6 +141,7 @@ export const createFieldDefinitionSchema = z.object({
     group: z.string().optional(),
     placeholder: z.string().optional(),
     helpText: z.string().optional(),
+    workspaceId: z.string().optional(),
 });
 
 // Schema for creating field via POST request (categoryId comes from URL)
@@ -189,6 +191,7 @@ export const createActionDefinitionSchema = z.object({
     sortOrder: z.number().int().default(0),
     isVisible: z.boolean().default(true),
     buttonColor: z.string().optional(),
+    workspaceId: z.string().optional(),
 });
 
 // Schema for creating action via POST request (categoryId comes from URL)

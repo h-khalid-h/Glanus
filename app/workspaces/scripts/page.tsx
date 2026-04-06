@@ -1,0 +1,552 @@
+'use client';
+import { useToast } from '@/lib/toast';
+import { ErrorState } from '@/components/ui/EmptyState';
+import { csrfFetch } from '@/lib/api/csrfFetch';
+
+import { useEffect, useState } from 'react';
+import { useWorkspaceId } from '@/lib/workspace/context';
+import { Terminal, Plus, Trash2, Zap, Rocket, X, CheckCircle, XCircle, Clock, Loader2, History, Calendar } from 'lucide-react';
+import { ConfirmDialog } from '@/components/ui';
+import { PageSpinner } from '@/components/ui/Spinner';
+import { ScheduledJobsPanel } from '@/components/workspace/scripts/ScheduledJobsPanel';
+
+interface Script {
+    id: string;
+    name: string;
+    description: string | null;
+    language: string;
+    content: string;
+    tags: string[];
+    isPublic: boolean;
+    _count: { executions: number };
+    createdAt: string;
+}
+
+interface Agent {
+    id: string;
+    hostname: string;
+    platform: string;
+    status: string;
+}
+
+interface Execution {
+    id: string;
+    scriptName: string;
+    language: string;
+    status: string;
+    output: string | null;
+    exitCode: number | null;
+    createdAt: string;
+    completedAt: string | null;
+    agent: Agent | null;
+    script: { id: string; name: string; language: string } | null;
+}
+
+export default function ScriptsLibraryPage() {
+    const { success, error: showError } = useToast();
+    const workspaceId = useWorkspaceId();
+
+    const [scripts, setScripts] = useState<Script[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    // Modal States
+    const [isCreating, setIsCreating] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    // Deploy Modal
+    const [deployTarget, setDeployTarget] = useState<Script | null>(null);
+    const [availableAgents, setAvailableAgents] = useState<Agent[]>([]);
+    const [selectedAgentIds, setSelectedAgentIds] = useState<string[]>([]);
+    const [isDeploying, setIsDeploying] = useState(false);
+    const [loadingAgents, setLoadingAgents] = useState(false);
+
+    // Execution History & Schedules
+    const [showHistory, setShowHistory] = useState(false);
+    const [showSchedules, setShowSchedules] = useState(false);
+    const [executions, setExecutions] = useState<Execution[]>([]);
+    const [loadingHistory, setLoadingHistory] = useState(false);
+
+    // Confirm dialog state
+    const [confirmState, setConfirmState] = useState<{ open: boolean; title: string; message: string; onConfirm: () => void }>({
+        open: false, title: '', message: '', onConfirm: () => {},
+    });
+
+    // Form Data
+    const [formData, setFormData] = useState({
+        name: '',
+        description: '',
+        language: 'powershell',
+        content: '# Enter your script here...',
+    });
+
+    useEffect(() => {
+        if (workspaceId) {
+            fetchScripts();
+        }
+    }, [workspaceId]);
+
+    const fetchScripts = async () => {
+        try {
+            const res = await csrfFetch(`/api/workspaces/${workspaceId}/scripts`);
+            const data = await res.json();
+            if (res.ok) {
+                setScripts(data.data?.scripts || []);
+            }
+        } catch (err: unknown) {
+            const msg = err instanceof Error ? err.message : 'Failed to fetch scripts';
+            setError(msg);
+            showError('Load Error', msg);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const fetchExecutionHistory = async () => {
+        setLoadingHistory(true);
+        try {
+            const res = await csrfFetch(`/api/workspaces/${workspaceId}/scripts/executions?limit=100`);
+            const data = await res.json();
+            if (res.ok) {
+                setExecutions(data.data?.executions || []);
+            }
+        } catch {
+            showError('Load Error', 'Failed to fetch execution history');
+        } finally {
+            setLoadingHistory(false);
+        }
+    };
+
+    const handleCreateScript = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsSubmitting(true);
+        try {
+            const res = await csrfFetch(`/api/workspaces/${workspaceId}/scripts`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData)
+            });
+
+            if (!res.ok) {
+                const data = await res.json();
+                throw new Error(data.message || 'Failed to craft script template.');
+            }
+
+            success('Success', 'Script saved to repository.');
+            setIsCreating(false);
+            setFormData({ name: '', description: '', language: 'powershell', content: '' });
+            fetchScripts();
+        } catch (err: unknown) {
+            showError('Creation Failed', err instanceof Error ? err.message : 'Unknown error');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const handleDeleteScript = (scriptId: string) => {
+        setConfirmState({
+            open: true,
+            title: 'Delete Script',
+            message: 'Are you sure you want to permanently delete this script? This action cannot be undone.',
+            onConfirm: async () => {
+                setConfirmState(prev => ({ ...prev, open: false }));
+                try {
+                    const res = await csrfFetch(`/api/workspaces/${workspaceId}/scripts/${scriptId}`, {
+                        method: 'DELETE'
+                    });
+                    if (!res.ok) throw new Error('Failed to delete script');
+                    success('Deleted', 'Script removed from library.');
+                    fetchScripts();
+                } catch (err: unknown) {
+                    showError('Deletion Failed', err instanceof Error ? err.message : 'Failed to delete');
+                }
+            },
+        });
+    };
+
+    const openDeployModal = async (script: Script) => {
+        setDeployTarget(script);
+        setSelectedAgentIds([]);
+        setLoadingAgents(true);
+        try {
+            const res = await csrfFetch(`/api/workspaces/${workspaceId}/agents`);
+            const data = await res.json();
+            if (res.ok) {
+                setAvailableAgents((data.data?.agents || []).filter((a: Agent) => a.status === 'ONLINE'));
+            }
+        } catch {
+            showError('Load Error', 'Failed to load agents');
+        } finally {
+            setLoadingAgents(false);
+        }
+    };
+
+    const handleDeploy = async () => {
+        if (!deployTarget || selectedAgentIds.length === 0) return;
+        setIsDeploying(true);
+        try {
+            const res = await csrfFetch(`/api/workspaces/${workspaceId}/scripts/${deployTarget.id}/deploy`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ targetAgentIds: selectedAgentIds })
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                throw new Error(data.error?.message || 'Deployment failed.');
+            }
+
+            const deployed = data.data?.deployedCount || selectedAgentIds.length;
+            const skipped = data.data?.skippedCount || 0;
+            success('Deployed', `Script dispatched to ${deployed} agents.${skipped > 0 ? ` ${skipped} agents were offline and skipped.` : ''}`);
+            setDeployTarget(null);
+            fetchScripts(); // Refresh execution counts
+        } catch (err: unknown) {
+            showError('Deployment Failed', err instanceof Error ? err.message : 'Unknown error');
+        } finally {
+            setIsDeploying(false);
+        }
+    };
+
+    const toggleAgentSelection = (agentId: string) => {
+        setSelectedAgentIds(prev =>
+            prev.includes(agentId)
+                ? prev.filter(id => id !== agentId)
+                : [...prev, agentId]
+        );
+    };
+
+    const selectAllAgents = () => {
+        if (selectedAgentIds.length === availableAgents.length) {
+            setSelectedAgentIds([]);
+        } else {
+            setSelectedAgentIds(availableAgents.map(a => a.id));
+        }
+    };
+
+    const getStatusIcon = (status: string) => {
+        switch (status) {
+            case 'SUCCESS': return <CheckCircle size={14} className="text-green-400" />;
+            case 'FAILED': return <XCircle size={14} className="text-red-400" />;
+            case 'RUNNING': return <Loader2 size={14} className="text-blue-400 animate-spin" />;
+            case 'PENDING': return <Clock size={14} className="text-amber-400" />;
+            default: return <Clock size={14} className="text-slate-400" />;
+        }
+    };
+
+    const getStatusColor = (status: string) => {
+        switch (status) {
+            case 'SUCCESS': return 'text-green-400';
+            case 'FAILED': return 'text-red-400';
+            case 'RUNNING': return 'text-blue-400';
+            case 'PENDING': return 'text-amber-400';
+            default: return 'text-slate-400';
+        }
+    };
+
+    if (loading) return <PageSpinner />;
+    if (error) return <ErrorState title="Failed to load scripts" description={error} onRetry={() => { setError(null); setLoading(true); fetchScripts(); }} />;
+
+    return (
+        <>
+            <ConfirmDialog
+                open={confirmState.open}
+                title={confirmState.title}
+                message={confirmState.message}
+                confirmLabel="Delete"
+                variant="danger"
+                onConfirm={confirmState.onConfirm}
+                onCancel={() => setConfirmState(prev => ({ ...prev, open: false }))}
+            />
+            <div className="flex justify-between items-center mb-8">
+                <div>
+                    <h1 className="text-3xl font-bold text-foreground mb-2">Script Library</h1>
+                    <p className="text-muted-foreground">Manage centralized execution payloads for your RMM fleet.</p>
+                </div>
+                <div className="flex items-center gap-3">
+                    <button
+                        onClick={() => { setShowHistory(!showHistory); setShowSchedules(false); if (!showHistory) fetchExecutionHistory(); }}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors ${showHistory ? 'bg-nerve/10 border-nerve text-nerve' : 'border-slate-800 text-slate-300 hover:bg-slate-800'}`}
+                    >
+                        <History size={18} />
+                        <span>Execution Log</span>
+                    </button>
+                    <button
+                        onClick={() => { setShowSchedules(!showSchedules); setShowHistory(false); }}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors ${showSchedules ? 'bg-nerve/10 border-nerve text-nerve' : 'border-slate-800 text-slate-300 hover:bg-slate-800'}`}
+                    >
+                        <Calendar size={18} />
+                        <span>Schedules</span>
+                    </button>
+                    <button
+                        onClick={() => setIsCreating(true)}
+                        className="flex items-center gap-2 px-4 py-2 bg-nerve text-white rounded-lg hover:brightness-110 transition-colors shadow-lg shadow-nerve/20"
+                    >
+                        <Plus size={18} />
+                        <span>New Script</span>
+                    </button>
+                </div>
+            </div>
+
+            {/* Scheduled Jobs Panel */}
+            {showSchedules && (
+                <ScheduledJobsPanel workspaceId={workspaceId} availableScripts={scripts} />
+            )}
+
+            {/* Execution History Panel */}
+            {showHistory && (
+                <div className="mb-8 rounded-xl border border-slate-800 bg-slate-900/50 overflow-hidden">
+                    <div className="px-6 py-4 border-b border-slate-800 flex justify-between items-center">
+                        <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                            <History size={18} className="text-nerve" />
+                            Execution History
+                        </h2>
+                        <span className="text-xs text-slate-500">{executions.length} records</span>
+                    </div>
+                    {loadingHistory ? (
+                        <div className="flex items-center justify-center py-12">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-nerve" />
+                        </div>
+                    ) : executions.length === 0 ? (
+                        <div className="text-center py-12 text-slate-500">
+                            <Terminal className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                            <p>No executions recorded yet. Deploy a script to see results here.</p>
+                        </div>
+                    ) : (
+                        <div className="overflow-x-auto">
+                            <table className="w-full">
+                                <thead>
+                                    <tr className="text-left text-xs text-slate-500 uppercase tracking-wider border-b border-slate-800">
+                                        <th className="px-6 py-3">Status</th>
+                                        <th className="px-6 py-3">Script</th>
+                                        <th className="px-6 py-3">Agent</th>
+                                        <th className="px-6 py-3">Language</th>
+                                        <th className="px-6 py-3">Exit Code</th>
+                                        <th className="px-6 py-3">Started</th>
+                                        <th className="px-6 py-3">Completed</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-800">
+                                    {executions.map(exec => (
+                                        <tr key={exec.id} className="hover:bg-slate-800/30 transition">
+                                            <td className="px-6 py-3">
+                                                <div className="flex items-center gap-2">
+                                                    {getStatusIcon(exec.status)}
+                                                    <span className={`text-sm font-medium ${getStatusColor(exec.status)}`}>{exec.status}</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-3 text-sm text-foreground">{exec.script?.name || exec.scriptName}</td>
+                                            <td className="px-6 py-3 text-sm text-slate-300">{exec.agent?.hostname || 'Unknown'}</td>
+                                            <td className="px-6 py-3">
+                                                <span className="text-xs px-2 py-0.5 rounded bg-slate-800 text-slate-300 uppercase font-mono">{exec.language}</span>
+                                            </td>
+                                            <td className="px-6 py-3 text-sm font-mono text-slate-400">{exec.exitCode !== null ? exec.exitCode : '—'}</td>
+                                            <td className="px-6 py-3 text-xs text-slate-500">{new Date(exec.createdAt).toLocaleString()}</td>
+                                            <td className="px-6 py-3 text-xs text-slate-500">{exec.completedAt ? new Date(exec.completedAt).toLocaleString() : '—'}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {scripts.length === 0 && !isCreating ? (
+                <div className="text-center py-16 px-4 rounded-xl border border-slate-800 bg-slate-900/30">
+                    <div className="mx-auto w-16 h-16 rounded-full bg-slate-800/50 flex items-center justify-center mb-4">
+                        <Terminal className="w-8 h-8 text-slate-400" />
+                    </div>
+                    <h3 className="text-xl font-medium text-foreground mb-2">No scripts found</h3>
+                    <p className="text-slate-500 max-w-sm mx-auto mb-6">
+                        Your library is empty. Create Bash, PowerShell, or Python payloads to deploy across your managed assets.
+                    </p>
+                    <button onClick={() => setIsCreating(true)} className="px-6 py-2 bg-nerve text-white rounded-md hover:brightness-110 transition font-medium">
+                        Create First Script
+                    </button>
+                </div>
+            ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {scripts.map(script => (
+                        <div key={script.id} className="rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm p-6 hover:border-slate-700 transition relative group">
+                            <div className="flex justify-between items-start mb-4">
+                                <div>
+                                    <h3 className="font-semibold text-lg text-foreground mb-1">{script.name}</h3>
+                                    <span className="text-xs px-2 py-1 rounded bg-slate-800 text-slate-300 uppercase tracking-wider font-mono">
+                                        {script.language}
+                                    </span>
+                                </div>
+                                <button
+                                    onClick={() => handleDeleteScript(script.id)}
+                                    className="p-1.5 text-slate-500 hover:text-red-400 hover:bg-red-400/10 rounded-md transition opacity-0 group-hover:opacity-100"
+                                    title="Delete Script"
+                                >
+                                    <Trash2 size={16} />
+                                </button>
+                            </div>
+                            <p className="text-sm text-slate-400 mb-6 line-clamp-2 h-10">
+                                {script.description || 'No description provided.'}
+                            </p>
+                            <div className="flex items-center justify-between mt-auto">
+                                <span className="text-xs text-slate-500 flex items-center gap-1.5">
+                                    <Zap size={14} /> {script._count.executions} Deployments
+                                </span>
+                                <button
+                                    onClick={() => openDeployModal(script)}
+                                    className="flex items-center gap-1.5 text-sm text-nerve hover:text-nerve/80 font-medium transition"
+                                >
+                                    <Rocket size={14} />
+                                    Deploy Fleet
+                                </button>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
+
+            {/* Creation Modal Overlay */}
+            {isCreating && (
+                <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div className="bg-slate-900 border border-slate-800 rounded-xl w-full max-w-3xl overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200" role="dialog" aria-modal="true" aria-labelledby="create-script-title">
+                        <div className="px-6 py-4 border-b border-slate-800 flex justify-between items-center bg-slate-900/50">
+                            <h2 id="create-script-title" className="text-xl font-semibold flex items-center gap-2 text-foreground">
+                                <Terminal size={20} className="text-nerve" />
+                                Compose Script Payload
+                            </h2>
+                            <button onClick={() => setIsCreating(false)} className="text-slate-400 hover:text-white transition" aria-label="Close">✕</button>
+                        </div>
+                        <form onSubmit={handleCreateScript} className="p-6 space-y-5">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-300 mb-1">Script Name</label>
+                                    <input required value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm focus:border-nerve focus:ring-1 focus:ring-nerve outline-none" placeholder="e.g., Restart Print Spooler" />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-300 mb-1">Environment Language</label>
+                                    <select value={formData.language} onChange={e => setFormData({ ...formData, language: e.target.value })} className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm focus:border-nerve focus:ring-1 focus:ring-nerve outline-none">
+                                        <option value="powershell">PowerShell (.ps1)</option>
+                                        <option value="bash">Bash Script (.sh)</option>
+                                        <option value="python">Python 3 (.py)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-slate-300 mb-1">Description</label>
+                                <input value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm focus:border-nerve focus:ring-1 focus:ring-nerve outline-none" placeholder="Target scenario or use-case..." />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-slate-300 mb-1">Raw Payload (Code)</label>
+                                <textarea required value={formData.content} onChange={e => setFormData({ ...formData, content: e.target.value })} rows={12} className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-3 text-sm font-mono text-slate-300 focus:border-nerve focus:ring-1 focus:ring-nerve outline-none" placeholder="Write your executable code here..." spellCheck={false} />
+                            </div>
+                            <div className="flex justify-end gap-3 pt-4 border-t border-slate-800">
+                                <button type="button" onClick={() => setIsCreating(false)} className="px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-800 text-slate-300 transition">Cancel</button>
+                                <button type="submit" disabled={isSubmitting} className="px-5 py-2 rounded-lg bg-nerve text-white text-sm font-medium hover:brightness-110 disabled:opacity-50 flex items-center gap-2 transition">
+                                    {isSubmitting ? 'Saving...' : 'Deploy to Library'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Fleet Deploy Modal */}
+            {deployTarget && (
+                <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div className="bg-slate-900 border border-slate-800 rounded-xl w-full max-w-2xl overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200" role="dialog" aria-modal="true" aria-labelledby="deploy-modal-title">
+                        <div className="px-6 py-4 border-b border-slate-800 flex justify-between items-center bg-slate-900/50">
+                            <h2 id="deploy-modal-title" className="text-xl font-semibold flex items-center gap-2 text-foreground">
+                                <Rocket size={20} className="text-nerve" />
+                                Deploy: {deployTarget.name}
+                            </h2>
+                            <button onClick={() => setDeployTarget(null)} className="text-slate-400 hover:text-white transition" aria-label="Close">
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        <div className="p-6 space-y-4">
+                            {/* Script Summary */}
+                            <div className="bg-slate-950 rounded-lg p-4 border border-slate-800">
+                                <div className="flex items-center justify-between mb-2">
+                                    <span className="text-xs uppercase tracking-wider font-mono text-slate-500">Payload Preview</span>
+                                    <span className="text-xs px-2 py-0.5 rounded bg-slate-800 text-slate-300 uppercase font-mono">{deployTarget.language}</span>
+                                </div>
+                                <pre className="text-xs text-slate-400 font-mono max-h-24 overflow-y-auto whitespace-pre-wrap">{deployTarget.content.slice(0, 300)}{deployTarget.content.length > 300 ? '...' : ''}</pre>
+                            </div>
+
+                            {/* Agent Selection */}
+                            <div>
+                                <div className="flex justify-between items-center mb-3">
+                                    <label className="text-sm font-medium text-slate-300">Select Target Agents ({selectedAgentIds.length}/{availableAgents.length})</label>
+                                    <button
+                                        type="button"
+                                        onClick={selectAllAgents}
+                                        className="text-xs text-nerve hover:underline"
+                                    >
+                                        {selectedAgentIds.length === availableAgents.length ? 'Deselect All' : 'Select All'}
+                                    </button>
+                                </div>
+
+                                {loadingAgents ? (
+                                    <div className="flex items-center justify-center py-8">
+                                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-nerve" />
+                                    </div>
+                                ) : availableAgents.length === 0 ? (
+                                    <div className="text-center py-8 text-slate-500 border border-dashed border-slate-700 rounded-lg">
+                                        <p>No online agents available.</p>
+                                        <p className="text-xs mt-1">Agents must be ONLINE to receive deployments.</p>
+                                    </div>
+                                ) : (
+                                    <div className="max-h-48 overflow-y-auto space-y-1 border border-slate-800 rounded-lg divide-y divide-slate-800">
+                                        {availableAgents.map(agent => (
+                                            <label
+                                                key={agent.id}
+                                                className={`flex items-center gap-3 px-4 py-2.5 cursor-pointer hover:bg-slate-800/50 transition ${selectedAgentIds.includes(agent.id) ? 'bg-nerve/5' : ''}`}
+                                            >
+                                                <input
+                                                    type="checkbox"
+                                                    checked={selectedAgentIds.includes(agent.id)}
+                                                    onChange={() => toggleAgentSelection(agent.id)}
+                                                    className="rounded border-slate-600 text-nerve focus:ring-nerve bg-slate-950"
+                                                />
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="font-medium text-sm text-foreground truncate">{agent.hostname}</div>
+                                                    <div className="text-xs text-slate-500">{agent.platform}</div>
+                                                </div>
+                                                <span className="flex items-center gap-1 text-xs text-green-400">
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
+                                                    Online
+                                                </span>
+                                            </label>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="px-6 py-4 border-t border-slate-800 flex justify-end gap-3">
+                            <button type="button" onClick={() => setDeployTarget(null)} className="px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-800 text-slate-300 transition">Cancel</button>
+                            <button
+                                onClick={handleDeploy}
+                                disabled={isDeploying || selectedAgentIds.length === 0}
+                                className="px-5 py-2 rounded-lg bg-nerve text-white text-sm font-medium hover:brightness-110 disabled:opacity-50 flex items-center gap-2 transition shadow-lg shadow-nerve/20"
+                            >
+                                {isDeploying ? (
+                                    <>
+                                        <Loader2 size={16} className="animate-spin" />
+                                        Deploying...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Rocket size={16} />
+                                        Deploy to {selectedAgentIds.length} Agent{selectedAgentIds.length !== 1 ? 's' : ''}
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </>
+    );
+}

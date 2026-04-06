@@ -125,6 +125,13 @@ export function useWorkspace() {
     return context;
 }
 
+// Convenience hook — returns the currently selected workspace's ID from context.
+// Use this in all routes instead of reading from URL params.
+export function useWorkspaceId(): string {
+    const { workspace } = useWorkspace();
+    return workspace?.id ?? '';
+}
+
 // Utility function to check if user has permission in current workspace
 export function useWorkspacePermission(requiredRole: 'OWNER' | 'ADMIN' | 'MEMBER' | 'VIEWER') {
     const { workspace } = useWorkspace();

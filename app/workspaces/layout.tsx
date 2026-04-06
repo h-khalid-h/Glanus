@@ -1,10 +1,7 @@
-import type { Metadata } from 'next';
+'use client';
 
-export const metadata: Metadata = {
-    title: 'Workspace',
-    description: 'Manage your workspace settings, members, and assets',
-};
+import { WorkspaceLayout } from '@/components/workspace/WorkspaceLayout';
 
 export default function WorkspacesLayout({ children }: { children: React.ReactNode }) {
-    return <>{children}</>;
+    return <WorkspaceLayout>{children}</WorkspaceLayout>;
 }

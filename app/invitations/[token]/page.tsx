@@ -59,7 +59,7 @@ export default function InvitationPage({ params: paramsPromise }: { params: Prom
             }
 
             // Success — redirect to workspace analytics (main workspace page)
-            router.push(`/workspaces/${data.workspaceId}/analytics`);
+            router.push(`/workspaces/analytics`);
         } catch (err: unknown) {
             setInviteState(prev => ({
                 ...prev,

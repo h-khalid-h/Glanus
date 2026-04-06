@@ -1,6 +1,6 @@
 import { apiSuccess } from '@/lib/api/response';
 import { NextRequest } from 'next/server';
-import { requireAuth, withErrorHandler } from '@/lib/api/withAuth';
+import { requireAuth, withErrorHandler, runWithUserRLS } from '@/lib/api/withAuth';
 import { withRateLimit } from '@/lib/security/rateLimit';
 import { z } from 'zod';
 import { PartnerService } from '@/lib/services/PartnerService';
@@ -25,8 +25,10 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     if (rateLimited) return rateLimited;
 
     const user = await requireAuth();
-    const partner = await PartnerService.getMyProfile(user.email!);
-    return apiSuccess({ partner });
+    return runWithUserRLS(user, async () => {
+        const partner = await PartnerService.getMyProfile(user.email!);
+        return apiSuccess({ partner });
+    });
 });
 
 // PATCH /api/partners/me
@@ -36,6 +38,8 @@ export const PATCH = withErrorHandler(async (request: NextRequest) => {
 
     const user = await requireAuth();
     const validation = updatePartnerSchema.parse(await request.json());
-    const partner = await PartnerService.updateMyProfile(user.email!, validation);
-    return apiSuccess({ partner });
+    return runWithUserRLS(user, async () => {
+        const partner = await PartnerService.updateMyProfile(user.email!, validation);
+        return apiSuccess({ partner });
+    });
 });

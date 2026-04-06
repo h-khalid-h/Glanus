@@ -20,7 +20,7 @@ test.describe('Alerts Page', () => {
             return;
         }
 
-        await page.goto(`/workspaces/${workspaceId}/alerts`);
+        await page.goto(`/workspaces/alerts`);
         await page.waitForLoadState('networkidle');
 
         // Wait for alert content to appear (skeleton loading finishes)
@@ -44,7 +44,7 @@ test.describe('Alerts Page', () => {
             return;
         }
 
-        await page.goto(`/workspaces/${workspaceId}/alerts`);
+        await page.goto(`/workspaces/alerts`);
         await page.waitForLoadState('networkidle');
 
         // Wait for page content to fully render
@@ -69,7 +69,7 @@ test.describe('Alerts Page', () => {
             return;
         }
 
-        await page.goto(`/workspaces/${workspaceId}/alerts`);
+        await page.goto(`/workspaces/alerts`);
         await page.waitForLoadState('networkidle');
 
         // Wait for webhook section

@@ -158,20 +158,19 @@ export default function AccountSettingsPage() {
     ];
 
     return (
-        <div className="min-h-screen bg-background">
-            <div className="max-w-4xl mx-auto px-6 py-10">
-                {/* Header */}
-                <div className="mb-8">
-                    <div className="flex items-center gap-3 mb-2">
-                        <div className="w-12 h-12 rounded-full bg-nerve/10 flex items-center justify-center">
-                            <User className="w-6 h-6 text-nerve" />
-                        </div>
-                        <div>
-                            <h1 className="text-3xl font-bold text-foreground">Account Settings</h1>
-                            <p className="text-slate-400">Manage your profile, security, and workspace memberships</p>
-                        </div>
+        <>
+            {/* Header */}
+            <div className="mb-8">
+                <div className="flex items-center gap-3 mb-2">
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                        <User className="w-5 h-5 text-primary" />
+                    </div>
+                    <div>
+                        <h1 className="text-2xl font-bold tracking-tight text-foreground">Account Settings</h1>
+                        <p className="text-sm text-muted-foreground">Manage your profile, security, and workspace memberships</p>
                     </div>
                 </div>
+            </div>
 
                 {/* Tab Navigation */}
                 <div className="flex gap-1 mb-8 bg-slate-900/50 rounded-lg p-1 border border-slate-800">
@@ -413,7 +412,6 @@ export default function AccountSettingsPage() {
                         )}
                     </div>
                 )}
-            </div>
-        </div>
+        </>
     );
 }

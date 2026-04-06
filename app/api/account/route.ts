@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { requireAuth, withErrorHandler } from '@/lib/api/withAuth';
+import { requireAuth, runWithUserRLS, withErrorHandler } from '@/lib/api/withAuth';
 import { apiSuccess } from '@/lib/api/response';
 import { AccountService } from '@/lib/services/AccountService';
 import { withRateLimit } from '@/lib/security/rateLimit';
@@ -21,8 +21,10 @@ const changePasswordSchema = z.object({
  */
 export const GET = withErrorHandler(async () => {
     const user = await requireAuth();
-    const profile = await AccountService.getProfile(user.id);
-    return apiSuccess({ profile });
+    return runWithUserRLS(user, async () => {
+        const profile = await AccountService.getProfile(user.id);
+        return apiSuccess({ profile });
+    });
 });
 
 /**
@@ -32,8 +34,10 @@ export const GET = withErrorHandler(async () => {
 export const PATCH = withErrorHandler(async (request: NextRequest) => {
     const user = await requireAuth();
     const data = updateProfileSchema.parse(await request.json());
-    const profile = await AccountService.updateProfile(user.id, data);
-    return apiSuccess({ profile }, { message: 'Profile updated successfully.' });
+    return runWithUserRLS(user, async () => {
+        const profile = await AccountService.updateProfile(user.id, data);
+        return apiSuccess({ profile }, { message: 'Profile updated successfully.' });
+    });
 });
 
 /**
@@ -46,6 +50,8 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
 
     const user = await requireAuth();
     const { currentPassword, newPassword } = changePasswordSchema.parse(await request.json());
-    const result = await AccountService.changePassword(user.id, currentPassword, newPassword);
-    return apiSuccess(result, { message: 'Password changed successfully.' });
+    return runWithUserRLS(user, async () => {
+        const result = await AccountService.changePassword(user.id, currentPassword, newPassword);
+        return apiSuccess(result, { message: 'Password changed successfully.' });
+    });
 });

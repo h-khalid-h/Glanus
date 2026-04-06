@@ -11,6 +11,7 @@ import { ConfirmDialog } from '@/components/ui';
 import { useWorkspace } from '@/lib/workspace/context';
 import { PageSpinner } from '@/components/ui/Spinner';
 import { ErrorState } from '@/components/ui/EmptyState';
+import { Search, Upload, Plus, Trash2, ChevronLeft, ChevronRight, X, MapPin, UserCircle, CheckSquare } from 'lucide-react';
 
 interface AssetCategory {
     id: string;
@@ -142,11 +143,30 @@ export default function AssetsPage() {
             case 'MAINTENANCE':
                 return 'bg-health-warn/15 text-health-warn';
             case 'RETIRED':
-                return 'bg-slate-800/50 text-slate-200';
+                return 'bg-muted text-muted-foreground';
             case 'LOST':
                 return 'bg-health-critical/15 text-health-critical';
             default:
-                return 'bg-slate-800/50 text-slate-200';
+                return 'bg-muted text-muted-foreground';
+        }
+    };
+
+    const getStatusAccentColor = (status: string): string => {
+        switch (status) {
+            case 'AVAILABLE': return 'hsl(var(--health-good))';
+            case 'ASSIGNED':  return 'hsl(var(--nerve))';
+            case 'MAINTENANCE': return 'hsl(var(--oracle))';
+            case 'LOST': return 'hsl(var(--health-critical))';
+            default: return 'hsl(var(--health-unknown))';
+        }
+    };
+
+    const getTypeStyle = (type: string) => {
+        switch (type) {
+            case 'PHYSICAL': return { cls: 'bg-nerve/10 text-nerve', label: 'Physical' };
+            case 'DIGITAL':  return { cls: 'bg-oracle/10 text-oracle', label: 'Digital' };
+            case 'DYNAMIC':  return { cls: 'bg-cortex/10 text-cortex', label: 'Dynamic' };
+            default: return { cls: 'bg-muted text-muted-foreground', label: type };
         }
     };
 
@@ -268,6 +288,8 @@ export default function AssetsPage() {
     if (loading && assets.length === 0 && categories.length === 0) return <PageSpinner text="Loading assets…" />;
     if (error && assets.length === 0) return <ErrorState title="Failed to load assets" description={error} onRetry={() => fetchAssets()} />;
 
+    const hasActiveFilters = !!(search || categoryId || status);
+
     return (
         <>
             <ConfirmDialog
@@ -279,12 +301,65 @@ export default function AssetsPage() {
                 onConfirm={handleBulkDelete}
                 onCancel={() => setShowBulkDeleteConfirm(false)}
             />
-            {/* Header */}
-            <div className="flex items-center justify-between mb-8">
+
+            {/* ── Bulk action bar ── */}
+            {showBulkActions && (
+                <div className="mb-5 flex items-center justify-between rounded-xl border border-primary/25 bg-primary/[0.04] px-4 py-2.5 animate-slide-up">
+                    <div className="flex items-center gap-2.5">
+                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/15">
+                            <CheckSquare className="h-3.5 w-3.5 text-primary" />
+                        </div>
+                        <span className="text-sm font-medium text-foreground">
+                            <span className="text-primary font-semibold">{selectedAssets.size}</span> selected
+                        </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <select
+                            value={bulkStatusTarget}
+                            onChange={e => { setBulkStatusTarget(e.target.value); if (e.target.value) handleBulkStatusChange(e.target.value); }}
+                            disabled={bulkActionLoading}
+                            className="input h-8 py-0 text-xs pl-3 pr-7 w-auto rounded-lg"
+                        >
+                            <option value="">Change status…</option>
+                            {statuses.map(s => <option key={s} value={s}>{getStatusLabel(s)}</option>)}
+                        </select>
+                        <button
+                            type="button"
+                            onClick={handleBulkExport}
+                            disabled={bulkActionLoading}
+                            className="btn-secondary h-8 py-0 text-xs gap-1.5"
+                        >
+                            Export CSV
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setShowBulkDeleteConfirm(true)}
+                            disabled={bulkActionLoading}
+                            className="btn-danger h-8 py-0 text-xs gap-1.5 inline-flex items-center"
+                        >
+                            <Trash2 className="h-3.5 w-3.5" />
+                            {bulkActionLoading ? 'Processing…' : 'Delete'}
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => { setSelectedAssets(new Set()); setShowBulkActions(false); }}
+                            className="btn-ghost h-8 w-8 p-0 rounded-lg"
+                            aria-label="Clear selection"
+                        >
+                            <X className="h-4 w-4" />
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* ── Page header ── */}
+            <div className="flex items-start justify-between mb-5">
                 <div>
-                    <h1 className="text-3xl font-bold text-foreground">Assets</h1>
-                    <p className="text-muted-foreground mt-1">
-                        {loading ? 'Loading assets...' : `${pagination.total} asset${pagination.total !== 1 ? 's' : ''} found`}
+                    <h1 className="text-xl font-semibold tracking-tight text-foreground">Asset Inventory</h1>
+                    <p className="text-sm text-muted-foreground mt-0.5">
+                        {loading
+                            ? 'Loading…'
+                            : `${pagination.total.toLocaleString()} asset${pagination.total !== 1 ? 's' : ''}${hasActiveFilters ? ' matched' : ' total'}`}
                     </p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -299,346 +374,224 @@ export default function AssetsPage() {
                         type="button"
                         onClick={() => fileInputRef.current?.click()}
                         disabled={importing}
-                        className="btn-secondary inline-flex items-center gap-2"
+                        className="btn-secondary inline-flex items-center gap-1.5 h-9 text-sm px-3"
                     >
-                        {importing ? (
-                            <><div className="animate-spin rounded-full h-4 w-4 border-b-2 border-nerve" /> Importing…</>
-                        ) : (
-                            <><svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>Import CSV</>
-                        )}
+                        {importing
+                            ? <><div className="animate-spin rounded-full h-3.5 w-3.5 border-2 border-primary border-t-transparent" /> Importing…</>
+                            : <><Upload className="h-3.5 w-3.5" /> Import</>}
                     </button>
-                    <Link
-                        href="/assets/new"
-                        className="btn-primary inline-flex items-center gap-2"
-                    >
-                        <svg
-                            className="w-5 h-5"
-                            fill="none"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                        >
-                            <path d="M12 4v16m8-8H4" />
-                        </svg>
+                    <Link href="/assets/new" className="btn-primary inline-flex items-center gap-1.5 h-9 text-sm px-3">
+                        <Plus className="h-3.5 w-3.5" />
                         Add Asset
                     </Link>
                 </div>
             </div>
 
-            {/* Filters */}
-            <div className="card mb-6">
-                <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-                    {/* Search */}
-                    <div className="md:col-span-2">
-                        <label className="block text-sm font-medium text-foreground mb-2">
-                            Search
-                        </label>
-                        <input
-                            type="text"
-                            placeholder="Search by name, model, serial..."
-                            value={search}
-                            onChange={(e) => handleSearch(e.target.value)}
-                            className="input w-full"
-                        />
-                    </div>
-
-                    {/* Asset Type Filter */}
-                    <div>
-                        <label className="block text-sm font-medium text-foreground mb-2">
-                            Type
-                        </label>
-                        <select
-                            value={assetType}
-                            onChange={(e) => setAssetType(e.target.value)}
-                            className="input w-full"
-                        >
-                            <option value="">All Types</option>
-                            <option value="DYNAMIC">✨ Dynamic</option>
-                            <option value="PHYSICAL">💻 Physical (Legacy)</option>
-                            <option value="DIGITAL">☁️ Digital (Legacy)</option>
-                        </select>
-                    </div>
-
-                    {/* Category Filter */}
-                    <div>
-                        <label className="block text-sm font-medium text-foreground mb-2">
-                            Category
-                        </label>
-                        <select
-                            value={categoryId}
-                            onChange={(e) => setCategoryId(e.target.value)}
-                            className="input w-full"
-                        >
-                            <option value="">All Categories</option>
-                            {categories.map((cat) => (
-                                <option key={cat.id} value={cat.id}>
-                                    {cat.icon} {cat.name}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-
-                    {/* Status Filter */}
-                    <div>
-                        <label className="block text-sm font-medium text-foreground mb-2">
-                            Status
-                        </label>
-                        <select
-                            value={status}
-                            onChange={(e) => setStatus(e.target.value)}
-                            className="input w-full"
-                        >
-                            <option value="">All Statuses</option>
-                            {statuses.map((s) => (
-                                <option key={s} value={s}>
-                                    {s}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
+            {/* ── Filter toolbar ── */}
+            <div className="filter-toolbar mb-5">
+                {/* Search */}
+                <div className="relative flex-1 min-w-48">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+                    <input
+                        type="text"
+                        placeholder="Search name, model, serial…"
+                        value={search}
+                        onChange={(e) => handleSearch(e.target.value)}
+                        className="input pl-9 h-8 py-0 text-sm"
+                    />
                 </div>
 
-                {/* Filter Pills */}
-                {(search || categoryId || status || assignmentFilter) && (
-                    <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-border">
-                        {search && (
-                            <span className="badge-primary flex items-center gap-1">
-                                Search: {search}
-                                <button type="button"
-                                    onClick={() => setSearch('')}
-                                    className="ml-1 hover:text-white"
-                                >
-                                    ×
-                                </button>
-                            </span>
-                        )}
-                        {categoryId && (
-                            <span className="badge-primary flex items-center gap-1">
-                                Category: {categories.find(c => c.id === categoryId)?.name || categoryId}
-                                <button type="button"
-                                    onClick={() => setCategoryId('')}
-                                    className="ml-1 hover:text-white"
-                                >
-                                    ×
-                                </button>
-                            </span>
-                        )}
-                        {status && (
-                            <span className="badge-primary flex items-center gap-1">
-                                Status: {status}
-                                <button type="button"
-                                    onClick={() => setStatus('')}
-                                    className="ml-1 hover:text-white"
-                                >
-                                    ×
-                                </button>
-                            </span>
-                        )}
-                    </div>
+                <div className="w-px h-5 bg-border/60 hidden sm:block" aria-hidden="true" />
+
+                {/* Type */}
+                <select
+                    value={assetType}
+                    onChange={(e) => setAssetType(e.target.value)}
+                    className="input h-8 py-0 pl-3 pr-8 w-auto text-sm"
+                >
+                    <option value="">All Types</option>
+                    <option value="DYNAMIC">Dynamic</option>
+                    <option value="PHYSICAL">Physical</option>
+                    <option value="DIGITAL">Digital</option>
+                </select>
+
+                {/* Category */}
+                <select
+                    value={categoryId}
+                    onChange={(e) => setCategoryId(e.target.value)}
+                    className="input h-8 py-0 pl-3 pr-8 w-auto text-sm"
+                >
+                    <option value="">All Categories</option>
+                    {categories.map((cat) => (
+                        <option key={cat.id} value={cat.id}>{cat.icon} {cat.name}</option>
+                    ))}
+                </select>
+
+                {/* Status */}
+                <select
+                    value={status}
+                    onChange={(e) => setStatus(e.target.value)}
+                    className="input h-8 py-0 pl-3 pr-8 w-auto text-sm"
+                >
+                    <option value="">All Statuses</option>
+                    {statuses.map((s) => (
+                        <option key={s} value={s}>{getStatusLabel(s)}</option>
+                    ))}
+                </select>
+
+                {/* Clear all */}
+                {hasActiveFilters && (
+                    <button
+                        type="button"
+                        onClick={() => { setSearch(''); setCategoryId(''); setStatus(''); }}
+                        className="btn-ghost h-8 text-sm text-muted-foreground inline-flex items-center gap-1 px-2"
+                    >
+                        <X className="h-3.5 w-3.5" />
+                        Clear
+                    </button>
                 )}
             </div>
 
-            {/* Bulk Actions Bar */}
-            {showBulkActions && (
-                <div className="card mb-4 bg-nerve/10 border-nerve/30">
-                    <div className="flex items-center justify-between">
-                        <div className="text-sm font-medium text-foreground">
-                            {selectedAssets.size} asset(s) selected
-                        </div>
-                        <div className="flex gap-2 items-center">
-                            <select
-                                value={bulkStatusTarget}
-                                onChange={e => { setBulkStatusTarget(e.target.value); if (e.target.value) handleBulkStatusChange(e.target.value); }}
-                                disabled={bulkActionLoading}
-                                className="bg-slate-800 border border-slate-700 text-white rounded-lg px-3 py-1.5 text-sm outline-none"
-                            >
-                                <option value="">Change Status…</option>
-                                {statuses.map(s => <option key={s} value={s}>{getStatusLabel(s)}</option>)}
-                            </select>
-                            <button type="button"
-                                onClick={handleBulkExport}
-                                disabled={bulkActionLoading}
-                                className="btn-secondary text-sm"
-                            >
-                                📄 Export CSV
-                            </button>
-                            <button type="button"
-                                onClick={() => setShowBulkDeleteConfirm(true)}
-                                disabled={bulkActionLoading}
-                                className="btn bg-destructive text-white hover:bg-destructive/80 text-sm"
-                            >
-                                {bulkActionLoading ? 'Processing...' : '🗑️ Delete Selected'}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Assets Table/List */}
+            {/* ── Content ── */}
             {loading && assets.length === 0 ? (
-                <div className="card">
-                    <div className="flex items-center justify-center py-12">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-nerve"></div>
-                    </div>
+                <div className="flex justify-center py-24">
+                    <div className="animate-spin rounded-full h-6 w-6 border-2 border-primary border-t-transparent" />
                 </div>
             ) : assets.length === 0 ? (
-                <div className="card text-center py-12">
-                    <svg
-                        className="mx-auto h-12 w-12 text-muted-foreground"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                    >
-                        <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
-                        />
-                    </svg>
-                    <h3 className="mt-2 text-lg font-medium text-foreground">No assets found</h3>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                        {search || categoryId || status
-                            ? 'Try adjusting your filters'
-                            : 'Get started by creating a new asset'}
+                <div className="flex flex-col items-center justify-center py-20 text-center animate-fade-in">
+                    <div className="w-12 h-12 rounded-2xl bg-surface-2 flex items-center justify-center mb-4 border border-border">
+                        <svg className="h-6 w-6 text-muted-foreground/60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                                d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                        </svg>
+                    </div>
+                    <h3 className="text-sm font-semibold text-foreground">
+                        {hasActiveFilters ? 'No assets matched' : 'No assets yet'}
+                    </h3>
+                    <p className="mt-1 text-sm text-muted-foreground max-w-xs">
+                        {hasActiveFilters
+                            ? 'Try adjusting your filters to find what you\'re looking for.'
+                            : 'Start tracking your IT inventory by adding your first asset.'}
                     </p>
-                    {!search && !categoryId && !status && (
-                        <div className="mt-6">
-                            <Link href="/assets/new" className="btn-primary">
-                                Add Your First Asset
-                            </Link>
-                        </div>
+                    {!hasActiveFilters && (
+                        <Link href="/assets/new" className="btn-primary mt-5 inline-flex items-center gap-1.5 text-sm h-9 px-4">
+                            <Plus className="h-3.5 w-3.5" />
+                            Add Your First Asset
+                        </Link>
                     )}
                 </div>
             ) : (
                 <>
-                    <div className="card overflow-hidden overflow-x-auto">
-                        <table className="min-w-full divide-y divide-border">
-                            <thead className="bg-muted/50">
-                                <tr>
-                                    <th className="px-6 py-3 text-left">
-                                        <input
-                                            type="checkbox"
-                                            checked={selectedAssets.size === assets.length && assets.length > 0}
-                                            onChange={toggleSelectAll}
-                                            className="rounded border-slate-700"
-                                            aria-label="Select all assets"
-                                        />
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                                        Asset
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                                        Category
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                                        Status
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                                        Assignment
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                                        Location
-                                    </th>
-                                    <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                                        Actions
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-border">
-                                {assets.map((asset) => (
-                                    <tr key={asset.id} className="hover:bg-muted/30 transition-colors">
-                                        <td className="px-6 py-4">
+                    {/* Card grid */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                        {assets.map((asset, i) => {
+                            const typeStyle = getTypeStyle(asset.assetType);
+                            const isSelected = selectedAssets.has(asset.id);
+                            return (
+                                <div
+                                    key={asset.id}
+                                    className={[
+                                        'asset-card animate-fade-in',
+                                        isSelected ? 'selected' : '',
+                                    ].join(' ')}
+                                    style={{ animationDelay: `${i * 25}ms`, animationFillMode: 'both' }}
+                                >
+                                    {/* Status accent strip */}
+                                    <div
+                                        className="absolute left-0 top-0 bottom-0 w-[3px] rounded-l-xl"
+                                        style={{ background: getStatusAccentColor(asset.status) }}
+                                    />
+
+                                    <div className="pl-4 pr-3.5 pt-3.5 pb-3.5">
+                                        {/* Top row: checkbox + type badge */}
+                                        <div className="flex items-start justify-between mb-2.5">
                                             <input
                                                 type="checkbox"
-                                                checked={selectedAssets.has(asset.id)}
+                                                checked={isSelected}
                                                 onChange={() => toggleAssetSelection(asset.id)}
-                                                className="rounded border-slate-700"
-                                                aria-label={`Select asset ${asset.name}`}
+                                                className="mt-0.5 h-3.5 w-3.5 rounded border-border accent-primary cursor-pointer"
+                                                aria-label={`Select ${asset.name}`}
+                                                onClick={e => e.stopPropagation()}
                                             />
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="flex items-center gap-2">
-                                                <div className="flex-1">
-                                                    <div className="flex items-center gap-2">
-                                                        <div className="text-sm font-medium text-foreground">
-                                                            {asset.name}
-                                                        </div>
-                                                    </div>
-                                                    {asset.manufacturer && asset.model && (
-                                                        <div className="text-sm text-muted-foreground">
-                                                            {asset.manufacturer} {asset.model}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="text-sm text-foreground flex items-center gap-2">
-                                                {asset.category ? (
-                                                    <span>{asset.category.icon} {asset.category.name}</span>
-                                                ) : (
-                                                    <span className="text-slate-500">Uncategorized</span>
-                                                )}
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <span className={`badge ${getStatusColor(asset.status)}`}>
-                                                {getStatusLabel(asset.status)}
+                                            <span className={`badge text-[10px] font-medium px-2 py-0.5 rounded-md ${typeStyle.cls}`}>
+                                                {typeStyle.label}
                                             </span>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            {asset.assignedTo ? (
-                                                <div className="text-sm text-foreground">
-                                                    {asset.assignedTo.name}
-                                                </div>
-                                            ) : (
-                                                <span className="text-sm text-muted-foreground">Unassigned</span>
-                                            )}
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="text-sm text-foreground">
-                                                {asset.location || '-'}
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                        </div>
+
+                                        {/* Asset name + model */}
+                                        <div className="mb-2.5">
                                             <Link
                                                 href={`/assets/${asset.id}`}
-                                                className="text-nerve hover:text-nerve/80 transition-colors"
+                                                className="text-sm font-semibold text-foreground leading-snug hover:text-primary transition-colors line-clamp-1 block"
                                             >
-                                                View
+                                                {asset.name}
                                             </Link>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                                            <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
+                                                {[asset.manufacturer, asset.model].filter(Boolean).join(' · ') || <span>&nbsp;</span>}
+                                            </p>
+                                        </div>
+
+                                        {/* Meta: category + location */}
+                                        <div className="flex flex-wrap gap-x-3 gap-y-1 mb-3">
+                                            {asset.category && (
+                                                <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
+                                                    <span>{asset.category.icon}</span>
+                                                    <span className="line-clamp-1">{asset.category.name}</span>
+                                                </span>
+                                            )}
+                                            {asset.location && (
+                                                <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
+                                                    <MapPin className="h-3 w-3 shrink-0" />
+                                                    <span className="line-clamp-1">{asset.location}</span>
+                                                </span>
+                                            )}
+                                        </div>
+
+                                        {/* Footer: assignment + status */}
+                                        <div className="flex items-center justify-between pt-2.5 border-t border-border/50">
+                                            <span className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground min-w-0">
+                                                <UserCircle className="h-3.5 w-3.5 shrink-0 opacity-60" />
+                                                <span className="truncate">
+                                                    {asset.assignedTo ? asset.assignedTo.name : 'Unassigned'}
+                                                </span>
+                                            </span>
+                                            <span className={`badge text-[10px] px-1.5 py-0.5 rounded-md ${getStatusColor(asset.status)}`}>
+                                                {getStatusLabel(asset.status)}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        })}
                     </div>
 
                     {/* Pagination */}
                     {pagination.totalPages > 1 && (
-                        <div className="flex items-center justify-between mt-6">
-                            <div className="text-sm text-muted-foreground">
-                                Showing {(pagination.page - 1) * pagination.limit + 1} to{' '}
-                                {Math.min(pagination.page * pagination.limit, pagination.total)} of{' '}
-                                {pagination.total} assets
-                            </div>
-                            <div className="flex gap-2">
-                                <button type="button"
+                        <div className="flex items-center justify-between mt-6 pt-4 border-t border-border/40">
+                            <p className="text-xs text-muted-foreground">
+                                {(pagination.page - 1) * pagination.limit + 1}–{Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total.toLocaleString()}
+                            </p>
+                            <div className="flex items-center gap-1">
+                                <button
+                                    type="button"
                                     onClick={() => fetchAssets(pagination.page - 1)}
                                     disabled={pagination.page === 1}
-                                    className="btn-secondary disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="btn-outline h-8 w-8 p-0 rounded-lg disabled:opacity-40"
+                                    aria-label="Previous page"
                                 >
-                                    Previous
+                                    <ChevronLeft className="h-3.5 w-3.5" />
                                 </button>
-                                <button type="button"
+                                <span className="flex items-center px-3 text-xs text-muted-foreground font-medium">
+                                    {pagination.page} / {pagination.totalPages}
+                                </span>
+                                <button
+                                    type="button"
                                     onClick={() => fetchAssets(pagination.page + 1)}
                                     disabled={pagination.page === pagination.totalPages}
-                                    className="btn-secondary disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="btn-outline h-8 w-8 p-0 rounded-lg disabled:opacity-40"
+                                    aria-label="Next page"
                                 >
-                                    Next
+                                    <ChevronRight className="h-3.5 w-3.5" />
                                 </button>
                             </div>
                         </div>

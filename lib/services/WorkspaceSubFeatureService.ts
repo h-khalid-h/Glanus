@@ -101,7 +101,7 @@ export class WorkspaceSubFeatureService {
         const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
         const portalSession = await stripe.billingPortal.sessions.create({
             customer: subscription.stripeCustomerId,
-            return_url: `${baseUrl}/workspaces/${workspaceId}/billing`,
+            return_url: `${baseUrl}/workspaces/billing`,
         });
 
         return { url: portalSession.url };

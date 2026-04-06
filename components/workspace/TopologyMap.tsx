@@ -28,20 +28,18 @@ export function TopologyMap({
 }: TopologyMapProps) {
     const svgRef = useRef<SVGSVGElement>(null);
     const [hoveredNode, setHoveredNode] = useState<string | null>(null);
-    const [dimensions, setDimensions] = useState({ width: 800, height: 500 });
+    const FIXED_HEIGHT = 440;
+    const [width, setWidth] = useState(800);
+    const dimensions = { width, height: FIXED_HEIGHT };
 
-    // Responsive sizing
+    // Responsive width only — never read container height to avoid resize loop
     useEffect(() => {
         const container = svgRef.current?.parentElement;
         if (!container) return;
 
         const observer = new ResizeObserver((entries) => {
-            for (const entry of entries) {
-                setDimensions({
-                    width: entry.contentRect.width,
-                    height: Math.max(400, entry.contentRect.height),
-                });
-            }
+            const w = entries[0]?.contentRect.width;
+            if (w && w > 0) setWidth(w);
         });
 
         observer.observe(container);
@@ -131,7 +129,7 @@ export function TopologyMap({
                     ref={svgRef}
                     viewBox={`0 0 ${dimensions.width} ${dimensions.height}`}
                     className="w-full"
-                    style={{ height: dimensions.height }}
+                    style={{ height: FIXED_HEIGHT }}
                 >
                     {/* Grid background */}
                     <defs>

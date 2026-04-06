@@ -24,6 +24,9 @@ interface AssetCategory {
     name: string;
     description: string | null;
     icon: string;
+    parentId: string | null;
+    assetTypeValue: 'PHYSICAL' | 'DIGITAL' | 'DYNAMIC';
+    isActive: boolean;
     fieldDefinitions: FieldDefinition[];
 }
 
@@ -35,6 +38,7 @@ export default function DynamicAssetCreatePage() {
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [categories, setCategories] = useState<AssetCategory[]>([]);
+    const [selectedParentCategory, setSelectedParentCategory] = useState<AssetCategory | null>(null);
     const [selectedCategory, setSelectedCategory] = useState<AssetCategory | null>(null);
 
     // Form State
@@ -42,6 +46,13 @@ export default function DynamicAssetCreatePage() {
     const [assetStatus, setAssetStatus] = useState('AVAILABLE');
     const [assetType, setAssetType] = useState<'PHYSICAL' | 'DIGITAL' | 'DYNAMIC'>('PHYSICAL');
     const [customFields, setCustomFields] = useState<Record<string, any>>({});
+
+    // Reset category selections whenever asset type changes
+    useEffect(() => {
+        setSelectedParentCategory(null);
+        setSelectedCategory(null);
+        setCustomFields({});
+    }, [assetType]);
 
     // Dedicated state for Physical/Digital payload
     const [physicalAsset, setPhysicalAsset] = useState<Record<string, any>>({});
@@ -65,11 +76,8 @@ export default function DynamicAssetCreatePage() {
         fetchCategories();
     }, [workspace?.id]);
 
-    const handleCategorySelect = (categoryId: string) => {
-        const category = categories.find(c => c.id === categoryId) || null;
+    const applyCategory = (category: AssetCategory | null) => {
         setSelectedCategory(category);
-
-        // Reset dynamic state on switch
         const initialCustom: Record<string, any> = {};
         if (category) {
             (category.fieldDefinitions || []).forEach(def => {
@@ -78,6 +86,26 @@ export default function DynamicAssetCreatePage() {
             });
         }
         setCustomFields(initialCustom);
+    };
+
+    const handleParentCategorySelect = (categoryId: string) => {
+        const parent = categories.find(c => c.id === categoryId) || null;
+        setSelectedParentCategory(parent);
+        // If this parent has no active children, treat it as the final selection
+        const children = parent
+            ? categories.filter(c => c.parentId === parent.id && c.isActive)
+            : [];
+        if (!parent || children.length === 0) {
+            applyCategory(parent);
+        } else {
+            setSelectedCategory(null);
+            setCustomFields({});
+        }
+    };
+
+    const handleChildCategorySelect = (categoryId: string) => {
+        const child = categories.find(c => c.id === categoryId) || null;
+        applyCategory(child);
     };
 
     const handleCustomFieldChange = (fieldName: string, value: any) => {
@@ -151,30 +179,30 @@ export default function DynamicAssetCreatePage() {
     if (loading) return <PageSpinner text="Loading Engine Definitions..." />;
 
     return (
-        <div className="container mx-auto px-4 py-8 max-w-4xl">
-            <div className="mb-8 flex justify-between items-center">
+        <div className="max-w-4xl mx-auto animate-fade-in">
+            <div className="flex items-center justify-between mb-6">
                 <div>
-                    <Link href="/assets" className="inline-flex items-center gap-2 text-nerve hover:text-nerve mb-4">
-                        <ArrowLeft size={20} />
-                        Back to Assets
+                    <Link href="/assets" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-2">
+                        <ArrowLeft size={14} />
+                        Assets
                     </Link>
-                    <h1 className="text-3xl font-bold text-foreground">Create Asset</h1>
-                    <p className="text-slate-400 mt-2">Provision a new tracked resource in this Workspace.</p>
+                    <h1 className="text-xl font-semibold text-foreground">Create Asset</h1>
+                    <p className="text-sm text-muted-foreground mt-0.5">Provision a new tracked resource in this Workspace.</p>
                 </div>
-                <Link href="/admin/categories" className="btn-secondary text-sm flex items-center gap-2">
-                    <ExternalLink size={16} /> Manage Categories
+                <Link href="/admin/asset-categories" className="btn-outline h-8 text-sm px-3 inline-flex items-center gap-1.5">
+                    <ExternalLink size={13} /> Manage Categories
                 </Link>
             </div>
 
-            <div className="grid grid-cols-1 gap-8">
-                <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="grid grid-cols-1 gap-5">
+                <form onSubmit={handleSubmit} className="space-y-5">
                     {/* Step 1: Core Configuration */}
-                    <div className="card">
-                        <h2 className="text-xl font-bold text-foreground mb-6 border-b border-border pb-4">1. Core Configuration</h2>
+                    <div className="detail-panel">
+                        <h2 className="detail-panel-title">1. Core Configuration</h2>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                             <div>
-                                <label className="block text-sm font-medium text-slate-300 mb-2">Asset Name *</label>
+                                <label className="block text-sm font-medium text-foreground mb-1.5">Asset Name *</label>
                                 <input
                                     type="text"
                                     required
@@ -186,7 +214,7 @@ export default function DynamicAssetCreatePage() {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-slate-300 mb-2">Initial Status *</label>
+                                <label className="block text-sm font-medium text-foreground mb-1.5">Initial Status *</label>
                                 <select
                                     required
                                     className="input w-full"
@@ -200,50 +228,89 @@ export default function DynamicAssetCreatePage() {
                             </div>
 
                             <div className="md:col-span-2">
-                                <label className="block text-sm font-medium text-slate-300 mb-2">Asset Type Track *</label>
-                                <div className="grid grid-cols-3 gap-4">
+                                <label className="block text-sm font-medium text-foreground mb-1.5">Asset Type Track *</label>
+                                <div className="grid grid-cols-3 gap-3">
                                     <button
                                         type="button"
-                                        className={`p-4 border rounded-lg text-center transition-all ${assetType === 'PHYSICAL' ? 'border-nerve bg-nerve/10 text-nerve' : 'border-slate-800 text-slate-400 hover:bg-slate-800'}`}
+                                        className={`p-3.5 border rounded-xl text-center transition-all duration-150 ${assetType === 'PHYSICAL' ? 'border-primary bg-primary/[0.06] text-primary' : 'border-border text-muted-foreground hover:bg-surface-2 hover:text-foreground'}`}
                                         onClick={() => setAssetType('PHYSICAL')}
                                     >
-                                        <div className="font-bold mb-1">Physical Hardware</div>
+                                        <div className="text-sm font-semibold mb-0.5">Physical</div>
                                         <div className="text-xs opacity-70">Laptops, Servers, Network</div>
                                     </button>
                                     <button
                                         type="button"
-                                        className={`p-4 border rounded-lg text-center transition-all ${assetType === 'DIGITAL' ? 'border-nerve bg-nerve/10 text-nerve' : 'border-slate-800 text-slate-400 hover:bg-slate-800'}`}
+                                        className={`p-3.5 border rounded-xl text-center transition-all duration-150 ${assetType === 'DIGITAL' ? 'border-primary bg-primary/[0.06] text-primary' : 'border-border text-muted-foreground hover:bg-surface-2 hover:text-foreground'}`}
                                         onClick={() => setAssetType('DIGITAL')}
                                     >
-                                        <div className="font-bold mb-1">Digital Asset</div>
+                                        <div className="text-sm font-semibold mb-0.5">Digital</div>
                                         <div className="text-xs opacity-70">SaaS, Licenses, Domains</div>
                                     </button>
                                     <button
                                         type="button"
-                                        className={`p-4 border rounded-lg text-center transition-all ${assetType === 'DYNAMIC' ? 'border-nerve bg-nerve/10 text-nerve' : 'border-slate-800 text-slate-400 hover:bg-slate-800'}`}
+                                        className={`p-3.5 border rounded-xl text-center transition-all duration-150 ${assetType === 'DYNAMIC' ? 'border-primary bg-primary/[0.06] text-primary' : 'border-border text-muted-foreground hover:bg-surface-2 hover:text-foreground'}`}
                                         onClick={() => setAssetType('DYNAMIC')}
                                     >
-                                        <div className="font-bold mb-1">Custom / Other</div>
-                                        <div className="text-xs opacity-70">Pure dynamic matrix</div>
+                                        <div className="text-sm font-semibold mb-0.5">Custom</div>
+                                        <div className="text-xs opacity-70">Dynamic matrix</div>
                                     </button>
                                 </div>
                             </div>
 
                             <div className="md:col-span-2">
-                                <label className="block text-sm font-medium text-nerve mb-2">Base Category Class *</label>
-                                <select
-                                    required
-                                    className="input w-full border-nerve/50 focus:border-nerve"
-                                    value={selectedCategory?.id || ''}
-                                    onChange={e => handleCategorySelect(e.target.value)}
-                                >
-                                    <option value="" disabled>Select a pre-defined Engine Class...</option>
-                                    {categories.map(cat => (
-                                        <option key={cat.id} value={cat.id}>{cat.icon} {cat.name}</option>
-                                    ))}
-                                </select>
-                                <p className="text-xs text-slate-500 mt-2">
-                                    Selecting a class determines which dynamically tracking fields apply to this asset regardless of origin type.
+                                <label className="block text-sm font-medium text-nerve mb-2">Base Category *</label>
+                                {(() => {
+                                    const parentCats = categories.filter(
+                                        c => !c.parentId && c.isActive && c.assetTypeValue === assetType
+                                    );
+                                    const childCats = selectedParentCategory
+                                        ? categories.filter(c => c.parentId === selectedParentCategory.id && c.isActive)
+                                        : [];
+                                    return (
+                                        <div className="space-y-3">
+                                            <select
+                                                required
+                                                className="input w-full border-nerve/50 focus:border-nerve"
+                                                value={selectedParentCategory?.id || ''}
+                                                onChange={e => handleParentCategorySelect(e.target.value)}
+                                            >
+                                                <option value="" disabled>
+                                                    {assetType === 'PHYSICAL' ? '🖥️ Select Hardware category…'
+                                                        : assetType === 'DIGITAL' ? '💿 Select Software category…'
+                                                        : 'Select category…'}
+                                                </option>
+                                                {parentCats.map(cat => (
+                                                    <option key={cat.id} value={cat.id}>
+                                                        {cat.icon} {cat.name}
+                                                    </option>
+                                                ))}
+                                            </select>
+
+                                            {childCats.length > 0 && (
+                                                <div>
+                                                    <label className="block text-xs font-medium text-muted-foreground mb-1.5">
+                                                        {selectedParentCategory?.icon} {selectedParentCategory?.name} — Sub-category *
+                                                    </label>
+                                                    <select
+                                                        required
+                                                        className="input w-full"
+                                                        value={selectedCategory?.id || ''}
+                                                        onChange={e => handleChildCategorySelect(e.target.value)}
+                                                    >
+                                                        <option value="" disabled>Select sub-category…</option>
+                                                        {childCats.map(child => (
+                                                            <option key={child.id} value={child.id}>
+                                                                {child.icon} {child.name}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                })()}
+                                <p className="text-xs text-muted-foreground mt-2">
+                                    Selecting a category determines which custom tracking fields apply to this asset.
                                 </p>
                             </div>
                         </div>
@@ -251,11 +318,11 @@ export default function DynamicAssetCreatePage() {
 
                     {/* Step 1.5: Hardware / Software Specifics */}
                     {assetType === 'PHYSICAL' && (
-                        <div className="card">
-                            <h2 className="text-xl font-bold text-foreground mb-6 border-b border-border pb-4">Hardware Specifications</h2>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="detail-panel">
+                            <h2 className="detail-panel-title">Hardware Specifications</h2>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-300 mb-2">Hardware Category</label>
+                                    <label className="block text-sm font-medium text-foreground mb-1.5">Hardware Category</label>
                                     <select className="input w-full" value={physicalAsset.category || 'LAPTOP'} onChange={e => setPhysicalAsset({ ...physicalAsset, category: e.target.value })}>
                                         <option value="LAPTOP">Laptop</option>
                                         <option value="DESKTOP">Desktop</option>
@@ -266,23 +333,23 @@ export default function DynamicAssetCreatePage() {
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-300 mb-2">MAC Address</label>
+                                    <label className="block text-sm font-medium text-foreground mb-1.5">MAC Address</label>
                                     <input type="text" className="input w-full" placeholder="00:00:00:00:00:00" value={physicalAsset.macAddress || ''} onChange={e => setPhysicalAsset({ ...physicalAsset, macAddress: e.target.value })} />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-300 mb-2">IP Address / Host</label>
+                                    <label className="block text-sm font-medium text-foreground mb-1.5">IP Address / Host</label>
                                     <input type="text" className="input w-full" placeholder="192.168.1.100" value={physicalAsset.ipAddress || ''} onChange={e => setPhysicalAsset({ ...physicalAsset, ipAddress: e.target.value })} />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-300 mb-2">OS Version</label>
+                                    <label className="block text-sm font-medium text-foreground mb-1.5">OS Version</label>
                                     <input type="text" className="input w-full" placeholder="Windows 11 Pro" value={physicalAsset.osVersion || ''} onChange={e => setPhysicalAsset({ ...physicalAsset, osVersion: e.target.value })} />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-300 mb-2">RAM (GB)</label>
+                                    <label className="block text-sm font-medium text-foreground mb-1.5">RAM (GB)</label>
                                     <input type="number" className="input w-full" placeholder="16" value={physicalAsset.ram || ''} onChange={e => setPhysicalAsset({ ...physicalAsset, ram: e.target.value })} />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-300 mb-2">Storage Array (GB)</label>
+                                    <label className="block text-sm font-medium text-foreground mb-1.5">Storage (GB)</label>
                                     <input type="number" className="input w-full" placeholder="512" value={physicalAsset.storage || ''} onChange={e => setPhysicalAsset({ ...physicalAsset, storage: e.target.value })} />
                                 </div>
                             </div>
@@ -290,11 +357,11 @@ export default function DynamicAssetCreatePage() {
                     )}
 
                     {assetType === 'DIGITAL' && (
-                        <div className="card">
-                            <h2 className="text-xl font-bold text-foreground mb-6 border-b border-border pb-4">Software & License Metrics</h2>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="detail-panel">
+                            <h2 className="detail-panel-title">Software &amp; License Metrics</h2>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-300 mb-2">Software Category</label>
+                                    <label className="block text-sm font-medium text-foreground mb-1.5">Software Category</label>
                                     <select className="input w-full" value={digitalAsset.category || 'SAAS_SUBSCRIPTION'} onChange={e => setDigitalAsset({ ...digitalAsset, category: e.target.value })}>
                                         <option value="SAAS_SUBSCRIPTION">SaaS Subscription</option>
                                         <option value="LICENSE">License Key</option>
@@ -304,11 +371,11 @@ export default function DynamicAssetCreatePage() {
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-300 mb-2">Vendor / Provider</label>
+                                    <label className="block text-sm font-medium text-foreground mb-1.5">Vendor / Provider</label>
                                     <input type="text" className="input w-full" placeholder="e.g. Microsoft, AWS" value={digitalAsset.vendor || ''} onChange={e => setDigitalAsset({ ...digitalAsset, vendor: e.target.value })} />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-300 mb-2">License Type</label>
+                                    <label className="block text-sm font-medium text-foreground mb-1.5">License Type</label>
                                     <select className="input w-full" value={digitalAsset.licenseType || 'SUBSCRIPTION'} onChange={e => setDigitalAsset({ ...digitalAsset, licenseType: e.target.value })}>
                                         <option value="SUBSCRIPTION">Recurring Subscription</option>
                                         <option value="PERPETUAL">Perpetual (One-time)</option>
@@ -317,19 +384,19 @@ export default function DynamicAssetCreatePage() {
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-300 mb-2">Seat Count / Licenses</label>
+                                    <label className="block text-sm font-medium text-foreground mb-1.5">Seat Count / Licenses</label>
                                     <input type="number" className="input w-full" placeholder="50" value={digitalAsset.seatCount || ''} onChange={e => setDigitalAsset({ ...digitalAsset, seatCount: e.target.value })} />
                                 </div>
                                 <div className="md:col-span-2">
-                                    <label className="block text-sm font-medium text-slate-300 mb-2">License Key / Access Token</label>
+                                    <label className="block text-sm font-medium text-foreground mb-1.5">License Key / Access Token</label>
                                     <input type="text" className="input w-full font-mono text-xs" placeholder="XXXX-XXXX-XXXX-XXXX" value={digitalAsset.licenseKey || ''} onChange={e => setDigitalAsset({ ...digitalAsset, licenseKey: e.target.value })} />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-300 mb-2">Monthly Cost</label>
-                                    <input type="number" step="0.01" className="input w-full" placeholder="$0.00" value={digitalAsset.monthlyRecurringCost || ''} onChange={e => setDigitalAsset({ ...digitalAsset, monthlyRecurringCost: e.target.value })} />
+                                    <label className="block text-sm font-medium text-foreground mb-1.5">Monthly Cost</label>
+                                    <input type="number" step="0.01" className="input w-full" placeholder="0.00" value={digitalAsset.monthlyRecurringCost || ''} onChange={e => setDigitalAsset({ ...digitalAsset, monthlyRecurringCost: e.target.value })} />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-300 mb-2">Renewal Date</label>
+                                    <label className="block text-sm font-medium text-foreground mb-1.5">Renewal Date</label>
                                     <input type="date" className="input w-full" value={digitalAsset.renewalDate || ''} onChange={e => setDigitalAsset({ ...digitalAsset, renewalDate: e.target.value })} />
                                 </div>
                             </div>
@@ -338,31 +405,31 @@ export default function DynamicAssetCreatePage() {
 
                     {/* Step 2: Dynamic Fields UI */}
                     {selectedCategory && (
-                        <div className="card border-nerve/30">
-                            <h2 className="text-xl font-bold text-foreground mb-6 flex items-center gap-3 border-b border-border pb-4">
-                                <span>2. Custom Matrix Data</span>
-                                <span className="text-sm px-3 py-1 bg-nerve/20 text-nerve rounded-full">{selectedCategory.icon} {selectedCategory.name}</span>
-                            </h2>
+                        <div className="detail-panel border-primary/20">
+                            <div className="flex items-center justify-between mb-3 pb-2 border-b border-border/60">
+                                <h2 className="text-sm font-semibold text-foreground">2. Custom Matrix Data</h2>
+                                <span className="badge text-[11px] px-2.5 py-1 bg-primary/10 text-primary rounded-lg">{selectedCategory.icon} {selectedCategory.name}</span>
+                            </div>
 
                             {(selectedCategory.fieldDefinitions || []).length === 0 ? (
-                                <p className="text-slate-500 italic">No custom tracking fields required for this Class.</p>
+                                <p className="text-sm text-muted-foreground/70 italic">No custom tracking fields required for this Class.</p>
                             ) : (
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                     {(selectedCategory.fieldDefinitions || []).map((def) => (
                                         <div key={def.id} className={def.fieldType === 'JSON' ? 'md:col-span-2' : ''}>
-                                            <label className="block text-sm font-medium text-slate-300 mb-2">
-                                                {def.label} {def.required && <span className="text-red-400">*</span>}
+                                            <label className="block text-sm font-medium text-foreground mb-1.5">
+                                                {def.label} {def.required && <span className="text-destructive">*</span>}
                                             </label>
 
                                             {def.fieldType === 'BOOLEAN' ? (
-                                                <div className="flex items-center gap-3 mt-3">
+                                                <div className="flex items-center gap-2.5 mt-2">
                                                     <input
                                                         type="checkbox"
-                                                        className="w-5 h-5 rounded border-slate-700 text-nerve focus:ring-nerve"
+                                                        className="h-4 w-4 rounded border-border accent-primary"
                                                         checked={customFields[def.name] || false}
                                                         onChange={e => handleCustomFieldChange(def.name, e.target.checked)}
                                                     />
-                                                    <span className="text-sm text-slate-400">Enable</span>
+                                                    <span className="text-sm text-muted-foreground">Enable</span>
                                                 </div>
                                             ) : def.fieldType === 'DATE' ? (
                                                 <input
@@ -397,12 +464,14 @@ export default function DynamicAssetCreatePage() {
                         </div>
                     )}
 
-                    {/* Submit Matrix */}
+                    {/* Submit */}
                     {selectedCategory && (
-                        <div className="flex justify-end gap-4 mt-8 pt-6 border-t border-slate-800">
-                            <Link href="/assets" className="btn-secondary">Cancel</Link>
-                            <button type="submit" disabled={submitting} className="btn-primary flex items-center gap-2">
-                                {submitting ? <PageSpinner /> : 'Provision Asset Node'}
+                        <div className="flex justify-end gap-2.5 pt-2 border-t border-border/60">
+                            <Link href="/assets" className="btn-secondary h-9 text-sm px-4">Cancel</Link>
+                            <button type="submit" disabled={submitting} className="btn-primary h-9 text-sm px-4 inline-flex items-center gap-2">
+                                {submitting
+                                    ? <><div className="animate-spin rounded-full h-3.5 w-3.5 border-2 border-primary-foreground border-t-transparent" /> Provisioning…</>
+                                    : 'Provision Asset'}
                             </button>
                         </div>
                     )}

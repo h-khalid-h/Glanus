@@ -22,6 +22,10 @@ const CSRF_EXEMPT_PATHS = [
     '/api/health',       // Health check
     '/api/ready',        // Readiness probe
     '/api/cron',         // Cron jobs use Bearer tokens natively
+    '/api/install-linux',  // Agent install scripts (GET only, token in URL)
+    '/api/install-windows',
+    '/api/install-macos',
+    '/api/downloads/',     // Agent binary downloads
 ];
 
 // Public page routes (no authentication required)
@@ -48,6 +52,10 @@ const PUBLIC_API_PATHS = [
     '/api/invitations',    // Invitation verification (token-based)
     '/api/cron/',        // Cron jobs use Bearer tokens (prefix match)
     '/api/agent/',       // Agent endpoints (use their own token auth)
+    '/api/install-linux',  // Agent install scripts (token embedded in URL)
+    '/api/install-windows',
+    '/api/install-macos',
+    '/api/downloads/',     // Agent binary downloads (prefix match)
 ];
 
 // Static/SEO files served by Next.js (not static assets)

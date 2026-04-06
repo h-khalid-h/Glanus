@@ -21,7 +21,7 @@ test.describe('Navigation & Mission Control', () => {
         const workspaceId = await getFirstWorkspaceId(page);
         if (!workspaceId) { test.skip(); return; }
 
-        await page.goto(`/workspaces/${workspaceId}/analytics`);
+        await page.goto(`/workspaces/analytics`);
         await page.waitForLoadState('networkidle');
 
         // Wait for Mission Control content to load (may need compilation time)
@@ -36,7 +36,7 @@ test.describe('Navigation & Mission Control', () => {
         const workspaceId = await getFirstWorkspaceId(page);
         if (!workspaceId) { test.skip(); return; }
 
-        await page.goto(`/workspaces/${workspaceId}/analytics`);
+        await page.goto(`/workspaces/analytics`);
         await page.waitForLoadState('networkidle');
 
         // Wait for sidebar to render
@@ -55,7 +55,7 @@ test.describe('Navigation & Mission Control', () => {
         const workspaceId = await getFirstWorkspaceId(page);
         if (!workspaceId) { test.skip(); return; }
 
-        await page.goto(`/workspaces/${workspaceId}/analytics`);
+        await page.goto(`/workspaces/analytics`);
         await page.waitForLoadState('networkidle');
 
         // Wait for page to be interactive
@@ -91,7 +91,7 @@ test.describe('Navigation & Mission Control', () => {
         const workspaceId = await getFirstWorkspaceId(page);
         if (!workspaceId) { test.skip(); return; }
 
-        await page.goto(`/workspaces/${workspaceId}/notifications`);
+        await page.goto(`/workspaces/notifications`);
         await page.waitForLoadState('networkidle');
 
         // Wait for page content

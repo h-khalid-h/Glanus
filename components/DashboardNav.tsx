@@ -14,13 +14,12 @@ const ICON_PATHS = {
     insights: 'M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z',
 };
 
-function buildNavItems(workspaceId: string | undefined) {
-    const wsPrefix = workspaceId ? `/workspaces/${workspaceId}` : '';
+function buildNavItems() {
     return [
         { href: '/dashboard', label: 'Dashboard', icon: ICON_PATHS.dashboard },
-        { href: wsPrefix ? `${wsPrefix}/analytics` : '/dashboard', label: 'Mission Control', icon: ICON_PATHS.assets },
+        { href: '/workspaces/analytics', label: 'Mission Control', icon: ICON_PATHS.assets },
         { href: '/remote', label: 'Remote', icon: ICON_PATHS.remote },
-        { href: wsPrefix ? `${wsPrefix}/intelligence` : '/dashboard', label: 'Insights', icon: ICON_PATHS.insights },
+        { href: '/workspaces/intelligence', label: 'Insights', icon: ICON_PATHS.insights },
     ];
 }
 
@@ -29,7 +28,7 @@ export function DashboardNav() {
     const { workspace } = useWorkspace();
     const pathname = usePathname();
     const [mobileOpen, setMobileOpen] = useState(false);
-    const NAV_ITEMS = buildNavItems(workspace?.id);
+    const NAV_ITEMS = buildNavItems();
 
     const isActive = (href: string) => {
         if (href === '/dashboard') return pathname === '/dashboard';

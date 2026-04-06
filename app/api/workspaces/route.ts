@@ -1,5 +1,5 @@
 import { apiSuccess, apiError } from '@/lib/api/response';
-import { requireAuth, withErrorHandler } from '@/lib/api/withAuth';
+import { requireAuth, runWithUserRLS, withErrorHandler } from '@/lib/api/withAuth';
 import { checkRateLimit } from '@/lib/security/rateLimit';
 import { WorkspaceService, CreateWorkspaceInput } from '@/lib/services/WorkspaceService';
 import { z } from 'zod';
@@ -20,8 +20,10 @@ const createWorkspaceSchema = z.object({
 // GET /api/workspaces - List all workspaces for current user
 export const GET = withErrorHandler(async () => {
     const user = await requireAuth();
-    const workspaces = await WorkspaceService.listWorkspaces(user.id);
-    return apiSuccess({ workspaces });
+    return runWithUserRLS(user, async () => {
+        const workspaces = await WorkspaceService.listWorkspaces(user.id);
+        return apiSuccess({ workspaces });
+    });
 });
 
 // POST /api/workspaces - Create a new workspace
@@ -38,6 +40,8 @@ export const POST = withErrorHandler(async (request: Request) => {
 
     const data = validation;
 
-    const workspace = await WorkspaceService.createWorkspace(user.id, data as CreateWorkspaceInput);
-    return apiSuccess({ workspace }, undefined, 201);
+    return runWithUserRLS(user, async () => {
+        const workspace = await WorkspaceService.createWorkspace(user.id, data as CreateWorkspaceInput);
+        return apiSuccess({ workspace }, undefined, 201);
+    });
 });

@@ -1,7 +1,7 @@
 import { apiSuccess } from '@/lib/api/response';
 import { NextRequest } from 'next/server';
 import { withRateLimit } from '@/lib/security/rateLimit';
-import { requireAuth, withErrorHandler } from '@/lib/api/withAuth';
+import { requireAuth, withErrorHandler, runWithUserRLS } from '@/lib/api/withAuth';
 import { z } from 'zod';
 import { PartnerExamService } from '@/lib/services/PartnerExamService';
 
@@ -17,6 +17,8 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
 
     const user = await requireAuth();
     const validation = submitExamSchema.parse(await request.json());
-    const result = await PartnerExamService.submitExam(user.email!, validation.examId, validation.answers);
-    return apiSuccess(result);
+    return runWithUserRLS(user, async () => {
+        const result = await PartnerExamService.submitExam(user.email!, validation.examId, validation.answers);
+        return apiSuccess(result);
+    });
 });

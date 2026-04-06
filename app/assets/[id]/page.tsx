@@ -237,7 +237,7 @@ export default function AssetDetailPage({ params }: { params: Promise<{ id: stri
     }
 
     return (
-        <div className="container mx-auto px-4 py-8 max-w-5xl">
+        <div className="max-w-5xl mx-auto animate-fade-in">
             <ConfirmDialog
                 open={confirmDialog.open}
                 title={confirmDialog.title}
@@ -249,21 +249,23 @@ export default function AssetDetailPage({ params }: { params: Promise<{ id: stri
             />
             {/* Header */}
             <div className="mb-6">
-                <Link href="/assets" className="inline-flex items-center gap-2 text-nerve hover:text-nerve mb-4">
-                    <ArrowLeft size={20} />
+                <Link href="/assets" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-4 transition-colors">
+                    <ArrowLeft size={15} />
                     Back to Assets
                 </Link>
 
-                <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-4">
-                        <span className="text-4xl">{asset.category?.icon || '📦'}</span>
-                        <div>
-                            <h1 className="text-3xl font-bold text-foreground">{asset.name}</h1>
-                            <p className="text-muted-foreground mt-1">{asset.category?.name || 'Uncategorized'}</p>
+                <div className="flex items-start justify-between gap-4 flex-wrap">
+                    <div className="flex items-center gap-3 min-w-0">
+                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-surface-2 border border-border text-2xl">
+                            {asset.category?.icon || '📦'}
+                        </div>
+                        <div className="min-w-0">
+                            <h1 className="text-xl font-semibold text-foreground truncate">{asset.name}</h1>
+                            <p className="text-sm text-muted-foreground mt-0.5">{asset.category?.name || 'Uncategorized'}</p>
                         </div>
                     </div>
 
-                    <div className="flex gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                         <button type="button"
                             onClick={async () => {
                                 if (!assetId) return;
@@ -288,65 +290,69 @@ export default function AssetDetailPage({ params }: { params: Promise<{ id: stri
                                 }
                             }}
                             disabled={connectingRemote}
-                            className="flex items-center gap-2 px-4 py-2 bg-nerve text-white rounded-lg hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                            className="btn-primary inline-flex items-center gap-1.5 h-9 text-sm px-3 disabled:opacity-50"
                         >
-                            <Monitor size={16} />
+                            <Monitor size={14} />
                             {connectingRemote ? 'Connecting…' : 'Connect Remotely'}
                         </button>
                         <Link
                             href={`/assets/${asset.id}/edit`}
-                            className="flex items-center gap-2 px-4 py-2 border border-slate-700 text-slate-300 rounded-lg hover:bg-slate-900/30"
+                            className="btn-outline inline-flex items-center gap-1.5 h-9 text-sm px-3"
                         >
-                            <Edit size={16} />
+                            <Edit size={14} />
                             Edit
                         </Link>
                         <button type="button"
                             onClick={requestDeleteAsset}
-                            className="flex items-center gap-2 px-4 py-2 bg-destructive text-white rounded-lg hover:bg-destructive/80"
+                            className="btn-danger inline-flex items-center gap-1.5 h-9 text-sm px-3"
                         >
-                            <Trash2 size={16} />
+                            <Trash2 size={14} />
                             Delete
                         </button>
                     </div>
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
                 {/* Main Info */}
-                <div className="lg:col-span-2 space-y-6">
+                <div className="lg:col-span-2 space-y-4">
                     {/* Status */}
-                    <div className="rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm p-6">
-                        <h2 className="text-lg font-semibold text-foreground mb-4">Status</h2>
+                    <div className="detail-panel">
+                        <h2 className="detail-panel-title">Status</h2>
                         <div className="flex items-center gap-2">
                             <span
-                                className={`px-3 py-1 text-sm font-medium rounded ${asset.status === 'AVAILABLE'
-                                    ? 'bg-health-good/15 text-health-good'
+                                className={`badge px-2.5 py-1 text-xs font-medium rounded-lg ${asset.status === 'AVAILABLE'
+                                    ? 'bg-health-good/10 text-health-good'
                                     : asset.status === 'ASSIGNED'
-                                        ? 'bg-nerve/10 text-nerve'
-                                        : 'bg-slate-800/50 text-slate-200'
+                                        ? 'bg-primary/10 text-primary'
+                                        : asset.status === 'MAINTENANCE'
+                                            ? 'bg-oracle/10 text-oracle'
+                                            : asset.status === 'LOST'
+                                                ? 'bg-destructive/10 text-destructive'
+                                                : 'bg-muted text-muted-foreground'
                                     }`}
                             >
-                                {asset.status}
+                                {asset.status.charAt(0) + asset.status.slice(1).toLowerCase()}
                             </span>
                         </div>
                     </div>
 
                     {/* Field Values */}
-                    <div className="rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm p-6">
-                        <h2 className="text-lg font-semibold text-foreground mb-4">Details</h2>
+                    <div className="detail-panel">
+                        <h2 className="detail-panel-title">Details</h2>
 
                         {!asset.fieldValues || asset.fieldValues.length === 0 ? (
-                            <p className="text-muted-foreground">No additional fields defined</p>
+                            <p className="text-sm text-muted-foreground/70">No additional fields defined</p>
                         ) : (
-                            <div className="space-y-4">
+                            <div className="space-y-3.5">
                                 {asset.fieldValues.map((fv) => (
                                     <div key={fv.id}>
-                                        <dt className="text-sm font-medium text-muted-foreground">
+                                        <dt className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">
                                             {fv.fieldDefinition.label}
                                         </dt>
-                                        <dd className="mt-1 text-sm text-foreground">
+                                        <dd className="text-sm text-foreground">
                                             {fv.fieldDefinition.fieldType === 'JSON' ? (
-                                                <pre className="bg-slate-900/30 p-3 rounded text-xs font-mono overflow-x-auto">
+                                                <pre className="bg-surface-2 border border-border p-3 rounded-lg text-xs font-mono overflow-x-auto scrollbar-thin">
                                                     {formatFieldValue(fv)}
                                                 </pre>
                                             ) : (
@@ -356,104 +362,93 @@ export default function AssetDetailPage({ params }: { params: Promise<{ id: stri
                                     </div>
                                 ))}
 
-                                {/* Phase 26: Physical Asset Details */}
+                                {/* Physical Asset Details */}
                                 {asset.physicalAsset && (
-                                    <>
-                                        <div className="col-span-full border-t border-slate-800 my-4 pt-4">
-                                            <h3 className="text-sm font-bold text-nerve mb-3">Hardware Specifications</h3>
-                                            <div className="grid grid-cols-2 gap-4">
-                                                {Object.entries(asset.physicalAsset).map(([key, val]) => {
-                                                    if (!val || key === 'id' || key === 'assetId' || key === 'createdAt' || key === 'updatedAt') return null;
-                                                    return (
-                                                        <div key={key}>
-                                                            <dt className="text-xs font-medium text-muted-foreground uppercase">{key.replace(/([A-Z])/g, ' $1').trim()}</dt>
-                                                            <dd className="mt-1 text-sm text-foreground">{String(val)}</dd>
-                                                        </div>
-                                                    )
-                                                })}
-                                            </div>
+                                    <div className="border-t border-border/60 pt-4 mt-4">
+                                        <h3 className="text-xs font-semibold text-primary uppercase tracking-wide mb-3">Hardware Specifications</h3>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            {Object.entries(asset.physicalAsset).map(([key, val]) => {
+                                                if (!val || key === 'id' || key === 'assetId' || key === 'createdAt' || key === 'updatedAt') return null;
+                                                return (
+                                                    <div key={key}>
+                                                        <dt className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">{key.replace(/([A-Z])/g, ' $1').trim()}</dt>
+                                                        <dd className="mt-0.5 text-sm text-foreground">{String(val)}</dd>
+                                                    </div>
+                                                );
+                                            })}
                                         </div>
-                                    </>
+                                    </div>
                                 )}
 
-                                {/* Phase 26: Digital Asset Details */}
+                                {/* Digital Asset Details */}
                                 {asset.digitalAsset && (
-                                    <>
-                                        <div className="col-span-full border-t border-slate-800 my-4 pt-4">
-                                            <h3 className="text-sm font-bold text-nerve mb-3">Software & License Metrics</h3>
-                                            <div className="grid grid-cols-2 gap-4">
-                                                {Object.entries(asset.digitalAsset).map(([key, val]) => {
-                                                    if (!val || key === 'id' || key === 'assetId' || key === 'createdAt' || key === 'updatedAt') return null;
-
-                                                    // Specialized formatting
-                                                    let displayVal = String(val);
-                                                    if (key === 'monthlyRecurringCost') displayVal = `$${Number(val).toFixed(2)}`;
-                                                    if (key === 'renewalDate' && val) displayVal = new Date(val as string).toLocaleDateString();
-
-                                                    return (
-                                                        <div key={key}>
-                                                            <dt className="text-xs font-medium text-muted-foreground uppercase">{key.replace(/([A-Z])/g, ' $1').trim()}</dt>
-                                                            <dd className="mt-1 text-sm text-foreground">{displayVal}</dd>
-                                                        </div>
-                                                    )
-                                                })}
-                                            </div>
+                                    <div className="border-t border-border/60 pt-4 mt-4">
+                                        <h3 className="text-xs font-semibold text-primary uppercase tracking-wide mb-3">Software &amp; License Metrics</h3>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            {Object.entries(asset.digitalAsset).map(([key, val]) => {
+                                                if (!val || key === 'id' || key === 'assetId' || key === 'createdAt' || key === 'updatedAt') return null;
+                                                let displayVal = String(val);
+                                                if (key === 'monthlyRecurringCost') displayVal = `$${Number(val).toFixed(2)}`;
+                                                if (key === 'renewalDate' && val) displayVal = new Date(val as string).toLocaleDateString();
+                                                return (
+                                                    <div key={key}>
+                                                        <dt className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">{key.replace(/([A-Z])/g, ' $1').trim()}</dt>
+                                                        <dd className="mt-0.5 text-sm text-foreground">{displayVal}</dd>
+                                                    </div>
+                                                );
+                                            })}
                                         </div>
-                                    </>
+                                    </div>
                                 )}
                             </div>
                         )}
                     </div>
 
                     {/* Metadata */}
-                    <div className="rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm p-6">
-                        <h2 className="text-lg font-semibold text-foreground mb-4">Metadata</h2>
-                        <div className="space-y-3 text-sm">
+                    <div className="detail-panel">
+                        <h2 className="detail-panel-title">Metadata</h2>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                             <div>
-                                <span className="text-muted-foreground">Asset ID:</span>
-                                <span className="ml-2 font-mono text-foreground">{asset.id}</span>
+                                <dt className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Asset ID</dt>
+                                <dd className="font-mono text-xs text-foreground bg-surface-2 border border-border px-2 py-1 rounded-md truncate">{asset.id}</dd>
                             </div>
                             <div>
-                                <span className="text-muted-foreground">Created:</span>
-                                <span className="ml-2 text-foreground">
-                                    {formatDateTime(asset.createdAt)}
-                                </span>
+                                <dt className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Created</dt>
+                                <dd className="text-foreground">{formatDateTime(asset.createdAt)}</dd>
                             </div>
                             <div>
-                                <span className="text-muted-foreground">Updated:</span>
-                                <span className="ml-2 text-foreground">
-                                    {formatDateTime(asset.updatedAt)}
-                                </span>
+                                <dt className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Last Updated</dt>
+                                <dd className="text-foreground">{formatDateTime(asset.updatedAt)}</dd>
                             </div>
                         </div>
                     </div>
 
                     {/* Maintenance Windows */}
                     {maintenanceWindows.length > 0 && (
-                        <div className="rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm p-6">
-                            <div className="flex items-center justify-between mb-4">
-                                <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
-                                    <Wrench size={18} className="text-nerve" />
+                        <div className="detail-panel">
+                            <div className="flex items-center justify-between mb-3 pb-2 border-b border-border/60">
+                                <h2 className="text-sm font-semibold text-foreground flex items-center gap-1.5">
+                                    <Wrench size={14} className="text-primary" />
                                     Maintenance
                                 </h2>
                                 {currentWorkspace?.id && (
-                                    <Link href={`/workspaces/${currentWorkspace.id}/maintenance`} className="text-xs text-nerve hover:underline">
+                                    <Link href={`/workspaces/${currentWorkspace.id}/maintenance`} className="text-xs text-primary hover:underline">
                                         View All →
                                     </Link>
                                 )}
                             </div>
-                            <div className="space-y-3">
+                            <div className="space-y-2.5">
                                 {maintenanceWindows.map(w => (
-                                    <div key={w.id} className="flex items-center gap-3 text-sm">
-                                        <Calendar size={14} className={w.status === 'completed' ? 'text-green-400' : w.status === 'in_progress' ? 'text-amber-400' : 'text-blue-400'} />
+                                    <div key={w.id} className="flex items-center gap-2.5 text-sm py-1">
+                                        <Calendar size={13} className={w.status === 'completed' ? 'text-health-good' : w.status === 'in_progress' ? 'text-oracle' : 'text-primary'} />
                                         <div className="flex-1 min-w-0">
-                                            <span className="text-foreground font-medium truncate block">{w.title}</span>
-                                            <span className="text-xs text-slate-500">{new Date(w.scheduledStart).toLocaleDateString()} • {w.type}</span>
+                                            <span className="text-foreground font-medium truncate block text-sm">{w.title}</span>
+                                            <span className="text-xs text-muted-foreground">{new Date(w.scheduledStart).toLocaleDateString()} · {w.type}</span>
                                         </div>
-                                        <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${w.status === 'completed' ? 'bg-green-500/10 text-green-400' :
-                                            w.status === 'in_progress' ? 'bg-amber-500/10 text-amber-400' :
-                                                w.status === 'cancelled' ? 'bg-slate-500/10 text-slate-400' :
-                                                    'bg-blue-500/10 text-blue-400'
+                                        <span className={`badge text-[10px] px-1.5 py-0.5 rounded-md ${w.status === 'completed' ? 'bg-health-good/10 text-health-good' :
+                                            w.status === 'in_progress' ? 'bg-oracle/10 text-oracle' :
+                                                w.status === 'cancelled' ? 'bg-muted text-muted-foreground' :
+                                                    'bg-primary/10 text-primary'
                                             }`}>{w.status.replace('_', ' ')}</span>
                                     </div>
                                 ))}
@@ -464,33 +459,33 @@ export default function AssetDetailPage({ params }: { params: Promise<{ id: stri
 
                 {/* Actions Panel */}
                 <div className="lg:col-span-1">
-                    <div className="rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm p-6 sticky top-8">
-                        <h2 className="text-lg font-semibold text-foreground mb-4">Actions</h2>
+                    <div className="detail-panel sticky top-20">
+                        <h2 className="detail-panel-title">Actions</h2>
 
                         {actions.length === 0 ? (
-                            <p className="text-sm text-muted-foreground">No actions available</p>
+                            <p className="text-sm text-muted-foreground/70">No actions available</p>
                         ) : (
-                            <div className="space-y-2">
+                            <div className="space-y-1.5">
                                 {actions.map((action) => (
                                     <button type="button"
                                         key={action.id}
                                         onClick={() => executeAction(action)}
                                         disabled={executingAction === action.id}
-                                        className="w-full flex items-center gap-3 px-4 py-3 text-left border border-slate-700 rounded-lg hover:bg-slate-900/30 disabled:bg-slate-800/50 disabled:cursor-not-allowed transition-colors"
+                                        className="w-full flex items-center gap-3 px-3 py-2.5 text-left rounded-lg border border-border hover:bg-surface-2 hover:border-primary/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-150"
                                     >
-                                        <span className="text-2xl">{action.icon || '⚡'}</span>
-                                        <div className="flex-1">
+                                        <span className="text-xl shrink-0">{action.icon || '⚡'}</span>
+                                        <div className="flex-1 min-w-0">
                                             <div className="text-sm font-medium text-foreground">
                                                 {action.label}
                                             </div>
                                             {action.description && (
-                                                <div className="text-xs text-muted-foreground mt-1">
+                                                <div className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
                                                     {action.description}
                                                 </div>
                                             )}
                                         </div>
                                         {executingAction === action.id && (
-                                            <Clock size={16} className="animate-spin text-nerve" />
+                                            <Clock size={14} className="animate-spin text-primary shrink-0" />
                                         )}
                                     </button>
                                 ))}
@@ -503,72 +498,68 @@ export default function AssetDetailPage({ params }: { params: Promise<{ id: stri
             {/* Execution Result Dialog */}
             {showExecutionDialog && executionResult && (
                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                    <div className="rounded-xl border border-slate-800 bg-slate-900/95 backdrop-blur-xl max-w-2xl w-full max-h-[80vh] overflow-auto">
-                        <div className="p-6">
-                            <div className="flex items-center justify-between mb-4">
-                                <h3 className="text-xl font-semibold text-foreground">
-                                    Execution Result
-                                </h3>
-                                <button type="button"
-                                    onClick={() => setShowExecutionDialog(false)}
-                                    className="text-slate-500 hover:text-slate-300"
-                                >
-                                    ✕
-                                </button>
+                    <div className="detail-panel max-w-2xl w-full max-h-[80vh] overflow-auto animate-slide-up">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-base font-semibold text-foreground">Execution Result</h3>
+                            <button type="button"
+                                onClick={() => setShowExecutionDialog(false)}
+                                className="btn-ghost h-7 w-7 p-0 rounded-lg text-muted-foreground"
+                            >
+                                ✕
+                            </button>
+                        </div>
+
+                        <div className="space-y-4">
+                            {/* Status */}
+                            <div className="flex items-center gap-2">
+                                {executionResult.status === 'SUCCESS' ? (
+                                    <>
+                                        <CheckCircle size={18} className="text-health-good" />
+                                        <span className="text-sm font-medium text-health-good">Success</span>
+                                    </>
+                                ) : executionResult.status === 'FAILED' ? (
+                                    <>
+                                        <XCircle size={18} className="text-destructive" />
+                                        <span className="text-sm font-medium text-destructive">Failed</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Clock size={18} className="text-oracle" />
+                                        <span className="text-sm font-medium text-oracle">Pending</span>
+                                    </>
+                                )}
                             </div>
 
-                            <div className="space-y-4">
-                                {/* Status */}
-                                <div className="flex items-center gap-2">
-                                    {executionResult.status === 'SUCCESS' ? (
-                                        <>
-                                            <CheckCircle size={24} className="text-health-good" />
-                                            <span className="text-lg font-medium text-health-good">Success</span>
-                                        </>
-                                    ) : executionResult.status === 'FAILED' ? (
-                                        <>
-                                            <XCircle size={24} className="text-health-critical" />
-                                            <span className="text-lg font-medium text-health-critical">Failed</span>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Clock size={24} className="text-health-warn" />
-                                            <span className="text-lg font-medium text-health-warn">Pending</span>
-                                        </>
-                                    )}
+                            {/* Output */}
+                            {executionResult.output && (
+                                <div>
+                                    <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Output</h4>
+                                    <pre className="bg-surface-2 border border-border p-3 rounded-lg text-xs font-mono overflow-x-auto scrollbar-thin">
+                                        {typeof executionResult.output === 'string'
+                                            ? executionResult.output
+                                            : JSON.stringify(executionResult.output, null, 2)}
+                                    </pre>
                                 </div>
+                            )}
 
-                                {/* Output */}
-                                {executionResult.output && (
-                                    <div>
-                                        <h4 className="text-sm font-medium text-slate-300 mb-2">Output:</h4>
-                                        <pre className="bg-slate-900/30 p-4 rounded text-sm font-mono overflow-x-auto">
-                                            {typeof executionResult.output === 'string'
-                                                ? executionResult.output
-                                                : JSON.stringify(executionResult.output, null, 2)}
-                                        </pre>
+                            {/* Error */}
+                            {executionResult.error && (
+                                <div>
+                                    <h4 className="text-xs font-semibold text-destructive/80 uppercase tracking-wide mb-2">Error</h4>
+                                    <div className="bg-destructive/5 border border-destructive/20 p-3 rounded-lg text-sm text-destructive">
+                                        {executionResult.error}
                                     </div>
-                                )}
+                                </div>
+                            )}
+                        </div>
 
-                                {/* Error */}
-                                {executionResult.error && (
-                                    <div>
-                                        <h4 className="text-sm font-medium text-health-critical mb-2">Error:</h4>
-                                        <div className="bg-health-critical/10 p-4 rounded text-sm text-health-critical">
-                                            {executionResult.error}
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-
-                            <div className="mt-6 flex justify-end">
-                                <button type="button"
-                                    onClick={() => setShowExecutionDialog(false)}
-                                    className="px-4 py-2 bg-nerve text-white rounded-lg hover:brightness-110"
-                                >
-                                    Close
-                                </button>
-                            </div>
+                        <div className="mt-5 flex justify-end">
+                            <button type="button"
+                                onClick={() => setShowExecutionDialog(false)}
+                                className="btn-primary h-9 text-sm px-4"
+                            >
+                                Close
+                            </button>
                         </div>
                     </div>
                 </div>

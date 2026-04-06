@@ -1,3 +1,4 @@
+/** @jest-environment node */
 import { DynamicFieldService } from '@/lib/services/DynamicFieldService';
 import { FieldType, Prisma } from '@prisma/client';
 

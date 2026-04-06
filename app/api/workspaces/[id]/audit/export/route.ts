@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { requireAuth, withErrorHandler } from '@/lib/api/withAuth';
+import { requireAuth, runWithWorkspaceRLS, withErrorHandler } from '@/lib/api/withAuth';
 import { WorkspaceAuditService } from '@/lib/services/WorkspaceAuditService';
 import { withRateLimit } from '@/lib/security/rateLimit';
 
@@ -14,6 +14,7 @@ export const GET = withErrorHandler(async (
     const rateLimitResponse = await withRateLimit(request, 'api');
     if (rateLimitResponse) return rateLimitResponse;
 
+    return runWithWorkspaceRLS(workspaceId, user, async () => {
     await WorkspaceAuditService.verifyAdminAccess(user.id, workspaceId);
 
     const { searchParams } = new URL(request.url);
@@ -31,5 +32,6 @@ export const GET = withErrorHandler(async (
             'Content-Type': contentType,
             'Content-Disposition': `attachment; filename="${result.filename}"`,
         },
+    });
     });
 });

@@ -1,12 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { useSession, signOut } from 'next-auth/react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useWorkspace } from '@/lib/workspace/context';
 import { NotificationPopover } from '@/components/workspace/NotificationPopover';
 import { CommandPalette } from '@/components/workspace/CommandPalette';
-import { Search, User } from 'lucide-react';
+import WorkspaceSwitcher from '@/components/WorkspaceSwitcher';
+import { Search, LogOut, Settings, Menu, X, ChevronRight, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 
 interface NavItem {
     href: string;
@@ -22,7 +24,23 @@ interface NavItem {
 export function WorkspaceLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
     const { workspace } = useWorkspace();
+    const { data: session } = useSession();
     const [mobileOpen, setMobileOpen] = useState(false);
+    const [collapsed, setCollapsed] = useState(false);
+
+    // Persist collapse state
+    useEffect(() => {
+        const stored = typeof window !== 'undefined' ? localStorage.getItem('sidebar-collapsed') : null;
+        if (stored === 'true') setCollapsed(true);
+    }, []);
+
+    const toggleCollapsed = useCallback(() => {
+        setCollapsed(prev => {
+            const next = !prev;
+            localStorage.setItem('sidebar-collapsed', String(next));
+            return next;
+        });
+    }, []);
 
     // Close mobile sidebar on navigation
     useEffect(() => {
@@ -31,8 +49,7 @@ export function WorkspaceLayout({ children }: { children: React.ReactNode }) {
 
     if (!workspace) return <>{children}</>;
 
-    const workspaceId = workspace.id;
-    const basePath = `/workspaces/${workspaceId}`;
+    const basePath = `/workspaces`;
 
     const navItems: NavItem[] = [
         {
@@ -282,130 +299,298 @@ export function WorkspaceLayout({ children }: { children: React.ReactNode }) {
         return pathname.startsWith(href);
     };
 
+    const activeNavItem = navItems.find(item => isActive(item.href));
+    const activeSection = activeNavItem?.section;
+
+    const userInitial = (
+        session?.user?.name?.[0] ||
+        session?.user?.email?.[0] ||
+        'U'
+    ).toUpperCase();
+
+    /* ─────────────────────────────────────────
+       Sidebar content (shared between mobile + desktop)
+    ───────────────────────────────────────── */
     const sidebarContent = (
-        <div className="flex h-full flex-col">
-            {/* Workspace header */}
-            <div className="border-b border-border px-4 py-4">
-                <div className="flex items-center gap-2">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-nerve/10 text-sm font-bold text-nerve">
-                        {workspace.name?.charAt(0)?.toUpperCase() || 'W'}
-                    </div>
-                    <div className="min-w-0">
-                        <p className="truncate text-sm font-semibold">{workspace.name}</p>
-                        <p className="text-2xs text-muted-foreground capitalize">
-                            {workspace.subscription?.plan?.toLowerCase() || 'free'} plan
-                        </p>
-                    </div>
-                </div>
+        <div className="flex h-full flex-col overflow-hidden">
+
+            {/* Brand header */}
+            <div className={`flex h-12 shrink-0 items-center border-b border-border ${collapsed ? 'justify-center px-0' : 'gap-2.5 px-4'}`}>
+                <Link href="/dashboard" className="flex items-center gap-2.5 min-w-0" aria-label="Glanus home">
+                    <svg width="20" height="20" viewBox="0 0 32 32" fill="none" aria-hidden="true" className="shrink-0">
+                        <path d="M10 6C6.134 6 3 9.134 3 13s3.134 7 7 7"
+                            stroke="hsl(168,100%,45%)" strokeWidth="2.5" strokeLinecap="round" />
+                        <path d="M22 26c3.866 0 7-3.134 7-7s-3.134-7-7-7"
+                            stroke="hsl(168,100%,45%)" strokeWidth="2.5" strokeLinecap="round" />
+                        <circle cx="16" cy="16" r="2.5" fill="hsl(168,100%,45%)" opacity="0.5" />
+                    </svg>
+                    {!collapsed && (
+                        <span className="text-sm font-bold tracking-tight text-foreground truncate">Glanus</span>
+                    )}
+                </Link>
             </div>
 
-            {/* Search shortcut hint */}
-            <div className="px-4 pb-3">
+            {/* Workspace switcher */}
+            {!collapsed && (
+                <div className="shrink-0 border-b border-border px-3 py-2.5">
+                    <WorkspaceSwitcher />
+                </div>
+            )}
+
+            {/* Search shortcut */}
+            <div className={`shrink-0 pt-2.5 pb-1 ${collapsed ? 'px-1.5 flex justify-center' : 'px-3'}`}>
+                {collapsed ? (
+                    <button
+                        type="button"
+                        onClick={() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true }))}
+                        className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-muted/40 text-muted-foreground transition-colors hover:border-primary/30 hover:bg-muted/70 hover:text-foreground"
+                        title="Search (⌘K)"
+                        aria-label="Search"
+                    >
+                        <Search className="h-3.5 w-3.5 shrink-0" />
+                    </button>
+                ) : (
                 <button
+                    type="button"
                     onClick={() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true }))}
-                    className="flex w-full items-center gap-2 rounded-lg border border-border bg-surface-2/50 px-3 py-1.5 text-xs text-muted-foreground hover:border-nerve/30 hover:text-foreground transition"
+                    className="flex w-full items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:border-primary/30 hover:bg-muted/70 hover:text-foreground"
                 >
-                    <Search size={13} />
+                    <Search className="h-3.5 w-3.5 shrink-0" />
                     <span className="flex-1 text-left">Search…</span>
-                    <kbd className="hidden sm:inline-block rounded border border-border bg-surface-1 px-1 py-0.5 text-[10px] font-mono">⌘K</kbd>
+                    <kbd className="hidden rounded border border-border bg-surface-1 px-1.5 py-0.5 font-mono text-xs sm:inline-block">⌘K</kbd>
                 </button>
+                )}
             </div>
 
             {/* Navigation */}
-            <nav className="flex-1 overflow-y-auto px-3 py-4">
+            <nav className="flex-1 overflow-y-auto py-2 scrollbar-thin" aria-label="Workspace navigation"
+                style={{ paddingLeft: collapsed ? 0 : undefined, paddingRight: collapsed ? 0 : undefined }}
+            >
                 {Object.entries(sections).map(([section, items]) => (
-                    <div key={section} className="mb-4">
-                        <p className="mb-1.5 px-2 text-2xs font-medium uppercase tracking-wider text-muted-foreground/60">
-                            {section}
-                        </p>
-                        <div className="space-y-0.5">
-                            {items.map(item => (
-                                <Link
-                                    key={item.href}
-                                    href={item.href}
-                                    className={`flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm transition-colors ${isActive(item.href)
-                                        ? 'bg-nerve/10 font-medium text-nerve'
-                                        : 'text-muted-foreground hover:bg-surface-2 hover:text-foreground'
-                                        }`}
-                                >
-                                    {item.icon}
-                                    {item.label}
-                                </Link>
-                            ))}
+                    <div key={section} className={`mb-3 ${collapsed ? '' : ''}`}>
+                        {!collapsed && (
+                            <p className="mb-1 px-3 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/40">
+                                {section}
+                            </p>
+                        )}
+                        {collapsed && (
+                            <div className="mx-2 mb-1 h-px bg-border/40" aria-hidden="true" />
+                        )}
+                        <div className={`space-y-px ${collapsed ? 'px-1' : 'px-2'}`}>
+                            {items.map(item => {
+                                const active = isActive(item.href);
+                                return (
+                                    <Link
+                                        key={item.href}
+                                        href={item.href}
+                                        className={[
+                                            'sidebar-nav-item relative flex items-center rounded-lg text-sm transition-all duration-150',
+                                            collapsed ? 'justify-center p-0 h-9 w-full' : 'gap-2.5 py-1.5 pr-3',
+                                            active
+                                                ? 'bg-primary/[0.08] font-medium text-primary'
+                                                : 'text-muted-foreground hover:bg-surface-2 hover:text-foreground',
+                                            !collapsed && active ? 'pl-[13px]' : !collapsed ? 'pl-3' : '',
+                                        ].join(' ')}
+                                        title={collapsed ? item.label : undefined}
+                                    >
+                                        {active && !collapsed && (
+                                            <span
+                                                className="absolute left-0 top-1/2 h-4 w-[2px] -translate-y-1/2 rounded-r-full bg-primary"
+                                                aria-hidden="true"
+                                            />
+                                        )}
+                                        <span className={collapsed ? '' : 'shrink-0'}>
+                                            {item.icon}
+                                        </span>
+                                        {!collapsed && item.label}
+                                    </Link>
+                                );
+                            })}
                         </div>
                     </div>
                 ))}
             </nav>
 
-            {/* Footer */}
-            <div className="border-t border-border px-4 py-3">
-                <p className="text-2xs text-muted-foreground/40">
-                    Glanus v2.0 · PRISM
-                </p>
+            {/* User footer */}
+            <div className="shrink-0 border-t border-border">
+                {/* Collapse toggle */}
+                <div className={`flex items-center px-3 py-2 border-b border-border/50 ${collapsed ? 'justify-center' : 'justify-between'}`}>
+                    {!collapsed && (
+                        <Link
+                            href="/account"
+                            className="flex flex-1 items-center gap-2.5 rounded-lg px-2 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-surface-2 hover:text-foreground min-w-0"
+                        >
+                            <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/15 text-xs font-bold text-primary">
+                                {userInitial}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                                <p className="truncate text-sm font-medium text-foreground leading-none mb-0.5">
+                                    {session?.user?.name || 'Account'}
+                                </p>
+                                <p className="truncate text-xs text-muted-foreground leading-none">
+                                    {session?.user?.email || ''}
+                                </p>
+                            </div>
+                        </Link>
+                    )}
+                    {collapsed && (
+                        <Link
+                            href="/account"
+                            className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/15 text-xs font-bold text-primary transition-colors hover:bg-primary/25"
+                            aria-label="Account"
+                            title="Account"
+                        >
+                            {userInitial}
+                        </Link>
+                    )}
+                    {!collapsed && (
+                        <div className="flex items-center gap-0.5">
+                            <Link
+                                href="/account"
+                                className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-surface-2 hover:text-foreground"
+                                aria-label="Account settings"
+                            >
+                                <Settings className="h-3.5 w-3.5" />
+                            </Link>
+                            <button
+                                type="button"
+                                onClick={() => signOut({ callbackUrl: '/login' })}
+                                className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                                aria-label="Sign out"
+                            >
+                                <LogOut className="h-3.5 w-3.5" />
+                            </button>
+                        </div>
+                    )}
+                </div>
+
+                {/* Collapse button */}
+                <div className={`flex items-center px-3 py-2 ${collapsed ? 'justify-center' : 'justify-between'}`}>
+                    {!collapsed && (
+                        <p className="text-xs text-muted-foreground/30">
+                            Glanus v2.0 · PRISM
+                        </p>
+                    )}
+                    <button
+                        type="button"
+                        onClick={toggleCollapsed}
+                        className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground/50 transition-colors hover:bg-surface-2 hover:text-muted-foreground"
+                        aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+                        title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+                    >
+                        {collapsed
+                            ? <PanelLeftOpen className="h-3.5 w-3.5" />
+                            : <PanelLeftClose className="h-3.5 w-3.5" />
+                        }
+                    </button>
+                </div>
             </div>
         </div>
     );
 
     return (
-        <div className="flex min-h-screen">
-            {/* Mobile hamburger button */}
-            <button type="button"
+        <div className="flex min-h-screen bg-background">
+
+            {/* Mobile hamburger */}
+            <button
+                type="button"
                 onClick={() => setMobileOpen(true)}
-                className="fixed left-4 top-4 z-40 flex h-10 w-10 items-center justify-center rounded-lg border border-border bg-surface-1 text-muted-foreground transition-colors hover:bg-surface-2 hover:text-foreground lg:hidden"
+                className="fixed left-3 top-3 z-40 flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground shadow-sm transition-colors hover:bg-surface-2 hover:text-foreground lg:hidden"
                 aria-label="Open navigation"
             >
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-                </svg>
+                <Menu className="h-4.5 w-4.5" />
             </button>
 
             {/* Mobile sidebar overlay */}
             {mobileOpen && (
                 <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="Navigation">
-                    {/* Backdrop */}
                     <div
-                        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+                        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
                         onClick={() => setMobileOpen(false)}
                     />
-                    {/* Sidebar */}
-                    <aside className="relative z-10 h-full w-64 bg-surface-1 shadow-xl animate-slide-in">
-                        <button type="button"
+                    <aside className="relative z-10 h-full w-[220px] bg-surface-1 shadow-2xl animate-slide-up">
+                        <button
+                            type="button"
                             onClick={() => setMobileOpen(false)}
-                            className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-surface-2 hover:text-foreground"
+                            className="absolute right-2 top-2.5 flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-surface-2 hover:text-foreground"
                             aria-label="Close navigation"
                         >
-                            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                            </svg>
+                            <X className="h-4 w-4" />
                         </button>
                         {sidebarContent}
                     </aside>
                 </div>
             )}
 
-            {/* Desktop Sidebar */}
-            <aside className="hidden w-56 shrink-0 border-r border-border bg-surface-1 lg:block">
+            {/* Desktop sidebar — collapsible */}
+            <aside
+                className={[
+                    'hidden shrink-0 border-r border-border bg-surface-1 lg:flex lg:flex-col sidebar-collapse-transition',
+                    collapsed ? 'w-14' : 'w-[220px]',
+                ].join(' ')}
+            >
                 {sidebarContent}
             </aside>
 
-            {/* Main content */}
-            <main className="flex-1 overflow-y-auto relative">
-                {/* Global Top Header */}
-                <header className="sticky top-0 z-30 flex h-14 items-center justify-end border-b border-border bg-surface-1/80 px-6 backdrop-blur">
-                    <div className="flex items-center gap-4">
-                        <Link href="/account" className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition">
-                            <User size={14} />
-                            Account
-                        </Link>
+            {/* Main column */}
+            <div className="flex flex-1 min-w-0 flex-col">
+
+                {/* Top header */}
+                <header className="sticky top-0 z-30 flex h-12 shrink-0 items-center justify-between border-b border-border bg-surface-1/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-surface-1/80">
+                    {/* Breadcrumb */}
+                    <nav className="flex items-center gap-1.5 min-w-0 text-sm" aria-label="Breadcrumb">
+                        <span className="text-muted-foreground/40 font-medium hidden sm:block shrink-0 text-xs">
+                            {workspace?.name}
+                        </span>
+                        {activeSection && (
+                            <>
+                                <ChevronRight className="h-3 w-3 text-muted-foreground/25 hidden sm:block shrink-0" />
+                                <span className="text-muted-foreground/50 hidden sm:block shrink-0 text-xs">
+                                    {activeSection}
+                                </span>
+                            </>
+                        )}
+                        {activeNavItem && (
+                            <>
+                                <ChevronRight className="h-3 w-3 text-muted-foreground/30 shrink-0" />
+                                <span className="text-sm font-semibold text-foreground truncate">
+                                    {activeNavItem.label}
+                                </span>
+                            </>
+                        )}
+                    </nav>
+
+                    {/* Right controls */}
+                    <div className="flex items-center gap-1.5">
+                        <button
+                            type="button"
+                            onClick={() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true }))}
+                            className="hidden sm:flex items-center gap-1.5 rounded-lg border border-border bg-muted/30 px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:border-primary/30 hover:bg-muted/60 hover:text-foreground"
+                            aria-label="Search"
+                        >
+                            <Search className="h-3 w-3" />
+                            <span>Search</span>
+                            <kbd className="rounded border border-border bg-surface-1 px-1 py-0.5 font-mono text-[10px]">⌘K</kbd>
+                        </button>
                         <NotificationPopover />
+                        <Link
+                            href="/account"
+                            className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/15 text-xs font-bold text-primary transition-colors hover:bg-primary/25"
+                            aria-label="Account"
+                        >
+                            {userInitial}
+                        </Link>
                     </div>
                 </header>
 
-                <div className="mx-auto max-w-7xl px-6 py-6">
-                    {children}
-                </div>
-                <CommandPalette />
-            </main>
+                {/* Page content */}
+                <main className="flex-1 overflow-y-auto scrollbar-thin">
+                    <div className="px-5 py-5 lg:px-6 lg:py-6">
+                        {children}
+                    </div>
+                    <CommandPalette />
+                </main>
+            </div>
         </div>
     );
 }

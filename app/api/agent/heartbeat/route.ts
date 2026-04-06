@@ -33,6 +33,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     if (rateLimitResponse) return rateLimitResponse;
 
     const data = heartbeatSchema.parse(await request.json());
+    // processHeartbeat handles its own token→agent lookup; skip redundant requireAgentContext
     const result = await AgentService.processHeartbeat(data.authToken, data.metrics);
     return apiSuccess({
         status: 'ok',

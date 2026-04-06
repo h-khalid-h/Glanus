@@ -1,9 +1,8 @@
-import { apiSuccess, apiError } from '@/lib/api/response';
+import { apiSuccess } from '@/lib/api/response';
 import { NextRequest } from 'next/server';
-import { withErrorHandler } from '@/lib/api/withAuth';
+import { withCronHandler } from '@/lib/api/withAuth';
 import { notificationOrchestrator } from '@/lib/services/NotificationOrchestratorService';
 import { logInfo } from '@/lib/logger';
-import crypto from 'crypto';
 import { AlertService } from '@/lib/services/AlertService';
 import { WorkspaceAuditService } from '@/lib/services/WorkspaceAuditService';
 
@@ -13,20 +12,8 @@ import { WorkspaceAuditService } from '@/lib/services/WorkspaceAuditService';
  * Security: Protected by timing-safe CRON_SECRET check on every request.
  */
 
-function verifyCronSecret(request: NextRequest): boolean {
-    const cronSecret = request.headers.get('Authorization');
-    const expectedSecret = process.env.CRON_SECRET;
-    if (!expectedSecret || !cronSecret) return false;
-    const expected = `Bearer ${expectedSecret}`;
-    return (
-        cronSecret.length === expected.length &&
-        crypto.timingSafeEqual(Buffer.from(cronSecret), Buffer.from(expected))
-    );
-}
-
 // POST /api/cron/process-alerts — Run alert processing cycle
-export const POST = withErrorHandler(async (request: NextRequest) => {
-    if (!verifyCronSecret(request)) return apiError(401, 'Unauthorized');
+export const POST = withCronHandler(async (_request: NextRequest) => {
 
     logInfo('[CRON] Starting alert processing...');
     const startTime = Date.now();
@@ -50,9 +37,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
 });
 
 // GET /api/cron/process-alerts — Status/health check
-export const GET = withErrorHandler(async (request: NextRequest) => {
-    if (!verifyCronSecret(request)) return apiError(401, 'Unauthorized');
-
+export const GET = withCronHandler(async (_request: NextRequest) => {
     const alertSystem = await WorkspaceAuditService.getStats();
 
     return apiSuccess({

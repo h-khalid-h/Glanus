@@ -61,7 +61,7 @@ export async function loginAndNavigateToWorkspace(page: Page): Promise<string | 
     await login(page);
     const workspaceId = await getWorkspaceId(page);
     if (workspaceId) {
-        await page.goto(`/workspaces/${workspaceId}/analytics`);
+        await page.goto(`/workspaces/analytics`);
         await page.waitForLoadState('networkidle');
     }
     return workspaceId;

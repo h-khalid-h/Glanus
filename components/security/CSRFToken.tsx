@@ -71,6 +71,8 @@ export function useCSRFToken() {
     return { token, loading };
 }
 
+import { csrfFetch } from '@/lib/api/csrfFetch';
+
 /**
  * Fetch wrapper that automatically includes CSRF token
  */
@@ -78,22 +80,5 @@ export async function fetchWithCSRF(
     url: string,
     options: RequestInit = {}
 ): Promise<Response> {
-    // Get CSRF token from cookie
-    const getCookieValue = (name: string): string | null => {
-        const cookies = document.cookie.split(';');
-        const cookie = cookies.find(c => c.trim().startsWith(`${name}=`));
-        return cookie ? cookie.split('=')[1] : null;
-    };
-
-    const csrfToken = getCookieValue('csrf-token');
-
-    const headers = new Headers(options.headers);
-    if (csrfToken && ['POST', 'PUT', 'PATCH', 'DELETE'].includes(options.method || 'GET')) {
-        headers.set('x-csrf-token', csrfToken);
-    }
-
-    return fetch(url, {
-        ...options,
-        headers,
-    });
+    return csrfFetch(url, options);
 }

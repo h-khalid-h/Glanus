@@ -22,10 +22,9 @@ export default function OnboardingPage() {
         try {
             await csrfFetch('/api/onboarding/complete', { method: 'POST' });
             if (workspaceId) {
-                router.push(`/workspaces/${workspaceId}/analytics`);
-            } else {
-                router.push('/dashboard');
+                localStorage.setItem('currentWorkspaceId', workspaceId);
             }
+            router.push('/dashboard');
         } catch (error: unknown) {
             showError('Failed to complete onboarding:', error instanceof Error ? error.message : 'An unexpected error occurred');
         } finally {

@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { softDeleteExtension } from '@/lib/prisma-extensions/soft-delete';
+    import { rlsExtension } from '@/lib/prisma-extensions/rls';
 
 const globalForPrisma = globalThis as unknown as {
     prisma: ReturnType<typeof createPrismaClient> | undefined;
@@ -11,14 +12,15 @@ function createPrismaClient() {
     // pool_timeout: seconds to wait for a free connection before throwing.
     const baseUrl = process.env.DATABASE_URL || '';
     const separator = baseUrl.includes('?') ? '&' : '?';
+    const poolSize = process.env.DATABASE_POOL_SIZE || '30';
     const datasourceUrl = baseUrl.includes('connection_limit')
         ? baseUrl
-        : `${baseUrl}${separator}connection_limit=10&pool_timeout=20&statement_timeout=30000`;
+        : `${baseUrl}${separator}connection_limit=${poolSize}&pool_timeout=15&statement_timeout=30000`;
 
     return new PrismaClient({
         datasourceUrl,
         log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
-    }).$extends(softDeleteExtension);
+    }).$extends(softDeleteExtension).$extends(rlsExtension);
 }
 
 export const prisma =

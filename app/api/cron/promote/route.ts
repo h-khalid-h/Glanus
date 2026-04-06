@@ -1,9 +1,8 @@
 import { NextRequest } from 'next/server';
 import { apiSuccess, apiError } from '@/lib/api/response';
 import { prisma } from '@/lib/db';
-import { withErrorHandler } from '@/lib/api/withAuth';
+import { withCronHandler } from '@/lib/api/withAuth';
 import { withRateLimit } from '@/lib/security/rateLimit';
-import crypto from 'crypto';
 
 /**
  * POST /api/cron/promote
@@ -14,19 +13,9 @@ import crypto from 'crypto';
  *   -H "Content-Type: application/json" \
  *   -d '{"email":"h.khalid@datac.com"}'
  */
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = withCronHandler(async (request: NextRequest) => {
     const rateLimited = await withRateLimit(request, 'strict-api');
     if (rateLimited) return rateLimited;
-
-    // Verify CRON_SECRET authorization (timing-safe)
-    const authHeader = request.headers.get('authorization');
-    const token = authHeader?.replace('Bearer ', '') || '';
-    const secret = process.env.CRON_SECRET || '';
-
-    if (!token || !secret || token.length !== secret.length ||
-        !crypto.timingSafeEqual(Buffer.from(token), Buffer.from(secret))) {
-        return apiError(401, 'Unauthorized');
-    }
 
     const body = await request.json();
     const { email } = body;

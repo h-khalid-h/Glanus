@@ -1,3 +1,4 @@
+/** @jest-environment node */
 import { assessConsequence, AutonomyLevel, AutomationAction } from '@/lib/reflex/automation';
 
 describe('REFLEX Automation Engine - Consequence Assessment', () => {

@@ -1,6 +1,6 @@
 import { apiSuccess, apiError } from '@/lib/api/response';
 import { NextRequest } from 'next/server';
-import { requireAuth, requireWorkspaceAccess, withErrorHandler } from '@/lib/api/withAuth';
+import { requireAuth, requireWorkspaceAccess, withErrorHandler, runWithWorkspaceRLS } from '@/lib/api/withAuth';
 import { validateQuery, validateRequest } from '@/lib/validation';
 import { assetQuerySchema, createAssetSchema } from '@/lib/schemas/asset.schemas';
 import { AssetService } from '@/lib/services/AssetService';
@@ -16,12 +16,11 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     }
 
     await requireWorkspaceAccess(workspaceId, user.id, request);
-
-    const params = validateQuery(searchParams, assetQuerySchema);
-
-    const data = await AssetService.getAssets(workspaceId, params);
-
-    return apiSuccess(data);
+    return runWithWorkspaceRLS(workspaceId, user, async () => {
+        const params = validateQuery(searchParams, assetQuerySchema);
+        const data = await AssetService.getAssets(workspaceId, params);
+        return apiSuccess(data);
+    });
 });
 
 // POST /api/assets - Create new asset (auth-protected, no separate rate limit needed)
@@ -36,10 +35,11 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     }
 
     await requireWorkspaceAccess(workspaceId, user.id, request);
-
-    const asset = await AssetService.createAsset(workspaceId, user.id, {
-        ...data,
-        assetType: data.assetType ?? 'DIGITAL',
+    return runWithWorkspaceRLS(workspaceId, user, async () => {
+        const asset = await AssetService.createAsset(workspaceId, user.id, {
+            ...data,
+            assetType: data.assetType ?? 'DIGITAL',
+        });
+        return apiSuccess(asset, undefined, 201);
     });
-    return apiSuccess(asset, undefined, 201);
 });

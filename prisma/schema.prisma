@@ -233,28 +233,29 @@ model Workspace {
   partnerAssignment PartnerAssignment? @relation("WorkspacePartnerAssignment")
 
   // Agent RMM (Glanus 2.0 Phase 3)
-  agentConnections AgentConnection[]     @relation("WorkspaceAgents")
-  scripts          Script[]              @relation("WorkspaceScripts")
-  scriptExecutions ScriptExecution[]     @relation("WorkspaceScripts")
-  alertRules       AlertRule[]           @relation("WorkspaceAlertRules")
-  webhooks         NotificationWebhook[] @relation("WorkspaceWebhooks")
-  auditLogs        AuditLog[]
-  actionQueueItems ActionQueueItem[]
-  aiInsights       AIInsight[]
-  mdmProfiles      MdmProfile[]          @relation("WorkspaceMdmProfiles")
-  reportSchedules  ReportSchedule[]      @relation("WorkspaceReportSchedules")
-  scriptSchedules  ScriptSchedule[]      @relation("WorkspaceScriptSchedules")
-  apiKeys          ApiKey[]              @relation("WorkspaceApiKeys")
+  agentConnections   AgentConnection[]     @relation("WorkspaceAgents")
+  scripts            Script[]              @relation("WorkspaceScripts")
+  scriptExecutions   ScriptExecution[]     @relation("WorkspaceScripts")
+  alertRules         AlertRule[]           @relation("WorkspaceAlertRules")
+  webhooks           NotificationWebhook[] @relation("WorkspaceWebhooks")
+  auditLogs          AuditLog[]
+  actionQueueItems   ActionQueueItem[]
+  aiInsights         AIInsight[]
+  mdmProfiles        MdmProfile[]          @relation("WorkspaceMdmProfiles")
+  reportSchedules    ReportSchedule[]      @relation("WorkspaceReportSchedules")
+  scriptSchedules    ScriptSchedule[]      @relation("WorkspaceScriptSchedules")
+  apiKeys            ApiKey[]              @relation("WorkspaceApiKeys")
   maintenanceWindows MaintenanceWindow[]
-  patchPolicies    PatchPolicy[]         // Phase 31: Patch Management
-  ztnaPolicies     ZtnaPolicy[]          // Phase 32: Zero-Trust Access
-  networkDevices   NetworkDevice[]       // Phase 33: Network Discovery
-  discoveryScans   DiscoveryScan[]       // Phase 33: Network Discovery
-  tickets          Ticket[]              // Phase 34: Helpdesk & Support Ticketing
+  patchPolicies      PatchPolicy[] // Phase 31: Patch Management
+  ztnaPolicies       ZtnaPolicy[] // Phase 32: Zero-Trust Access
+  networkDevices     NetworkDevice[] // Phase 33: Network Discovery
+  discoveryScans     DiscoveryScan[] // Phase 33: Network Discovery
+  tickets            Ticket[] // Phase 34: Helpdesk & Support Ticketing
 
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  deletedAt       DateTime?
+  assetCategories AssetCategory[]
 
   @@index([slug])
   @@index([ownerId])
@@ -397,10 +398,10 @@ model User {
   ticketMessages TicketMessage[] @relation("TicketMessageSender")
 
   // Audit: reverse relations for createdBy fields
-  createdScriptExecutions ScriptExecution[]  @relation("ScriptExecutionCreator")
-  createdAlertRules       AlertRule[]        @relation("AlertRuleCreator")
-  createdReportSchedules  ReportSchedule[]   @relation("ReportScheduleCreator")
-  createdApiKeys          ApiKey[]           @relation("ApiKeyCreator")
+  createdScriptExecutions   ScriptExecution[]   @relation("ScriptExecutionCreator")
+  createdAlertRules         AlertRule[]         @relation("AlertRuleCreator")
+  createdReportSchedules    ReportSchedule[]    @relation("ReportScheduleCreator")
+  createdApiKeys            ApiKey[]            @relation("ApiKeyCreator")
   createdMaintenanceWindows MaintenanceWindow[] @relation("MaintenanceWindowCreator")
 
   @@index([email])
@@ -602,20 +603,20 @@ model Script {
   id          String    @id @default(cuid())
   workspaceId String
   workspace   Workspace @relation("WorkspaceScripts", fields: [workspaceId], references: [id], onDelete: Cascade)
-  
-  name        String
-  description String?   @db.Text
-  language    String    // 'bash', 'powershell', 'python'
-  content     String    @db.Text
-  tags        String[]
-  isPublic    Boolean   @default(false)
-  
-  executions  ScriptExecution[] @relation("ScriptTemplate")
-  schedules   ScriptSchedule[]  @relation("ScriptSchedules")
-  patchPolicies PatchPolicy[]   @relation("ScriptPatchPolicies") // Phase 31: Patch Management
 
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  name        String
+  description String?  @db.Text
+  language    String // 'bash', 'powershell', 'python'
+  content     String   @db.Text
+  tags        String[]
+  isPublic    Boolean  @default(false)
+
+  executions    ScriptExecution[] @relation("ScriptTemplate")
+  schedules     ScriptSchedule[]  @relation("ScriptSchedules")
+  patchPolicies PatchPolicy[]     @relation("ScriptPatchPolicies") // Phase 31: Patch Management
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([workspaceId])
   @@index([language])
@@ -625,22 +626,22 @@ model ScriptSchedule {
   id          String    @id @default(cuid())
   workspaceId String
   workspace   Workspace @relation("WorkspaceScriptSchedules", fields: [workspaceId], references: [id], onDelete: Cascade)
-  
-  scriptId    String
-  script      Script    @relation("ScriptSchedules", fields: [scriptId], references: [id], onDelete: Cascade)
-  
-  name           String
-  description    String?   @db.Text
-  targetIds      Json      // Array of Agent IDs to execute against
-  cronExpression String    // e.g., "0 0 * * *"
-  enabled        Boolean   @default(true)
-  
-  lastRunAt   DateTime?
-  nextRunAt   DateTime?
-  runCount    Int       @default(0)
 
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  scriptId String
+  script   Script @relation("ScriptSchedules", fields: [scriptId], references: [id], onDelete: Cascade)
+
+  name           String
+  description    String? @db.Text
+  targetIds      Json // Array of Agent IDs to execute against
+  cronExpression String // e.g., "0 0 * * *"
+  enabled        Boolean @default(true)
+
+  lastRunAt DateTime?
+  nextRunAt DateTime?
+  runCount  Int       @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([workspaceId])
   @@index([scriptId])
@@ -813,7 +814,7 @@ enum RelationshipType {
 model AssetCategory {
   id          String  @id @default(cuid())
   name        String
-  slug        String  @unique
+  slug        String
   description String? @db.Text
   icon        String?
 
@@ -821,6 +822,10 @@ model AssetCategory {
   parentId String?
   parent   AssetCategory?  @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: Restrict)
   children AssetCategory[] @relation("CategoryHierarchy")
+
+  // Workspace Isolation
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 
   // Asset type reference (Physical or Digital)  
   assetTypeValue AssetType // Using existing AssetType enum
@@ -840,8 +845,10 @@ model AssetCategory {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@unique([workspaceId, slug])
   @@index([parentId])
   @@index([slug])
+  @@index([workspaceId])
   @@index([assetTypeValue])
 }
 
@@ -1257,8 +1264,8 @@ model AgentConnection {
   lastMetricSavedAt DateTime?
 
   // Relations
-  metrics AgentMetric[]
-  scripts ScriptExecution[]
+  metrics           AgentMetric[]
+  scripts           ScriptExecution[]
   installedSoftware InstalledSoftware[] // Phase 30: Endpoint Software Inventory
   discoveredDevices NetworkDevice[]     @relation("AgentDiscoveredDevices")
   discoveryScans    DiscoveryScan[]     @relation("AgentDiscoveryScans")
@@ -1322,8 +1329,8 @@ model ScriptExecution {
   workspace   Workspace @relation("WorkspaceScripts", fields: [workspaceId], references: [id], onDelete: Cascade)
 
   // Optional link if spawned from the Script Library (mass deployment) 
-  scriptId    String?
-  script      Script?   @relation("ScriptTemplate", fields: [scriptId], references: [id], onDelete: SetNull)
+  scriptId String?
+  script   Script? @relation("ScriptTemplate", fields: [scriptId], references: [id], onDelete: SetNull)
 
   // Script (inline payload)
   scriptName String
@@ -1341,9 +1348,9 @@ model ScriptExecution {
   completedAt DateTime?
 
   // Creator
-  createdAt    DateTime @default(now())
-  createdBy    String
-  createdByUser User    @relation("ScriptExecutionCreator", fields: [createdBy], references: [id], onDelete: Cascade)
+  createdAt     DateTime @default(now())
+  createdBy     String
+  createdByUser User     @relation("ScriptExecutionCreator", fields: [createdBy], references: [id], onDelete: Cascade)
 
   @@index([agentId, status])
   @@index([assetId, createdAt])
@@ -1371,10 +1378,10 @@ model AlertRule {
   notifyWebhook Boolean @default(false)
 
   // Metadata
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  createdBy    String?
-  createdByUser User?   @relation("AlertRuleCreator", fields: [createdBy], references: [id], onDelete: SetNull)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  createdBy     String?
+  createdByUser User?    @relation("AlertRuleCreator", fields: [createdBy], references: [id], onDelete: SetNull)
 
   @@index([workspaceId, enabled])
   @@index([metric])
@@ -1497,30 +1504,30 @@ model ReportSchedule {
   workspace   Workspace @relation("WorkspaceReportSchedules", fields: [workspaceId], references: [id], onDelete: Cascade)
 
   // Schedule Configuration
-  name         String
-  reportType   String    // 'asset_inventory', 'rmm_health', 'cortex_insights'
-  format       String    @default("csv") // 'csv', 'pdf'
-  frequency    String    // 'daily', 'weekly', 'monthly'
-  dayOfWeek    Int?      // 0-6 (Sunday-Saturday), used for weekly
-  dayOfMonth   Int?      // 1-31, used for monthly
-  timeOfDay    String    @default("08:00") // HH:mm UTC
-  timezone     String    @default("UTC")
+  name       String
+  reportType String // 'asset_inventory', 'rmm_health', 'cortex_insights'
+  format     String @default("csv") // 'csv', 'pdf'
+  frequency  String // 'daily', 'weekly', 'monthly'
+  dayOfWeek  Int? // 0-6 (Sunday-Saturday), used for weekly
+  dayOfMonth Int? // 1-31, used for monthly
+  timeOfDay  String @default("08:00") // HH:mm UTC
+  timezone   String @default("UTC")
 
   // Delivery Configuration
-  recipients   String[]  // Array of email addresses
-  enabled      Boolean   @default(true)
+  recipients String[] // Array of email addresses
+  enabled    Boolean  @default(true)
 
   // Tracking
-  lastRunAt    DateTime?
-  lastStatus   String?   // 'success', 'failed'
-  lastError    String?   @db.Text
-  runCount     Int       @default(0)
+  lastRunAt  DateTime?
+  lastStatus String? // 'success', 'failed'
+  lastError  String?   @db.Text
+  runCount   Int       @default(0)
 
   // Audit
-  createdBy    String
+  createdBy     String
   createdByUser User     @relation("ReportScheduleCreator", fields: [createdBy], references: [id], onDelete: Cascade)
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   @@index([workspaceId, enabled])
   @@index([frequency])
@@ -1531,30 +1538,30 @@ model ReportSchedule {
 // API KEY MANAGEMENT
 // ============================================
 model ApiKey {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   workspaceId String
   workspace   Workspace @relation("WorkspaceApiKeys", fields: [workspaceId], references: [id], onDelete: Cascade)
 
   // Key Identity
-  name        String                       // Human-readable label (e.g. "CI/CD Pipeline Key")
-  prefix      String                       // First 8 chars of key for identification (e.g. "glns_abc1")
-  keyHash     String   @unique             // SHA-256 hash of the full key (never store plaintext)
+  name    String // Human-readable label (e.g. "CI/CD Pipeline Key")
+  prefix  String // First 8 chars of key for identification (e.g. "glns_abc1")
+  keyHash String @unique // SHA-256 hash of the full key (never store plaintext)
 
   // Permissions
-  scopes      String[] @default(["read"])   // Allowed scopes: read, write, admin, agents, scripts
+  scopes String[] @default(["read"]) // Allowed scopes: read, write, admin, agents, scripts
 
   // Usage Tracking
-  lastUsedAt  DateTime?
-  usageCount  Int      @default(0)
+  lastUsedAt DateTime?
+  usageCount Int       @default(0)
 
   // Lifecycle
-  expiresAt   DateTime?                    // Optional expiration
-  revokedAt   DateTime?                    // Soft-revoke timestamp
-  createdBy   String                       // User ID who created the key
-  createdByUser User   @relation("ApiKeyCreator", fields: [createdBy], references: [id], onDelete: Cascade)
+  expiresAt     DateTime? // Optional expiration
+  revokedAt     DateTime? // Soft-revoke timestamp
+  createdBy     String // User ID who created the key
+  createdByUser User      @relation("ApiKeyCreator", fields: [createdBy], references: [id], onDelete: Cascade)
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([workspaceId])
   @@index([prefix])
@@ -1563,10 +1570,10 @@ model ApiKey {
 
 // ─── Phase 16: Asset Maintenance Windows ────────────────────
 model MaintenanceWindow {
-  id          String   @id @default(cuid())
+  id          String  @id @default(cuid())
   title       String
-  description String?  @db.Text
-  type        String   @default("preventive") // preventive, corrective, inspection
+  description String? @db.Text
+  type        String  @default("preventive") // preventive, corrective, inspection
 
   // Scheduling
   scheduledStart DateTime
@@ -1575,23 +1582,23 @@ model MaintenanceWindow {
   actualEnd      DateTime?
 
   // Status
-  status      String   @default("scheduled") // scheduled, in_progress, completed, cancelled
-  priority    String   @default("medium")    // low, medium, high, critical
+  status   String @default("scheduled") // scheduled, in_progress, completed, cancelled
+  priority String @default("medium") // low, medium, high, critical
 
   // Notes & outcomes
-  notes       String?  @db.Text
-  cost        Decimal?
+  notes String?  @db.Text
+  cost  Decimal?
 
   // Relations
   assetId     String
-  asset       Asset    @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  asset       Asset     @relation(fields: [assetId], references: [id], onDelete: Cascade)
   workspaceId String
   workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   createdById String
   createdBy   User      @relation("MaintenanceWindowCreator", fields: [createdById], references: [id], onDelete: Cascade)
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([assetId])
   @@index([workspaceId])
@@ -1605,18 +1612,18 @@ model MaintenanceWindow {
 // ============================================
 
 model InstalledSoftware {
-  id              String   @id @default(cuid())
+  id              String          @id @default(cuid())
   agentId         String
   agentConnection AgentConnection @relation(fields: [agentId], references: [id], onDelete: Cascade)
-  
-  name            String
-  version         String?
-  publisher       String?
-  installDate     DateTime?
-  sizeMB          Float?
-  
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+
+  name        String
+  version     String?
+  publisher   String?
+  installDate DateTime?
+  sizeMB      Float?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([agentId])
   @@index([name])
@@ -1627,19 +1634,19 @@ model InstalledSoftware {
 // ============================================
 
 model PatchPolicy {
-  id              String   @id @default(cuid())
-  workspaceId     String
-  workspace       Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  
-  name            String
-  targetSoftware  String   // Application name to hunt for in InstalledSoftware
-  actionScriptId  String
-  actionScript    Script    @relation("ScriptPatchPolicies", fields: [actionScriptId], references: [id], onDelete: Restrict)
-  
-  isEnabled       Boolean   @default(true)
-  
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id          String    @id @default(cuid())
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  name           String
+  targetSoftware String // Application name to hunt for in InstalledSoftware
+  actionScriptId String
+  actionScript   Script @relation("ScriptPatchPolicies", fields: [actionScriptId], references: [id], onDelete: Restrict)
+
+  isEnabled Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([workspaceId])
   @@index([targetSoftware])
@@ -1654,12 +1661,12 @@ model ZtnaPolicy {
   workspaceId String
   workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 
-  isEnabled   Boolean   @default(false)
-  ipWhitelist String    @db.Text // Comma-separated strict IP validations
-  action      String    @default("BLOCK") // Extensible for future heuristics e.g "REQUIRE_MFA"
+  isEnabled   Boolean @default(false)
+  ipWhitelist String  @db.Text // Comma-separated strict IP validations
+  action      String  @default("BLOCK") // Extensible for future heuristics e.g "REQUIRE_MFA"
 
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([workspaceId, isEnabled])
 }
@@ -1676,46 +1683,46 @@ enum DiscoveryScanStatus {
 }
 
 model NetworkDevice {
-  id             String    @id @default(cuid())
-  workspaceId    String
-  workspace      Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  
+  id          String    @id @default(cuid())
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
   discoveredById String?
   discoveredBy   AgentConnection? @relation("AgentDiscoveredDevices", fields: [discoveredById], references: [id], onDelete: SetNull)
-  
-  ipAddress      String
-  macAddress     String?
-  hostname       String?
-  deviceType     String    @default("UNKNOWN") // ROUTER, PRINTER, SWITCH, UNKNOWN
-  snmpData       Json?
-  
-  lastSeen       DateTime  @default(now())
-  
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-  
+
+  ipAddress  String
+  macAddress String?
+  hostname   String?
+  deviceType String  @default("UNKNOWN") // ROUTER, PRINTER, SWITCH, UNKNOWN
+  snmpData   Json?
+
+  lastSeen DateTime @default(now())
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@index([workspaceId])
   @@index([discoveredById])
   @@index([ipAddress])
 }
 
 model DiscoveryScan {
-  id           String              @id @default(cuid())
-  workspaceId  String
-  workspace    Workspace           @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  id          String    @id @default(cuid())
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 
-  agentId      String
-  agent        AgentConnection     @relation("AgentDiscoveryScans", fields: [agentId], references: [id], onDelete: Cascade)
+  agentId String
+  agent   AgentConnection @relation("AgentDiscoveryScans", fields: [agentId], references: [id], onDelete: Cascade)
 
   subnet       String
   status       DiscoveryScanStatus @default(PENDING)
   devicesFound Int                 @default(0)
-  
-  startedAt    DateTime?
-  completedAt  DateTime?
 
-  createdAt    DateTime            @default(now())
-  updatedAt    DateTime            @updatedAt
+  startedAt   DateTime?
+  completedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([workspaceId])
   @@index([agentId])
@@ -1742,31 +1749,31 @@ enum TicketPriority {
 }
 
 model Ticket {
-  id          String         @id @default(cuid())
-  number      Int            @unique @default(autoincrement()) // Human-readable ID
-  
+  id     String @id @default(cuid())
+  number Int    @unique @default(autoincrement()) // Human-readable ID
+
   workspaceId String
-  workspace   Workspace      @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 
   title       String
   description String         @db.Text
   status      TicketStatus   @default(OPEN)
   priority    TicketPriority @default(NORMAL)
 
-  assetId     String?
-  asset       Asset?         @relation("AssetTickets", fields: [assetId], references: [id], onDelete: SetNull)
+  assetId String?
+  asset   Asset?  @relation("AssetTickets", fields: [assetId], references: [id], onDelete: SetNull)
 
-  creatorId   String
-  creator     User           @relation("TicketCreator", fields: [creatorId], references: [id], onDelete: Cascade)
+  creatorId String
+  creator   User   @relation("TicketCreator", fields: [creatorId], references: [id], onDelete: Cascade)
 
-  assigneeId  String?
-  assignee    WorkspaceMember? @relation("TicketAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+  assigneeId String?
+  assignee   WorkspaceMember? @relation("TicketAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
 
-  messages    TicketMessage[]
+  messages TicketMessage[]
 
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
-  resolvedAt  DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  resolvedAt DateTime?
 
   @@index([workspaceId])
   @@index([status])
@@ -1775,19 +1782,19 @@ model Ticket {
 }
 
 model TicketMessage {
-  id         String   @id @default(cuid())
-  
-  ticketId   String
-  ticket     Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  id String @id @default(cuid())
 
-  senderId   String
-  sender     User     @relation("TicketMessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  ticketId String
+  ticket   Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
 
-  content    String   @db.Text
-  isInternal Boolean  @default(false)
+  senderId String
+  sender   User   @relation("TicketMessageSender", fields: [senderId], references: [id], onDelete: Cascade)
 
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  content    String  @db.Text
+  isInternal Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([ticketId])
   @@index([senderId])

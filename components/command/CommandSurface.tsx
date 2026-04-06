@@ -99,7 +99,7 @@ export function CommandSurface() {
                     description: 'Workspace overview and health',
                     icon: <ChartIcon />,
                     category: 'navigation',
-                    handler: () => router.push(`/workspaces/${workspaceId}/analytics`),
+                    handler: () => router.push(`/workspaces/analytics`),
                     keywords: ['analytics', 'metrics', 'stats', 'reliability'],
                 },
                 {
@@ -117,7 +117,7 @@ export function CommandSurface() {
                     description: 'Monitor connected agents',
                     icon: <CpuIcon />,
                     category: 'navigation',
-                    handler: () => router.push(`/workspaces/${workspaceId}/agents`),
+                    handler: () => router.push(`/workspaces/agents`),
                     keywords: ['monitoring', 'endpoints', 'rmm', 'connections'],
                 },
                 {
@@ -126,7 +126,7 @@ export function CommandSurface() {
                     description: 'Check active alert rules',
                     icon: <BellIcon />,
                     category: 'navigation',
-                    handler: () => router.push(`/workspaces/${workspaceId}/alerts`),
+                    handler: () => router.push(`/workspaces/alerts`),
                     keywords: ['warnings', 'notifications', 'monitor'],
                 },
                 {
@@ -135,7 +135,7 @@ export function CommandSurface() {
                     description: 'Configure workspace preferences',
                     icon: <SettingsIcon />,
                     category: 'navigation',
-                    handler: () => router.push(`/workspaces/${workspaceId}/settings`),
+                    handler: () => router.push(`/workspaces/settings`),
                     keywords: ['config', 'preferences', 'account'],
                 },
                 {
@@ -144,7 +144,7 @@ export function CommandSurface() {
                     description: 'Invite and manage team members',
                     icon: <UsersIcon />,
                     category: 'navigation',
-                    handler: () => router.push(`/workspaces/${workspaceId}/members`),
+                    handler: () => router.push(`/workspaces/members`),
                     keywords: ['team', 'users', 'invite', 'people'],
                 },
                 {
@@ -153,7 +153,7 @@ export function CommandSurface() {
                     description: 'Manage your plan and billing',
                     icon: <CreditCardIcon />,
                     category: 'navigation',
-                    handler: () => router.push(`/workspaces/${workspaceId}/billing`),
+                    handler: () => router.push(`/workspaces/billing`),
                     keywords: ['payment', 'plan', 'upgrade', 'subscription'],
                 },
             );
@@ -294,12 +294,12 @@ export function CommandSurface() {
         }
         if (searchResults?.agents) {
             for (const _ag of searchResults.agents) {
-                handlers.push(() => { router.push(`/workspaces/${workspaceId}/agents`); setOpen(false); });
+                handlers.push(() => { router.push(`/workspaces/agents`); setOpen(false); });
             }
         }
         if (searchResults?.insights) {
             for (const _ins of searchResults.insights) {
-                handlers.push(() => { router.push(`/workspaces/${workspaceId}/notifications`); setOpen(false); });
+                handlers.push(() => { router.push(`/workspaces/notifications`); setOpen(false); });
             }
         }
         return handlers;
@@ -521,7 +521,7 @@ export function CommandSurface() {
                                                             data-index={idx}
                                                             data-active={idx === activeIndex}
                                                             className="command-item"
-                                                            onClick={() => { router.push(`/workspaces/${workspaceId}/agents`); setOpen(false); }}
+                                                            onClick={() => { router.push(`/workspaces/agents`); setOpen(false); }}
                                                             onMouseEnter={() => setActiveIndex(idx)}
                                                         >
                                                             <span className="text-muted-foreground shrink-0"><CpuIcon /></span>
@@ -556,7 +556,7 @@ export function CommandSurface() {
                                                             data-index={idx}
                                                             data-active={idx === activeIndex}
                                                             className="command-item"
-                                                            onClick={() => { router.push(`/workspaces/${workspaceId}/notifications`); setOpen(false); }}
+                                                            onClick={() => { router.push(`/workspaces/notifications`); setOpen(false); }}
                                                             onMouseEnter={() => setActiveIndex(idx)}
                                                         >
                                                             <span className="text-oracle shrink-0"><SparkleIcon /></span>

@@ -93,7 +93,8 @@ export default function WorkspaceWizard({ onComplete, showSampleDataOption = fal
                 onComplete(newWorkspace.id);
             } else if (newWorkspace) {
                 // Default behavior: redirect to dashboard
-                router.push(`/workspaces/${newWorkspace.id}/dashboard`);
+                localStorage.setItem('currentWorkspaceId', newWorkspace.id);
+                router.push(`/dashboard`);
                 router.refresh();
             }
         } catch (err: unknown) {

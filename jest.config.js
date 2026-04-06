@@ -10,6 +10,7 @@ const DB_TEST_PATHS = [
     '<rootDir>/__tests__/api/workspaces/',
     '<rootDir>/__tests__/api/assets/',
     '<rootDir>/__tests__/api/admin/',
+    '<rootDir>/__tests__/security/rls-integration.test.ts',
 ]
 
 // Add any custom config to be passed to Jest

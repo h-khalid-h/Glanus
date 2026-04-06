@@ -194,19 +194,19 @@ export function MissionControl({ data, workspaceName, workspaceId, plan }: Missi
                                     label="Invite Member"
                                     icon="↗"
                                     accentClass="bg-cortex/10 text-cortex"
-                                    onClick={() => router.push(`/workspaces/${workspaceId}/members`)}
+                                    onClick={() => router.push(`/workspaces/members`)}
                                 />
                                 <QuickAction
                                     label="Create Alert Rule"
                                     icon="⚡"
                                     accentClass="bg-oracle/10 text-oracle"
-                                    onClick={() => router.push(`/workspaces/${workspaceId}/alerts`)}
+                                    onClick={() => router.push(`/workspaces/alerts`)}
                                 />
                                 <QuickAction
                                     label="Run Script"
                                     icon="▶"
                                     accentClass="bg-reflex/10 text-reflex"
-                                    onClick={() => router.push(`/workspaces/${workspaceId}/agents`)}
+                                    onClick={() => router.push(`/workspaces/agents`)}
                                 />
                             </div>
                         </div>

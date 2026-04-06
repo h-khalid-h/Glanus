@@ -1,9 +1,8 @@
 import { NextRequest } from 'next/server';
-import { apiSuccess, apiError } from '@/lib/api/response';
+import { apiSuccess } from '@/lib/api/response';
 import { prisma } from '@/lib/db';
-import { withErrorHandler } from '@/lib/api/withAuth';
+import { withCronHandler } from '@/lib/api/withAuth';
 import { AssetType } from '@prisma/client';
-import crypto from 'crypto';
 
 const DEFAULT_CATEGORIES: Array<{ name: string; slug: string; icon: string; description: string; assetTypeValue: AssetType; sortOrder: number }> = [
     { name: 'Servers', slug: 'servers', icon: '🖥️', description: 'Physical and virtual server infrastructure', assetTypeValue: 'PHYSICAL', sortOrder: 1 },
@@ -17,14 +16,7 @@ const DEFAULT_CATEGORIES: Array<{ name: string; slug: string; icon: string; desc
 ];
 
 // POST /api/cron/seed-categories
-export const POST = withErrorHandler(async (request: NextRequest) => {
-    const authHeader = request.headers.get('Authorization');
-    const token = authHeader?.replace('Bearer ', '') || '';
-    const secret = process.env.CRON_SECRET || '';
-    if (!token || !secret || token.length !== secret.length ||
-        !crypto.timingSafeEqual(Buffer.from(token), Buffer.from(secret))) {
-        return apiError(401, 'Unauthorized');
-    }
+export const POST = withCronHandler(async (_request: NextRequest) => {
 
     const results = [];
     for (const cat of DEFAULT_CATEGORIES) {

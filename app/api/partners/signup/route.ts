@@ -1,5 +1,5 @@
 import { apiSuccess, apiError } from '@/lib/api/response';
-import { requireAuth, withErrorHandler } from '@/lib/api/withAuth';
+import { requireAuth, withErrorHandler, runWithUserRLS } from '@/lib/api/withAuth';
 import { z } from 'zod';
 import { checkRateLimit } from '@/lib/security/rateLimit';
 import { PartnerService } from '@/lib/services/PartnerService';
@@ -31,6 +31,8 @@ export const POST = withErrorHandler(async (request: Request) => {
     if (!rateLimitResult.allowed) return apiError(429, 'Rate limit exceeded');
 
     const validation = partnerSignupSchema.parse(await request.json());
-    const partner = await PartnerService.applyAsPartner({ ...validation, userId: user.id, userEmail: user.email! });
-    return apiSuccess({ partner, message: 'Partner application submitted successfully.' }, undefined, 201);
+    return runWithUserRLS(user, async () => {
+        const partner = await PartnerService.applyAsPartner({ ...validation, userId: user.id, userEmail: user.email! });
+        return apiSuccess({ partner, message: 'Partner application submitted successfully.' }, undefined, 201);
+    });
 });

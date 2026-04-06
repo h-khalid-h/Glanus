@@ -1,6 +1,6 @@
 import { apiSuccess } from '@/lib/api/response';
 import { NextRequest } from 'next/server';
-import { withErrorHandler } from '@/lib/api/withAuth';
+import { withErrorHandler, requireAgentContext, runWithWorkspaceRLS } from '@/lib/api/withAuth';
 import { z } from 'zod';
 import { AgentService } from '@/lib/services/AgentService';
 import { withRateLimit } from '@/lib/security/rateLimit';
@@ -20,6 +20,11 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     if (rateLimitResponse) return rateLimitResponse;
 
     const data = commandResultSchema.parse(await request.json());
-    await AgentService.recordCommandResult(data);
+    const agent = await requireAgentContext(data.authToken);
+    await runWithWorkspaceRLS(
+        agent.workspaceId,
+        { id: agent.id, role: 'USER' },
+        () => AgentService.recordCommandResult(data)
+    );
     return apiSuccess({ status: 'ok', message: 'Result recorded successfully' });
 });

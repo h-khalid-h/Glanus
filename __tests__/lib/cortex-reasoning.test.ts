@@ -1,3 +1,4 @@
+/** @jest-environment node */
 import { buildRiskProfile } from '@/lib/cortex/reasoning';
 import type { OperationalGraphData } from '@/lib/nerve/operational-graph';
 

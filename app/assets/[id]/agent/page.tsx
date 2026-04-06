@@ -85,7 +85,7 @@ export default function AssetAgentPage() {
             const interval = setInterval(() => {
                 fetchAgentData();
                 fetchExecutions();
-            }, 10000);
+            }, 30000);
             return () => clearInterval(interval);
         }
     }, [assetId]);

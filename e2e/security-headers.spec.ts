@@ -63,7 +63,7 @@ test.describe('Security Headers — Authenticated Routes', () => {
         const workspaceId = href?.match(/\/workspaces\/([^/]+)/)?.[1];
         if (!workspaceId) { test.skip(); return; }
 
-        const response = await page.request.get(`/workspaces/${workspaceId}/analytics`);
+        const response = await page.request.get(`/workspaces/analytics`);
         const headers = response.headers();
         // X-Content-Type-Options must be set for all routes
         expect(headers['x-content-type-options']).toBe('nosniff');

@@ -117,14 +117,14 @@ export function CommandPalette() {
             id: a.id,
             label: a.hostname,
             sub: `${a.platform} • ${a.status} • ${a.ipAddress || 'No IP'}`,
-            href: `/workspaces/${workspaceId}/agents/${a.id}`,
+            href: `/workspaces/agents/${a.id}`,
         }));
         results.insights.forEach(i => allItems.push({
             type: 'insight',
             id: i.id,
             label: i.title,
             sub: `${i.type} • ${i.severity || 'info'}`,
-            href: `/workspaces/${workspaceId}/intelligence`,
+            href: `/workspaces/intelligence`,
         }));
     }
 
@@ -225,7 +225,7 @@ export function CommandPalette() {
                                         return (
                                             <button
                                                 key={a.id}
-                                                onClick={() => { router.push(`/workspaces/${workspaceId}/agents/${a.id}`); setOpen(false); }}
+                                                onClick={() => { router.push(`/workspaces/agents/${a.id}`); setOpen(false); }}
                                                 className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition ${selectedIndex === idx ? 'bg-nerve/10 text-white' : 'text-slate-300 hover:bg-slate-800'}`}
                                             >
                                                 {getIcon('agent')}
@@ -248,7 +248,7 @@ export function CommandPalette() {
                                         return (
                                             <button
                                                 key={ins.id}
-                                                onClick={() => { router.push(`/workspaces/${workspaceId}/intelligence`); setOpen(false); }}
+                                                onClick={() => { router.push(`/workspaces/intelligence`); setOpen(false); }}
                                                 className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition ${selectedIndex === idx ? 'bg-nerve/10 text-white' : 'text-slate-300 hover:bg-slate-800'}`}
                                             >
                                                 {getIcon('insight')}

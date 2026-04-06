@@ -14,7 +14,8 @@ import { NextResponse } from 'next/server';
 export function apiSuccess<T>(
     data: T,
     meta?: Record<string, unknown>,
-    status = 200
+    status = 200,
+    headers?: Record<string, string>
 ) {
     return NextResponse.json(
         {
@@ -25,7 +26,7 @@ export function apiSuccess<T>(
                 ...meta,
             },
         },
-        { status }
+        { status, headers }
     );
 }
 

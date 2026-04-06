@@ -16,5 +16,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 
     const user = await requireAuth();
     const result = await DashboardService.getCrossWorkspaceInsights(user.id);
-    return apiSuccess(result);
+    return apiSuccess(result, undefined, 200, {
+        'Cache-Control': 'private, max-age=15, stale-while-revalidate=30',
+    });
 });

@@ -42,11 +42,12 @@ export class AssetCategoryAdminService {
     // ASSET CATEGORIES
     // ========================================
 
-    static async listCategories(query: CategoryQueryInput) {
+    static async listCategories(query: CategoryQueryInput, workspaceId: string) {
         const { assetType, parentId, isActive, includeFields, includeActions, includeChildren } = query;
 
         const categories = await prisma.assetCategory.findMany({
             where: {
+                workspaceId,
                 ...(assetType && { assetTypeValue: assetType }),
                 ...(parentId && { parentId }),
                 ...(isActive !== undefined && { isActive }),
@@ -63,10 +64,10 @@ export class AssetCategoryAdminService {
         return { categories, count: categories.length };
     }
 
-    static async createCategory(data: CreateCategoryInput, userId: string) {
+    static async createCategory(data: CreateCategoryInput, userId: string, workspaceId: string) {
         const slug = data.slug || data.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-        const existing = await prisma.assetCategory.findUnique({ where: { slug } });
-        if (existing) throw new ApiError(409, 'Category slug already exists');
+        const existing = await prisma.assetCategory.findUnique({ where: { workspaceId_slug: { workspaceId, slug } } });
+        if (existing) throw new ApiError(409, 'Category slug already exists in this workspace');
 
         if (data.parentId) {
             const parent = await prisma.assetCategory.findUnique({ where: { id: data.parentId } });
@@ -77,6 +78,7 @@ export class AssetCategoryAdminService {
 
         const category = await prisma.assetCategory.create({
             data: {
+                workspaceId,
                 name: data.name,
                 assetTypeValue: data.assetTypeValue,
                 description: data.description,
@@ -98,9 +100,9 @@ export class AssetCategoryAdminService {
         return category;
     }
 
-    static async getCategory(id: string) {
-        const category = await prisma.assetCategory.findUnique({
-            where: { id },
+    static async getCategory(id: string, workspaceId: string) {
+        const category = await prisma.assetCategory.findFirst({
+            where: { id, workspaceId },
             include: {
                 parent: true,
                 children: { orderBy: { sortOrder: 'asc' } },
@@ -113,13 +115,13 @@ export class AssetCategoryAdminService {
         return category;
     }
 
-    static async updateCategory(id: string, data: UpdateCategoryInput, userId: string) {
-        const existing = await prisma.assetCategory.findUnique({ where: { id } });
+    static async updateCategory(id: string, data: UpdateCategoryInput, userId: string, workspaceId: string) {
+        const existing = await prisma.assetCategory.findFirst({ where: { id, workspaceId } });
         if (!existing) throw new ApiError(404, 'Category not found');
 
         if (data.slug && data.slug !== existing.slug) {
-            const conflict = await prisma.assetCategory.findUnique({ where: { slug: data.slug } });
-            if (conflict) throw new ApiError(409, 'Category slug already exists');
+            const conflict = await prisma.assetCategory.findUnique({ where: { workspaceId_slug: { workspaceId, slug: data.slug } } });
+            if (conflict) throw new ApiError(409, 'Category slug already exists in this workspace');
         }
 
         if (data.parentId !== undefined && data.parentId !== existing.parentId) {
@@ -144,9 +146,9 @@ export class AssetCategoryAdminService {
         return category;
     }
 
-    static async deleteCategory(id: string, userId: string) {
-        const category = await prisma.assetCategory.findUnique({
-            where: { id },
+    static async deleteCategory(id: string, userId: string, workspaceId: string) {
+        const category = await prisma.assetCategory.findFirst({
+            where: { id, workspaceId },
             include: { children: true, _count: { select: { assets: true } } },
         });
         if (!category) throw new ApiError(404, 'Category not found');

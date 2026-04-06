@@ -1,6 +1,6 @@
 import { apiSuccess } from '@/lib/api/response';
 import { NextRequest } from 'next/server';
-import { requireAdmin, withErrorHandler } from '@/lib/api/withAuth';
+import { requireAdmin, runWithUserRLS, withErrorHandler } from '@/lib/api/withAuth';
 import { z } from 'zod';
 import { PartnerModerationService } from '@/lib/services/PartnerModerationService';
 
@@ -17,6 +17,8 @@ export const PATCH = withErrorHandler(async (
     const { id } = await context.params;
     const user = await requireAdmin();
     const data = updatePartnerSchema.parse(await request.json());
-    const result = await PartnerModerationService.moderatePartner(id, data.action, user.email!, data.reason);
-    return apiSuccess(result);
+    return runWithUserRLS(user, async () => {
+        const result = await PartnerModerationService.moderatePartner(id, data.action, user.email!, data.reason);
+        return apiSuccess(result);
+    });
 });
