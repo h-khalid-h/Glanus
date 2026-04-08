@@ -285,10 +285,12 @@ export default function WorkspaceAlertsPage() {
                         </div>
                     ) : (
                         <div className="rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm divide-y divide-slate-800/50">
-                            {notifications.map((item) => (
+                            {notifications.map((item) => {
+                                const actionStr = (item.action || '').toLowerCase();
+                                return (
                                 <div key={item.id} className="p-4 hover:bg-slate-800/30 transition-colors flex items-start gap-4">
-                                    <div className={`mt-1 shrink-0 w-8 h-8 rounded-lg flex items-center justify-center ${getNotificationColor(item.type, item.action.toLowerCase())}`}>
-                                        {getNotificationIcon(item.type, item.action.toLowerCase())}
+                                    <div className={`mt-1 shrink-0 w-8 h-8 rounded-lg flex items-center justify-center ${getNotificationColor(item.type, actionStr)}`}>
+                                        {getNotificationIcon(item.type, actionStr)}
                                     </div>
                                     <div className="flex-1">
                                         <div className="flex items-center justify-between mb-1">
@@ -315,7 +317,8 @@ export default function WorkspaceAlertsPage() {
                                         )}
                                     </div>
                                 </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     )}
                 </div>

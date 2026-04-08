@@ -133,7 +133,7 @@ export default function DynamicAssetCreatePage() {
 
             if (assetType === 'PHYSICAL') {
                 payload.physicalAsset = {
-                    category: physicalAsset.category || 'OTHER',
+                    category: 'OTHER',
                     processor: physicalAsset.processor,
                     ram: physicalAsset.ram ? parseInt(physicalAsset.ram) : undefined,
                     storage: physicalAsset.storage ? parseInt(physicalAsset.storage) : undefined,
@@ -143,7 +143,7 @@ export default function DynamicAssetCreatePage() {
                 }
             } else if (assetType === 'DIGITAL') {
                 payload.digitalAsset = {
-                    category: digitalAsset.category || 'OTHER',
+                    category: 'OTHER',
                     vendor: digitalAsset.vendor,
                     licenseKey: digitalAsset.licenseKey,
                     licenseType: digitalAsset.licenseType || 'PERPETUAL',
@@ -178,35 +178,43 @@ export default function DynamicAssetCreatePage() {
 
     if (loading) return <PageSpinner text="Loading Engine Definitions..." />;
 
+    // Reusable input styling pattern
+    const inputClasses = "w-full bg-surface-container-low border border-slate-700/50 rounded-lg focus:border-primary focus:ring-1 focus:ring-primary transition-all py-2.5 px-3 text-on-surface text-sm outline-none placeholder:text-slate-500";
+    const labelClasses = "block text-sm font-medium text-slate-400 mb-1.5";
+    const panelClasses = "bg-surface-container rounded-xl shadow-sm border border-slate-800/20 p-6";
+
     return (
-        <div className="max-w-4xl mx-auto animate-fade-in">
-            <div className="flex items-center justify-between mb-6">
+        <div className="max-w-4xl mx-auto animate-fade-in pb-12">
+            <div className="flex items-center justify-between mb-8">
                 <div>
-                    <Link href="/assets" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-2">
+                    <Link href="/assets" className="inline-flex items-center gap-1.5 text-sm text-slate-400 hover:text-primary transition-colors mb-2 font-medium">
                         <ArrowLeft size={14} />
-                        Assets
+                        Back to Assets
                     </Link>
-                    <h1 className="text-xl font-semibold text-foreground">Create Asset</h1>
-                    <p className="text-sm text-muted-foreground mt-0.5">Provision a new tracked resource in this Workspace.</p>
+                    <h1 className="text-2xl font-semibold tracking-tight text-on-surface">Provision New Asset</h1>
+                    <p className="text-sm text-slate-400 mt-1">Register and configure a tracked resource within this environment.</p>
                 </div>
-                <Link href="/admin/asset-categories" className="btn-outline h-8 text-sm px-3 inline-flex items-center gap-1.5">
-                    <ExternalLink size={13} /> Manage Categories
+                <Link href="/workspaces/manage/categories" className="btn-secondary h-9 text-sm px-4 inline-flex items-center gap-1.5 border-none bg-surface-container-high hover:bg-surface-container-highest transition-colors">
+                    <ExternalLink size={14} /> Manage Categories
                 </Link>
             </div>
 
-            <div className="grid grid-cols-1 gap-5">
-                <form onSubmit={handleSubmit} className="space-y-5">
+            <div className="grid grid-cols-1 gap-6">
+                <form onSubmit={handleSubmit} className="space-y-6">
                     {/* Step 1: Core Configuration */}
-                    <div className="detail-panel">
-                        <h2 className="detail-panel-title">1. Core Configuration</h2>
+                    <div className={panelClasses}>
+                        <div className="flex items-center gap-2 mb-6 border-b border-slate-800/60 pb-3">
+                            <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/20 text-primary text-xs font-bold">1</span>
+                            <h2 className="text-base font-semibold text-on-surface">Core Configuration</h2>
+                        </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
-                                <label className="block text-sm font-medium text-foreground mb-1.5">Asset Name *</label>
+                                <label className={labelClasses}>Asset Name *</label>
                                 <input
                                     type="text"
                                     required
-                                    className="input w-full"
+                                    className={inputClasses}
                                     placeholder="e.g. Primary Edge Router"
                                     value={assetName}
                                     onChange={e => setAssetName(e.target.value)}
@@ -214,51 +222,51 @@ export default function DynamicAssetCreatePage() {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-foreground mb-1.5">Initial Status *</label>
+                                <label className={labelClasses}>Initial Status *</label>
                                 <select
                                     required
-                                    className="input w-full"
+                                    className={inputClasses}
                                     value={assetStatus}
                                     onChange={e => setAssetStatus(e.target.value)}
                                 >
-                                    <option value="AVAILABLE">✅ Available</option>
-                                    <option value="ASSIGNED">👤 Assigned</option>
-                                    <option value="MAINTENANCE">🔧 Maintenance</option>
+                                    <option value="AVAILABLE">Available</option>
+                                    <option value="ASSIGNED">Assigned</option>
+                                    <option value="MAINTENANCE">Maintenance</option>
                                 </select>
                             </div>
 
-                            <div className="md:col-span-2">
-                                <label className="block text-sm font-medium text-foreground mb-1.5">Asset Type Track *</label>
-                                <div className="grid grid-cols-3 gap-3">
+                            <div className="md:col-span-2 mt-2">
+                                <label className={labelClasses}>Asset Tracking Type *</label>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                     <button
                                         type="button"
-                                        className={`p-3.5 border rounded-xl text-center transition-all duration-150 ${assetType === 'PHYSICAL' ? 'border-primary bg-primary/[0.06] text-primary' : 'border-border text-muted-foreground hover:bg-surface-2 hover:text-foreground'}`}
+                                        className={`p-4 border rounded-xl text-left transition-all duration-200 ${assetType === 'PHYSICAL' ? 'border-primary bg-primary/10 ring-1 ring-primary/30' : 'border-slate-700/50 bg-surface-container-low hover:border-slate-500'}`}
                                         onClick={() => setAssetType('PHYSICAL')}
                                     >
-                                        <div className="text-sm font-semibold mb-0.5">Physical</div>
-                                        <div className="text-xs opacity-70">Laptops, Servers, Network</div>
+                                        <div className={`text-sm font-semibold mb-1 ${assetType === 'PHYSICAL' ? 'text-primary' : 'text-on-surface'}`}>Physical Hardware</div>
+                                        <div className="text-xs text-slate-500">Laptops, Servers, Network gear</div>
                                     </button>
                                     <button
                                         type="button"
-                                        className={`p-3.5 border rounded-xl text-center transition-all duration-150 ${assetType === 'DIGITAL' ? 'border-primary bg-primary/[0.06] text-primary' : 'border-border text-muted-foreground hover:bg-surface-2 hover:text-foreground'}`}
+                                        className={`p-4 border rounded-xl text-left transition-all duration-200 ${assetType === 'DIGITAL' ? 'border-oracle bg-oracle/10 ring-1 ring-oracle/30' : 'border-slate-700/50 bg-surface-container-low hover:border-slate-500'}`}
                                         onClick={() => setAssetType('DIGITAL')}
                                     >
-                                        <div className="text-sm font-semibold mb-0.5">Digital</div>
-                                        <div className="text-xs opacity-70">SaaS, Licenses, Domains</div>
+                                        <div className={`text-sm font-semibold mb-1 ${assetType === 'DIGITAL' ? 'text-oracle' : 'text-on-surface'}`}>Digital Subscription</div>
+                                        <div className="text-xs text-slate-500">SaaS, Cloud Software, Licenses</div>
                                     </button>
                                     <button
                                         type="button"
-                                        className={`p-3.5 border rounded-xl text-center transition-all duration-150 ${assetType === 'DYNAMIC' ? 'border-primary bg-primary/[0.06] text-primary' : 'border-border text-muted-foreground hover:bg-surface-2 hover:text-foreground'}`}
+                                        className={`p-4 border rounded-xl text-left transition-all duration-200 ${assetType === 'DYNAMIC' ? 'border-cortex bg-cortex/10 ring-1 ring-cortex/30' : 'border-slate-700/50 bg-surface-container-low hover:border-slate-500'}`}
                                         onClick={() => setAssetType('DYNAMIC')}
                                     >
-                                        <div className="text-sm font-semibold mb-0.5">Custom</div>
-                                        <div className="text-xs opacity-70">Dynamic matrix</div>
+                                        <div className={`text-sm font-semibold mb-1 ${assetType === 'DYNAMIC' ? 'text-cortex' : 'text-on-surface'}`}>Custom Schema</div>
+                                        <div className="text-xs text-slate-500">Freeform dynamic matrix assets</div>
                                     </button>
                                 </div>
                             </div>
 
-                            <div className="md:col-span-2">
-                                <label className="block text-sm font-medium text-nerve mb-2">Base Category *</label>
+                            <div className="md:col-span-2 pt-2">
+                                <label className="block text-sm font-medium text-on-surface mb-2">Base Category Selection *</label>
                                 {(() => {
                                     const parentCats = categories.filter(
                                         c => !c.parentId && c.isActive && c.assetTypeValue === assetType
@@ -267,33 +275,38 @@ export default function DynamicAssetCreatePage() {
                                         ? categories.filter(c => c.parentId === selectedParentCategory.id && c.isActive)
                                         : [];
                                     return (
-                                        <div className="space-y-3">
-                                            <select
-                                                required
-                                                className="input w-full border-nerve/50 focus:border-nerve"
-                                                value={selectedParentCategory?.id || ''}
-                                                onChange={e => handleParentCategorySelect(e.target.value)}
-                                            >
-                                                <option value="" disabled>
-                                                    {assetType === 'PHYSICAL' ? '🖥️ Select Hardware category…'
-                                                        : assetType === 'DIGITAL' ? '💿 Select Software category…'
-                                                        : 'Select category…'}
-                                                </option>
-                                                {parentCats.map(cat => (
-                                                    <option key={cat.id} value={cat.id}>
-                                                        {cat.icon} {cat.name}
+                                        <div className="space-y-4 p-4 rounded-xl border border-slate-700/50 bg-surface-container-low/50">
+                                            <div>
+                                                <select
+                                                    required
+                                                    className={inputClasses}
+                                                    value={selectedParentCategory?.id || ''}
+                                                    onChange={e => handleParentCategorySelect(e.target.value)}
+                                                >
+                                                    <option value="" disabled>
+                                                        {assetType === 'PHYSICAL' ? '🖥️ Select Hardware Category…'
+                                                            : assetType === 'DIGITAL' ? '💿 Select Software Category…'
+                                                            : 'Select Base Category…'}
                                                     </option>
-                                                ))}
-                                            </select>
+                                                    {parentCats.map(cat => (
+                                                        <option key={cat.id} value={cat.id}>
+                                                            {cat.icon} {cat.name}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </div>
 
                                             {childCats.length > 0 && (
-                                                <div>
-                                                    <label className="block text-xs font-medium text-muted-foreground mb-1.5">
-                                                        {selectedParentCategory?.icon} {selectedParentCategory?.name} — Sub-category *
-                                                    </label>
+                                                <div className="animate-fade-in">
+                                                    <div className="flex items-center gap-2 mb-2 ml-1">
+                                                        <div className="w-4 h-4 border-l-2 border-b-2 border-slate-600 rounded-bl-sm"></div>
+                                                        <label className="block text-xs font-medium text-slate-400">
+                                                            Select Sub-category for {selectedParentCategory?.name} *
+                                                        </label>
+                                                    </div>
                                                     <select
                                                         required
-                                                        className="input w-full"
+                                                        className={inputClasses}
                                                         value={selectedCategory?.id || ''}
                                                         onChange={e => handleChildCategorySelect(e.target.value)}
                                                     >
@@ -309,8 +322,9 @@ export default function DynamicAssetCreatePage() {
                                         </div>
                                     );
                                 })()}
-                                <p className="text-xs text-muted-foreground mt-2">
-                                    Selecting a category determines which custom tracking fields apply to this asset.
+                                <p className="text-xs text-slate-500 mt-2.5 ml-1 flex items-center gap-1.5">
+                                    <span className="inline-block w-1.5 h-1.5 rounded-full bg-slate-500"></span> 
+                                    Category selection dictates the custom technical properties applicable below.
                                 </p>
                             </div>
                         </div>
@@ -318,86 +332,96 @@ export default function DynamicAssetCreatePage() {
 
                     {/* Step 1.5: Hardware / Software Specifics */}
                     {assetType === 'PHYSICAL' && (
-                        <div className="detail-panel">
-                            <h2 className="detail-panel-title">Hardware Specifications</h2>
+                        <div className={`${panelClasses} border-primary/20 bg-primary/[0.02]`}>
+                            <div className="flex items-center gap-2 mb-6 border-b border-slate-800/60 pb-3">
+                                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/20 text-primary text-xs font-bold">A</span>
+                                <h2 className="text-base font-semibold text-on-surface">Hardware Specifications</h2>
+                            </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                 <div>
-                                    <label className="block text-sm font-medium text-foreground mb-1.5">Hardware Category</label>
-                                    <select className="input w-full" value={physicalAsset.category || 'LAPTOP'} onChange={e => setPhysicalAsset({ ...physicalAsset, category: e.target.value })}>
-                                        <option value="LAPTOP">Laptop</option>
-                                        <option value="DESKTOP">Desktop</option>
-                                        <option value="SERVER">Server / Rack</option>
-                                        <option value="NETWORK_EQUIPMENT">Network Engine</option>
-                                        <option value="MOBILE_DEVICE">Mobile Device</option>
-                                        <option value="OTHER">Other / Peripheral</option>
+                                    <label className={labelClasses}>MAC Address</label>
+                                    <input type="text" className={`${inputClasses} font-mono`} placeholder="00:00:00:00:00:00" value={physicalAsset.macAddress || ''} onChange={e => setPhysicalAsset({ ...physicalAsset, macAddress: e.target.value })} />
+                                </div>
+                                <div>
+                                    <label className={labelClasses}>IP Address / Hostname</label>
+                                    <input type="text" className={`${inputClasses} font-mono`} placeholder="192.168.1.100" value={physicalAsset.ipAddress || ''} onChange={e => setPhysicalAsset({ ...physicalAsset, ipAddress: e.target.value })} />
+                                </div>
+                                <div>
+                                    <label className={labelClasses}>OS Version</label>
+                                    <select className={inputClasses} value={physicalAsset.osVersion || ''} onChange={e => setPhysicalAsset({ ...physicalAsset, osVersion: e.target.value })}>
+                                        <option value="" disabled>Select OS Environment…</option>
+                                        <optgroup label="Windows">
+                                            <option value="Windows 11">Windows 11</option>
+                                            <option value="Windows 10">Windows 10</option>
+                                            <option value="Windows Server 2022">Windows Server 2022</option>
+                                        </optgroup>
+                                        <optgroup label="Apple">
+                                            <option value="macOS Sequoia">macOS Sequoia</option>
+                                            <option value="macOS Sonoma">macOS Sonoma</option>
+                                            <option value="iOS / iPadOS">iOS / iPadOS</option>
+                                        </optgroup>
+                                        <optgroup label="Linux">
+                                            <option value="Ubuntu Linux">Ubuntu Linux</option>
+                                            <option value="Debian Linux">Debian Linux</option>
+                                            <option value="RHEL / Rocky Linux">RHEL / Rocky Linux</option>
+                                        </optgroup>
+                                        <optgroup label="Other">
+                                            <option value="Android">Android</option>
+                                            <option value="ChromeOS">ChromeOS</option>
+                                            <option value="Other">Other Firmware</option>
+                                        </optgroup>
                                     </select>
                                 </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-foreground mb-1.5">MAC Address</label>
-                                    <input type="text" className="input w-full" placeholder="00:00:00:00:00:00" value={physicalAsset.macAddress || ''} onChange={e => setPhysicalAsset({ ...physicalAsset, macAddress: e.target.value })} />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-foreground mb-1.5">IP Address / Host</label>
-                                    <input type="text" className="input w-full" placeholder="192.168.1.100" value={physicalAsset.ipAddress || ''} onChange={e => setPhysicalAsset({ ...physicalAsset, ipAddress: e.target.value })} />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-foreground mb-1.5">OS Version</label>
-                                    <input type="text" className="input w-full" placeholder="Windows 11 Pro" value={physicalAsset.osVersion || ''} onChange={e => setPhysicalAsset({ ...physicalAsset, osVersion: e.target.value })} />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-foreground mb-1.5">RAM (GB)</label>
-                                    <input type="number" className="input w-full" placeholder="16" value={physicalAsset.ram || ''} onChange={e => setPhysicalAsset({ ...physicalAsset, ram: e.target.value })} />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-foreground mb-1.5">Storage (GB)</label>
-                                    <input type="number" className="input w-full" placeholder="512" value={physicalAsset.storage || ''} onChange={e => setPhysicalAsset({ ...physicalAsset, storage: e.target.value })} />
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className={labelClasses}>RAM (GB)</label>
+                                        <input type="number" className={inputClasses} placeholder="16" value={physicalAsset.ram || ''} onChange={e => setPhysicalAsset({ ...physicalAsset, ram: e.target.value })} />
+                                    </div>
+                                    <div>
+                                        <label className={labelClasses}>Storage (GB)</label>
+                                        <input type="number" className={inputClasses} placeholder="512" value={physicalAsset.storage || ''} onChange={e => setPhysicalAsset({ ...physicalAsset, storage: e.target.value })} />
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     )}
 
                     {assetType === 'DIGITAL' && (
-                        <div className="detail-panel">
-                            <h2 className="detail-panel-title">Software &amp; License Metrics</h2>
+                        <div className={`${panelClasses} border-oracle/20 bg-oracle/[0.02]`}>
+                            <div className="flex items-center gap-2 mb-6 border-b border-slate-800/60 pb-3">
+                                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-oracle/20 text-oracle text-xs font-bold">A</span>
+                                <h2 className="text-base font-semibold text-on-surface">Software &amp; Access Metrics</h2>
+                            </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                 <div>
-                                    <label className="block text-sm font-medium text-foreground mb-1.5">Software Category</label>
-                                    <select className="input w-full" value={digitalAsset.category || 'SAAS_SUBSCRIPTION'} onChange={e => setDigitalAsset({ ...digitalAsset, category: e.target.value })}>
-                                        <option value="SAAS_SUBSCRIPTION">SaaS Subscription</option>
-                                        <option value="LICENSE">License Key</option>
-                                        <option value="API_SERVICE">API Service / Cloud</option>
-                                        <option value="WEB_APPLICATION">Web App Domain</option>
-                                        <option value="OTHER">Other Digital Space</option>
-                                    </select>
+                                    <label className={labelClasses}>Vendor / Provider</label>
+                                    <input type="text" className={inputClasses} placeholder="e.g. Microsoft, AWS" value={digitalAsset.vendor || ''} onChange={e => setDigitalAsset({ ...digitalAsset, vendor: e.target.value })} />
                                 </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-foreground mb-1.5">Vendor / Provider</label>
-                                    <input type="text" className="input w-full" placeholder="e.g. Microsoft, AWS" value={digitalAsset.vendor || ''} onChange={e => setDigitalAsset({ ...digitalAsset, vendor: e.target.value })} />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-foreground mb-1.5">License Type</label>
-                                    <select className="input w-full" value={digitalAsset.licenseType || 'SUBSCRIPTION'} onChange={e => setDigitalAsset({ ...digitalAsset, licenseType: e.target.value })}>
-                                        <option value="SUBSCRIPTION">Recurring Subscription</option>
-                                        <option value="PERPETUAL">Perpetual (One-time)</option>
-                                        <option value="OPEN_SOURCE">Open Source</option>
-                                        <option value="ENTERPRISE">Enterprise Agreement</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-foreground mb-1.5">Seat Count / Licenses</label>
-                                    <input type="number" className="input w-full" placeholder="50" value={digitalAsset.seatCount || ''} onChange={e => setDigitalAsset({ ...digitalAsset, seatCount: e.target.value })} />
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="col-span-2 sm:col-span-1">
+                                        <label className={labelClasses}>License Type</label>
+                                        <select className={inputClasses} value={digitalAsset.licenseType || 'SUBSCRIPTION'} onChange={e => setDigitalAsset({ ...digitalAsset, licenseType: e.target.value })}>
+                                            <option value="SUBSCRIPTION">Recurring Subscription</option>
+                                            <option value="PERPETUAL">Perpetual</option>
+                                            <option value="ENTERPRISE">Enterprise Agreement</option>
+                                        </select>
+                                    </div>
+                                    <div className="col-span-2 sm:col-span-1">
+                                        <label className={labelClasses}>Seat Count</label>
+                                        <input type="number" className={inputClasses} placeholder="50" value={digitalAsset.seatCount || ''} onChange={e => setDigitalAsset({ ...digitalAsset, seatCount: e.target.value })} />
+                                    </div>
                                 </div>
                                 <div className="md:col-span-2">
-                                    <label className="block text-sm font-medium text-foreground mb-1.5">License Key / Access Token</label>
-                                    <input type="text" className="input w-full font-mono text-xs" placeholder="XXXX-XXXX-XXXX-XXXX" value={digitalAsset.licenseKey || ''} onChange={e => setDigitalAsset({ ...digitalAsset, licenseKey: e.target.value })} />
+                                    <label className={labelClasses}>License Key / Access Token</label>
+                                    <input type="text" className={`${inputClasses} font-mono tracking-wider`} placeholder="XXXX-XXXX-XXXX-XXXX" value={digitalAsset.licenseKey || ''} onChange={e => setDigitalAsset({ ...digitalAsset, licenseKey: e.target.value })} />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-foreground mb-1.5">Monthly Cost</label>
-                                    <input type="number" step="0.01" className="input w-full" placeholder="0.00" value={digitalAsset.monthlyRecurringCost || ''} onChange={e => setDigitalAsset({ ...digitalAsset, monthlyRecurringCost: e.target.value })} />
+                                    <label className={labelClasses}>Monthly Recurring Cost ($)</label>
+                                    <input type="number" step="0.01" className={inputClasses} placeholder="199.99" value={digitalAsset.monthlyRecurringCost || ''} onChange={e => setDigitalAsset({ ...digitalAsset, monthlyRecurringCost: e.target.value })} />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-foreground mb-1.5">Renewal Date</label>
-                                    <input type="date" className="input w-full" value={digitalAsset.renewalDate || ''} onChange={e => setDigitalAsset({ ...digitalAsset, renewalDate: e.target.value })} />
+                                    <label className={labelClasses}>Renewal Date</label>
+                                    <input type="date" className={inputClasses} value={digitalAsset.renewalDate || ''} onChange={e => setDigitalAsset({ ...digitalAsset, renewalDate: e.target.value })} />
                                 </div>
                             </div>
                         </div>
@@ -405,45 +429,52 @@ export default function DynamicAssetCreatePage() {
 
                     {/* Step 2: Dynamic Fields UI */}
                     {selectedCategory && (
-                        <div className="detail-panel border-primary/20">
-                            <div className="flex items-center justify-between mb-3 pb-2 border-b border-border/60">
-                                <h2 className="text-sm font-semibold text-foreground">2. Custom Matrix Data</h2>
-                                <span className="badge text-[11px] px-2.5 py-1 bg-primary/10 text-primary rounded-lg">{selectedCategory.icon} {selectedCategory.name}</span>
+                        <div className={`${panelClasses} relative overflow-hidden animate-slide-up`}>
+                             <div className="flex items-center justify-between mb-6 border-b border-slate-800/60 pb-3">
+                                <div className="flex items-center gap-2">
+                                    <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/20 text-primary text-xs font-bold">2</span>
+                                    <h2 className="text-base font-semibold text-on-surface">Custom Matrix Data</h2>
+                                </div>
+                                <span className={`badge text-[10px] uppercase font-bold tracking-wider px-2.5 py-1 ${assetType === 'PHYSICAL' ? 'bg-primary/10 text-primary' : assetType === 'DIGITAL' ? 'bg-oracle/10 text-oracle' : 'bg-cortex/10 text-cortex'} rounded-lg`}>
+                                    {selectedCategory.icon} {selectedCategory.name}
+                                </span>
                             </div>
 
                             {(selectedCategory.fieldDefinitions || []).length === 0 ? (
-                                <p className="text-sm text-muted-foreground/70 italic">No custom tracking fields required for this Class.</p>
+                                <div className="flex flex-col items-center justify-center py-10 bg-surface-container-low/30 rounded-xl border border-dashed border-slate-700/50">
+                                    <p className="text-sm text-slate-500">No custom tracking fields defined for this category.</p>
+                                </div>
                             ) : (
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     {(selectedCategory.fieldDefinitions || []).map((def) => (
                                         <div key={def.id} className={def.fieldType === 'JSON' ? 'md:col-span-2' : ''}>
-                                            <label className="block text-sm font-medium text-foreground mb-1.5">
-                                                {def.label} {def.required && <span className="text-destructive">*</span>}
+                                            <label className={labelClasses}>
+                                                {def.label} {def.required && <span className="text-primary">*</span>}
                                             </label>
 
                                             {def.fieldType === 'BOOLEAN' ? (
-                                                <div className="flex items-center gap-2.5 mt-2">
+                                                <div className="flex items-center gap-3 mt-3 bg-surface-container-low p-3 rounded-lg border border-slate-700/30">
                                                     <input
                                                         type="checkbox"
-                                                        className="h-4 w-4 rounded border-border accent-primary"
+                                                        className="h-4 w-4 rounded border-slate-600 bg-surface-container accent-primary transition-all"
                                                         checked={customFields[def.name] || false}
                                                         onChange={e => handleCustomFieldChange(def.name, e.target.checked)}
                                                     />
-                                                    <span className="text-sm text-muted-foreground">Enable</span>
+                                                    <span className="text-sm font-medium text-slate-300">Enable Feature</span>
                                                 </div>
                                             ) : def.fieldType === 'DATE' ? (
                                                 <input
                                                     type="date"
                                                     required={def.required}
-                                                    className="input w-full"
+                                                    className={inputClasses}
                                                     value={customFields[def.name] || ''}
                                                     onChange={e => handleCustomFieldChange(def.name, e.target.value)}
                                                 />
                                             ) : def.fieldType === 'JSON' ? (
                                                 <textarea
                                                     required={def.required}
-                                                    className="input w-full h-32 font-mono text-xs"
-                                                    placeholder='{"key": "value"}'
+                                                    className={`${inputClasses} resize-y min-h-[120px] font-mono whitespace-pre`}
+                                                    placeholder='{\n  "config": true\n}'
                                                     value={customFields[def.name] || ''}
                                                     onChange={e => handleCustomFieldChange(def.name, e.target.value)}
                                                 />
@@ -451,7 +482,7 @@ export default function DynamicAssetCreatePage() {
                                                 <input
                                                     type={def.fieldType === 'NUMBER' ? 'number' : 'text'}
                                                     required={def.required}
-                                                    className="input w-full"
+                                                    className={inputClasses}
                                                     placeholder={`Enter ${def.label}...`}
                                                     value={customFields[def.name] || ''}
                                                     onChange={e => handleCustomFieldChange(def.name, e.target.value)}
@@ -464,17 +495,24 @@ export default function DynamicAssetCreatePage() {
                         </div>
                     )}
 
-                    {/* Submit */}
-                    {selectedCategory && (
-                        <div className="flex justify-end gap-2.5 pt-2 border-t border-border/60">
-                            <Link href="/assets" className="btn-secondary h-9 text-sm px-4">Cancel</Link>
-                            <button type="submit" disabled={submitting} className="btn-primary h-9 text-sm px-4 inline-flex items-center gap-2">
+                    {/* Submit Bar */}
+                    <div className="sticky bottom-6 flex justify-between items-center bg-surface-container/95 border border-slate-700/50 p-4 rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.4)] backdrop-blur-md z-10">
+                        <div className="text-sm text-slate-400 hidden sm:block">
+                            {!selectedCategory ? 'Please select a core category to complete provisioning.' : 'Ready to provision asset.'}
+                        </div>
+                        <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
+                            <Link href="/assets" className="btn-secondary h-10 px-5 transition-colors text-sm rounded-lg flex items-center justify-center font-medium">Cancel</Link>
+                            <button 
+                                type="submit" 
+                                disabled={!selectedCategory || submitting} 
+                                className="primary-gradient-btn h-10 px-6 text-sm font-bold shadow-lg shadow-primary/20 text-on-primary inline-flex items-center justify-center gap-2 rounded-lg disabled:opacity-50 disabled:grayscale transition-all active:scale-95"
+                            >
                                 {submitting
-                                    ? <><div className="animate-spin rounded-full h-3.5 w-3.5 border-2 border-primary-foreground border-t-transparent" /> Provisioning…</>
+                                    ? <><div className="animate-spin rounded-full h-4 w-4 border-2 border-transparent border-t-on-primary" /> Provisioning…</>
                                     : 'Provision Asset'}
                             </button>
                         </div>
-                    )}
+                    </div>
                 </form>
             </div>
         </div>

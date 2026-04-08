@@ -65,6 +65,7 @@ export class AssetService {
             ];
         }
         if (category) where.category = { name: { equals: category, mode: 'insensitive' } };
+        if (params.categoryId) where.categoryId = params.categoryId;
         if (status) where.status = status as AssetStatus;
         if (assignedToId) where.assignedToId = assignedToId;
         if (location) where.location = { contains: location, mode: 'insensitive' };
@@ -262,6 +263,14 @@ export class AssetService {
                 workspace: { members: { some: { userId } } },
             },
             include: {
+                category: {
+                    include: { fieldDefinitions: true },
+                },
+                fieldValues: {
+                    include: {
+                        fieldDefinition: true,
+                    },
+                },
                 physicalAsset: true,
                 digitalAsset: true,
                 assignedTo: {
@@ -284,6 +293,15 @@ export class AssetService {
                     orderBy: { createdAt: 'desc' },
                     take: 5,
                 },
+                auditLogs: {
+                    orderBy: { createdAt: 'desc' },
+                    take: 10,
+                },
+                tickets: {
+                    orderBy: { createdAt: 'desc' },
+                    take: 5,
+                },
+                agentConnection: true,
             },
         });
 

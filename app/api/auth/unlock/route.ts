@@ -6,10 +6,8 @@
 import { NextRequest } from 'next/server';
 import { apiSuccess, apiError } from '@/lib/api/response';
 import { requireAuth, withErrorHandler } from '@/lib/api/withAuth';
-import { ApiError } from '@/lib/errors';
 import { resetRateLimit, withRateLimit } from '@/lib/security/rateLimit';
 import { unlockSchema } from '@/lib/schemas/workspace.schemas';
-import { AccountService } from '@/lib/services/AccountService';
 
 // POST /api/auth/unlock - Unlock a locked account (admin only)
 export const POST = withErrorHandler(async (request: NextRequest) => {

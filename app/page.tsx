@@ -1,6 +1,14 @@
 import Link from 'next/link';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
+import { redirect } from 'next/navigation';
 
-export default function HomePage() {
+export default async function HomePage() {
+    const session = await getServerSession(authOptions);
+    if (session?.user) {
+        redirect('/dashboard');
+    }
+
     return (
         <div className="min-h-screen bg-gradient-midnight relative overflow-hidden">
             {/* Background grid pattern */}

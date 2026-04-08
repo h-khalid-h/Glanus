@@ -67,6 +67,8 @@ export default function AssetsPage() {
     const [status, setStatus] = useState('');
     const [assignmentFilter, _setAssignmentFilter] = useState('');
 
+
+
     // Bulk selection state
     const [selectedAssets, setSelectedAssets] = useState<Set<string>>(new Set());
     const [showBulkActions, setShowBulkActions] = useState(false);
@@ -103,6 +105,9 @@ export default function AssetsPage() {
             if (categoryId) params.set('categoryId', categoryId);
             if (status) params.set('status', status);
             if (assignmentFilter) params.set('assignedTo', assignmentFilter);
+
+            // Append timestamp to bust any Next.js aggressive caching across tenant boundaries
+            params.set('_t', Date.now().toString());
 
             const response = await csrfFetch(`/api/assets?${params}`);
             if (!response.ok) throw new Error('Failed to fetch assets');
@@ -353,16 +358,16 @@ export default function AssetsPage() {
             )}
 
             {/* ── Page header ── */}
-            <div className="flex items-start justify-between mb-5">
+            <div className="flex items-start justify-between mb-8">
                 <div>
-                    <h1 className="text-xl font-semibold tracking-tight text-foreground">Asset Inventory</h1>
-                    <p className="text-sm text-muted-foreground mt-0.5">
+                    <h1 className="text-2xl font-semibold tracking-tight text-on-surface">Asset Inventory</h1>
+                    <p className="text-sm text-slate-400 mt-1">
                         {loading
                             ? 'Loading…'
                             : `${pagination.total.toLocaleString()} asset${pagination.total !== 1 ? 's' : ''}${hasActiveFilters ? ' matched' : ' total'}`}
                     </p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-3">
                     <input
                         ref={fileInputRef}
                         type="file"
@@ -374,40 +379,40 @@ export default function AssetsPage() {
                         type="button"
                         onClick={() => fileInputRef.current?.click()}
                         disabled={importing}
-                        className="btn-secondary inline-flex items-center gap-1.5 h-9 text-sm px-3"
+                        className="inline-flex items-center gap-1.5 bg-surface-container-highest border border-slate-700 hover:bg-slate-700/80 text-on-surface transition-colors font-medium rounded-full px-5 py-2 text-sm disabled:opacity-50"
                     >
                         {importing
                             ? <><div className="animate-spin rounded-full h-3.5 w-3.5 border-2 border-primary border-t-transparent" /> Importing…</>
                             : <><Upload className="h-3.5 w-3.5" /> Import</>}
                     </button>
-                    <Link href="/assets/new" className="btn-primary inline-flex items-center gap-1.5 h-9 text-sm px-3">
-                        <Plus className="h-3.5 w-3.5" />
+                    <Link href="/assets/new" className="inline-flex items-center gap-1.5 primary-gradient-btn text-on-primary font-bold shadow-lg shadow-primary/20 active:scale-95 transition-all rounded-full px-6 py-2 text-sm">
+                        <Plus className="h-4 w-4" />
                         Add Asset
                     </Link>
                 </div>
             </div>
 
             {/* ── Filter toolbar ── */}
-            <div className="filter-toolbar mb-5">
+            <div className="flex flex-wrap gap-3 mb-8 p-3 bg-surface-container rounded-xl shadow-sm border border-slate-800/20">
                 {/* Search */}
-                <div className="relative flex-1 min-w-48">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+                <div className="relative flex-1 min-w-[200px]">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
                     <input
                         type="text"
                         placeholder="Search name, model, serial…"
                         value={search}
                         onChange={(e) => handleSearch(e.target.value)}
-                        className="input pl-9 h-8 py-0 text-sm"
+                        className="w-full bg-surface-container-low border-none rounded-lg focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-surface-container transition-all py-2 pl-9 pr-3 text-on-surface text-sm outline-none placeholder:text-slate-500"
                     />
                 </div>
 
-                <div className="w-px h-5 bg-border/60 hidden sm:block" aria-hidden="true" />
+                <div className="w-px h-6 bg-slate-800/40 hidden sm:block self-center mx-1" aria-hidden="true" />
 
                 {/* Type */}
                 <select
                     value={assetType}
                     onChange={(e) => setAssetType(e.target.value)}
-                    className="input h-8 py-0 pl-3 pr-8 w-auto text-sm"
+                    className="bg-surface-container-low border-none rounded-lg focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-surface-container transition-all py-2 pl-3 pr-8 text-on-surface text-sm outline-none appearance-none"
                 >
                     <option value="">All Types</option>
                     <option value="DYNAMIC">Dynamic</option>
@@ -419,11 +424,11 @@ export default function AssetsPage() {
                 <select
                     value={categoryId}
                     onChange={(e) => setCategoryId(e.target.value)}
-                    className="input h-8 py-0 pl-3 pr-8 w-auto text-sm"
+                    className="bg-surface-container-low border-none rounded-lg focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-surface-container transition-all py-2 pl-3 pr-8 text-on-surface text-sm outline-none appearance-none max-w-[180px] truncate"
                 >
                     <option value="">All Categories</option>
                     {categories.map((cat) => (
-                        <option key={cat.id} value={cat.id}>{cat.icon} {cat.name}</option>
+                        <option key={cat.id} value={cat.id}>{cat.name}</option>
                     ))}
                 </select>
 
@@ -431,7 +436,7 @@ export default function AssetsPage() {
                 <select
                     value={status}
                     onChange={(e) => setStatus(e.target.value)}
-                    className="input h-8 py-0 pl-3 pr-8 w-auto text-sm"
+                    className="bg-surface-container-low border-none rounded-lg focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-surface-container transition-all py-2 pl-3 pr-8 text-on-surface text-sm outline-none appearance-none"
                 >
                     <option value="">All Statuses</option>
                     {statuses.map((s) => (
@@ -490,8 +495,9 @@ export default function AssetsPage() {
                             return (
                                 <div
                                     key={asset.id}
+                                    onClick={() => _router.push(`/assets/${asset.id}`)}
                                     className={[
-                                        'asset-card animate-fade-in',
+                                        'asset-card animate-fade-in cursor-pointer transition-all hover:ring-1 hover:ring-primary/50 relative group',
                                         isSelected ? 'selected' : '',
                                     ].join(' ')}
                                     style={{ animationDelay: `${i * 25}ms`, animationFillMode: 'both' }}

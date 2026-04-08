@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect, Suspense } from 'react';
-import { useParams } from 'next/navigation';
+
 import { csrfFetch } from '@/lib/api/csrfFetch';
 import { useToast } from '@/lib/toast';
 import { useWorkspace } from '@/lib/workspace/context';
@@ -21,9 +21,9 @@ interface ZtnaPolicy {
 }
 
 function ZtnaDashboardContent() {
+    const { workspace } = useWorkspace();
     const workspaceId = workspace?.id ?? '';
     const { success, error: showError } = useToast();
-    const { workspace } = useWorkspace();
 
     // Evaluate active member permission
     const hasAdminAccess = workspace?.userRole === 'ADMIN' || workspace?.userRole === 'OWNER';

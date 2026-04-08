@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { apiSuccess } from '@/lib/api/response';
-import { getRules, saveRule, AutomationRule } from '@/lib/reflex/automation';
+import { getRules, saveRule } from '@/lib/reflex/automation';
 import { requireAuth, requireWorkspaceRole, withErrorHandler } from '@/lib/api/withAuth';
 import { withRateLimit } from '@/lib/security/rateLimit';
 

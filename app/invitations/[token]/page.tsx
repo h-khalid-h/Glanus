@@ -29,10 +29,10 @@ export default function InvitationPage({ params: paramsPromise }: { params: Prom
                 const res = await csrfFetch(`/api/invitations/${params.token}`);
                 if (!res.ok) {
                     const data = await res.json();
-                    throw new Error(data.error || 'Invalid or expired invitation');
+                    throw new Error(data.error?.message || 'Invalid or expired invitation');
                 }
                 const data = await res.json();
-                setInviteState({ loading: false, error: null, invite: data.invitation });
+                setInviteState({ loading: false, error: null, invite: data.data?.invitation });
             } catch (err: unknown) {
                 setInviteState({
                     loading: false,
@@ -55,7 +55,7 @@ export default function InvitationPage({ params: paramsPromise }: { params: Prom
             const data = await res.json();
 
             if (!res.ok) {
-                throw new Error(data.error || 'Failed to accept invitation');
+                throw new Error(data.error?.message || 'Failed to accept invitation');
             }
 
             // Success — redirect to workspace analytics (main workspace page)

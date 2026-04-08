@@ -11,6 +11,8 @@ const UpdateWorkspaceSchema = z.object({
     website: z.string().url().optional(),
     industry: z.string().optional(),
     size: z.string().optional(),
+    primaryColor: z.string().optional(),
+    accentColor: z.string().optional(),
 }).strict();
 
 type RouteContext = { params: Promise<{ id: string }> };

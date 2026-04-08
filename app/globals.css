@@ -427,6 +427,10 @@
     background: linear-gradient(135deg, hsl(var(--primary) / 0.08), hsl(var(--cortex) / 0.05));
   }
 
+  .primary-gradient-btn {
+    background: linear-gradient(135deg, #adc6ff 0%, #357df1 100%);
+  }
+
   .bg-gradient-surface {
     background: linear-gradient(180deg, hsl(var(--surface-0)), hsl(var(--surface-1)));
   }
@@ -458,12 +462,12 @@
   /* Scrollbar */
   .scrollbar-thin {
     scrollbar-width: thin;
-    scrollbar-color: hsl(var(--muted-foreground) / 0.2) transparent;
+    scrollbar-color: hsl(var(--border)) transparent;
   }
 
   .scrollbar-thin::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 8px;
+    height: 8px;
   }
 
   .scrollbar-thin::-webkit-scrollbar-track {
@@ -471,12 +475,14 @@
   }
 
   .scrollbar-thin::-webkit-scrollbar-thumb {
-    background-color: hsl(var(--muted-foreground) / 0.2);
-    border-radius: 3px;
+    background-color: hsl(var(--border) / 0.8);
+    border-radius: 10px;
+    border: 2px solid transparent;
+    background-clip: content-box;
   }
 
   .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-    background-color: hsl(var(--muted-foreground) / 0.35);
+    background-color: hsl(var(--muted-foreground) / 0.8);
   }
 
   /* Layer colors */
@@ -568,28 +574,28 @@
 
 /* Asset card */
 .asset-card {
-  @apply relative rounded-xl border border-border bg-card transition-all duration-200 overflow-hidden cursor-pointer;
+  @apply relative rounded-xl border border-slate-800/20 bg-surface-container transition-all duration-200 overflow-hidden cursor-pointer;
   box-shadow: var(--shadow-xs);
 }
 
 .asset-card:hover {
-  box-shadow: var(--shadow-md);
-  @apply border-primary/25 -translate-y-0.5;
+  box-shadow: var(--shadow-sm);
+  @apply border-slate-700/50 bg-surface-container-high -translate-y-0.5;
 }
 
 .asset-card.selected {
-  @apply border-primary ring-2 ring-primary/20;
-  box-shadow: var(--shadow-glow);
+  @apply border-blue-500/50 ring-1 ring-blue-500/20 bg-surface-container-highest;
+  box-shadow: 0 0 16px rgba(59, 130, 246, 0.1);
 }
 
 /* Detail panel */
 .detail-panel {
-  @apply rounded-xl border border-border bg-card p-5;
+  @apply rounded-xl border border-slate-800/20 bg-surface-container-lowest p-5;
   box-shadow: var(--shadow-xs);
 }
 
 .detail-panel-title {
-  @apply text-sm font-semibold text-foreground mb-3 pb-2 border-b border-border/60;
+  @apply text-sm font-semibold text-on-surface mb-3 pb-2 border-b border-slate-800/40;
 }
 
 @keyframes fade-in {

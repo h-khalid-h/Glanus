@@ -7,7 +7,6 @@ import { useToast } from '@/lib/toast';
 import { PageSpinner } from '@/components/ui/Spinner';
 import { WorkspaceLayout } from '@/components/workspace/WorkspaceLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
 import { ArrowLeft, Save } from 'lucide-react';
 
 interface Asset {
@@ -75,55 +74,57 @@ function NewTicketContent() {
 
     return (
         <div className="max-w-3xl mx-auto space-y-6">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 mb-6">
                 <button
                     onClick={() => router.push(`/workspaces/helpdesk`)}
-                    className="text-slate-400 hover:text-white transition-colors p-1 -ml-1"
+                    className="btn-ghost h-9 w-9 p-0 -ml-2"
                 >
-                    <ArrowLeft size={18} />
+                    <ArrowLeft className="h-5 w-5" />
                 </button>
-                <h1 className="text-2xl font-bold text-foreground">Submit a Ticket</h1>
+                <h1 className="text-2xl font-semibold tracking-tight text-on-surface">Submit a Ticket</h1>
             </div>
 
-            <Card className="border-slate-800 bg-slate-900/50 backdrop-blur-sm">
-                <CardHeader className="border-b border-slate-800">
-                    <CardTitle>Request IT Support</CardTitle>
-                    <CardDescription>Describe your issue in detail. You can bind hardware devices or software licenses to help IT Staff diagnose the problem.</CardDescription>
+            <Card className="border-border bg-surface-container shadow-sm border-none">
+                <CardHeader className="border-b border-border/50 pb-5">
+                    <CardTitle className="text-lg">Request IT Support</CardTitle>
+                    <CardDescription className="text-muted-foreground mt-1">
+                        Describe your issue in detail. You can bind hardware devices or software licenses to help IT Staff diagnose the problem.
+                    </CardDescription>
                 </CardHeader>
                 <CardContent className="pt-6">
                     <form onSubmit={handleCreateTicket} className="space-y-6">
 
                         <div className="space-y-2">
-                            <label className="text-sm font-medium text-slate-300">Ticket Subject <span className="text-rose-500">*</span></label>
+                            <label className="text-sm font-medium text-on-surface">Ticket Subject <span className="text-health-critical">*</span></label>
                             <input
                                 type="text"
                                 required
                                 value={title}
                                 onChange={e => setTitle(e.target.value)}
-                                className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 text-sm text-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                className="w-full bg-surface-container-low border-none rounded-lg px-4 py-2.5 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-surface-container placeholder:text-muted-foreground transition-all"
                                 placeholder="E.g., Cannot access office VPN"
                             />
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-sm font-medium text-slate-300">Detailed Description <span className="text-rose-500">*</span></label>
+                            <label className="text-sm font-medium text-on-surface">Detailed Description <span className="text-health-critical">*</span></label>
                             <textarea
                                 required
                                 rows={6}
                                 value={description}
                                 onChange={e => setDescription(e.target.value)}
-                                className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 text-sm text-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500 resize-y"
+                                className="w-full bg-surface-container-low border-none rounded-lg px-4 py-2.5 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-surface-container resize-y placeholder:text-muted-foreground transition-all"
                                 placeholder="Describe step-by-step what is happening..."
                             />
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-2">
-                                <label className="text-sm font-medium text-slate-300">Urgency Level</label>
+                                <label className="text-sm font-medium text-on-surface">Urgency Level</label>
                                 <select
                                     value={priority}
                                     onChange={e => setPriority(e.target.value)}
-                                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 text-sm text-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                    className="w-full bg-surface-container-low border-none rounded-lg px-4 py-2.5 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-surface-container transition-all appearance-none"
                                 >
                                     <option value="LOW">Low - No rush</option>
                                     <option value="NORMAL">Normal - Standard issue</option>
@@ -133,11 +134,14 @@ function NewTicketContent() {
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-sm font-medium text-slate-300">Related Asset (Optional)</label>
+                                <label className="text-sm font-medium text-on-surface flex items-center justify-between">
+                                    <span>Related Asset</span>
+                                    <span className="text-muted-foreground font-normal text-xs">(Optional)</span>
+                                </label>
                                 <select
                                     value={assetId}
                                     onChange={e => setAssetId(e.target.value)}
-                                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 text-sm text-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                    className="w-full bg-surface-container-low border-none rounded-lg px-4 py-2.5 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-surface-container transition-all appearance-none"
                                 >
                                     <option value="">No specific asset</option>
                                     {assets.map(asset => (
@@ -149,13 +153,13 @@ function NewTicketContent() {
                             </div>
                         </div>
 
-                        <div className="flex justify-end gap-3 pt-4">
-                            <Button type="button" variant="secondary" onClick={() => router.push(`/workspaces/helpdesk`)}>
+                        <div className="flex justify-end gap-3 pt-6 border-t border-border/50">
+                            <button type="button" className="btn-secondary h-10 px-5" onClick={() => router.push(`/workspaces/helpdesk`)}>
                                 Cancel
-                            </Button>
-                            <Button type="submit" disabled={loading || !title.trim() || !description.trim()} className="gap-2">
-                                <Save size={16} /> {loading ? 'Submitting...' : 'Submit Support Request'}
-                            </Button>
+                            </button>
+                            <button type="submit" disabled={loading || !title.trim() || !description.trim()} className="btn-primary h-10 px-6 gap-2">
+                                <Save className="h-4 w-4" /> {loading ? 'Submitting...' : 'Submit Support Request'}
+                            </button>
                         </div>
 
                     </form>

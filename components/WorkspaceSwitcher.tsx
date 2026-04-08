@@ -4,12 +4,14 @@ import { useEffect, useState, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Image from 'next/image';
 import { useWorkspaceStore, Workspace } from '@/lib/stores/workspaceStore';
+import { useWorkspace } from '@/lib/workspace/context';
 import { ChevronsUpDown, Check, Plus, Building } from 'lucide-react';
 
 export default function WorkspaceSwitcher() {
     const router = useRouter();
     const _pathname = usePathname();
     const { workspaces, currentWorkspace, setCurrentWorkspace, fetchWorkspaces, isLoading } = useWorkspaceStore();
+    const { switchWorkspace } = useWorkspace();
     const [mounted, setMounted] = useState(false);
     const [isOpen, setIsOpen] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
@@ -39,10 +41,10 @@ export default function WorkspaceSwitcher() {
         return () => document.removeEventListener('keydown', handleKeyDown);
     }, []);
 
-    const handleSelect = (workspace: Workspace) => {
+    const handleSelect = async (workspace: Workspace) => {
         setCurrentWorkspace(workspace);
+        await switchWorkspace(workspace.id);
         setIsOpen(false);
-        router.push(`/workspaces/analytics`);
         router.refresh();
     };
 

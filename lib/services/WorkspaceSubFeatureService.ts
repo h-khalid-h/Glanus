@@ -99,11 +99,17 @@ export class WorkspaceSubFeatureService {
         }
 
         const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
-        const portalSession = await stripe.billingPortal.sessions.create({
-            customer: subscription.stripeCustomerId,
-            return_url: `${baseUrl}/workspaces/billing`,
-        });
-
-        return { url: portalSession.url };
+        try {
+            const portalSession = await stripe.billingPortal.sessions.create({
+                customer: subscription.stripeCustomerId,
+                return_url: `${baseUrl}/workspaces/${workspaceId}/manage/settings`,
+            });
+            return { url: portalSession.url };
+        } catch (error: any) {
+            if (error.message?.includes('Invalid API Key') || String(process.env.STRIPE_SECRET_KEY).includes('sk_test_...')) {
+                throw new ApiError(400, 'Customer Portal is not configured: Please provide a valid Stripe Secret Key in your environment variables.');
+            }
+            throw new ApiError(500, error.message || 'Failed to create customer portal session');
+        }
     }
 }

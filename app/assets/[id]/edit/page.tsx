@@ -7,6 +7,8 @@ import { csrfFetch } from '@/lib/api/csrfFetch';
 import { PageSpinner } from '@/components/ui/Spinner';
 import { useToast } from '@/lib/toast';
 
+import { useWorkspace } from '@/lib/workspace/context';
+
 interface FieldDefinition {
     id: string;
     name: string;
@@ -21,10 +23,14 @@ interface AssetCategory {
     name: string;
     description: string | null;
     icon: string;
+    parentId: string | null;
+    assetTypeValue: 'PHYSICAL' | 'DIGITAL' | 'DYNAMIC';
+    isActive: boolean;
     fieldDefinitions: FieldDefinition[];
 }
 
 export default function EditAssetPage({ params }: { params: Promise<{ id: string }> }) {
+    const { workspace } = useWorkspace();
     const router = useRouter();
     const { success, error: toastError } = useToast();
 
@@ -33,7 +39,8 @@ export default function EditAssetPage({ params }: { params: Promise<{ id: string
     const [submitting, setSubmitting] = useState(false);
 
     // Engine State
-    const [category, setCategory] = useState<AssetCategory | null>(null);
+    const [selectedCategory, setSelectedCategory] = useState<AssetCategory | null>(null);
+    const [selectedParentCategory, setSelectedParentCategory] = useState<AssetCategory | null>(null);
     const [categoriesList, setCategoriesList] = useState<AssetCategory[]>([]); // needed if they want to change classes? (Usually prohibited but supported in backend)
 
     const [formData, setFormData] = useState({
@@ -49,19 +56,22 @@ export default function EditAssetPage({ params }: { params: Promise<{ id: string
 
     // Unwrap params and fetch asset data
     useEffect(() => {
+        if (!workspace?.id) return;
         params.then(({ id: assetId }) => {
             setId(assetId);
-            fetchAsset(assetId);
+            fetchAsset(assetId, workspace.id);
         });
-    }, [params]);
+    }, [params, workspace?.id]);
 
-    const fetchAsset = async (assetId: string) => {
+    const fetchAsset = async (assetId: string, workspaceId: string) => {
         try {
             // 1. Fetch Engine Schemas just in case they change the Class type
-            const catRes = await csrfFetch(`/api/assets/categories`);
+            let fetchedCategories: AssetCategory[] = [];
+            const catRes = await csrfFetch(`/api/assets/categories?workspaceId=${workspaceId}`);
             if (catRes.ok) {
                 const catData = await catRes.json();
-                setCategoriesList(catData.data || []);
+                fetchedCategories = catData.data || [];
+                setCategoriesList(fetchedCategories);
             }
 
             // 2. Fetch the specific Node
@@ -71,7 +81,17 @@ export default function EditAssetPage({ params }: { params: Promise<{ id: string
             const result = await response.json();
             const asset = result.data || result; // Backend inconsistency guard
 
-            setCategory(asset.category || null);
+            if (asset.category) {
+                const assignedCategory = fetchedCategories.find((c: any) => c.id === asset.categoryId) || asset.category;
+                if (assignedCategory.parentId) {
+                    const parent = fetchedCategories.find((c: any) => c.id === assignedCategory.parentId) || null;
+                    setSelectedParentCategory(parent);
+                    setSelectedCategory(assignedCategory);
+                } else {
+                    setSelectedParentCategory(assignedCategory);
+                    setSelectedCategory(assignedCategory);
+                }
+            }
 
             // 3. Pre-fill core form
             setFormData({
@@ -132,21 +152,43 @@ export default function EditAssetPage({ params }: { params: Promise<{ id: string
         }
     };
 
-    const handleCategoryChange = (newCategoryId: string) => {
-        const newCat = categoriesList.find(c => c.id === newCategoryId);
-        if (!newCat) return;
+    const applyCategory = (category: AssetCategory | null) => {
+        setSelectedCategory(category);
+        if (category) {
+            setFormData(prev => ({ ...prev, categoryId: category.id }));
+            const initialCustom: Record<string, any> = {};
+            (category.fieldDefinitions || []).forEach((def: FieldDefinition) => {
+                initialCustom[def.name] = def.defaultValue || '';
+                if (def.fieldType === 'BOOLEAN') initialCustom[def.name] = def.defaultValue === 'true';
+            });
+            setCustomFields(initialCustom);
+        } else {
+            setFormData(prev => ({ ...prev, categoryId: '' }));
+            setCustomFields({});
+        }
+    };
 
-        setCategory(newCat);
-        setFormData(prev => ({ ...prev, categoryId: newCategoryId }));
+    const handleParentCategorySelect = (categoryId: string) => {
+        const parent = categoriesList.find(c => c.id === categoryId) || null;
+        setSelectedParentCategory(parent);
+        
+        const children = parent
+            ? categoriesList.filter(c => c.parentId === parent.id && c.isActive)
+            : [];
+            
+        if (!parent || children.length === 0) {
+            applyCategory(parent);
+        } else {
+            setSelectedCategory(null);
+            setCustomFields({});
+            setFormData(prev => ({ ...prev, categoryId: '' }));
+        }
+    };
 
-        // Reset and map variables for the new class schema
-        const initialCustom: Record<string, any> = {};
-        newCat.fieldDefinitions.forEach(def => {
-            initialCustom[def.name] = def.defaultValue || '';
-            if (def.fieldType === 'BOOLEAN') initialCustom[def.name] = def.defaultValue === 'true';
-        });
-        setCustomFields(initialCustom);
-    }
+    const handleChildCategorySelect = (categoryId: string) => {
+        const child = categoriesList.find(c => c.id === categoryId) || null;
+        applyCategory(child);
+    };
 
     const handleCustomFieldChange = (fieldName: string, value: any) => {
         setCustomFields(prev => ({
@@ -263,18 +305,59 @@ export default function EditAssetPage({ params }: { params: Promise<{ id: string
                             </select>
                         </div>
 
-                        <div>
-                            <label className="block text-sm font-medium text-nerve mb-2">Engine Class</label>
-                            <select
-                                value={formData.categoryId}
-                                onChange={(e) => handleCategoryChange(e.target.value)}
-                                className="input w-full border-nerve/30 focus:border-nerve"
-                            >
-                                {categoriesList.map(cat => (
-                                    <option key={cat.id} value={cat.id}>{cat.icon} {cat.name}</option>
-                                ))}
-                            </select>
-                            <p className="text-xs text-muted-foreground mt-1">Warning: Changing the Class will erase existing custom variables on Save.</p>
+                        <div className="md:col-span-2">
+                            <label className="block text-sm font-medium text-nerve mb-2">Base Category *</label>
+                            {(() => {
+                                const parentCats = categoriesList.filter(
+                                    c => !c.parentId && c.isActive && c.assetTypeValue === formData.assetType
+                                );
+                                const childCats = selectedParentCategory
+                                    ? categoriesList.filter(c => c.parentId === selectedParentCategory.id && c.isActive)
+                                    : [];
+                                return (
+                                    <div className="space-y-3">
+                                        <select
+                                            required
+                                            className="input w-full border-nerve/50 focus:border-nerve"
+                                            value={selectedParentCategory?.id || ''}
+                                            onChange={e => handleParentCategorySelect(e.target.value)}
+                                        >
+                                            <option value="" disabled>
+                                                {formData.assetType === 'PHYSICAL' ? '🖥️ Select Hardware category…'
+                                                    : formData.assetType === 'DIGITAL' ? '💿 Select Software category…'
+                                                    : 'Select category…'}
+                                            </option>
+                                            {parentCats.map(cat => (
+                                                <option key={cat.id} value={cat.id}>
+                                                    {cat.icon} {cat.name}
+                                                </option>
+                                            ))}
+                                        </select>
+
+                                        {childCats.length > 0 && (
+                                            <div>
+                                                <label className="block text-xs font-medium text-muted-foreground mb-1.5">
+                                                    {selectedParentCategory?.icon} {selectedParentCategory?.name} — Sub-category *
+                                                </label>
+                                                <select
+                                                    required
+                                                    className="input w-full"
+                                                    value={selectedCategory?.id || ''}
+                                                    onChange={e => handleChildCategorySelect(e.target.value)}
+                                                >
+                                                    <option value="" disabled>Select sub-category…</option>
+                                                    {childCats.map(child => (
+                                                        <option key={child.id} value={child.id}>
+                                                            {child.icon} {child.name}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            })()}
+                            <p className="text-xs text-muted-foreground mt-2">Warning: Changing the category will reset all custom matrix tracking variables.</p>
                         </div>
 
                         <div className="md:col-span-2">
@@ -282,24 +365,24 @@ export default function EditAssetPage({ params }: { params: Promise<{ id: string
                             <div className="grid grid-cols-3 gap-3">
                                 <button
                                     type="button"
-                                    className={`p-3.5 border rounded-xl text-center transition-all duration-150 ${formData.assetType === 'PHYSICAL' ? 'border-primary bg-primary/[0.06] text-primary' : 'border-border text-muted-foreground hover:bg-surface-2 hover:text-foreground'}`}
-                                    onClick={() => updateField('assetType', 'PHYSICAL')}
+                                    disabled
+                                    className={`p-3.5 border rounded-xl text-center transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed ${formData.assetType === 'PHYSICAL' ? 'border-primary bg-primary/[0.06] text-primary' : 'border-border text-muted-foreground bg-surface-2'}`}
                                 >
                                     <div className="text-sm font-semibold mb-0.5">Physical</div>
                                     <div className="text-xs opacity-70">Laptops, Servers, Network</div>
                                 </button>
                                 <button
                                     type="button"
-                                    className={`p-3.5 border rounded-xl text-center transition-all duration-150 ${formData.assetType === 'DIGITAL' ? 'border-primary bg-primary/[0.06] text-primary' : 'border-border text-muted-foreground hover:bg-surface-2 hover:text-foreground'}`}
-                                    onClick={() => updateField('assetType', 'DIGITAL')}
+                                    disabled
+                                    className={`p-3.5 border rounded-xl text-center transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed ${formData.assetType === 'DIGITAL' ? 'border-primary bg-primary/[0.06] text-primary' : 'border-border text-muted-foreground bg-surface-2'}`}
                                 >
                                     <div className="text-sm font-semibold mb-0.5">Digital</div>
                                     <div className="text-xs opacity-70">SaaS, Licenses, Domains</div>
                                 </button>
                                 <button
                                     type="button"
-                                    className={`p-3.5 border rounded-xl text-center transition-all duration-150 ${formData.assetType === 'DYNAMIC' ? 'border-primary bg-primary/[0.06] text-primary' : 'border-border text-muted-foreground hover:bg-surface-2 hover:text-foreground'}`}
-                                    onClick={() => updateField('assetType', 'DYNAMIC')}
+                                    disabled
+                                    className={`p-3.5 border rounded-xl text-center transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed ${formData.assetType === 'DYNAMIC' ? 'border-primary bg-primary/[0.06] text-primary' : 'border-border text-muted-foreground bg-surface-2'}`}
                                 >
                                     <div className="text-sm font-semibold mb-0.5">Custom</div>
                                     <div className="text-xs opacity-70">Dynamic matrix</div>
@@ -314,17 +397,7 @@ export default function EditAssetPage({ params }: { params: Promise<{ id: string
                     <div className="detail-panel">
                         <h2 className="detail-panel-title">Hardware Specifications</h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                            <div>
-                                <label className="block text-sm font-medium text-foreground mb-1.5">Hardware Category</label>
-                                <select className="input w-full" value={physicalAsset.category || 'LAPTOP'} onChange={e => setPhysicalAsset({ ...physicalAsset, category: e.target.value })}>
-                                    <option value="LAPTOP">Laptop</option>
-                                    <option value="DESKTOP">Desktop</option>
-                                    <option value="SERVER">Server / Rack</option>
-                                    <option value="NETWORK_EQUIPMENT">Network Engine</option>
-                                    <option value="MOBILE_DEVICE">Mobile Device</option>
-                                    <option value="OTHER">Other / Peripheral</option>
-                                </select>
-                            </div>
+
                             <div>
                                 <label className="block text-sm font-medium text-foreground mb-1.5">MAC Address</label>
                                 <input type="text" className="input w-full" placeholder="00:00:00:00:00:00" value={physicalAsset.macAddress || ''} onChange={e => setPhysicalAsset({ ...physicalAsset, macAddress: e.target.value })} />
@@ -335,7 +408,33 @@ export default function EditAssetPage({ params }: { params: Promise<{ id: string
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-foreground mb-1.5">OS Version</label>
-                                <input type="text" className="input w-full" placeholder="Windows 11 Pro" value={physicalAsset.osVersion || ''} onChange={e => setPhysicalAsset({ ...physicalAsset, osVersion: e.target.value })} />
+                                <select className="input w-full" value={physicalAsset.osVersion || ''} onChange={e => setPhysicalAsset({ ...physicalAsset, osVersion: e.target.value })}>
+                                    <option value="" disabled>Select OS…</option>
+                                    <optgroup label="Windows">
+                                        <option value="Windows 11">Windows 11</option>
+                                        <option value="Windows 10">Windows 10</option>
+                                        <option value="Windows Server 2022">Windows Server 2022</option>
+                                        <option value="Windows Server 2019">Windows Server 2019</option>
+                                    </optgroup>
+                                    <optgroup label="Apple">
+                                        <option value="macOS Sequoia">macOS Sequoia</option>
+                                        <option value="macOS Sonoma">macOS Sonoma</option>
+                                        <option value="macOS Ventura">macOS Ventura</option>
+                                        <option value="iOS">iOS</option>
+                                        <option value="iPadOS">iPadOS</option>
+                                    </optgroup>
+                                    <optgroup label="Linux">
+                                        <option value="Ubuntu Linux">Ubuntu Linux</option>
+                                        <option value="Debian Linux">Debian Linux</option>
+                                        <option value="Red Hat Enterprise Linux">Red Hat Enterprise Linux</option>
+                                        <option value="Rocky / AlmaLinux">Rocky / AlmaLinux</option>
+                                    </optgroup>
+                                    <optgroup label="Other">
+                                        <option value="Android">Android</option>
+                                        <option value="ChromeOS">ChromeOS</option>
+                                        <option value="Other">Other</option>
+                                    </optgroup>
+                                </select>
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-foreground mb-1.5">RAM (GB)</label>
@@ -397,18 +496,18 @@ export default function EditAssetPage({ params }: { params: Promise<{ id: string
                 )}
 
                 {/* 2. Dynamic Schema UI */}
-                {category && (
+                {selectedCategory && (
                     <div className="detail-panel border-primary/20">
                         <div className="flex items-center justify-between mb-3 pb-2 border-b border-border/60">
                             <h2 className="text-sm font-semibold text-foreground">2. Custom Matrix Data</h2>
-                            <span className="badge text-[11px] px-2.5 py-1 bg-primary/10 text-primary rounded-lg">{category.icon} {category.name}</span>
+                            <span className="badge text-[11px] px-2.5 py-1 bg-primary/10 text-primary rounded-lg">{selectedCategory.icon} {selectedCategory.name}</span>
                         </div>
 
-                        {category.fieldDefinitions.length === 0 ? (
+                        {(selectedCategory.fieldDefinitions || []).length === 0 ? (
                             <p className="text-sm text-muted-foreground/70 italic">No custom tracking fields required for this Class.</p>
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                {category.fieldDefinitions.map((def) => (
+                                {(selectedCategory.fieldDefinitions || []).map((def) => (
                                     <div key={def.id} className={def.fieldType === 'JSON' ? 'md:col-span-2' : ''}>
                                         <label className="block text-sm font-medium text-foreground mb-1.5">
                                             {def.label} {def.required && <span className="text-destructive">*</span>}
@@ -464,7 +563,7 @@ export default function EditAssetPage({ params }: { params: Promise<{ id: string
                     </Link>
                     <button
                         type="submit"
-                        disabled={submitting}
+                        disabled={!selectedCategory || submitting}
                         className="btn-primary h-9 text-sm px-4 inline-flex items-center gap-2"
                     >
                         {submitting
@@ -476,3 +575,4 @@ export default function EditAssetPage({ params }: { params: Promise<{ id: string
         </div>
     );
 }
+    

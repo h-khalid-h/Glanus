@@ -135,7 +135,7 @@ export function CommandSurface() {
                     description: 'Configure workspace preferences',
                     icon: <SettingsIcon />,
                     category: 'navigation',
-                    handler: () => router.push(`/workspaces/settings`),
+                    handler: () => router.push(`/workspaces/manage/settings`),
                     keywords: ['config', 'preferences', 'account'],
                 },
                 {
@@ -144,7 +144,7 @@ export function CommandSurface() {
                     description: 'Invite and manage team members',
                     icon: <UsersIcon />,
                     category: 'navigation',
-                    handler: () => router.push(`/workspaces/members`),
+                    handler: () => router.push(`/workspaces/manage/members`),
                     keywords: ['team', 'users', 'invite', 'people'],
                 },
                 {

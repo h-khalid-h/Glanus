@@ -7,9 +7,7 @@ import { useToast } from '@/lib/toast';
 import { PageSpinner } from '@/components/ui/Spinner';
 import { WorkspaceLayout } from '@/components/workspace/WorkspaceLayout';
 import { ArrowLeft, Send, AlertTriangle, Shield, CheckCircle } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
-import { Button } from '@/components/ui/Button';
 
 interface TicketMessage {
     id: string;
@@ -35,32 +33,31 @@ interface TicketDetail {
 
 function TicketHeader({ ticket, onStatusChange }: { ticket: TicketDetail, onStatusChange: (status: string) => void }) {
     const router = useRouter();
-    const workspaceId = useWorkspaceId();
 
     return (
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-slate-900/50 p-6 rounded-xl border border-slate-800">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-surface-container border border-border/50 p-6 rounded-xl shadow-sm">
             <div className="flex flex-col gap-2">
                 <div className="flex items-center gap-3">
                     <button
                         onClick={() => router.push(`/workspaces/helpdesk`)}
-                        className="text-slate-400 hover:text-white transition-colors p-1 -ml-1"
+                        className="btn-ghost h-8 w-8 p-0 -ml-1"
                     >
-                        <ArrowLeft size={18} />
+                        <ArrowLeft className="h-4 w-4" />
                     </button>
-                    <Badge variant="primary" className="font-mono text-xs">#{ticket.number}</Badge>
-                    <h1 className="text-xl font-bold text-slate-100">{ticket.title}</h1>
+                    <span className="badge text-xs px-2 rounded-md bg-surface-container-highest text-on-surface border border-border">#{ticket.number}</span>
+                    <h1 className="text-xl font-semibold tracking-tight text-on-surface">{ticket.title}</h1>
                 </div>
-                <div className="flex flex-wrap items-center gap-4 text-sm text-slate-400 ml-8">
-                    <span>Created by <span className="text-slate-200">{ticket.creator.name || ticket.creator.email}</span></span>
+                <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground ml-10">
+                    <span>Created by <span className="text-on-surface font-medium">{ticket.creator.name || ticket.creator.email}</span></span>
                     {ticket.asset && (
-                        <span>Asset: <span className="text-indigo-400 cursor-pointer">{ticket.asset.name}</span></span>
+                        <span>Asset: <span className="text-primary font-medium hover:underline cursor-pointer">{ticket.asset.name}</span></span>
                     )}
                 </div>
             </div>
 
             <div className="flex items-center gap-3">
                 <select
-                    className="bg-slate-950 border border-slate-800 text-sm rounded-md px-3 py-2 text-slate-300 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    className="bg-surface-container-low border-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-surface-container transition-all text-sm rounded-lg px-3 py-2 text-on-surface outline-none appearance-none"
                     value={ticket.status}
                     onChange={(e) => onStatusChange(e.target.value)}
                 >
@@ -72,9 +69,9 @@ function TicketHeader({ ticket, onStatusChange }: { ticket: TicketDetail, onStat
                 </select>
 
                 {ticket.status !== 'RESOLVED' && ticket.status !== 'CLOSED' && (
-                    <Button variant="primary" className="gap-2" onClick={() => onStatusChange('RESOLVED')}>
-                        <CheckCircle size={16} /> Resolve Issue
-                    </Button>
+                    <button className="btn-primary h-9 px-4 gap-2" onClick={() => onStatusChange('RESOLVED')}>
+                        <CheckCircle className="h-4 w-4" /> Resolve Issue
+                    </button>
                 )}
             </div>
         </div>
@@ -159,48 +156,52 @@ function TicketThreadContent() {
     };
 
     if (loading) return <PageSpinner />;
-    if (!ticket) return <div className="p-8 text-center text-slate-400">Ticket not found or access denied.</div>;
+    if (!ticket) return <div className="p-12 text-center text-muted-foreground bg-surface-container rounded-xl">Ticket not found or access denied.</div>;
 
     const isClosed = ticket.status === 'CLOSED' || ticket.status === 'RESOLVED';
 
     return (
-        <div className="space-y-6 h-[calc(100vh-8rem)] flex flex-col">
+        <div className="space-y-6 h-[calc(100vh-8rem)] flex flex-col pt-1">
             <TicketHeader ticket={ticket} onStatusChange={handleStatusChange} />
 
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 flex-1 min-h-0">
                 <div className="lg:col-span-3 flex flex-col gap-4 min-h-0">
                     {/* Message Thread */}
-                    <Card className="flex-1 border-slate-800 bg-slate-900/40 overflow-hidden flex flex-col">
+                    <div className="flex-1 border border-border bg-surface-container rounded-xl shadow-sm overflow-hidden flex flex-col">
                         <div
                             ref={scrollRef}
-                            className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin scrollbar-thumb-slate-700"
+                            className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin scrollbar-thumb-border/80 scrollbar-track-transparent"
                         >
+                            {ticket.messages.length === 0 ? (
+                                <div className="text-center text-sm text-muted-foreground mt-10">No messages yet.</div>
+                            ) : null}
+
                             {ticket.messages.map((msg) => {
                                 const isStaff = msg.sender.role === 'ADMIN' || msg.sender.role === 'IT_STAFF' || msg.sender.role === 'OWNER';
 
                                 return (
                                     <div key={msg.id} className={`flex gap-4 ${msg.isInternal ? 'opacity-90' : ''}`}>
-                                        <div className={`w-10 h-10 rounded-full shrink-0 flex items-center justify-center font-bold text-sm border
-                                            ${isStaff ? 'bg-indigo-900/50 text-indigo-300 border-indigo-800' : 'bg-slate-800 text-slate-300 border-slate-700'}
+                                        <div className={`w-10 h-10 rounded-full shrink-0 flex items-center justify-center font-bold text-sm border shadow-sm
+                                            ${isStaff ? 'bg-primary/10 text-primary border-primary/20' : 'bg-surface-container-highest text-on-surface border-border'}
                                         `}>
                                             {(msg.sender.name || msg.sender.email).charAt(0).toUpperCase()}
                                         </div>
 
-                                        <div className={`flex-1 rounded-2xl p-4 ${msg.isInternal
-                                            ? 'bg-amber-900/20 border border-amber-800/50'
-                                            : isStaff ? 'bg-slate-800/40 border border-slate-800' : 'bg-slate-800/80'
+                                        <div className={`flex-1 rounded-2xl p-4 shadow-sm ${msg.isInternal
+                                            ? 'bg-amber-500/10 border border-amber-500/20 text-amber-500/90'
+                                            : isStaff ? 'bg-surface-container-low border border-border' : 'bg-surface-container-highest border border-border/50'
                                             }`}>
                                             <div className="flex justify-between items-center mb-2">
                                                 <div className="flex items-center gap-2">
-                                                    <span className="font-medium text-slate-200">{msg.sender.name || 'User'}</span>
-                                                    {isStaff && <Badge variant="primary" className="text-[10px] px-1.5 h-4 bg-indigo-950/50 text-indigo-400 border-indigo-800">Support API</Badge>}
-                                                    {msg.isInternal && <Badge variant="warning" className="text-[10px] px-1.5 h-4 flex gap-1"><Shield size={10} /> Internal Note</Badge>}
+                                                    <span className="font-semibold text-on-surface text-sm">{msg.sender.name || 'User'}</span>
+                                                    {isStaff && <span className="badge text-[10px] px-1.5 h-4 bg-primary/10 text-primary border border-primary/20 rounded">Support API</span>}
+                                                    {msg.isInternal && <span className="badge text-[10px] px-1.5 h-4 flex gap-1 items-center bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded"><Shield className="h-2.5 w-2.5" /> Internal Note</span>}
                                                 </div>
-                                                <span className="text-xs text-slate-500">
-                                                    {new Date(msg.createdAt).toLocaleString()}
+                                                <span className="text-xs text-muted-foreground font-medium">
+                                                    {new Date(msg.createdAt).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
                                                 </span>
                                             </div>
-                                            <div className="text-slate-300 text-sm whitespace-pre-wrap leading-relaxed">
+                                            <div className="text-on-surface text-sm whitespace-pre-wrap leading-relaxed">
                                                 {msg.content}
                                             </div>
                                         </div>
@@ -210,15 +211,19 @@ function TicketThreadContent() {
                         </div>
 
                         {/* Reply Composer */}
-                        <div className="p-4 bg-slate-950 border-t border-slate-800">
+                        <div className="p-4 bg-surface-container-low border-t border-border">
                             {isClosed ? (
-                                <div className="text-center p-4 text-sm text-slate-500 bg-slate-900/50 rounded-lg border border-slate-800 border-dashed">
+                                <div className="text-center p-4 text-sm text-muted-foreground bg-surface-container rounded-lg border border-border border-dashed">
                                     This ticket has been resolved. You cannot send new messages unless it is reopened.
                                 </div>
                             ) : (
                                 <div className="flex flex-col gap-3">
                                     <textarea
-                                        className={`w-full bg-slate-900 border ${isInternal ? 'border-amber-700/50 focus:ring-amber-500' : 'border-slate-800 focus:ring-indigo-500'} rounded-lg p-3 text-sm text-slate-200 focus:outline-none focus:ring-1 resize-none min-h-[100px]`}
+                                        className={`w-full border rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all resize-none min-h-[100px] shadow-sm
+                                            ${isInternal 
+                                                ? 'bg-amber-500/5 text-amber-100 border-amber-500/30 focus:ring-amber-500 focus:ring-offset-surface-container-low placeholder:text-amber-500/50' 
+                                                : 'bg-surface-container text-on-surface border-border focus:ring-primary focus:ring-offset-surface-container-low placeholder:text-muted-foreground'}
+                                        `}
                                         placeholder={isInternal ? "Write a private internal note (not visible to users)..." : "Draft a reply to the user..."}
                                         value={replyContent}
                                         onChange={(e) => setReplyContent(e.target.value)}
@@ -229,64 +234,67 @@ function TicketThreadContent() {
                                             }
                                         }}
                                     />
-                                    <div className="flex justify-between items-center">
-                                        <label className="flex items-center gap-2 text-sm text-slate-400 cursor-pointer">
+                                    <div className="flex justify-between items-center px-1">
+                                        <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer group">
                                             <input
                                                 type="checkbox"
-                                                className="rounded bg-slate-900 border-slate-700 text-indigo-500 focus:ring-indigo-500 focus:ring-offset-slate-950"
+                                                className="rounded bg-surface-container border-border text-primary focus:ring-primary focus:ring-offset-surface-container-low cursor-pointer"
                                                 checked={isInternal}
                                                 onChange={(e) => setIsInternal(e.target.checked)}
                                             />
-                                            <Shield size={14} className={isInternal ? "text-amber-500" : ""} />
-                                            Post as Internal IT Note
+                                            <Shield className={`h-4 w-4 ${isInternal ? "text-amber-500" : "text-muted-foreground group-hover:text-on-surface"}`} />
+                                            <span className="group-hover:text-on-surface transition-colors">Post as Internal IT Note</span>
                                         </label>
 
                                         <div className="flex items-center gap-3">
-                                            <span className="text-xs text-slate-500 hidden sm:block">Ctrl + Enter to send</span>
-                                            <Button
+                                            <span className="text-xs text-muted-foreground hidden sm:block font-medium">⌘ / Ctrl + Enter to send</span>
+                                            <button
                                                 onClick={handleSendReply}
                                                 disabled={!replyContent.trim() || sending}
-                                                className={`gap-2 ${isInternal ? 'bg-amber-600 hover:bg-amber-700' : ''}`}
+                                                className={`btn-primary h-9 px-4 gap-2 ${isInternal ? '!bg-amber-600 hover:!bg-amber-700 !text-white !shadow-amber-500/20' : ''}`}
                                             >
-                                                <Send size={16} /> {sending ? 'Sending...' : 'Send Reply'}
-                                            </Button>
+                                                <Send className="h-4 w-4" /> {sending ? 'Sending...' : 'Send Reply'}
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
                             )}
                         </div>
-                    </Card>
+                    </div>
                 </div>
 
                 {/* Meta Sidebar */}
                 <div className="space-y-4">
-                    <Card className="border-slate-800 bg-slate-900/50">
-                        <CardContent className="p-5 space-y-4">
+                    <div className="border-border bg-surface-container border rounded-xl shadow-sm overflow-hidden">
+                        <div className="p-5 space-y-5">
                             <div>
-                                <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Priority</h3>
-                                <div className="flex items-center gap-2 text-sm font-medium text-slate-200">
-                                    {ticket.priority === 'URGENT' && <AlertTriangle size={14} className="text-rose-500" />}
+                                <h3 className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-2.5">Priority</h3>
+                                <div className="flex items-center gap-2 text-sm font-semibold text-on-surface bg-surface-container-low p-2 rounded-lg border border-border">
+                                    {ticket.priority === 'URGENT' && <AlertTriangle className="h-4 w-4 text-health-critical" />}
                                     {ticket.priority}
                                 </div>
                             </div>
 
-                            <hr className="border-slate-800" />
+                            <hr className="border-border/50" />
 
                             <div>
-                                <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Assignment</h3>
+                                <h3 className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-2.5">Assignment</h3>
                                 {ticket.assignee ? (
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-6 h-6 rounded-full bg-slate-800 flex items-center justify-center text-xs font-bold text-slate-300 border border-slate-700">
+                                    <div className="flex items-center gap-3 bg-surface-container-low p-2.5 rounded-lg border border-border">
+                                        <div className="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center text-xs font-bold text-on-surface border border-border/50 shrink-0 shadow-sm">
                                             {(ticket.assignee.user.name || ticket.assignee.user.email).charAt(0).toUpperCase()}
                                         </div>
-                                        <span className="text-sm text-slate-300">{ticket.assignee.user.name || 'Agent'}</span>
+                                        <div className="min-w-0">
+                                            <div className="text-sm font-semibold text-on-surface truncate">{ticket.assignee.user.name || 'Agent'}</div>
+                                            <div className="text-xs text-muted-foreground truncate">{ticket.assignee.user.email}</div>
+                                        </div>
                                     </div>
                                 ) : (
-                                    <div className="text-sm text-slate-400">Unassigned</div>
+                                    <div className="text-sm text-muted-foreground italic bg-surface-container-low p-3 rounded-lg border border-border border-dashed text-center">Unassigned</div>
                                 )}
                             </div>
-                        </CardContent>
-                    </Card>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

@@ -194,7 +194,7 @@ export function MissionControl({ data, workspaceName, workspaceId, plan }: Missi
                                     label="Invite Member"
                                     icon="↗"
                                     accentClass="bg-cortex/10 text-cortex"
-                                    onClick={() => router.push(`/workspaces/members`)}
+                                    onClick={() => router.push(`/workspaces/manage/members`)}
                                 />
                                 <QuickAction
                                     label="Create Alert Rule"

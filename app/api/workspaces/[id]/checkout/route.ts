@@ -27,21 +27,29 @@ export const POST = withErrorHandler(async (
 
     const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
 
-    const checkoutSession = await stripe.checkout.sessions.create({
-        mode: 'subscription',
-        payment_method_types: ['card'],
-        customer_email: user.email,
-        line_items: [{ price: priceId, quantity: 1 }],
-        metadata: {
-            workspaceId,
-            userId: user.id,
-        },
-        subscription_data: {
-            metadata: { workspaceId },
-        },
-        success_url: `${baseUrl}/workspaces/${workspaceId}/billing?status=success`,
-        cancel_url: `${baseUrl}/workspaces/${workspaceId}/billing?status=canceled`,
-    });
+    try {
+        const checkoutSession = await stripe.checkout.sessions.create({
+            mode: 'subscription',
+            payment_method_types: ['card'],
+            customer_email: user.email,
+            line_items: [{ price: priceId, quantity: 1 }],
+            metadata: {
+                workspaceId,
+                userId: user.id,
+            },
+            subscription_data: {
+                metadata: { workspaceId },
+            },
+            success_url: `${baseUrl}/workspaces/${workspaceId}/manage/settings?status=success`,
+            cancel_url: `${baseUrl}/workspaces/${workspaceId}/manage/settings?status=canceled`,
+        });
 
-    return apiSuccess({ url: checkoutSession.url });
+        return apiSuccess({ url: checkoutSession.url });
+    } catch (error: any) {
+        // If the Stripe key is invalid or testing, return an explicit 400 error message to the user frontend
+        if (error.message?.includes('Invalid API Key') || String(process.env.STRIPE_SECRET_KEY).includes('sk_test_...')) {
+            return apiError(400, 'Billing module is not configured: Please provide a valid Stripe Secret Key in your environment variables.');
+        }
+        throw error; // Re-throw to be caught by withErrorHandler
+    }
 });

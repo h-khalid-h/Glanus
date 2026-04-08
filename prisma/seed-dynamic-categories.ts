@@ -5,6 +5,17 @@ const prisma = new PrismaClient();
 async function main() {
     console.log('🌱 Seeding dynamic categories...');
 
+    let workspace = await prisma.workspace.findFirst();
+    if (!workspace) {
+        workspace = await prisma.workspace.create({
+            data: {
+                name: 'Default System Workspace',
+                domain: 'default'
+            }
+        });
+    }
+    const workspaceId = workspace.id;
+
     // ============================================
     // PHYSICAL ASSET CATEGORIES
     // ============================================
@@ -14,6 +25,7 @@ async function main() {
     // Root category: Physical
     const physicalRoot = await prisma.assetCategory.create({
         data: {
+            workspaceId,
             name: 'Physical',
             slug: 'physical',
             description: 'Physical hardware and infrastructure assets',
@@ -26,6 +38,7 @@ async function main() {
     // Computing branch
     const computing = await prisma.assetCategory.create({
         data: {
+            workspaceId,
             name: 'Computing',
             slug: 'computing',
             description: 'Computing devices and servers',
@@ -57,6 +70,7 @@ async function main() {
     // Server category
     const server = await prisma.assetCategory.create({
         data: {
+            workspaceId,
             name: 'Server',
             slug: 'server',
             description: 'Physical and virtual servers',
@@ -216,6 +230,7 @@ async function main() {
     // Laptop category
     const laptop = await prisma.assetCategory.create({
         data: {
+            workspaceId,
             name: 'Laptop',
             slug: 'laptop',
             description: 'Portable computing devices',
@@ -302,6 +317,7 @@ async function main() {
     // Infrastructure branch
     const infrastructure = await prisma.assetCategory.create({
         data: {
+            workspaceId,
             name: 'Infrastructure',
             slug: 'infrastructure',
             description: 'Physical infrastructure and facilities',
@@ -313,6 +329,7 @@ async function main() {
 
     const building = await prisma.assetCategory.create({
         data: {
+            workspaceId,
             name: 'Building',
             slug: 'building',
             description: 'Buildings and facilities',
@@ -343,6 +360,7 @@ async function main() {
 
     const room = await prisma.assetCategory.create({
         data: {
+            workspaceId,
             name: 'Room',
             slug: 'room',
             description: 'Rooms within buildings',
@@ -387,6 +405,7 @@ async function main() {
     // Root category: Digital
     const digitalRoot = await prisma.assetCategory.create({
         data: {
+            workspaceId,
             name: 'Digital',
             slug: 'digital',
             description: 'Digital assets, software, and cloud services',
@@ -399,6 +418,7 @@ async function main() {
     // Content branch
     const content = await prisma.assetCategory.create({
         data: {
+            workspaceId,
             name: 'Content',
             slug: 'content',
             description: 'Digital content and media',
@@ -428,6 +448,7 @@ async function main() {
 
     const video = await prisma.assetCategory.create({
         data: {
+            workspaceId,
             name: 'Video',
             slug: 'video',
             description: 'Video content',
@@ -467,6 +488,7 @@ async function main() {
 
     const youtubeVideo = await prisma.assetCategory.create({
         data: {
+            workspaceId,
             name: 'YouTube Video',
             slug: 'youtube-video',
             description: 'Videos hosted on YouTube',
@@ -548,6 +570,7 @@ async function main() {
     // Software branch
     const software = await prisma.assetCategory.create({
         data: {
+            workspaceId,
             name: 'Software',
             slug: 'software',
             description: 'Software and applications',

@@ -8,7 +8,7 @@ import { CommandSurface } from '@/components/command/CommandSurface';
 
 export function Providers({ children }: { children: React.ReactNode }) {
     return (
-        <SessionProvider>
+        <SessionProvider refetchOnWindowFocus={false}>
             <WorkspaceProvider>
                 <ToastProvider>
                     {children}

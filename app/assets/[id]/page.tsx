@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { PageSpinner } from '@/components/ui/Spinner';
 import { ErrorState } from '@/components/ui/EmptyState';
 import { formatDateTime } from '@/lib/utils';
-import { ArrowLeft, Edit, Trash2, Clock, CheckCircle, XCircle, Monitor, Wrench, Calendar } from 'lucide-react';
+import { ArrowLeft, Edit, Trash2, Clock, CheckCircle, XCircle, Monitor, Wrench, Calendar, User, History, Ticket, AlertTriangle, Wifi, Terminal } from 'lucide-react';
 import { useToast } from '@/lib/toast';
 import { ConfirmDialog } from '@/components/ui';
 import { useWorkspace } from '@/lib/workspace/context';
@@ -47,6 +47,27 @@ interface AssetDetail {
     digitalAsset?: Record<string, any> | null;
     createdAt: string;
     updatedAt: string;
+    assignedTo?: { id: string; name: string; email: string; role: string } | null;
+    assignmentHistory?: Array<{
+        id: string; assignedAt: string; unassignedAt?: string; notes?: string;
+        user: { id: string; name: string; email: string; };
+    }>;
+    remoteSessions?: Array<{
+        id: string; status: string; startedAt: string; duration?: number;
+        user: { name: string; email: string; };
+    }>;
+    aiInsights?: Array<{
+        id: string; insightType: string; severity: string; details: any; createdAt: string; summary: string;
+    }>;
+    auditLogs?: Array<{
+        id: string; action: string; details: any; createdAt: string;
+    }>;
+    tickets?: Array<{
+        id: string; subject: string; status: string; priority: string; createdAt: string;
+    }>;
+    agentConnection?: {
+        status: string; lastSeen?: string; platform?: string;
+    } | null;
 }
 
 export default function AssetDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -96,7 +117,7 @@ export default function AssetDetailPage({ params }: { params: Promise<{ id: stri
             const response = await csrfFetch(`/api/assets/${id}`);
             if (!response.ok) throw new Error('Failed to fetch asset');
             const data = await response.json();
-            setAsset(data);
+            setAsset(data.data || data);
         } catch (err: unknown) {
             setError(err instanceof Error ? err.message : 'An unexpected error occurred');
         } finally {
@@ -455,40 +476,212 @@ export default function AssetDetailPage({ params }: { params: Promise<{ id: stri
                             </div>
                         </div>
                     )}
+
+                    {/* Assignments & History */}
+                    <div className="detail-panel">
+                        <div className="flex items-center justify-between mb-3 pb-2 border-b border-border/60">
+                            <h2 className="text-sm font-semibold text-foreground flex items-center gap-1.5">
+                                <User size={14} className="text-primary" />
+                                Assignments &amp; History
+                            </h2>
+                        </div>
+                        {asset.assignedTo && (
+                            <div className="mb-4 p-3 bg-surface-2 border border-border rounded-lg">
+                                <h3 className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide mb-1">Current Assignee</h3>
+                                <div className="flex items-center justify-between">
+                                    <span className="text-sm font-medium text-foreground">{asset.assignedTo.name} ({asset.assignedTo.email})</span>
+                                    <span className={`badge px-2 py-0.5 text-[10px] rounded-md bg-primary/10 text-primary`}>{asset.assignedTo.role}</span>
+                                </div>
+                            </div>
+                        )}
+                        {!asset.assignmentHistory || asset.assignmentHistory.length === 0 ? (
+                            <p className="text-sm text-muted-foreground/70">No assignment history found</p>
+                        ) : (
+                            <div className="space-y-3 relative before:absolute before:inset-0 before:ml-2 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-border/60 before:to-transparent">
+                                {asset.assignmentHistory.map((history) => (
+                                    <div key={history.id} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
+                                        <div className="flex items-center justify-center w-4 h-4 rounded-full border-2 border-surface-bg bg-primary/20 shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 shadow" />
+                                        <div className="w-[calc(100%-2rem)] md:w-[calc(50%-1.5rem)] p-3 rounded-lg border border-border bg-surface-2">
+                                            <div className="flex items-center justify-between mb-1">
+                                                <span className="font-medium text-foreground text-xs">{history.user.name}</span>
+                                                <span className="text-[10px] text-muted-foreground">{new Date(history.assignedAt).toLocaleDateString()}</span>
+                                            </div>
+                                            <span className="text-[10px] text-muted-foreground block">
+                                                {history.unassignedAt ? `Unassigned: ${new Date(history.unassignedAt).toLocaleDateString()}` : 'Currently Assigned'}
+                                            </span>
+                                            {history.notes && <p className="mt-1.5 text-xs text-muted-foreground italic">{history.notes}</p>}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Support Tickets */}
+                    {asset.tickets && asset.tickets.length > 0 && (
+                        <div className="detail-panel">
+                            <div className="flex items-center justify-between mb-3 pb-2 border-b border-border/60">
+                                <h2 className="text-sm font-semibold text-foreground flex items-center gap-1.5">
+                                    <Ticket size={14} className="text-primary" />
+                                    Support Tickets
+                                </h2>
+                            </div>
+                            <div className="space-y-2.5">
+                                {asset.tickets.map(ticket => (
+                                    <div key={ticket.id} className="flex items-center gap-3 text-sm p-3 rounded-lg bg-surface-2 border border-border">
+                                        <div className={`w-1.5 h-full self-stretch rounded-full ${ticket.priority === 'URGENT' ? 'bg-destructive' : ticket.priority === 'HIGH' ? 'bg-oracle' : 'bg-primary'}`} />
+                                        <div className="flex-1 min-w-0">
+                                            <span className="text-foreground font-medium truncate block text-sm">{ticket.subject}</span>
+                                            <span className="text-xs text-muted-foreground inline-flex items-center gap-2 mt-0.5">
+                                                <span>{new Date(ticket.createdAt).toLocaleDateString()}</span>
+                                                <span className="w-1 h-1 rounded-full bg-border"></span>
+                                                <span className="uppercase text-[10px] tracking-wider">{ticket.status}</span>
+                                            </span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Activity & Audit Logs */}
+                    {asset.auditLogs && asset.auditLogs.length > 0 && (
+                        <div className="detail-panel">
+                            <div className="flex items-center justify-between mb-3 pb-2 border-b border-border/60">
+                                <h2 className="text-sm font-semibold text-foreground flex items-center gap-1.5">
+                                    <History size={14} className="text-primary" />
+                                    Recent Activity
+                                </h2>
+                            </div>
+                            <div className="space-y-4">
+                                {asset.auditLogs.map(log => (
+                                    <div key={log.id} className="flex gap-3 text-sm">
+                                        <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-surface-2 border border-border">
+                                            <div className="h-1.5 w-1.5 rounded-full bg-muted-foreground/60" />
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-sm text-foreground">
+                                                <span className="font-medium text-primary mr-1 text-xs">[{log.action}]</span>
+                                                {log.details?.assetName ? <span className="text-muted-foreground">Updated <span className="font-medium text-foreground">{log.details.assetName}</span></span> : 'Asset modified.'}
+                                            </p>
+                                            <p className="text-[10px] text-muted-foreground mt-0.5">
+                                                {new Date(log.createdAt).toLocaleString()}
+                                            </p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
                 </div>
 
-                {/* Actions Panel */}
+                {/* Right Column Panels */}
                 <div className="lg:col-span-1">
-                    <div className="detail-panel sticky top-20">
-                        <h2 className="detail-panel-title">Actions</h2>
+                    <div className="sticky top-20 space-y-5">
+                        <div className="detail-panel">
+                            <h2 className="detail-panel-title">Actions</h2>
 
-                        {actions.length === 0 ? (
-                            <p className="text-sm text-muted-foreground/70">No actions available</p>
-                        ) : (
-                            <div className="space-y-1.5">
-                                {actions.map((action) => (
-                                    <button type="button"
-                                        key={action.id}
-                                        onClick={() => executeAction(action)}
-                                        disabled={executingAction === action.id}
-                                        className="w-full flex items-center gap-3 px-3 py-2.5 text-left rounded-lg border border-border hover:bg-surface-2 hover:border-primary/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-150"
-                                    >
-                                        <span className="text-xl shrink-0">{action.icon || '⚡'}</span>
-                                        <div className="flex-1 min-w-0">
-                                            <div className="text-sm font-medium text-foreground">
-                                                {action.label}
-                                            </div>
-                                            {action.description && (
-                                                <div className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
-                                                    {action.description}
+                            {actions.length === 0 ? (
+                                <p className="text-sm text-muted-foreground/70">No actions available</p>
+                            ) : (
+                                <div className="space-y-1.5">
+                                    {actions.map((action) => (
+                                        <button type="button"
+                                            key={action.id}
+                                            onClick={() => executeAction(action)}
+                                            disabled={executingAction === action.id}
+                                            className="w-full flex items-center gap-3 px-3 py-2.5 text-left rounded-lg border border-border hover:bg-surface-2 hover:border-primary/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-150"
+                                        >
+                                            <span className="text-xl shrink-0">{action.icon || '⚡'}</span>
+                                            <div className="flex-1 min-w-0">
+                                                <div className="text-sm font-medium text-foreground">
+                                                    {action.label}
                                                 </div>
+                                                {action.description && (
+                                                    <div className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
+                                                        {action.description}
+                                                    </div>
+                                                )}
+                                            </div>
+                                            {executingAction === action.id && (
+                                                <Clock size={14} className="animate-spin text-primary shrink-0" />
                                             )}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Agent Connectivity */}
+                        {asset.agentConnection && (
+                            <div className="detail-panel">
+                                <h2 className="detail-panel-title flex items-center gap-2">
+                                    <Wifi size={14} className={asset.agentConnection.status === 'ONLINE' ? 'text-health-good' : 'text-muted-foreground'} />
+                                    RMM Agent
+                                </h2>
+                                <div className="flex items-center justify-between text-sm">
+                                    <span className="text-muted-foreground">Status</span>
+                                    <span className={`badge px-2 py-0.5 rounded-md ${asset.agentConnection.status === 'ONLINE' ? 'bg-health-good/10 text-health-good' : 'bg-muted text-muted-foreground'}`}>
+                                        {asset.agentConnection.status}
+                                    </span>
+                                </div>
+                                {asset.agentConnection.platform && (
+                                    <div className="flex items-center justify-between text-sm mt-2">
+                                        <span className="text-muted-foreground">Platform</span>
+                                        <span className="text-foreground">{asset.agentConnection.platform}</span>
+                                    </div>
+                                )}
+                                {asset.agentConnection.lastSeen && (
+                                    <div className="flex items-center justify-between text-sm mt-2">
+                                        <span className="text-muted-foreground">Last Seen</span>
+                                        <span className="text-foreground">{new Date(asset.agentConnection.lastSeen).toLocaleString()}</span>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Insights & Alerts */}
+                        {asset.aiInsights && asset.aiInsights.length > 0 && (
+                            <div className="detail-panel">
+                                <h2 className="detail-panel-title flex items-center gap-2">
+                                    <AlertTriangle size={14} className="text-oracle" />
+                                    Insights &amp; Alerts
+                                </h2>
+                                <div className="space-y-3">
+                                    {asset.aiInsights.map(insight => (
+                                        <div key={insight.id} className="text-sm p-3 rounded-lg bg-surface-2 border border-border">
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <span className={`w-2 h-2 rounded-full ${insight.severity === 'HIGH' ? 'bg-destructive' : insight.severity === 'MEDIUM' ? 'bg-oracle' : 'bg-primary'}`} />
+                                                <span className="font-medium text-foreground">{insight.insightType.replace(/_/g, ' ')}</span>
+                                            </div>
+                                            <p className="text-muted-foreground text-xs">{insight.summary || 'Insight registered'}</p>
                                         </div>
-                                        {executingAction === action.id && (
-                                            <Clock size={14} className="animate-spin text-primary shrink-0" />
-                                        )}
-                                    </button>
-                                ))}
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Remote Sessions */}
+                        {asset.remoteSessions && asset.remoteSessions.length > 0 && (
+                            <div className="detail-panel">
+                                <h2 className="detail-panel-title flex items-center gap-2">
+                                    <Terminal size={14} className="text-primary" />
+                                    Recent Sessions
+                                </h2>
+                                <div className="space-y-3">
+                                    {asset.remoteSessions.map(session => (
+                                        <div key={session.id} className="flex flex-col gap-1 text-sm pb-3 last:pb-0 border-b last:border-0 border-border/50">
+                                            <div className="flex items-center justify-between">
+                                                <span className="font-medium text-foreground text-xs">{session.user.name}</span>
+                                                <span className="text-[10px] text-muted-foreground">{new Date(session.startedAt).toLocaleDateString()}</span>
+                                            </div>
+                                            <div className="flex items-center justify-between">
+                                                <span className={`text-[10px] uppercase ${session.status === 'ACTIVE' ? 'text-health-good font-bold' : 'text-muted-foreground'}`}>{session.status}</span>
+                                                {session.duration && <span className="text-[10px] text-muted-foreground">{Math.floor(session.duration / 60)}m {session.duration % 60}s</span>}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
                         )}
                     </div>

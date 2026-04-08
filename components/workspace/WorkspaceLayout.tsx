@@ -9,6 +9,7 @@ import { NotificationPopover } from '@/components/workspace/NotificationPopover'
 import { CommandPalette } from '@/components/workspace/CommandPalette';
 import WorkspaceSwitcher from '@/components/WorkspaceSwitcher';
 import { Search, LogOut, Settings, Menu, X, ChevronRight, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { hexToTailwindHsl } from '@/lib/utils/colors';
 
 interface NavItem {
     href: string;
@@ -27,6 +28,7 @@ export function WorkspaceLayout({ children }: { children: React.ReactNode }) {
     const { data: session } = useSession();
     const [mobileOpen, setMobileOpen] = useState(false);
     const [collapsed, setCollapsed] = useState(false);
+    const [userMenuOpen, setUserMenuOpen] = useState(false);
 
     // Persist collapse state
     useEffect(() => {
@@ -173,35 +175,16 @@ export function WorkspaceLayout({ children }: { children: React.ReactNode }) {
             ),
         },
         {
-            href: `${basePath}/members`,
-            label: 'Team',
+            href: `${basePath}/manage`,
+            label: 'Admin Management',
             section: 'Workspace',
             icon: (
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.746 3.746 0 013.296-1.043A3.746 3.746 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 013.296 1.043 3.746 3.746 0 011.043 3.296A3.745 3.745 0 0121 12z" />
                 </svg>
             ),
         },
-        {
-            href: `${basePath}/audit`,
-            label: 'Audit Logs',
-            section: 'Workspace',
-            icon: (
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m3.75 9v6m3-3H9m1.5-12H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-                </svg>
-            ),
-        },
-        {
-            href: `${basePath}/notifications`,
-            label: 'Notifications',
-            section: 'Workspace',
-            icon: (
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
-                </svg>
-            ),
-        },
+
         {
             href: `${basePath}/partner`,
             label: 'IT Partner Match',
@@ -212,16 +195,7 @@ export function WorkspaceLayout({ children }: { children: React.ReactNode }) {
                 </svg>
             ),
         },
-        {
-            href: `${basePath}/activity`,
-            label: 'Activity Feed',
-            section: 'Workspace',
-            icon: (
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
-                </svg>
-            ),
-        },
+
         {
             href: `${basePath}/maintenance`,
             label: 'Maintenance',
@@ -232,16 +206,7 @@ export function WorkspaceLayout({ children }: { children: React.ReactNode }) {
                 </svg>
             ),
         },
-        {
-            href: `${basePath}/billing`,
-            label: 'Billing',
-            section: 'Workspace',
-            icon: (
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" />
-                </svg>
-            ),
-        },
+
         {
             href: `${basePath}/remote`,
             label: 'Remote Desktop',
@@ -262,17 +227,7 @@ export function WorkspaceLayout({ children }: { children: React.ReactNode }) {
                 </svg>
             ),
         },
-        {
-            href: `${basePath}/settings`,
-            label: 'Settings',
-            section: 'Workspace',
-            icon: (
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-            ),
-        },
+
         {
             href: `${basePath}/webhooks`,
             label: 'Webhooks',
@@ -363,20 +318,20 @@ export function WorkspaceLayout({ children }: { children: React.ReactNode }) {
             </div>
 
             {/* Navigation */}
-            <nav className="flex-1 overflow-y-auto py-2 scrollbar-thin" aria-label="Workspace navigation"
+            <nav className="flex-1 overflow-y-auto py-2 px-2 custom-scrollbar" aria-label="Workspace navigation"
                 style={{ paddingLeft: collapsed ? 0 : undefined, paddingRight: collapsed ? 0 : undefined }}
             >
                 {Object.entries(sections).map(([section, items]) => (
                     <div key={section} className={`mb-3 ${collapsed ? '' : ''}`}>
                         {!collapsed && (
-                            <p className="mb-1 px-3 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/40">
+                            <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-widest text-slate-500">
                                 {section}
                             </p>
                         )}
                         {collapsed && (
-                            <div className="mx-2 mb-1 h-px bg-border/40" aria-hidden="true" />
+                            <div className="mx-2 mb-1 h-px bg-slate-800/20" aria-hidden="true" />
                         )}
-                        <div className={`space-y-px ${collapsed ? 'px-1' : 'px-2'}`}>
+                        <div className={`space-y-1 ${collapsed ? 'px-1' : ''}`}>
                             {items.map(item => {
                                 const active = isActive(item.href);
                                 return (
@@ -384,25 +339,18 @@ export function WorkspaceLayout({ children }: { children: React.ReactNode }) {
                                         key={item.href}
                                         href={item.href}
                                         className={[
-                                            'sidebar-nav-item relative flex items-center rounded-lg text-sm transition-all duration-150',
-                                            collapsed ? 'justify-center p-0 h-9 w-full' : 'gap-2.5 py-1.5 pr-3',
+                                            'sidebar-nav-item flex items-center rounded-lg text-sm transition-all duration-150',
+                                            collapsed ? 'justify-center p-0 h-10 w-full' : 'gap-3 py-2.5 px-3',
                                             active
-                                                ? 'bg-primary/[0.08] font-medium text-primary'
-                                                : 'text-muted-foreground hover:bg-surface-2 hover:text-foreground',
-                                            !collapsed && active ? 'pl-[13px]' : !collapsed ? 'pl-3' : '',
+                                                ? 'text-blue-200 bg-slate-900/80 font-semibold border-r-2 border-blue-400'
+                                                : 'text-slate-400 bg-transparent hover:bg-slate-900 hover:text-slate-200',
                                         ].join(' ')}
                                         title={collapsed ? item.label : undefined}
                                     >
-                                        {active && !collapsed && (
-                                            <span
-                                                className="absolute left-0 top-1/2 h-4 w-[2px] -translate-y-1/2 rounded-r-full bg-primary"
-                                                aria-hidden="true"
-                                            />
-                                        )}
-                                        <span className={collapsed ? '' : 'shrink-0'}>
+                                        <span className={collapsed ? '' : 'shrink-0 material-symbols-outlined text-xl opacity-80'}>
                                             {item.icon}
                                         </span>
-                                        {!collapsed && item.label}
+                                        {!collapsed && <span className="font-inter">{item.label}</span>}
                                     </Link>
                                 );
                             })}
@@ -411,85 +359,46 @@ export function WorkspaceLayout({ children }: { children: React.ReactNode }) {
                 ))}
             </nav>
 
+            
             {/* User footer */}
-            <div className="shrink-0 border-t border-border">
-                {/* Collapse toggle */}
-                <div className={`flex items-center px-3 py-2 border-b border-border/50 ${collapsed ? 'justify-center' : 'justify-between'}`}>
-                    {!collapsed && (
-                        <Link
-                            href="/account"
-                            className="flex flex-1 items-center gap-2.5 rounded-lg px-2 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-surface-2 hover:text-foreground min-w-0"
-                        >
-                            <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/15 text-xs font-bold text-primary">
-                                {userInitial}
-                            </div>
-                            <div className="min-w-0 flex-1">
-                                <p className="truncate text-sm font-medium text-foreground leading-none mb-0.5">
-                                    {session?.user?.name || 'Account'}
-                                </p>
-                                <p className="truncate text-xs text-muted-foreground leading-none">
-                                    {session?.user?.email || ''}
-                                </p>
-                            </div>
-                        </Link>
-                    )}
-                    {collapsed && (
-                        <Link
-                            href="/account"
-                            className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/15 text-xs font-bold text-primary transition-colors hover:bg-primary/25"
-                            aria-label="Account"
-                            title="Account"
-                        >
-                            {userInitial}
-                        </Link>
-                    )}
-                    {!collapsed && (
-                        <div className="flex items-center gap-0.5">
-                            <Link
-                                href="/account"
-                                className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-surface-2 hover:text-foreground"
-                                aria-label="Account settings"
-                            >
-                                <Settings className="h-3.5 w-3.5" />
-                            </Link>
-                            <button
-                                type="button"
-                                onClick={() => signOut({ callbackUrl: '/login' })}
-                                className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-                                aria-label="Sign out"
-                            >
-                                <LogOut className="h-3.5 w-3.5" />
-                            </button>
-                        </div>
-                    )}
-                </div>
-
+            <div className="shrink-0 border-t border-slate-800/20 bg-slate-950">
                 {/* Collapse button */}
-                <div className={`flex items-center px-3 py-2 ${collapsed ? 'justify-center' : 'justify-between'}`}>
+                <div className={`flex items-center px-4 py-3 ${collapsed ? 'justify-center' : 'justify-between'}`}>
                     {!collapsed && (
-                        <p className="text-xs text-muted-foreground/30">
-                            Glanus v2.0 · PRISM
+                        <p className="text-xs text-slate-600 font-medium">
+                            Glanus v2.0
                         </p>
                     )}
                     <button
                         type="button"
                         onClick={toggleCollapsed}
-                        className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground/50 transition-colors hover:bg-surface-2 hover:text-muted-foreground"
+                        className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-900 hover:text-slate-300"
                         aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
                         title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
                     >
                         {collapsed
-                            ? <PanelLeftOpen className="h-3.5 w-3.5" />
-                            : <PanelLeftClose className="h-3.5 w-3.5" />
+                            ? <PanelLeftOpen className="h-4 w-4" />
+                            : <PanelLeftClose className="h-4 w-4" />
                         }
                     </button>
                 </div>
             </div>
         </div>
     );
+    const primaryHsl = hexToTailwindHsl(workspace.primaryColor || '#00E5C8') || '168 100% 45%';
+    const accentHsl = hexToTailwindHsl(workspace.accentColor || '#14b8a6') || '168 100% 30%';
+
+    const dynamicStyles = {
+        '--primary': primaryHsl,
+        '--nerve': primaryHsl,
+        '--ring': primaryHsl,
+        '--sidebar-ring': primaryHsl,
+        '--accent': accentHsl,
+        '--cortex': accentHsl,
+    } as React.CSSProperties;
 
     return (
-        <div className="flex min-h-screen bg-background">
+        <div style={dynamicStyles} className="flex min-h-screen bg-surface-container-lowest text-on-surface inter">
 
             {/* Mobile hamburger */}
             <button
@@ -525,18 +434,21 @@ export function WorkspaceLayout({ children }: { children: React.ReactNode }) {
             {/* Desktop sidebar — collapsible */}
             <aside
                 className={[
-                    'hidden shrink-0 border-r border-border bg-surface-1 lg:flex lg:flex-col sidebar-collapse-transition',
-                    collapsed ? 'w-14' : 'w-[220px]',
+                    'hidden border-r border-slate-800/20 bg-slate-950 lg:flex lg:flex-col sidebar-collapse-transition z-50 fixed inset-y-0 left-0',
+                    collapsed ? 'w-[72px]' : 'w-64',
                 ].join(' ')}
             >
                 {sidebarContent}
             </aside>
 
             {/* Main column */}
-            <div className="flex flex-1 min-w-0 flex-col">
+            <div className={[
+                "flex flex-1 min-w-0 flex-col transition-all",
+                collapsed ? 'lg:pl-[72px]' : 'lg:pl-64'
+            ].join(' ')}>
 
                 {/* Top header */}
-                <header className="sticky top-0 z-30 flex h-12 shrink-0 items-center justify-between border-b border-border bg-surface-1/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-surface-1/80">
+                <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center justify-between border-b border-transparent shadow-sm shadow-blue-900/10 bg-slate-950/60 px-6 backdrop-blur-xl">
                     {/* Breadcrumb */}
                     <nav className="flex items-center gap-1.5 min-w-0 text-sm" aria-label="Breadcrumb">
                         <span className="text-muted-foreground/40 font-medium hidden sm:block shrink-0 text-xs">
@@ -573,19 +485,55 @@ export function WorkspaceLayout({ children }: { children: React.ReactNode }) {
                             <kbd className="rounded border border-border bg-surface-1 px-1 py-0.5 font-mono text-[10px]">⌘K</kbd>
                         </button>
                         <NotificationPopover />
-                        <Link
-                            href="/account"
-                            className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/15 text-xs font-bold text-primary transition-colors hover:bg-primary/25"
-                            aria-label="Account"
-                        >
-                            {userInitial}
-                        </Link>
+                        
+                        {/* User Menu Dropdown */}
+                        <div className="relative">
+                            <button
+                                type="button"
+                                onClick={() => setUserMenuOpen(!userMenuOpen)}
+                                onBlur={() => setTimeout(() => setUserMenuOpen(false), 150)}
+                                className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/15 border border-primary/20 text-xs font-bold text-primary transition-colors hover:bg-primary/25 ml-1"
+                                aria-expanded={userMenuOpen}
+                                aria-label="User menu"
+                            >
+                                {userInitial}
+                            </button>
+                            
+                            {userMenuOpen && (
+                                <div className="absolute right-0 mt-2 w-56 origin-top-right rounded-xl border border-slate-800 bg-slate-950 shadow-lg shadow-black/40 ring-1 ring-black ring-opacity-5 animate-slide-up z-50">
+                                    <div className="px-4 py-3 border-b border-slate-800/80 text-left">
+                                        <p className="text-sm font-medium text-slate-200 truncate">
+                                            {session?.user?.name || 'Account'}
+                                        </p>
+                                        <p className="text-xs text-slate-500 truncate mt-0.5">
+                                            {session?.user?.email || ''}
+                                        </p>
+                                    </div>
+                                    <div className="p-1">
+                                        <Link href="/account" className="flex items-center gap-2.5 px-3 py-2 text-sm text-slate-300 rounded-lg hover:bg-slate-900 hover:text-slate-100 transition-colors">
+                                            <Settings className="h-4 w-4 text-slate-500" />
+                                            Account Settings
+                                        </Link>
+                                    </div>
+                                    <div className="p-1 border-t border-slate-800/80">
+                                        <button
+                                            type="button"
+                                            onClick={() => signOut({ callbackUrl: '/login' })}
+                                            className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-red-400 rounded-lg hover:bg-red-950/30 hover:text-red-300 transition-colors shadow-black"
+                                        >
+                                            <LogOut className="h-4 w-4 text-red-500/70" />
+                                            Sign out
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </header>
 
                 {/* Page content */}
                 <main className="flex-1 overflow-y-auto scrollbar-thin">
-                    <div className="px-5 py-5 lg:px-6 lg:py-6">
+                    <div key={workspace?.id || 'loading-workspace'} className="px-5 py-5 lg:px-6 lg:py-6 animate-fade-in">
                         {children}
                     </div>
                     <CommandPalette />
@@ -595,3 +543,4 @@ export function WorkspaceLayout({ children }: { children: React.ReactNode }) {
     );
 }
 
+    
