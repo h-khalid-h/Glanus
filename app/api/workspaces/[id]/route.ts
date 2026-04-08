@@ -1,6 +1,7 @@
 import { apiSuccess } from '@/lib/api/response';
 import { NextRequest } from 'next/server';
 import { requireAuth, requireWorkspaceRole, withErrorHandler } from '@/lib/api/withAuth';
+import { withRateLimit } from '@/lib/security/rateLimit';
 import { WorkspaceService } from '@/lib/services/WorkspaceService';
 import { z } from 'zod';
 
@@ -34,6 +35,8 @@ export const PATCH = withErrorHandler(async (
     request: NextRequest,
     context: RouteContext,
 ) => {
+    const rateLimited = await withRateLimit(request, 'strict-api');
+    if (rateLimited) return rateLimited;
     const { id } = await context.params;
     const user = await requireAuth();
     await requireWorkspaceRole(id, user.id, 'ADMIN', request);
@@ -47,6 +50,8 @@ export const DELETE = withErrorHandler(async (
     request: NextRequest,
     context: RouteContext,
 ) => {
+    const rateLimited = await withRateLimit(request, 'strict-api');
+    if (rateLimited) return rateLimited;
     const { id } = await context.params;
     const user = await requireAuth();
     await requireWorkspaceRole(id, user.id, 'OWNER', request);

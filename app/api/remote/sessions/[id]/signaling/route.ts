@@ -1,6 +1,7 @@
 import { apiSuccess } from '@/lib/api/response';
 import { NextRequest } from 'next/server';
 import { requireAuth, withErrorHandler, ApiError } from '@/lib/api/withAuth';
+import { withRateLimit } from '@/lib/security/rateLimit';
 import { RemoteSignalingService } from '@/lib/services/RemoteSignalingService';
 
 interface RouteContext {
@@ -38,6 +39,8 @@ export const GET = withErrorHandler(async (request: NextRequest, context: RouteC
 
 // PATCH /api/remote/sessions/[id]/signaling
 export const PATCH = withErrorHandler(async (request: NextRequest, context: RouteContext) => {
+    const rateLimited = await withRateLimit(request, 'strict-api');
+    if (rateLimited) return rateLimited;
     const { id } = await context.params;
     const body = await request.json();
     const { userId, agentToken } = await resolveSignalingCaller(request);

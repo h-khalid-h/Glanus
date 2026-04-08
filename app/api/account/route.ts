@@ -32,6 +32,8 @@ export const GET = withErrorHandler(async () => {
  * Update the current user's profile (name, email).
  */
 export const PATCH = withErrorHandler(async (request: NextRequest) => {
+    const rateLimited = await withRateLimit(request, 'strict-api');
+    if (rateLimited) return rateLimited;
     const user = await requireAuth();
     const data = updateProfileSchema.parse(await request.json());
     return runWithUserRLS(user, async () => {

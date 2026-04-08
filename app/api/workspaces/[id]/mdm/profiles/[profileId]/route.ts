@@ -1,6 +1,7 @@
 import { apiSuccess } from '@/lib/api/response';
 import { NextRequest } from 'next/server';
 import { requireAuth, requireWorkspaceRole, withErrorHandler, ApiError } from '@/lib/api/withAuth';
+import { withRateLimit } from '@/lib/security/rateLimit';
 import { MdmService } from '@/lib/services/MdmService';
 import { z } from 'zod';
 
@@ -28,6 +29,8 @@ export const GET = withErrorHandler(async (req: NextRequest, context: RouteConte
 
 // PUT /api/workspaces/[id]/mdm/profiles/[profileId]
 export const PUT = withErrorHandler(async (req: NextRequest, context: RouteContext) => {
+    const rateLimited = await withRateLimit(req, 'strict-api');
+    if (rateLimited) return rateLimited;
     const user = await requireAuth();
     const { id: workspaceId, profileId } = await context.params;
     await requireWorkspaceRole(workspaceId, user.id, 'ADMIN', req);
@@ -39,6 +42,8 @@ export const PUT = withErrorHandler(async (req: NextRequest, context: RouteConte
 
 // DELETE /api/workspaces/[id]/mdm/profiles/[profileId]
 export const DELETE = withErrorHandler(async (req: NextRequest, context: RouteContext) => {
+    const rateLimited = await withRateLimit(req, 'strict-api');
+    if (rateLimited) return rateLimited;
     const user = await requireAuth();
     const { id: workspaceId, profileId } = await context.params;
     await requireWorkspaceRole(workspaceId, user.id, 'ADMIN', req);

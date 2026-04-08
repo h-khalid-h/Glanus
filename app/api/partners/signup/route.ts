@@ -1,7 +1,8 @@
 import { apiSuccess, apiError } from '@/lib/api/response';
+import { NextRequest } from 'next/server';
 import { requireAuth, withErrorHandler, runWithUserRLS } from '@/lib/api/withAuth';
 import { z } from 'zod';
-import { checkRateLimit } from '@/lib/security/rateLimit';
+import { checkRateLimit, withRateLimit } from '@/lib/security/rateLimit';
 import { PartnerService } from '@/lib/services/PartnerService';
 
 const partnerSignupSchema = z.object({
@@ -23,7 +24,9 @@ const partnerSignupSchema = z.object({
 });
 
 // POST /api/partners/signup
-export const POST = withErrorHandler(async (request: Request) => {
+export const POST = withErrorHandler(async (request: NextRequest) => {
+    const rateLimited = await withRateLimit(request, 'strict-api');
+    if (rateLimited) return rateLimited;
     const user = await requireAuth();
 
     const clientIp = (request as unknown as { headers: { get: (h: string) => string | null } }).headers.get('x-forwarded-for') || 'unknown';

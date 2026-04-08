@@ -1,6 +1,7 @@
 import { apiSuccess } from '@/lib/api/response';
 import { NextRequest } from 'next/server';
 import { requireAuth, requireWorkspaceRole, withErrorHandler } from '@/lib/api/withAuth';
+import { withRateLimit } from '@/lib/security/rateLimit';
 import { WorkspaceWebhookService, WebhookInput } from '@/lib/services/WorkspaceWebhookService';
 import { z } from 'zod';
 
@@ -35,6 +36,8 @@ export const GET = withErrorHandler(async (_request: NextRequest, { params }: Ro
 
 // POST - Create or update webhook (ADMIN or higher)
 export const POST = withErrorHandler(async (request: NextRequest, { params }: RouteContext) => {
+    const rateLimited = await withRateLimit(request, 'strict-api');
+    if (rateLimited) return rateLimited;
     const { id: workspaceId } = await params;
     const user = await requireAuth();
     await requireWorkspaceRole(workspaceId, user.id, 'ADMIN');
@@ -44,7 +47,9 @@ export const POST = withErrorHandler(async (request: NextRequest, { params }: Ro
 });
 
 // DELETE - Delete webhook (ADMIN or higher)
-export const DELETE = withErrorHandler(async (_request: NextRequest, { params }: RouteContext) => {
+export const DELETE = withErrorHandler(async (request: NextRequest, { params }: RouteContext) => {
+    const rateLimited = await withRateLimit(request, 'strict-api');
+    if (rateLimited) return rateLimited;
     const { id: workspaceId } = await params;
     const user = await requireAuth();
     await requireWorkspaceRole(workspaceId, user.id, 'ADMIN');

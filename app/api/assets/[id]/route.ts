@@ -3,6 +3,7 @@ import { NextRequest } from 'next/server';
 import { requireAuth, withErrorHandler } from '@/lib/api/withAuth';
 import { AssetService } from '@/lib/services/AssetService';
 import { updateAssetSchema } from '@/lib/schemas/asset.schemas';
+import { withRateLimit } from '@/lib/security/rateLimit';
 
 // GET /api/assets/[id] - Get single asset
 export const GET = withErrorHandler(async (
@@ -20,6 +21,8 @@ export const PUT = withErrorHandler(async (
     request: NextRequest,
     context: { params: Promise<{ id: string }> },
 ) => {
+    const rateLimited = await withRateLimit(request, 'strict-api');
+    if (rateLimited) return rateLimited;
     const { id } = await context.params;
     const user = await requireAuth();
 
@@ -30,9 +33,11 @@ export const PUT = withErrorHandler(async (
 
 // DELETE /api/assets/[id] - Soft delete asset
 export const DELETE = withErrorHandler(async (
-    _request: NextRequest,
+    request: NextRequest,
     context: { params: Promise<{ id: string }> },
 ) => {
+    const rateLimited = await withRateLimit(request, 'strict-api');
+    if (rateLimited) return rateLimited;
     const { id } = await context.params;
     const user = await requireAuth();
     const asset = await AssetService.deleteAsset(id, user.id);

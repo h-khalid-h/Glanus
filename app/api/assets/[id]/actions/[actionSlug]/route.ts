@@ -4,6 +4,7 @@ import { ApiError } from '@/lib/errors';
 import { NextRequest } from 'next/server';
 import { AssetActionService } from '@/lib/services/AssetActionService';
 import { executeActionSchema } from '@/lib/schemas/dynamic-asset.schemas';
+import { withRateLimit } from '@/lib/security/rateLimit';
 import { prisma } from '@/lib/db';
 
 type RouteContext = { params: Promise<{ id: string; actionSlug: string }> };
@@ -38,6 +39,8 @@ export const GET = withErrorHandler(async (_request: NextRequest, { params }: Ro
  * Execute an action on an asset
  */
 export const POST = withErrorHandler(async (request: NextRequest, { params }: RouteContext) => {
+    const rateLimited = await withRateLimit(request, 'strict-api');
+    if (rateLimited) return rateLimited;
     const user = await requireAuth();
     const { id, actionSlug } = await params;
     await requireAssetAccess(id, user.id);

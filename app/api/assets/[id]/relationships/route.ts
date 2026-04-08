@@ -4,6 +4,7 @@ import { ApiError } from '@/lib/errors';
 import { NextRequest } from 'next/server';
 import { AssetRelationshipService } from '@/lib/services/AssetRelationshipService';
 import { createRelationshipSchema, relationshipQuerySchema } from '@/lib/schemas/dynamic-asset.schemas';
+import { withRateLimit } from '@/lib/security/rateLimit';
 import { prisma } from '@/lib/db';
 
 type RouteContext = { params: Promise<{ id: string }> };
@@ -47,6 +48,8 @@ export const GET = withErrorHandler(async (request: NextRequest, { params }: Rou
  * Create a new relationship
  */
 export const POST = withErrorHandler(async (request: NextRequest, { params }: RouteContext) => {
+    const rateLimited = await withRateLimit(request, 'strict-api');
+    if (rateLimited) return rateLimited;
     const user = await requireAuth();
     const { id } = await params;
     const body = await request.json();
