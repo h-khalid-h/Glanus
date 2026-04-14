@@ -94,6 +94,20 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
             setWorkspace(targetWorkspace);
             localStorage.setItem('currentWorkspaceId', id);
         }
+
+        // Embed the workspace claim into the JWT so that subsequent API
+        // requests to /api/workspaces/[id]/** can skip the DB membership
+        // lookup via the requireWorkspaceAccess() claim fast-path.
+        try {
+            await fetch('/api/auth/switch-workspace', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ workspaceId: id }),
+                credentials: 'include',
+            });
+        } catch {
+            // Non-fatal: the app works without the claim, just falls back to DB.
+        }
     }, [workspaces]);
 
     // Fetch workspaces on mount and when session changes

@@ -253,6 +253,7 @@ model Workspace {
   tickets            Ticket[] // Phase 34: Helpdesk & Support Ticketing
   payments           Payment[]      @relation("WorkspacePayments")
   billingEvents      BillingEvent[] @relation("WorkspaceBillingEvents")
+  assetUserAssignments AssetAssignment[]
 
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
@@ -400,6 +401,8 @@ model User {
   auditLogs        AuditLog[]
   aiInsights       AIInsight[]
   assetAssignments AssignmentHistory[]
+  assetUserAssignments  AssetAssignment[] @relation("UserAssetAssignments")
+  assignedByAssignments AssetAssignment[] @relation("AssignedByUser")
 
   // NEW: Dynamic system relations
   actionExecutions     AssetActionExecution[] @relation("UserActionExecutions")
@@ -455,7 +458,8 @@ model Asset {
   physicalAsset PhysicalAsset?
   digitalAsset  DigitalAsset?
 
-  assignmentHistory AssignmentHistory[]
+  assignmentHistory    AssignmentHistory[]
+  assetUserAssignments AssetAssignment[]    @relation("AssetUserAssignments")
   remoteSessions    RemoteSession[]
   auditLogs         AuditLog[]
   aiInsights        AIInsight[]
@@ -479,13 +483,13 @@ model Asset {
   deletedAt DateTime?
 
   @@unique([workspaceId, serialNumber])
+  @@index([workspaceId, name])
   @@index([status])
   @@index([assignedToId])
   @@index([assetType])
   @@index([deletedAt])
   @@index([categoryId])
   @@index([workspaceId])
-  @@index([workspaceId, name])
 }
 
 model PhysicalAsset {
@@ -575,6 +579,34 @@ model AssignmentHistory {
   @@index([assetId])
   @@index([userId])
   @@index([unassignedAt])
+}
+
+// ============================================================
+// ASSET USER ASSIGNMENTS — dedicated pivot with tenant isolation
+// ============================================================
+
+model AssetAssignment {
+  id           String    @id @default(cuid())
+  workspaceId  String
+  assetId      String
+  userId       String
+  startDate    DateTime
+  endDate      DateTime?
+  assignedById String?
+  notes        String?   @db.Text
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  workspace  Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  asset      Asset     @relation("AssetUserAssignments", fields: [assetId], references: [id], onDelete: Cascade)
+  user       User      @relation("UserAssetAssignments", fields: [userId], references: [id], onDelete: Cascade)
+  assignedBy User?     @relation("AssignedByUser", fields: [assignedById], references: [id], onDelete: SetNull)
+
+  @@index([workspaceId])
+  @@index([assetId])
+  @@index([userId])
+  @@index([workspaceId, assetId, endDate])
+  @@map("asset_user_assignments")
 }
 
 model RemoteSession {

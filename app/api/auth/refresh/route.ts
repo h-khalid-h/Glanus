@@ -29,7 +29,10 @@ export async function POST(request: NextRequest) {
     const refreshToken = request.cookies.get(REFRESH_COOKIE_NAME)?.value;
 
     if (!refreshToken) {
-        return NextResponse.json({ error: 'No refresh token' }, { status: 401 });
+        // No refresh cookie: the session was issued without a persistent refresh token
+        // (e.g. first login before DB migration, or vanilla NextAuth session).
+        // Return 204 so the client knows there is nothing to rotate and should NOT sign out.
+        return new NextResponse(null, { status: 204 });
     }
 
     const ipAddress =

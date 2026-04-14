@@ -68,12 +68,19 @@ export function useAuth() {
         isRefreshing.current = true;
         try {
             const res = await fetch('/api/auth/refresh', { method: 'POST', credentials: 'include' });
+
+            // 204 = no refresh cookie present (session exists but has no persistent refresh
+            // token — e.g. issued before the new auth system was deployed).
+            // This is NOT an error; just leave the NextAuth session as-is.
+            if (res.status === 204) return false;
+
             if (res.ok) {
-                // Tell NextAuth to re-read the cookie
                 await update();
                 return true;
             }
-            // Refresh failed — token expired or revoked
+
+            // Only sign the user out if the server explicitly rejected a real token
+            // (401 = expired/invalid, 403 = replay detected).
             if (res.status === 401 || res.status === 403) {
                 await nextAuthSignOut({ redirect: false });
                 router.push('/login?expired=true');
@@ -107,28 +114,39 @@ export function useAuth() {
         async (input: LoginInput): Promise<LoginResult> => {
             const csrfToken = await getCsrfToken();
 
-            const res = await fetch('/api/auth/login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    ...(csrfToken ? { 'x-csrf-token': csrfToken } : {}),
-                },
-                credentials: 'include',
-                body: JSON.stringify(input),
-            });
+            let res: Response;
+            try {
+                res = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...(csrfToken ? { 'x-csrf-token': csrfToken } : {}),
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify(input),
+                });
+            } catch {
+                return { ok: false, error: 'Network error. Please check your connection.' };
+            }
 
-            const data = await res.json();
+            // Parse body defensively — an empty/non-JSON body (e.g., 500 with no content)
+            // must not crash as a raw exception into the UI.
+            let data: { ok?: boolean; error?: string; user?: LoginResult['user'] } = {};
+            try {
+                data = await res.json() as typeof data;
+            } catch {
+                if (!res.ok) {
+                    return { ok: false, error: `Server error (${res.status}). Please try again.` };
+                }
+            }
 
             if (!res.ok) {
                 return { ok: false, error: data.error || 'Login failed' };
             }
 
-            // Tell NextAuth to pick up the new session cookie
-            await update();
-
             return { ok: true, user: data.user };
         },
-        [update]
+        []
     );
 
     // --- Logout ---

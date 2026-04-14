@@ -112,6 +112,18 @@ const loginSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
+    try {
+        return await handleLogin(request);
+    } catch (err) {
+        logWarn('[AUTH] Unhandled login error', { error: err instanceof Error ? err.message : String(err) });
+        return NextResponse.json(
+            { error: 'An unexpected error occurred. Please try again.' },
+            { status: 500 }
+        );
+    }
+}
+
+async function handleLogin(request: NextRequest): Promise<Response> {
     // Rate limit
     const rlResponse = await withRateLimit(request, 'api');
     if (rlResponse) return rlResponse;
@@ -175,11 +187,20 @@ export async function POST(request: NextRequest) {
     await logSuccessfulLogin(user.id, email, ipAddress, userAgent);
 
     // Create refresh token + session
-    const refreshResult = await createRefreshToken({
-        userId: user.id,
-        ipAddress,
-        userAgent,
-    });
+    // Wrap in try-catch so auth still succeeds even if the refresh-token tables
+    // haven't been migrated yet — the user gets a standard NextAuth session.
+    let refreshResult: Awaited<ReturnType<typeof createRefreshToken>> | null = null;
+    try {
+        refreshResult = await createRefreshToken({
+            userId: user.id,
+            ipAddress,
+            userAgent,
+        });
+    } catch (err) {
+        logWarn('[AUTH] Could not create refresh token (missing migration?)', {
+            error: err instanceof Error ? err.message : String(err),
+        });
+    }
 
     // Encode access token
     const accessJwt = await encodeAccessToken({
@@ -188,26 +209,30 @@ export async function POST(request: NextRequest) {
         name: user.name,
         role: user.role,
         isStaff: user.isStaff,
-        sid: refreshResult.sessionId,
+        sid: refreshResult?.sessionId,
     });
 
-    // Audit log
-    await prisma.auditLog.create({
-        data: {
-            action: 'USER_LOGIN',
-            resourceType: 'User',
-            resourceId: user.id,
-            userId: user.id,
-            ipAddress,
-            metadata: {
-                loginTime: new Date().toISOString(),
-                userAgent,
-                sessionId: refreshResult.sessionId,
+    // Audit log (non-fatal)
+    try {
+        await prisma.auditLog.create({
+            data: {
+                action: 'USER_LOGIN',
+                resourceType: 'User',
+                resourceId: user.id,
+                userId: user.id,
+                ipAddress,
+                metadata: {
+                    loginTime: new Date().toISOString(),
+                    userAgent,
+                    sessionId: refreshResult?.sessionId,
+                },
             },
-        },
-    });
+        });
+    } catch (err) {
+        logWarn('[AUTH] Audit log failed', { error: err instanceof Error ? err.message : String(err) });
+    }
 
-    logInfo(`[AUTH] User ${user.email} logged in (session: ${refreshResult.sessionId})`);
+    logInfo(`[AUTH] User ${user.email} logged in (session: ${refreshResult?.sessionId ?? 'none'})`);
 
     // Build response
     const response = NextResponse.json({
@@ -225,7 +250,9 @@ export async function POST(request: NextRequest) {
 
     // Set cookies
     response.cookies.set(getSessionCookieName(), accessJwt, getAccessCookieOptions());
-    response.cookies.set(REFRESH_COOKIE_NAME, refreshResult.plaintext, getRefreshCookieOptions());
+    if (refreshResult) {
+        response.cookies.set(REFRESH_COOKIE_NAME, refreshResult.plaintext, getRefreshCookieOptions());
+    }
 
     return response;
 }

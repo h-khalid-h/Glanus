@@ -92,7 +92,11 @@ export const assetQuerySchema = z.object({
  * Assign asset request schema
  */
 export const assignAssetSchema = z.object({
-    userId: z.string().uuid('Invalid user ID format'),
+    userId: z.string().min(1, 'User ID is required'),
+    startDate: z
+        .string()
+        .datetime({ message: 'startDate must be a valid ISO 8601 datetime' })
+        .optional(),
     notes: z.string().max(1000).optional(),
 });
 
@@ -100,21 +104,21 @@ export const assignAssetSchema = z.object({
  * Bulk operations schemas
  */
 export const bulkAssignSchema = z.object({
-    assetIds: z.array(z.string().uuid()).min(1, 'At least one asset ID is required'),
-    userId: z.string().uuid('Invalid user ID format'),
+    assetIds: z.array(z.string().min(1)).min(1, 'At least one asset ID is required'),
+    userId: z.string().min(1, 'User ID is required'),
 });
 
 export const bulkDeleteSchema = z.object({
-    assetIds: z.array(z.string().uuid()).min(1, 'At least one asset ID is required'),
+    assetIds: z.array(z.string().min(1)).min(1, 'At least one asset ID is required'),
 });
 
 export const bulkOpsSchema = z.object({
     operation: z.enum(['DELETE', 'UPDATE', 'ASSIGN'], { message: 'operation must be DELETE, UPDATE, or ASSIGN' }),
-    assetIds: z.array(z.string().uuid()).min(1, 'At least one asset ID is required'),
+    assetIds: z.array(z.string().min(1)).min(1, 'At least one asset ID is required'),
     data: z.object({
         status: z.enum(['AVAILABLE', 'ASSIGNED', 'MAINTENANCE', 'RETIRED', 'LOST']).optional(),
         location: z.string().max(255).optional(),
-        assigneeId: z.string().uuid().optional(),
+        assigneeId: z.string().min(1).optional(),
     }).optional(),
 });
 

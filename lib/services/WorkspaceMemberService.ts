@@ -14,6 +14,7 @@ import { logError } from '@/lib/logger';
 import { auditLog } from '@/lib/workspace/auditLog';
 import { sendEmail } from '@/lib/email/sendgrid';
 import { getRoleChangedEmailTemplate, getMemberRemovedEmailTemplate } from '@/lib/email/templates';
+import { revokeWorkspaceClaim } from '@/lib/auth/claim-revocation';
 
 export class WorkspaceMemberService {
     /**
@@ -103,6 +104,12 @@ export class WorkspaceMemberService {
             details: { oldRole, newRole },
         });
 
+        // Revoke the affected member's workspace claim so the next API request
+        // re-validates their role from the DB instead of the now-stale JWT claim.
+        revokeWorkspaceClaim(workspaceId, updated.user.id).catch(
+            (err: unknown) => logError('Failed to revoke workspace claim', err)
+        );
+
         return updated;
     }
 
@@ -145,5 +152,10 @@ export class WorkspaceMemberService {
             resourceId: memberId,
             details: { removedUser: memberToRemove.user.email },
         });
+
+        // Revoke the removed member's workspace claim immediately.
+        revokeWorkspaceClaim(workspaceId, memberToRemove.userId).catch(
+            (err: unknown) => logError('Failed to revoke workspace claim on removal', err)
+        );
     }
 }

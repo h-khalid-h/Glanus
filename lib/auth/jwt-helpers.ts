@@ -11,7 +11,7 @@
 
 import { encode, decode } from 'next-auth/jwt';
 
-const ACCESS_TOKEN_MAX_AGE = 15 * 60; // 15 minutes in seconds
+export const ACCESS_TOKEN_MAX_AGE = 15 * 60; // 15 minutes in seconds
 
 /** The cookie name NextAuth uses in production (secure prefix). */
 export function getSessionCookieName(): string {
@@ -31,6 +31,17 @@ export interface AccessTokenPayload {
     isStaff: boolean;
     /** The AuthSession ID — allows middleware to verify session validity. */
     sid?: string;
+    /**
+     * Active workspace ID embedded as a JWT claim.
+     * Set when the user switches workspace via /api/auth/switch-workspace.
+     * Allows requireWorkspaceAccess() to skip a DB round-trip on the hot path.
+     */
+    wid?: string;
+    /**
+     * Role in the active workspace (OWNER | ADMIN | MEMBER | VIEWER).
+     * Only valid together with wid.
+     */
+    wRole?: string;
 }
 
 /**
@@ -48,7 +59,9 @@ export async function encodeAccessToken(payload: AccessTokenPayload): Promise<st
             role: payload.role,
             isStaff: payload.isStaff,
             sid: payload.sid,
-            // NextAuth expects sub for internal tracking
+            // Workspace claims — absent on first login
+            ...(payload.wid && { wid: payload.wid }),
+            ...(payload.wRole && { wRole: payload.wRole }),
             sub: payload.id,
         },
         secret,
@@ -73,6 +86,8 @@ export async function decodeAccessToken(token: string): Promise<AccessTokenPaylo
             role: decoded.role as string,
             isStaff: decoded.isStaff as boolean,
             sid: decoded.sid as string | undefined,
+            wid: decoded.wid as string | undefined,
+            wRole: decoded.wRole as string | undefined,
         };
     } catch {
         return null;

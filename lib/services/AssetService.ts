@@ -115,6 +115,12 @@ export class AssetService {
                 if (existing) throw new ApiError(409, 'An asset with this serial number already exists in this workspace');
             }
 
+            const duplicateName = await tx.asset.findFirst({
+                where: { name: data.name, workspaceId, deletedAt: null },
+                select: { id: true },
+            });
+            if (duplicateName) throw new ApiError(409, 'An asset with this name already exists in this workspace');
+
             const selectedCategory = await tx.assetCategory.findUnique({
                 where: { id: data.categoryId },
                 include: { fieldDefinitions: true }
@@ -376,6 +382,19 @@ export class AssetService {
             if (duplicate) {
                 throw new ApiError(409, 'An asset with this serial number already exists');
             }
+        }
+
+        if (data.name && data.name !== existingAsset?.name) {
+            const duplicateName = await tx.asset.findFirst({
+                where: {
+                    name: data.name,
+                    workspaceId: existingAsset.workspaceId,
+                    deletedAt: null,
+                    id: { not: assetId },
+                },
+                select: { id: true },
+            });
+            if (duplicateName) throw new ApiError(409, 'An asset with this name already exists in this workspace');
         }
 
         if (data.customFields && existingAsset.category) {

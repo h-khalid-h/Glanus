@@ -1,12 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/use-auth';
 
 export default function LoginPage() {
-    const router = useRouter();
     const { login } = useAuth();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -25,12 +23,11 @@ export default function LoginPage() {
             if (!result.ok) {
                 setError(result.error || 'Invalid credentials');
             } else {
-                if (result.user?.isStaff) {
-                    router.push('/super-admin');
-                } else {
-                    router.push('/dashboard');
-                }
-                router.refresh();
+                // Hard navigation ensures the page fully reloads, letting the
+                // SessionProvider re-initialise from the new session cookie.
+                window.location.assign(
+                    result.user?.isStaff ? '/super-admin' : '/dashboard'
+                );
             }
         } catch (error: unknown) {
             setError(error instanceof Error ? error.message : 'An error occurred. Please try again.');

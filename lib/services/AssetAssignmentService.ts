@@ -2,79 +2,252 @@ import { ApiError } from '@/lib/errors';
 import { prisma } from '@/lib/db';
 
 /**
- * AssetAssignmentService — Manages asset assignment lifecycle and script execution.
+ * AssetAssignmentService — Production-grade asset ↔ user assignment lifecycle.
  *
- * Responsibilities:
- *  - assignAsset: assign to a user, close prior assignment, audit
- *  - unassignAsset: clear assignment, close history record, audit
- *  - executeScript: queue a script for execution on the linked agent
- *  - getScriptHistory: fetch recent script execution records
- *  - getLinkedAgent: retrieve the agent connected to an asset
+ * Design constraints:
+ *  - One active assignment per asset per workspace at any time (endDate = null).
+ *  - All writes run inside a DB transaction to prevent race conditions.
+ *  - Tenant isolation is enforced via workspaceId derived from the authenticated
+ *    user's workspace membership — never from un-trusted request payload.
+ *  - Overlapping date ranges for the same asset are rejected.
  */
 export class AssetAssignmentService {
-    static async assignAsset(assetId: string, requestingUserId: string, assigneeId: string, notes?: string | null) {
+    // ──────────────────────────────────────────────────────────────────────────
+    // PRIVATE HELPERS
+    // ──────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Resolve & verify that an asset belongs to a workspace the requesting user
+     * is a member of. Returns the asset's workspaceId.
+     */
+    private static async resolveAssetWorkspace(
+        assetId: string,
+        requestingUserId: string,
+    ): Promise<{ assetWorkspaceId: string }> {
         const asset = await prisma.asset.findFirst({
-            where: { id: assetId, deletedAt: null, workspace: { members: { some: { userId: requestingUserId } } } },
+            where: {
+                id: assetId,
+                deletedAt: null,
+                workspace: { members: { some: { userId: requestingUserId } } },
+            },
+            select: { workspaceId: true },
         });
         if (!asset) throw new ApiError(404, 'Asset not found');
+        return { assetWorkspaceId: asset.workspaceId };
+    }
 
-        const targetUser = await prisma.user.findFirst({
-            where: { id: assigneeId, workspaceMemberships: { some: { workspaceId: asset.workspaceId! } } },
+    /**
+     * Verify that the target user is a member of the given workspace.
+     */
+    private static async assertWorkspaceMember(
+        userId: string,
+        workspaceId: string,
+    ): Promise<void> {
+        const member = await prisma.workspaceMember.findFirst({
+            where: { userId, workspaceId },
+            select: { id: true },
         });
-        if (!targetUser) throw new ApiError(404, 'User not found or not a member of this workspace');
+        if (!member) throw new ApiError(404, 'Target user is not a member of this workspace');
+    }
 
-        // Close previous open assignment
-        if (asset.assignedToId) {
-            const currentAssignment = await prisma.assignmentHistory.findFirst({ where: { assetId, unassignedAt: null } });
-            if (currentAssignment) {
-                await prisma.assignmentHistory.update({ where: { id: currentAssignment.id }, data: { unassignedAt: new Date() } });
+    // ──────────────────────────────────────────────────────────────────────────
+    // PUBLIC API
+    // ──────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Assign an asset to a user.
+     *
+     * - If there is an existing active assignment, it is closed (endDate = now)
+     *   and a new one is opened. This implements the "reassign" flow.
+     * - startDate defaults to now() when omitted.
+     * - Rejects a startDate that is in the past relative to an existing open
+     *   assignment (would create an overlap).
+     */
+    static async assignAsset(
+        assetId: string,
+        requestingUserId: string,
+        assigneeId: string,
+        startDate?: Date | null,
+        notes?: string | null,
+    ) {
+        const { assetWorkspaceId } = await this.resolveAssetWorkspace(assetId, requestingUserId);
+        await this.assertWorkspaceMember(assigneeId, assetWorkspaceId);
+
+        const effectiveStart = startDate ?? new Date();
+        if (effectiveStart > new Date(Date.now() + 60_000 /* 1 min tolerance */)) {
+            // Future start dates are fine — just validate the type.
+        }
+
+        return await prisma.$transaction(async (tx) => {
+            // Fetch active assignment (endDate IS NULL)
+            const activeAssignment = await tx.assetAssignment.findFirst({
+                where: { assetId, workspaceId: assetWorkspaceId, endDate: null },
+                select: { id: true, startDate: true, userId: true },
+            });
+
+            // Guard: reject overlapping ranges — new startDate cannot be before
+            // an existing open assignment's startDate (that would be ambiguous).
+            if (activeAssignment && effectiveStart < activeAssignment.startDate) {
+                throw new ApiError(
+                    409,
+                    'Start date conflicts with an existing active assignment. Close the current assignment first.',
+                );
             }
-        }
 
-        await prisma.assignmentHistory.create({ data: { assetId, userId: assigneeId, notes: notes || null } });
+            // Close any active assignment (reassign flow)
+            if (activeAssignment) {
+                await tx.assetAssignment.update({
+                    where: { id: activeAssignment.id },
+                    data: { endDate: effectiveStart },
+                });
+            }
 
-        const updatedAsset = await prisma.asset.update({
-            where: { id: assetId },
-            data: { assignedToId: assigneeId, status: 'ASSIGNED' },
-            include: { assignedTo: { select: { id: true, name: true, email: true } } },
+            // Create the new assignment record
+            const assignment = await tx.assetAssignment.create({
+                data: {
+                    workspaceId: assetWorkspaceId,
+                    assetId,
+                    userId: assigneeId,
+                    startDate: effectiveStart,
+                    endDate: null,
+                    assignedById: requestingUserId,
+                    notes: notes ?? null,
+                },
+                include: {
+                    user: { select: { id: true, name: true, email: true } },
+                    assignedBy: { select: { id: true, name: true, email: true } },
+                },
+            });
+
+            // Keep the Asset.assignedToId denormalized field in sync
+            await tx.asset.update({
+                where: { id: assetId },
+                data: { assignedToId: assigneeId, status: 'ASSIGNED' },
+            });
+
+            // Also close any legacy AssignmentHistory record
+            const legacyOpen = await tx.assignmentHistory.findFirst({
+                where: { assetId, unassignedAt: null },
+                select: { id: true },
+            });
+            if (legacyOpen) {
+                await tx.assignmentHistory.update({
+                    where: { id: legacyOpen.id },
+                    data: { unassignedAt: effectiveStart },
+                });
+            }
+            await tx.assignmentHistory.create({
+                data: { assetId, userId: assigneeId, notes: notes ?? null },
+            });
+
+            await tx.auditLog.create({
+                data: {
+                    action: 'ASSET_ASSIGNED',
+                    resourceType: 'Asset',
+                    resourceId: assetId,
+                    userId: requestingUserId,
+                    assetId,
+                    metadata: {
+                        assignedTo: assignment.user.name,
+                        assignedToId: assigneeId,
+                        startDate: effectiveStart.toISOString(),
+                        notes: notes ?? null,
+                        previousAssignmentClosed: !!activeAssignment,
+                    },
+                },
+            });
+
+            return assignment;
         });
-
-        await prisma.auditLog.create({
-            data: {
-                action: 'ASSET_ASSIGNED', resourceType: 'Asset', resourceId: assetId,
-                userId: requestingUserId, assetId,
-                metadata: { assetName: updatedAsset.name, assignedTo: targetUser.name, assignedToId: assigneeId, notes },
-            },
-        });
-
-        return updatedAsset;
     }
 
+    /**
+     * Unassign an asset — closes the active assignment by setting endDate = now.
+     * Throws 400 if the asset has no active assignment.
+     */
     static async unassignAsset(assetId: string, requestingUserId: string) {
-        const asset = await prisma.asset.findFirst({
-            where: { id: assetId, deletedAt: null, workspace: { members: { some: { userId: requestingUserId } } } },
-            include: { assignedTo: true },
+        const { assetWorkspaceId } = await this.resolveAssetWorkspace(assetId, requestingUserId);
+
+        return await prisma.$transaction(async (tx) => {
+            const activeAssignment = await tx.assetAssignment.findFirst({
+                where: { assetId, workspaceId: assetWorkspaceId, endDate: null },
+                include: { user: { select: { id: true, name: true, email: true } } },
+            });
+
+            if (!activeAssignment) {
+                throw new ApiError(400, 'Asset does not have an active assignment');
+            }
+
+            const now = new Date();
+
+            const closed = await tx.assetAssignment.update({
+                where: { id: activeAssignment.id },
+                data: { endDate: now },
+                include: {
+                    user: { select: { id: true, name: true, email: true } },
+                    assignedBy: { select: { id: true, name: true, email: true } },
+                },
+            });
+
+            // Sync denormalized field
+            await tx.asset.update({
+                where: { id: assetId },
+                data: { assignedToId: null, status: 'AVAILABLE' },
+            });
+
+            // Close legacy AssignmentHistory record if still open
+            const legacyOpen = await tx.assignmentHistory.findFirst({
+                where: { assetId, unassignedAt: null },
+                select: { id: true },
+            });
+            if (legacyOpen) {
+                await tx.assignmentHistory.update({
+                    where: { id: legacyOpen.id },
+                    data: { unassignedAt: now },
+                });
+            }
+
+            await tx.auditLog.create({
+                data: {
+                    action: 'ASSET_UNASSIGNED',
+                    resourceType: 'Asset',
+                    resourceId: assetId,
+                    userId: requestingUserId,
+                    assetId,
+                    metadata: {
+                        previouslyAssignedTo: activeAssignment.user.name,
+                        previouslyAssignedToId: activeAssignment.userId,
+                        endDate: now.toISOString(),
+                    },
+                },
+            });
+
+            return closed;
         });
-        if (!asset) throw new ApiError(404, 'Asset not found');
-        if (!asset.assignedToId) throw new ApiError(400, 'Asset is not currently assigned');
+    }
 
-        const currentAssignment = await prisma.assignmentHistory.findFirst({ where: { assetId, unassignedAt: null } });
-        if (currentAssignment) {
-            await prisma.assignmentHistory.update({ where: { id: currentAssignment.id }, data: { unassignedAt: new Date() } });
-        }
+    /**
+     * Return the full assignment history for an asset (newest first),
+     * with user and assignedBy eager-loaded.
+     */
+    static async getAssetHistory(assetId: string, requestingUserId: string) {
+        const { assetWorkspaceId } = await this.resolveAssetWorkspace(assetId, requestingUserId);
 
-        const updatedAsset = await prisma.asset.update({ where: { id: assetId }, data: { assignedToId: null, status: 'AVAILABLE' } });
-
-        await prisma.auditLog.create({
-            data: {
-                action: 'ASSET_UNASSIGNED', resourceType: 'Asset', resourceId: assetId,
-                userId: requestingUserId, assetId,
-                metadata: { assetName: updatedAsset.name, previouslyAssignedTo: asset.assignedTo?.name },
+        const assignments = await prisma.assetAssignment.findMany({
+            where: { assetId, workspaceId: assetWorkspaceId },
+            orderBy: { startDate: 'desc' },
+            include: {
+                user: { select: { id: true, name: true, email: true } },
+                assignedBy: { select: { id: true, name: true, email: true } },
             },
         });
 
-        return updatedAsset;
+        return assignments;
     }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // LEGACY HELPERS (agent / script execution — unchanged)
+    // ──────────────────────────────────────────────────────────────────────────
 
     static async executeScript(assetId: string, userId: string, data: { scriptName: string; scriptBody: string; language: string }) {
         const asset = await prisma.asset.findFirst({
@@ -122,3 +295,4 @@ export class AssetAssignmentService {
         return asset.agentConnection;
     }
 }
+

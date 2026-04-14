@@ -7,10 +7,11 @@ import Link from 'next/link';
 import { PageSpinner } from '@/components/ui/Spinner';
 import { ErrorState } from '@/components/ui/EmptyState';
 import { formatDateTime } from '@/lib/utils';
-import { ArrowLeft, Edit, Trash2, Clock, CheckCircle, XCircle, Monitor, Wrench, Calendar, User, History, Ticket, AlertTriangle, Wifi, Terminal } from 'lucide-react';
+import { ArrowLeft, Edit, Trash2, Clock, CheckCircle, XCircle, Monitor, Wrench, Calendar, User, History, Ticket, AlertTriangle, Wifi, Terminal, UserPlus, UserMinus, RefreshCw } from 'lucide-react';
 import { useToast } from '@/lib/toast';
 import { ConfirmDialog } from '@/components/ui';
 import { useWorkspace } from '@/lib/workspace/context';
+import { AssetAssignDialog } from '@/components/assets/AssetAssignDialog';
 
 interface AssetFieldValue {
     id: string;
@@ -31,6 +32,15 @@ interface AssetAction {
     handlerType: string;
     requiresConfirmation: boolean;
     confirmationMessage: string;
+}
+
+interface AssetAssignmentRecord {
+    id: string;
+    startDate: string;
+    endDate?: string | null;
+    notes?: string | null;
+    user: { id: string; name: string; email: string };
+    assignedBy?: { id: string; name: string; email: string } | null;
 }
 
 interface AssetDetail {
@@ -86,6 +96,11 @@ export default function AssetDetailPage({ params }: { params: Promise<{ id: stri
     const [connectingRemote, setConnectingRemote] = useState(false);
     const { workspace: currentWorkspace } = useWorkspace();
 
+    // Assignment UI state
+    const [showAssignDialog, setShowAssignDialog] = useState(false);
+    const [assignments, setAssignments] = useState<AssetAssignmentRecord[]>([]);
+    const [unassigning, setUnassigning] = useState(false);
+
     // Maintenance windows for this asset
     const [maintenanceWindows, setMaintenanceWindows] = useState<Array<{
         id: string; title: string; type: string; status: string;
@@ -98,6 +113,7 @@ export default function AssetDetailPage({ params }: { params: Promise<{ id: stri
             setAssetId(resolvedParams.id);
             await fetchAsset(resolvedParams.id);
             await fetchActions(resolvedParams.id);
+            await fetchAssignments(resolvedParams.id);
         };
         init();
     }, [params]);
@@ -123,6 +139,49 @@ export default function AssetDetailPage({ params }: { params: Promise<{ id: stri
         } finally {
             setLoading(false);
         }
+    };
+
+    const fetchAssignments = async (id: string) => {
+        try {
+            const res = await csrfFetch(`/api/assets/${id}/assignments`);
+            if (!res.ok) return;
+            const data = await res.json();
+            setAssignments(Array.isArray(data.data) ? data.data : []);
+        } catch {
+            // non-critical — silently ignore
+        }
+    };
+
+    const handleAssignSuccess = async () => {
+        setShowAssignDialog(false);
+        if (!assetId) return;
+        await Promise.all([fetchAsset(assetId), fetchAssignments(assetId)]);
+        toastSuccess('Assignment Updated', 'Asset has been successfully assigned.');
+    };
+
+    const handleUnassign = () => {
+        setConfirmDialog({
+            open: true,
+            title: 'Unassign Asset',
+            message: `Remove the current assignment from "${asset?.name}"? This will close the active assignment record.`,
+            onConfirm: async () => {
+                setConfirmDialog(prev => ({ ...prev, open: false }));
+                setUnassigning(true);
+                try {
+                    const res = await csrfFetch(`/api/assets/${assetId}/unassign`, { method: 'POST' });
+                    if (!res.ok) {
+                        const d = await res.json();
+                        throw new Error(d.error?.message ?? d.error ?? 'Unassign failed');
+                    }
+                    if (assetId) await Promise.all([fetchAsset(assetId), fetchAssignments(assetId)]);
+                    toastSuccess('Unassigned', 'Asset is now unassigned.');
+                } catch (err: unknown) {
+                    toastError('Error', err instanceof Error ? err.message : 'An unexpected error occurred');
+                } finally {
+                    setUnassigning(false);
+                }
+            },
+        });
     };
 
     const fetchActions = async (id: string) => {
@@ -484,35 +543,89 @@ export default function AssetDetailPage({ params }: { params: Promise<{ id: stri
                                 <User size={14} className="text-primary" />
                                 Assignments &amp; History
                             </h2>
+                            <div className="flex items-center gap-1.5">
+                                {asset.assignedTo ? (
+                                    <>
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowAssignDialog(true)}
+                                            className="btn-outline inline-flex items-center gap-1 h-7 text-xs px-2.5"
+                                        >
+                                            <RefreshCw size={11} />
+                                            Reassign
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={handleUnassign}
+                                            disabled={unassigning}
+                                            className="btn-danger inline-flex items-center gap-1 h-7 text-xs px-2.5 disabled:opacity-50"
+                                        >
+                                            <UserMinus size={11} />
+                                            {unassigning ? 'Removing…' : 'Unassign'}
+                                        </button>
+                                    </>
+                                ) : (
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowAssignDialog(true)}
+                                        className="btn-primary inline-flex items-center gap-1 h-7 text-xs px-2.5"
+                                    >
+                                        <UserPlus size={11} />
+                                        Assign
+                                    </button>
+                                )}
+                            </div>
                         </div>
-                        {asset.assignedTo && (
-                            <div className="mb-4 p-3 bg-surface-2 border border-border rounded-lg">
-                                <h3 className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide mb-1">Current Assignee</h3>
-                                <div className="flex items-center justify-between">
-                                    <span className="text-sm font-medium text-foreground">{asset.assignedTo.name} ({asset.assignedTo.email})</span>
-                                    <span className={`badge px-2 py-0.5 text-[10px] rounded-md bg-primary/10 text-primary`}>{asset.assignedTo.role}</span>
+
+                        {/* Current assignee card */}
+                        {asset.assignedTo ? (
+                            <div className="mb-4 p-3 bg-primary/5 border border-primary/20 rounded-lg flex items-center gap-3">
+                                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary text-sm font-semibold">
+                                    {asset.assignedTo.name?.charAt(0).toUpperCase()}
                                 </div>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-medium text-foreground">{asset.assignedTo.name}</p>
+                                    <p className="text-xs text-muted-foreground">{asset.assignedTo.email}</p>
+                                </div>
+                                <span className="badge px-2 py-0.5 text-[10px] rounded-md bg-primary/10 text-primary shrink-0">Active</span>
+                            </div>
+                        ) : (
+                            <div className="mb-4 flex items-center gap-2 text-sm text-muted-foreground/70 py-1">
+                                <User size={14} />
+                                Not currently assigned
                             </div>
                         )}
-                        {!asset.assignmentHistory || asset.assignmentHistory.length === 0 ? (
-                            <p className="text-sm text-muted-foreground/70">No assignment history found</p>
+
+                        {/* Pivot assignment history */}
+                        {assignments.length === 0 ? (
+                            <p className="text-sm text-muted-foreground/60 text-center py-2">No assignment history</p>
                         ) : (
-                            <div className="space-y-3 relative before:absolute before:inset-0 before:ml-2 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-border/60 before:to-transparent">
-                                {asset.assignmentHistory.map((history) => (
-                                    <div key={history.id} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
-                                        <div className="flex items-center justify-center w-4 h-4 rounded-full border-2 border-surface-bg bg-primary/20 shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 shadow" />
-                                        <div className="w-[calc(100%-2rem)] md:w-[calc(50%-1.5rem)] p-3 rounded-lg border border-border bg-surface-2">
-                                            <div className="flex items-center justify-between mb-1">
-                                                <span className="font-medium text-foreground text-xs">{history.user.name}</span>
-                                                <span className="text-[10px] text-muted-foreground">{new Date(history.assignedAt).toLocaleDateString()}</span>
+                            <div className="space-y-2">
+                                {assignments.map((a) => {
+                                    const isActive = !a.endDate;
+                                    return (
+                                        <div key={a.id} className={`flex gap-3 items-start p-3 rounded-lg border ${isActive ? 'border-primary/20 bg-primary/5' : 'border-border bg-surface-2'}`}>
+                                            <div className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${isActive ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
+                                                {a.user.name?.charAt(0).toUpperCase()}
                                             </div>
-                                            <span className="text-[10px] text-muted-foreground block">
-                                                {history.unassignedAt ? `Unassigned: ${new Date(history.unassignedAt).toLocaleDateString()}` : 'Currently Assigned'}
-                                            </span>
-                                            {history.notes && <p className="mt-1.5 text-xs text-muted-foreground italic">{history.notes}</p>}
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex items-center justify-between gap-2">
+                                                    <span className="text-sm font-medium text-foreground truncate">{a.user.name}</span>
+                                                    <span className={`text-[10px] px-1.5 py-0.5 rounded-md shrink-0 ${isActive ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>
+                                                        {isActive ? 'Active' : 'Closed'}
+                                                    </span>
+                                                </div>
+                                                <p className="text-[11px] text-muted-foreground mt-0.5">{a.user.email}</p>
+                                                <div className="flex items-center gap-3 mt-1.5 text-[11px] text-muted-foreground">
+                                                    <span >From {new Date(a.startDate).toLocaleDateString()}</span>
+                                                    {a.endDate && <span>→ {new Date(a.endDate).toLocaleDateString()}</span>}
+                                                    {a.assignedBy && <span>by {a.assignedBy.name}</span>}
+                                                </div>
+                                                {a.notes && <p className="mt-1.5 text-xs text-muted-foreground italic">&quot;{a.notes}&quot;</p>}
+                                            </div>
                                         </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         )}
                     </div>
@@ -687,6 +800,17 @@ export default function AssetDetailPage({ params }: { params: Promise<{ id: stri
                     </div>
                 </div>
             </div>
+
+            {/* Assign / Reassign Dialog */}
+            {showAssignDialog && currentWorkspace?.id && (
+                <AssetAssignDialog
+                    assetId={asset.id}
+                    workspaceId={currentWorkspace.id}
+                    currentAssigneeId={asset.assignedTo?.id ?? null}
+                    onClose={() => setShowAssignDialog(false)}
+                    onSuccess={handleAssignSuccess}
+                />
+            )}
 
             {/* Execution Result Dialog */}
             {showExecutionDialog && executionResult && (

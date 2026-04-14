@@ -13,6 +13,7 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { apiError } from '@/lib/api/response';
 import { logError } from '@/lib/logger';
+import { isWorkspaceClaimRevoked } from '@/lib/auth/claim-revocation';
 import { ValidationError } from '@/lib/validation';
 import type { WorkspaceRole } from '@prisma/client';
 import { Prisma } from '@prisma/client';
@@ -25,6 +26,25 @@ import { authCache, workspaceCache } from '@/lib/cache';
 // Import ApiError from canonical errors module for internal use, and re-export for routes
 import { ApiError } from '@/lib/errors';
 export { ApiError } from '@/lib/errors';
+
+// ── Slim select used by the claim fast-path (no members/ztnaPolicies join) ──
+const slimWorkspaceSelect = {
+    id: true,
+    ownerId: true,
+    name: true,
+    slug: true,
+    description: true,
+    logo: true,
+    primaryColor: true,
+    accentColor: true,
+    settings: true,
+    deletedAt: true,
+    createdAt: true,
+    updatedAt: true,
+    subscription: true,
+} satisfies Prisma.WorkspaceSelect;
+
+type SlimWorkspace = Prisma.WorkspaceGetPayload<{ select: typeof slimWorkspaceSelect }>;
 
 
 // ============================================
@@ -60,15 +80,86 @@ export async function requireAuth() {
 }
 
 /**
+ * Claims carried by the JWT when the user has switched to a workspace.
+ * Passed in by route handlers to enable the DB-free fast path.
+ */
+export interface WorkspaceClaims {
+    /** The workspace ID embedded in the JWT via /api/auth/switch-workspace. */
+    wid?: string;
+    /** The user's role in that workspace at the time of the last token refresh. */
+    wRole?: string;
+}
+
+/** Roles recognised as valid claim values. */
+const VALID_ROLES = new Set<WorkspaceRole>(['OWNER', 'ADMIN', 'MEMBER', 'VIEWER']);
+
+/**
  * Verify that a user has access to a workspace.
  * Returns the workspace, membership, and effective role.
  * Throws ApiError(403) if no access.
+ *
+ * Fast path: when `claims.wid === workspaceId` and no ZTNA check is needed
+ * (no `request` arg), the members JOIN is skipped entirely and the role is
+ * read directly from the JWT claim.  The workspace row (without members) is
+ * fetched with a 60 s cache — so a typical request hits zero DB rows.
+ *
+ * Fallback: any request that includes `request` (ZTNA policy evaluation)
+ * always goes to the full DB query to enforce IP white-lists.
  */
 export async function requireWorkspaceAccess(
     workspaceId: string,
     userId: string,
-    request?: NextRequest
+    request?: NextRequest,
+    claims?: WorkspaceClaims
 ) {
+    // ── JWT Claim fast-path ──────────────────────────────────────────────────
+    // Conditions: claim present, matches this workspace, no ZTNA eval needed.
+    const claimRole = claims?.wRole as WorkspaceRole | undefined;
+    let canUseClaim =
+        !request &&
+        claims?.wid === workspaceId &&
+        !!claimRole &&
+        VALID_ROLES.has(claimRole);
+
+    if (canUseClaim) {
+        // Reject if an admin explicitly revoked this claim (e.g., role change / removal).
+        // isWorkspaceClaimRevoked() returns true (conservative) when Redis is unreachable,
+        // so we always fall back to DB in that case.
+        if (await isWorkspaceClaimRevoked(workspaceId, userId)) {
+            canUseClaim = false;
+        }
+    }
+
+    if (canUseClaim) {
+        // Workspace metadata is still needed by some callers (name, slug, etc.).
+        // Fetch *without* the members join and cache aggressively — workspace
+        // rows are read-heavy and rarely mutated.
+        const slimCacheKey = `ws-slim:${workspaceId}`;
+        let workspace = workspaceCache.get<SlimWorkspace>(slimCacheKey);
+
+        if (!workspace) {
+            const fetched = await prisma.workspace.findUnique({
+                where: { id: workspaceId },
+                select: slimWorkspaceSelect,
+            });
+
+            if (!fetched) throw new ApiError(404, 'Workspace not found');
+            if (fetched.deletedAt) throw new ApiError(404, 'Workspace not found');
+
+            workspaceCache.set(slimCacheKey, fetched, 60_000); // 60 s
+            workspace = fetched;
+        }
+
+        return {
+            workspace: workspace!,
+            // membership is not queried on the claim path; role is sufficient for all
+            // downstream RBAC checks (requireWorkspaceRole/hasMinimumRole).
+            membership: null as unknown,
+            role: claimRole as WorkspaceRole,
+        };
+    }
+
+    // ── Full DB path (membership verification + optional ZTNA) ───────────────
     const cacheKey = `ws:${workspaceId}:${userId}`;
     const cachedAccess = workspaceCache.get<{
         workspace: NonNullable<Awaited<ReturnType<typeof prisma.workspace.findUnique>>>;
@@ -151,9 +242,10 @@ export async function requireWorkspaceRole(
     workspaceId: string,
     userId: string,
     minRole: WorkspaceRole,
-    request?: NextRequest
+    request?: NextRequest,
+    claims?: WorkspaceClaims
 ) {
-    const access = await requireWorkspaceAccess(workspaceId, userId, request);
+    const access = await requireWorkspaceAccess(workspaceId, userId, request, claims);
 
     if (!hasMinimumRole(access.role, minRole)) {
         throw new ApiError(403, `Requires ${minRole} role or higher`);
