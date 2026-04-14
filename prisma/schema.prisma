@@ -375,6 +375,10 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // Email verification
+  emailVerified   Boolean   @default(false)
+  emailVerifiedAt DateTime?
+
   // Onboarding tracking (Week 2)
   onboardingCompleted Boolean @default(false)
 
@@ -382,6 +386,11 @@ model User {
   ownedWorkspaces      Workspace[]           @relation("WorkspaceOwner")
   workspaceMemberships WorkspaceMember[]
   sentInvitations      WorkspaceInvitation[] @relation("SentInvitations")
+
+  // Auth: refresh tokens & sessions
+  refreshTokens      RefreshToken[]
+  authSessions       AuthSession[]
+  emailVerifications EmailVerification[]
 
   // Partner Profile (Glanus 2.0 Phase 2)
   partnerProfile Partner? @relation("PartnerProfile")
@@ -1914,4 +1923,87 @@ model TicketMessage {
 
   @@index([ticketId])
   @@index([senderId])
+}
+
+// ============================================
+// AUTH: REFRESH TOKENS & SESSION MANAGEMENT
+// ============================================
+
+/// Hashed refresh tokens with rotation and family tracking.
+/// When a token is reused (replay attack), the entire family is invalidated.
+model RefreshToken {
+  id String @id @default(cuid())
+
+  // Token is stored as SHA-256 hash (never plaintext)
+  tokenHash String @unique
+
+  // Family tracking for rotation detection
+  // All tokens in the same family share this ID; if a revoked token
+  // is presented, every token in that family is wiped (compromise detection).
+  family String
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Associated session (1:1 at any point in time; rotations update the session)
+  sessionId String?
+  session   AuthSession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+
+  // Lifecycle
+  expiresAt DateTime
+  revokedAt DateTime? // Soft-revoke; keeps audit trail
+  createdAt DateTime  @default(now())
+
+  // Device context captured at issuance
+  ipAddress String?
+  userAgent String? @db.Text
+
+  @@index([userId])
+  @@index([family])
+  @@index([expiresAt])
+}
+
+/// Tracks active login sessions per user/device.
+/// Users can view and revoke individual sessions.
+model AuthSession {
+  id String @id @default(cuid())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Device / browser fingerprint
+  ipAddress  String?
+  userAgent  String?  @db.Text
+  deviceName String?  // Derived from user agent (e.g. "Chrome on macOS")
+  country    String?  // GeoIP-derived (best effort)
+
+  // Activity tracking
+  lastActiveAt DateTime @default(now())
+  createdAt    DateTime @default(now())
+  expiresAt    DateTime // Hard expiry aligned with refresh token family
+
+  // Revocation
+  revokedAt DateTime?
+
+  // Reverse relation
+  refreshTokens RefreshToken[]
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+/// Email verification tokens (one active per user).
+model EmailVerification {
+  id String @id @default(cuid())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  tokenHash String   @unique // SHA-256 of the plaintext token
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
 }

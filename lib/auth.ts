@@ -225,7 +225,6 @@ export const authOptions: NextAuthOptions = {
                     name: user.name,
                     role: user.role,
                     isStaff: user.isStaff,
-                    isStaff: user.isStaff,
                 };
             },
         }),
@@ -234,15 +233,13 @@ export const authOptions: NextAuthOptions = {
         async jwt({ token, user }) {
             if (user) {
                 token.id = user.id;
+                token.role = user.role;
                 token.isStaff = user.isStaff;
             }
             return token;
         },
         async session({ session, token }) {
             if (session.user) {
-                session.user.id = token.id as string;
-                session.user.role = token.role as string;
-                session.user.isStaff = token.isStaff as boolean
                 session.user.id = token.id as string;
                 session.user.role = token.role as string;
                 session.user.isStaff = token.isStaff as boolean;
@@ -287,7 +284,7 @@ export const authOptions: NextAuthOptions = {
     },
     session: {
         strategy: 'jwt',
-        maxAge: Math.max(1, Math.min(8760, parseInt(process.env.SESSION_TIMEOUT_HOURS || '24') || 24)) * 60 * 60, // 1h–8760h (1yr), default 24h
+        maxAge: 15 * 60, // 15 minutes — short-lived access token; refresh via /api/auth/refresh
     },
     secret: process.env.NEXTAUTH_SECRET,
 };

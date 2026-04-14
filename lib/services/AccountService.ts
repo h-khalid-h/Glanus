@@ -5,6 +5,7 @@ import { verifyResetToken, generateResetToken } from '@/lib/auth/password-reset'
 import { logInfo } from '@/lib/logger';
 import { sendEmail } from '@/lib/email/sendgrid';
 import { getPasswordResetEmailTemplate } from '@/lib/email/templates';
+import { invalidateAllUserTokens } from '@/lib/auth/tokens';
 
 /**
  * AccountService — Domain layer for user account self-management.
@@ -76,6 +77,9 @@ export class AccountService {
             where: { id: result.userId },
             data: { password: hashedPassword },
         });
+
+        // Invalidate all existing sessions (force re-login everywhere)
+        await invalidateAllUserTokens(result.userId);
 
         logInfo(`[AUTH] Password reset completed for user ${user.email}`);
         return { reset: true };
@@ -154,6 +158,9 @@ export class AccountService {
 
         const hashedPassword = await bcrypt.hash(newPassword, 12);
         await prisma.user.update({ where: { id: userId }, data: { password: hashedPassword } });
+
+        // Invalidate all existing refresh tokens & sessions (force re-login)
+        await invalidateAllUserTokens(userId);
 
         return { changed: true };
     }

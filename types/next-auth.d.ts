@@ -22,9 +22,8 @@ declare module 'next-auth/jwt' {
     interface JWT {
         id: string;
         role: string;
-        isStaff: boolean
-        id: string;
-        role: string;
         isStaff: boolean;
+        /** AuthSession ID for server-side session revocation checks. */
+        sid?: string;
     }
 }

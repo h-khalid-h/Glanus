@@ -3,6 +3,7 @@ import { apiSuccess } from '@/lib/api/response';
 import { withErrorHandler } from '@/lib/api/withAuth';
 import { withRateLimit } from '@/lib/security/rateLimit';
 import { AccountService } from '@/lib/services/AccountService';
+import { sendVerificationEmail } from '@/lib/auth/email-verification';
 import { z } from 'zod';
 
 const signupSchema = z.object({
@@ -27,5 +28,11 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     const { name, email, password } = parsed;
 
     const user = await AccountService.register(name, email, password);
-    return apiSuccess({ user, message: 'Account created successfully' }, undefined, 201);
+
+    // Send email verification (non-blocking — don't fail signup if email fails)
+    sendVerificationEmail(user.id, email).catch(() => {
+        // Silently fail; user can request resend later
+    });
+
+    return apiSuccess({ user, message: 'Account created. Please check your email to verify your address.' }, undefined, 201);
 });

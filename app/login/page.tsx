@@ -1,12 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { signIn, getSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useAuth } from '@/hooks/use-auth';
 
 export default function LoginPage() {
     const router = useRouter();
+    const { login } = useAuth();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
@@ -19,18 +20,12 @@ export default function LoginPage() {
         setIsLoading(true);
 
         try {
-            const result = await signIn('credentials', {
-                email,
-                password,
-                redirect: false,
-            });
+            const result = await login({ email, password });
 
-            if (result?.error) {
-                setError(result.error);
+            if (!result.ok) {
+                setError(result.error || 'Invalid credentials');
             } else {
-                // Fetch fresh session to check isStaff flag
-                const session = await getSession();
-                if (session?.user?.isStaff) {
+                if (result.user?.isStaff) {
                     router.push('/super-admin');
                 } else {
                     router.push('/dashboard');

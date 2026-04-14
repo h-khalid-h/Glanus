@@ -1,20 +1,25 @@
 'use client';
 
-import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
+import { useAuth } from '@/hooks/use-auth';
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
-    const { data: session, status } = useSession();
+    const { session, status, isLoading, refresh } = useAuth();
     const router = useRouter();
 
     useEffect(() => {
         if (status === 'unauthenticated') {
-            router.push('/login');
+            // Attempt one silent refresh before redirecting to login
+            refresh().then((ok) => {
+                if (!ok) {
+                    router.push('/login');
+                }
+            });
         }
-    }, [status, router]);
+    }, [status, router, refresh]);
 
-    if (status === 'loading') {
+    if (isLoading) {
         return (
             <div className="flex min-h-screen items-center justify-center bg-background">
                 <div className="text-center">
