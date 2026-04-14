@@ -131,7 +131,7 @@ export function useAuth() {
 
             // Parse body defensively — an empty/non-JSON body (e.g., 500 with no content)
             // must not crash as a raw exception into the UI.
-            let data: { ok?: boolean; error?: string; user?: LoginResult['user'] } = {};
+            let data: { ok?: boolean; error?: string | { code?: number; message?: string; retryAfter?: number }; user?: LoginResult['user'] } = {};
             try {
                 data = await res.json() as typeof data;
             } catch {
@@ -141,7 +141,10 @@ export function useAuth() {
             }
 
             if (!res.ok) {
-                return { ok: false, error: data.error || 'Login failed' };
+                const errMsg = typeof data.error === 'string'
+                    ? data.error
+                    : (data.error as { message?: string } | undefined)?.message || 'Login failed';
+                return { ok: false, error: errMsg };
             }
 
             return { ok: true, user: data.user };
