@@ -224,6 +224,8 @@ export const authOptions: NextAuthOptions = {
                     email: user.email,
                     name: user.name,
                     role: user.role,
+                    isStaff: user.isStaff,
+                    isStaff: user.isStaff,
                 };
             },
         }),
@@ -232,7 +234,7 @@ export const authOptions: NextAuthOptions = {
         async jwt({ token, user }) {
             if (user) {
                 token.id = user.id;
-                token.role = user.role;
+                token.isStaff = user.isStaff;
             }
             return token;
         },
@@ -240,6 +242,10 @@ export const authOptions: NextAuthOptions = {
             if (session.user) {
                 session.user.id = token.id as string;
                 session.user.role = token.role as string;
+                session.user.isStaff = token.isStaff as boolean
+                session.user.id = token.id as string;
+                session.user.role = token.role as string;
+                session.user.isStaff = token.isStaff as boolean;
             }
             return session;
         },

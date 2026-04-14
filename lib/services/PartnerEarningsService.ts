@@ -42,7 +42,7 @@ export class PartnerEarningsService {
             orderBy: { assignedAt: 'desc' },
         });
 
-        const planPrices: Record<string, number> = { FREE: 0, PERSONAL: 19, TEAM: 49, ENTERPRISE: 99 };
+        const planPrices: Record<string, number> = { FREE: 0, PERSONAL: 9, TEAM: 29, ENTERPRISE: 99 };
         const activeAssignments = assignments.filter(a => a.status === 'ACCEPTED' || a.status === 'ACTIVE');
 
         let currentMonthEstimate = 0;

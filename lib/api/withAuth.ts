@@ -193,6 +193,20 @@ export async function requireAdmin() {
     return user;
 }
 
+/**
+ * Require the user to be a system admin or IT staff.
+ * Throws ApiError(403) if not authorized.
+ */
+export async function requireStaff() {
+    const user = await requireAuth();
+
+    if (user.role !== 'ADMIN' && user.role !== 'IT_STAFF' && !user.isStaff) {
+        throw new ApiError(403, 'Staff access required');
+    }
+
+    return user;
+}
+
 // ============================================
 // RLS Context Helpers
 // ============================================
@@ -215,7 +229,7 @@ export function runWithWorkspaceRLS<T>(
     fn: () => Promise<T>
 ): Promise<T> {
     return withRLSContext(
-        { workspaceId, userId: user.id, isAdmin: user.role === 'ADMIN' },
+        { workspaceId, userId: user.id, isAdmin: user.role === 'ADMIN' || user.role === 'IT_STAFF' },
         fn
     );
 }
@@ -225,11 +239,11 @@ export function runWithWorkspaceRLS<T>(
  * Useful for account-level endpoints like /api/account/profile.
  */
 export function runWithUserRLS<T>(
-    user: { id: string; role: string },
+    user: { id: string; role: string; isStaff?: boolean },
     fn: () => Promise<T>
 ): Promise<T> {
     return withRLSContext(
-        { workspaceId: null, userId: user.id, isAdmin: user.role === 'ADMIN' },
+        { workspaceId: null, userId: user.id, isAdmin: user.role === 'ADMIN' || user.role === 'IT_STAFF' || !!user.isStaff },
         fn
     );
 }
@@ -271,7 +285,7 @@ export function withWorkspaceHandler<TParams extends { params: Promise<{ id: str
             request
         );
         return withRLSContext(
-            { workspaceId: workspace.id, userId: user.id, isAdmin: user.role === 'ADMIN' },
+            { workspaceId: workspace.id, userId: user.id, isAdmin: user.role === 'ADMIN' || user.role === 'IT_STAFF' },
             () => handler(request, routeCtx, { user, workspace, membership, role })
         );
     });

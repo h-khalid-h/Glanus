@@ -56,6 +56,7 @@ const PUBLIC_API_PATHS = [
     '/api/install-windows',
     '/api/install-macos',
     '/api/downloads/',     // Agent binary downloads (prefix match)
+    '/api/plans',          // Plan configs (public pricing info)
 ];
 
 // Static/SEO files served by Next.js (not static assets)
@@ -149,6 +150,34 @@ export async function middleware(request: NextRequest) {
             const loginUrl = new URL('/login', request.url);
             loginUrl.searchParams.set('callbackUrl', pathname);
             return NextResponse.redirect(loginUrl);
+        }
+
+        // 1b. Staff-only route enforcement
+        const isStaff = token.isStaff === true;
+        const isStaffRoute = pathname.startsWith('/super-admin') || pathname.startsWith('/api/admin');
+        const isAccountRoute = pathname.startsWith('/account') || pathname.startsWith('/api/account');
+        const isApiAuth = pathname.startsWith('/api/auth');
+
+        if (isStaff && !isStaffRoute && !isAccountRoute && !isApiAuth && !pathname.startsWith('/api/plans') && !pathname.startsWith('/api/csrf')) {
+            // Staff users can only access super-admin, account, and auth routes
+            if (pathname.startsWith('/api/')) {
+                return NextResponse.json(
+                    { error: 'Staff users can only access admin routes' },
+                    { status: 403, headers: { 'X-Request-Id': requestId } }
+                );
+            }
+            return NextResponse.redirect(new URL('/super-admin', request.url));
+        }
+
+        if (!isStaff && isStaffRoute) {
+            // Non-staff users cannot access super-admin routes
+            if (pathname.startsWith('/api/admin')) {
+                return NextResponse.json(
+                    { error: 'Admin access required' },
+                    { status: 403, headers: { 'X-Request-Id': requestId } }
+                );
+            }
+            return NextResponse.redirect(new URL('/dashboard', request.url));
         }
     }
 

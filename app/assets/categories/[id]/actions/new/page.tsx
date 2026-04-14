@@ -56,7 +56,7 @@ export default function NewActionPage({ params }: { params: Promise<{ id: string
                 throw new Error(data.error || 'Failed to create action');
             }
 
-            router.push(`/workspaces/manage/categories/${categoryId}/actions`);
+            router.push(`/assets/categories/${categoryId}/actions`);
         } catch (err: unknown) {
             setError(err instanceof Error ? err.message : 'An unexpected error occurred');
         } finally {
@@ -71,7 +71,7 @@ export default function NewActionPage({ params }: { params: Promise<{ id: string
         <div className="max-w-2xl mx-auto animate-fade-in">
             <div className="mb-5">
                 <Link
-                    href={`/workspaces/manage/categories/${categoryId}/actions`}
+                    href={`/assets/categories/${categoryId}/actions`}
                     className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-2"
                 >
                     <ArrowLeft size={14} />
@@ -145,7 +145,7 @@ export default function NewActionPage({ params }: { params: Promise<{ id: string
                 </div>
 
                 <div className="flex items-center justify-end gap-2.5 pt-1">
-                    <Link href={`/workspaces/manage/categories/${categoryId}/actions`} className="btn-secondary h-9 text-sm px-4">Cancel</Link>
+                    <Link href={`/assets/categories/${categoryId}/actions`} className="btn-secondary h-9 text-sm px-4">Cancel</Link>
                     <button type="submit" disabled={loading} className="btn-primary h-9 text-sm px-4 inline-flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
                         {loading ? <><div className="animate-spin rounded-full h-3.5 w-3.5 border-2 border-primary-foreground border-t-transparent" /> Creating…</> : 'Create Action'}
                     </button>

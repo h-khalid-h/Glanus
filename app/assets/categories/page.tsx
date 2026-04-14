@@ -99,7 +99,7 @@ export default function CategoriesPage() {
                     <p className="text-sm text-muted-foreground mt-0.5">Manage asset categories, fields, and actions</p>
                 </div>
                 <Link
-                    href="/workspaces/manage/categories/new"
+                    href="/assets/categories/new"
                     className="btn-primary h-9 text-sm px-3 inline-flex items-center gap-1.5"
                 >
                     <Plus size={14} />
@@ -108,7 +108,7 @@ export default function CategoriesPage() {
             </div>
 
             {categories.length === 0 ? (
-                <NoData resource="Categories" createHref="/workspaces/manage/categories/new" />
+                <NoData resource="Categories" createHref="/assets/categories/new" />
             ) : (
                 <div className="detail-panel p-0 overflow-hidden animate-fade-in">
                     <div className="overflow-x-auto">
@@ -159,16 +159,12 @@ export default function CategoriesPage() {
                                         <td className="px-5 py-3.5 text-right">
                                             <div className="flex items-center justify-end gap-1.5">
                                                 <Link
-                                                    href={`/workspaces/manage/categories/${category.id}/fields`}
-                                                    className="px-2.5 py-1 text-xs font-medium text-primary bg-primary/[0.06] hover:bg-primary/[0.12] rounded transition-colors"
-                                                >Fields</Link>
-                                                <Link
-                                                    href={`/workspaces/manage/categories/${category.id}/actions`}
+                                                    href={`/assets/categories/${category.id}/actions`}
                                                     className="px-2.5 py-1 text-xs font-medium text-primary bg-primary/[0.06] hover:bg-primary/[0.12] rounded transition-colors"
                                                 >Actions</Link>
                                                 <div className="w-px h-4 bg-border mx-0.5"></div>
                                                 <Link
-                                                    href={`/workspaces/manage/categories/${category.id}/edit`}
+                                                    href={`/assets/categories/${category.id}/edit`}
                                                     className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-surface-2 rounded transition-colors"
                                                     aria-label={`Edit ${category.name}`}
                                                 ><Edit2 size={14} /></Link>

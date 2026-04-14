@@ -11,7 +11,7 @@ import { ConfirmDialog } from '@/components/ui';
 import { useWorkspace } from '@/lib/workspace/context';
 import { PageSpinner } from '@/components/ui/Spinner';
 import { ErrorState } from '@/components/ui/EmptyState';
-import { Search, Upload, Plus, Trash2, ChevronLeft, ChevronRight, X, MapPin, UserCircle, CheckSquare } from 'lucide-react';
+import { Search, Upload, Plus, Trash2, ChevronLeft, ChevronRight, X, MapPin, UserCircle, CheckSquare, ExternalLink } from 'lucide-react';
 
 interface AssetCategory {
     id: string;
@@ -375,6 +375,9 @@ export default function AssetsPage() {
                         onChange={handleImportCSV}
                         className="hidden"
                     />
+                    <Link href="/assets/categories" className="inline-flex items-center gap-1.5 bg-surface-container-high hover:bg-surface-container-highest text-on-surface transition-colors font-medium rounded-full px-5 py-2 text-sm border border-slate-700/50">
+                        <ExternalLink className="h-3.5 w-3.5" /> Manage Categories
+                    </Link>
                     <button
                         type="button"
                         onClick={() => fileInputRef.current?.click()}

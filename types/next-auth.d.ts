@@ -4,6 +4,7 @@ declare module 'next-auth' {
     interface User {
         id: string;
         role: string;
+        isStaff: boolean;
     }
 
     interface Session {
@@ -12,6 +13,7 @@ declare module 'next-auth' {
             email: string;
             name?: string | null;
             role: string;
+            isStaff: boolean;
         };
     }
 }
@@ -20,5 +22,9 @@ declare module 'next-auth/jwt' {
     interface JWT {
         id: string;
         role: string;
+        isStaff: boolean
+        id: string;
+        role: string;
+        isStaff: boolean;
     }
 }

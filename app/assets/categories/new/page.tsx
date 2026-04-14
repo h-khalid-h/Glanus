@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useState, use } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { ArrowLeft, Box, LayoutGrid, Settings, Info } from 'lucide-react';
@@ -21,7 +21,6 @@ const categorySchema = z.object({
     parentId: z.string().optional(),
     isActive: z.boolean().default(true),
     allowsChildren: z.boolean().default(true),
-    sortOrder: z.number().int().min(0).default(0),
 });
 
 type CategoryFormData = z.input<typeof categorySchema>;
@@ -32,22 +31,19 @@ interface Category {
     allowsChildren: boolean;
 }
 
-export default function EditCategoryPage({ params }: { params: Promise<{ id: string }> }) {
+export default function NewCategoryPage() {
     const router = useRouter();
     const { workspace } = useWorkspace();
-    const resolvedParams = use(params);
-    const categoryId = resolvedParams.id;
-    
     const [loading, setLoading] = useState(false);
-    const [fetchingData, setFetchingData] = useState(true);
+    const [fetchingCats, setFetchingCats] = useState(true);
     const [categories, setCategories] = useState<Category[]>([]);
     const [error, setError] = useState<string | null>(null);
     const { success, error: showError } = useToast();
 
     const {
         register,
+        control,
         handleSubmit,
-        reset,
         formState: { errors, isDirty },
     } = useForm<CategoryFormData>({
         resolver: zodResolver(categorySchema),
@@ -56,81 +52,54 @@ export default function EditCategoryPage({ params }: { params: Promise<{ id: str
             isActive: true,
             allowsChildren: true,
             parentId: '',
-            sortOrder: 0,
         },
     });
 
     useEffect(() => {
-        const init = async () => {
+        const fetchCategories = async () => {
             if (!workspace?.id) return;
             try {
-                // Fetch existing category data AND possible parents in parallel
-                const [itemRes, catsRes] = await Promise.all([
-                    fetchWithCSRF(`/api/admin/asset-categories/${categoryId}?workspaceId=${workspace.id}`),
-                    fetchWithCSRF(`/api/admin/asset-categories?workspaceId=${workspace.id}`)
-                ]);
-
-                if (!itemRes.ok) throw new Error('Failed to fetch category');
-                
-                const itemJson = await itemRes.json();
-                const itemData = itemJson.data || itemJson;
-                
-                reset({
-                    name: itemData.name,
-                    description: itemData.description || '',
-                    icon: itemData.icon || '',
-                    assetTypeValue: itemData.assetTypeValue,
-                    parentId: itemData.parentId || '',
-                    allowsChildren: itemData.allowsChildren,
-                    isActive: itemData.isActive,
-                    sortOrder: itemData.sortOrder,
-                });
-
-                if (catsRes.ok) {
-                    const catsJson = await catsRes.json();
-                    const list = catsJson.data?.categories || catsJson.categories || [];
-                    // Exclude self from potential parents to prevent recursive loops
-                    setCategories(list.filter((c: Category) => c.id !== categoryId));
+                const res = await fetchWithCSRF(`/api/admin/asset-categories?workspaceId=${workspace.id}`);
+                if (res.ok) {
+                    const json = await res.json();
+                    setCategories(json.data?.categories || json.categories || []);
                 }
             } catch (err) {
-                console.error('Failed to fetch data:', err);
-                setError(err instanceof Error ? err.message : 'Something went wrong');
+                console.error('Failed to fetch categories:', err);
             } finally {
-                setFetchingData(false);
+                setFetchingCats(false);
             }
         };
-
-        if (categoryId && workspace?.id) {
-            init();
-        }
-    }, [categoryId, workspace?.id, reset]);
+        fetchCategories();
+    }, [workspace?.id]);
 
     const onSubmit = async (data: CategoryFormData) => {
         try {
             if (!workspace?.id) return;
             setLoading(true);
 
+            // Clean up empty string to undefined so Zod doesn't fail CUID validation
             const payload = {
                 ...data,
                 parentId: data.parentId === '' ? undefined : data.parentId,
                 workspaceId: workspace.id,
             };
 
-            const response = await fetchWithCSRF(`/api/admin/asset-categories/${categoryId}`, {
-                method: 'PUT',
+            const response = await fetchWithCSRF(`/api/admin/asset-categories?workspaceId=${workspace.id}`, {
+                method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
             });
 
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData.error || 'Failed to update category');
+                throw new Error(errorData.error || 'Failed to create category');
             }
 
-            success(`Category "${data.name}" updated successfully`);
-            router.push('/workspaces/manage/categories');
+            success(`Category "${data.name}" created successfully`);
+            router.push('/assets/categories');
         } catch (err: unknown) {
-            showError('Failed to update category', err instanceof Error ? err.message : 'An unexpected error occurred');
+            showError('Failed to create category', err instanceof Error ? err.message : 'An unexpected error occurred');
             setError(err instanceof Error ? err.message : 'Something went wrong');
         } finally {
             setLoading(false);
@@ -139,25 +108,25 @@ export default function EditCategoryPage({ params }: { params: Promise<{ id: str
 
     if (error) return <ErrorState title="Something went wrong" description={error} onRetry={() => window.location.reload()} />;
 
-
-
     return (
         <div className="max-w-3xl mx-auto animate-fade-in">
+            {/* Header Section */}
             <div className="mb-6">
                 <Link
-                    href="/workspaces/manage/categories"
+                    href="/assets/categories"
                     className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-3"
                 >
                     <ArrowLeft size={14} />
                     Categories
                 </Link>
-                <h1 className="text-xl font-semibold text-foreground">Edit Category</h1>
-                <p className="text-sm text-muted-foreground mt-0.5">Modify the classification settings for this tracking group.</p>
+                <h1 className="text-xl font-semibold text-foreground">Create Category</h1>
+                <p className="text-sm text-muted-foreground mt-0.5">Define a new classification for your dynamic assets.</p>
             </div>
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
                 <CSRFToken />
 
+                {/* Section 1: Basic Information */}
                 <div className="detail-panel">
                     <div className="flex items-center gap-2.5 mb-4 pb-3 border-b border-border/60">
                         <div className="h-7 w-7 flex items-center justify-center bg-primary/10 text-primary rounded-lg border border-primary/20">
@@ -167,6 +136,7 @@ export default function EditCategoryPage({ params }: { params: Promise<{ id: str
                     </div>
 
                     <div className="space-y-4">
+                        {/* Name Field */}
                         <div>
                             <label htmlFor="name" className="block text-sm font-medium text-foreground mb-1.5">
                                 Category Name <span className="text-destructive">*</span>
@@ -178,10 +148,15 @@ export default function EditCategoryPage({ params }: { params: Promise<{ id: str
                                 className="input w-full"
                                 placeholder="e.g., Network Switches"
                             />
-                            {errors.name && <p className="mt-1.5 text-xs text-destructive flex items-center gap-1"><Info size={12} /> {errors.name.message}</p>}
+                            {errors.name && (
+                                <p className="mt-1.5 text-xs text-destructive flex items-center gap-1">
+                                    <Info size={12} /> {errors.name.message}
+                                </p>
+                            )}
                         </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            {/* Icon Field */}
                             <div>
                                 <label htmlFor="icon" className="block text-sm font-medium text-foreground mb-1.5">Icon</label>
                                 <div className="relative">
@@ -200,19 +175,9 @@ export default function EditCategoryPage({ params }: { params: Promise<{ id: str
                                 <p className="mt-1 text-xs text-muted-foreground">Pick a recognizable emoji.</p>
                                 {errors.icon && <p className="mt-1 text-xs text-destructive flex items-center gap-1"><Info size={12} /> {errors.icon.message}</p>}
                             </div>
-                            <div>
-                                <label htmlFor="sortOrder" className="block text-sm font-medium text-foreground mb-1.5">Sort Order</label>
-                                <input
-                                    {...register('sortOrder', { valueAsNumber: true })}
-                                    type="number"
-                                    id="sortOrder"
-                                    min="0"
-                                    className="input w-full"
-                                />
-                                <p className="mt-1 text-xs text-muted-foreground">Order in sidebar dropdowns.</p>
-                            </div>
                         </div>
 
+                        {/* Description Field */}
                         <div>
                             <label htmlFor="description" className="block text-sm font-medium text-foreground mb-1.5">
                                 Description <span className="text-xs text-muted-foreground font-normal">(Optional)</span>
@@ -229,6 +194,7 @@ export default function EditCategoryPage({ params }: { params: Promise<{ id: str
                     </div>
                 </div>
 
+                {/* Section 2: Configuration */}
                 <div className="detail-panel">
                     <div className="flex items-center gap-2.5 mb-4 pb-3 border-b border-border/60">
                         <div className="h-7 w-7 flex items-center justify-center bg-cortex/10 text-cortex rounded-lg border border-cortex/20">
@@ -238,6 +204,7 @@ export default function EditCategoryPage({ params }: { params: Promise<{ id: str
                     </div>
 
                     <div className="space-y-4">
+                        {/* Asset Type Select */}
                         <div>
                             <label htmlFor="assetTypeValue" className="block text-sm font-medium text-foreground mb-1.5">Asset Class</label>
                             <select
@@ -252,13 +219,14 @@ export default function EditCategoryPage({ params }: { params: Promise<{ id: str
                             {errors.assetTypeValue && <p className="mt-1 text-xs text-destructive flex items-center gap-1"><Info size={12} /> {errors.assetTypeValue.message}</p>}
                         </div>
 
+                        {/* Hierarchy Select */}
                         <div className="pt-3 border-t border-border/60">
                             <label htmlFor="parentId" className="block text-sm font-medium text-foreground mb-1.5">Category Level</label>
                             <select
                                 {...register('parentId')}
                                 id="parentId"
                                 className="input w-full disabled:opacity-50"
-                                disabled={fetchingData}
+                                disabled={fetchingCats}
                             >
                                 <option value="">Top-Level Category</option>
                                 {categories.filter(c => c.allowsChildren).map(cat => (
@@ -268,6 +236,7 @@ export default function EditCategoryPage({ params }: { params: Promise<{ id: str
                             <p className="mt-1 text-xs text-muted-foreground">Select a parent to make this a nested subcategory.</p>
                         </div>
 
+                        {/* Toggles */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3 border-t border-border/60">
                             <div className="flex items-center justify-between p-3.5 bg-surface-1/50 border border-border rounded-lg">
                                 <div>
@@ -293,6 +262,7 @@ export default function EditCategoryPage({ params }: { params: Promise<{ id: str
                     </div>
                 </div>
 
+                {/* Sticky Action Footer */}
                 <div className="flex items-center justify-between pt-2 border-t border-border/60">
                     <p className="text-xs text-muted-foreground">
                         {isDirty ? (
@@ -300,17 +270,17 @@ export default function EditCategoryPage({ params }: { params: Promise<{ id: str
                                 <span className="w-1.5 h-1.5 rounded-full bg-oracle animate-pulse" />
                                 Unsaved changes
                             </span>
-                        ) : 'No changes'}
+                        ) : 'Ready to create'}
                     </p>
                     <div className="flex gap-2.5">
-                        <Link href="/workspaces/manage/categories" className="btn-secondary h-9 text-sm px-4">Cancel</Link>
+                        <Link href="/assets/categories" className="btn-secondary h-9 text-sm px-4">Cancel</Link>
                         <button
                             type="submit"
                             disabled={loading || !isDirty}
                             className="btn-primary h-9 text-sm px-4 inline-flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {loading && <ButtonSpinner />}
-                            {loading ? 'Saving…' : 'Save Changes'}
+                            {loading ? 'Creating…' : 'Create Category'}
                         </button>
                     </div>
                 </div>

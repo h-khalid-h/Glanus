@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, ExternalLink } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { csrfFetch } from '@/lib/api/csrfFetch';
 import { useToast } from '@/lib/toast';
 import { useWorkspace } from '@/lib/workspace/context';
@@ -39,6 +39,7 @@ export default function DynamicAssetCreatePage() {
     const [submitting, setSubmitting] = useState(false);
     const [categories, setCategories] = useState<AssetCategory[]>([]);
     const [selectedParentCategory, setSelectedParentCategory] = useState<AssetCategory | null>(null);
+    const [selectedChildCategory, setSelectedChildCategory] = useState<AssetCategory | null>(null);
     const [selectedCategory, setSelectedCategory] = useState<AssetCategory | null>(null);
 
     // Form State
@@ -50,6 +51,7 @@ export default function DynamicAssetCreatePage() {
     // Reset category selections whenever asset type changes
     useEffect(() => {
         setSelectedParentCategory(null);
+        setSelectedChildCategory(null);
         setSelectedCategory(null);
         setCustomFields({});
     }, [assetType]);
@@ -80,7 +82,8 @@ export default function DynamicAssetCreatePage() {
         setSelectedCategory(category);
         const initialCustom: Record<string, any> = {};
         if (category) {
-            (category.fieldDefinitions || []).forEach(def => {
+            // Collect fields from the full category chain (parent → child)
+            getAllFieldDefinitions(category).forEach(def => {
                 initialCustom[def.name] = def.defaultValue || '';
                 if (def.fieldType === 'BOOLEAN') initialCustom[def.name] = def.defaultValue === 'true';
             });
@@ -88,23 +91,47 @@ export default function DynamicAssetCreatePage() {
         setCustomFields(initialCustom);
     };
 
+    // Build grouped field definitions: parent fields + selected category fields
+    const getGroupedFields = (category: AssetCategory): { categoryName: string; icon: string; fields: FieldDefinition[] }[] => {
+        const groups: { categoryName: string; icon: string; fields: FieldDefinition[] }[] = [];
+        // If this is a child, include parent fields first
+        if (category.parentId) {
+            const parent = categories.find(c => c.id === category.parentId);
+            if (parent && (parent.fieldDefinitions || []).length > 0) {
+                groups.push({ categoryName: parent.name, icon: parent.icon, fields: parent.fieldDefinitions });
+            }
+        }
+        // Add this category's own fields
+        if ((category.fieldDefinitions || []).length > 0) {
+            groups.push({ categoryName: category.name, icon: category.icon, fields: category.fieldDefinitions });
+        }
+        // If this is a parent, include active children's fields
+        if (!category.parentId) {
+            categories
+                .filter(c => c.parentId === category.id && c.isActive && (c.fieldDefinitions || []).length > 0)
+                .forEach(child => {
+                    groups.push({ categoryName: child.name, icon: child.icon, fields: child.fieldDefinitions });
+                });
+        }
+        return groups;
+    };
+
+    // Flat list of all field definitions for form state initialization
+    const getAllFieldDefinitions = (category: AssetCategory): FieldDefinition[] => {
+        return getGroupedFields(category).flatMap(g => g.fields);
+    };
+
     const handleParentCategorySelect = (categoryId: string) => {
         const parent = categories.find(c => c.id === categoryId) || null;
         setSelectedParentCategory(parent);
-        // If this parent has no active children, treat it as the final selection
-        const children = parent
-            ? categories.filter(c => c.parentId === parent.id && c.isActive)
-            : [];
-        if (!parent || children.length === 0) {
-            applyCategory(parent);
-        } else {
-            setSelectedCategory(null);
-            setCustomFields({});
-        }
+        setSelectedChildCategory(null);
+        // Always apply the parent so Custom Matrix Data shows immediately
+        applyCategory(parent);
     };
 
     const handleChildCategorySelect = (categoryId: string) => {
         const child = categories.find(c => c.id === categoryId) || null;
+        setSelectedChildCategory(child);
         applyCategory(child);
     };
 
@@ -194,9 +221,6 @@ export default function DynamicAssetCreatePage() {
                     <h1 className="text-2xl font-semibold tracking-tight text-on-surface">Provision New Asset</h1>
                     <p className="text-sm text-slate-400 mt-1">Register and configure a tracked resource within this environment.</p>
                 </div>
-                <Link href="/workspaces/manage/categories" className="btn-secondary h-9 text-sm px-4 inline-flex items-center gap-1.5 border-none bg-surface-container-high hover:bg-surface-container-highest transition-colors">
-                    <ExternalLink size={14} /> Manage Categories
-                </Link>
             </div>
 
             <div className="grid grid-cols-1 gap-6">
@@ -307,7 +331,7 @@ export default function DynamicAssetCreatePage() {
                                                     <select
                                                         required
                                                         className={inputClasses}
-                                                        value={selectedCategory?.id || ''}
+                                                        value={selectedChildCategory?.id || ''}
                                                         onChange={e => handleChildCategorySelect(e.target.value)}
                                                     >
                                                         <option value="" disabled>Select sub-category…</option>
@@ -428,7 +452,10 @@ export default function DynamicAssetCreatePage() {
                     )}
 
                     {/* Step 2: Dynamic Fields UI */}
-                    {selectedCategory && (
+                    {selectedCategory && (() => {
+                        const grouped = getGroupedFields(selectedCategory);
+                        const totalFields = grouped.reduce((sum, g) => sum + g.fields.length, 0);
+                        return (
                         <div className={`${panelClasses} relative overflow-hidden animate-slide-up`}>
                              <div className="flex items-center justify-between mb-6 border-b border-slate-800/60 pb-3">
                                 <div className="flex items-center gap-2">
@@ -440,60 +467,74 @@ export default function DynamicAssetCreatePage() {
                                 </span>
                             </div>
 
-                            {(selectedCategory.fieldDefinitions || []).length === 0 ? (
+                            {totalFields === 0 ? (
                                 <div className="flex flex-col items-center justify-center py-10 bg-surface-container-low/30 rounded-xl border border-dashed border-slate-700/50">
                                     <p className="text-sm text-slate-500">No custom tracking fields defined for this category.</p>
                                 </div>
                             ) : (
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    {(selectedCategory.fieldDefinitions || []).map((def) => (
-                                        <div key={def.id} className={def.fieldType === 'JSON' ? 'md:col-span-2' : ''}>
-                                            <label className={labelClasses}>
-                                                {def.label} {def.required && <span className="text-primary">*</span>}
-                                            </label>
-
-                                            {def.fieldType === 'BOOLEAN' ? (
-                                                <div className="flex items-center gap-3 mt-3 bg-surface-container-low p-3 rounded-lg border border-slate-700/30">
-                                                    <input
-                                                        type="checkbox"
-                                                        className="h-4 w-4 rounded border-slate-600 bg-surface-container accent-primary transition-all"
-                                                        checked={customFields[def.name] || false}
-                                                        onChange={e => handleCustomFieldChange(def.name, e.target.checked)}
-                                                    />
-                                                    <span className="text-sm font-medium text-slate-300">Enable Feature</span>
+                                <div className="space-y-6">
+                                    {grouped.map((group, gi) => (
+                                        <div key={gi}>
+                                            {grouped.length > 1 && (
+                                                <div className="flex items-center gap-2 mb-3">
+                                                    <span className="text-base">{group.icon}</span>
+                                                    <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">{group.categoryName} Fields</span>
+                                                    <div className="flex-1 h-px bg-slate-700/40"></div>
                                                 </div>
-                                            ) : def.fieldType === 'DATE' ? (
-                                                <input
-                                                    type="date"
-                                                    required={def.required}
-                                                    className={inputClasses}
-                                                    value={customFields[def.name] || ''}
-                                                    onChange={e => handleCustomFieldChange(def.name, e.target.value)}
-                                                />
-                                            ) : def.fieldType === 'JSON' ? (
-                                                <textarea
-                                                    required={def.required}
-                                                    className={`${inputClasses} resize-y min-h-[120px] font-mono whitespace-pre`}
-                                                    placeholder='{\n  "config": true\n}'
-                                                    value={customFields[def.name] || ''}
-                                                    onChange={e => handleCustomFieldChange(def.name, e.target.value)}
-                                                />
-                                            ) : (
-                                                <input
-                                                    type={def.fieldType === 'NUMBER' ? 'number' : 'text'}
-                                                    required={def.required}
-                                                    className={inputClasses}
-                                                    placeholder={`Enter ${def.label}...`}
-                                                    value={customFields[def.name] || ''}
-                                                    onChange={e => handleCustomFieldChange(def.name, e.target.value)}
-                                                />
                                             )}
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                {group.fields.map((def) => (
+                                                    <div key={def.id} className={def.fieldType === 'JSON' ? 'md:col-span-2' : ''}>
+                                                        <label className={labelClasses}>
+                                                            {def.label} {def.required && <span className="text-primary">*</span>}
+                                                        </label>
+
+                                                        {def.fieldType === 'BOOLEAN' ? (
+                                                            <div className="flex items-center gap-3 mt-3 bg-surface-container-low p-3 rounded-lg border border-slate-700/30">
+                                                                <input
+                                                                    type="checkbox"
+                                                                    className="h-4 w-4 rounded border-slate-600 bg-surface-container accent-primary transition-all"
+                                                                    checked={customFields[def.name] || false}
+                                                                    onChange={e => handleCustomFieldChange(def.name, e.target.checked)}
+                                                                />
+                                                                <span className="text-sm font-medium text-slate-300">Enable Feature</span>
+                                                            </div>
+                                                        ) : def.fieldType === 'DATE' ? (
+                                                            <input
+                                                                type="date"
+                                                                required={def.required}
+                                                                className={inputClasses}
+                                                                value={customFields[def.name] || ''}
+                                                                onChange={e => handleCustomFieldChange(def.name, e.target.value)}
+                                                            />
+                                                        ) : def.fieldType === 'JSON' ? (
+                                                            <textarea
+                                                                required={def.required}
+                                                                className={`${inputClasses} resize-y min-h-[120px] font-mono whitespace-pre`}
+                                                                placeholder='{\n  "config": true\n}'
+                                                                value={customFields[def.name] || ''}
+                                                                onChange={e => handleCustomFieldChange(def.name, e.target.value)}
+                                                            />
+                                                        ) : (
+                                                            <input
+                                                                type={def.fieldType === 'NUMBER' ? 'number' : 'text'}
+                                                                required={def.required}
+                                                                className={inputClasses}
+                                                                placeholder={`Enter ${def.label}...`}
+                                                                value={customFields[def.name] || ''}
+                                                                onChange={e => handleCustomFieldChange(def.name, e.target.value)}
+                                                            />
+                                                        )}
+                                                    </div>
+                                                ))}
+                                            </div>
                                         </div>
                                     ))}
                                 </div>
                             )}
                         </div>
-                    )}
+                        );
+                    })()}
 
                     {/* Submit Bar */}
                     <div className="sticky bottom-6 flex justify-between items-center bg-surface-container/95 border border-slate-700/50 p-4 rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.4)] backdrop-blur-md z-10">

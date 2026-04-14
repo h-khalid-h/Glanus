@@ -41,7 +41,8 @@ export default function EditAssetPage({ params }: { params: Promise<{ id: string
     // Engine State
     const [selectedCategory, setSelectedCategory] = useState<AssetCategory | null>(null);
     const [selectedParentCategory, setSelectedParentCategory] = useState<AssetCategory | null>(null);
-    const [categoriesList, setCategoriesList] = useState<AssetCategory[]>([]); // needed if they want to change classes? (Usually prohibited but supported in backend)
+    const [selectedChildCategory, setSelectedChildCategory] = useState<AssetCategory | null>(null);
+    const [categoriesList, setCategoriesList] = useState<AssetCategory[]>([]);
 
     const [formData, setFormData] = useState({
         name: '',
@@ -86,6 +87,7 @@ export default function EditAssetPage({ params }: { params: Promise<{ id: string
                 if (assignedCategory.parentId) {
                     const parent = fetchedCategories.find((c: any) => c.id === assignedCategory.parentId) || null;
                     setSelectedParentCategory(parent);
+                    setSelectedChildCategory(assignedCategory);
                     setSelectedCategory(assignedCategory);
                 } else {
                     setSelectedParentCategory(assignedCategory);
@@ -128,21 +130,31 @@ export default function EditAssetPage({ params }: { params: Promise<{ id: string
             // 4. Pre-fill Custom Mapping Data
             const existingCustomState: Record<string, any> = {};
 
-            // Map the arrays (AssetFieldValue[]) out into dictionary mappings aligned against field definition 'names'.
-            if (asset.category?.fieldDefinitions && asset.fieldValues) {
-                asset.category.fieldDefinitions.forEach((def: FieldDefinition) => {
-                    // Find existing value in database array
-                    const record = asset.fieldValues.find((fv: any) => fv.fieldDefinitionId === def.id);
-                    if (record) {
-                        // Hydrate cast
-                        if (def.fieldType === 'BOOLEAN') existingCustomState[def.name] = record.value === 'true';
-                        else existingCustomState[def.name] = record.value;
-                    } else {
-                        // Fallbacks
-                        existingCustomState[def.name] = def.fieldType === 'BOOLEAN' ? false : '';
-                    }
-                });
+            // Gather all field definitions from the full category chain
+            const assignedCat = fetchedCategories.find((c: any) => c.id === asset.categoryId);
+            const allDefs: FieldDefinition[] = [];
+            if (assignedCat) {
+                if (assignedCat.parentId) {
+                    const parentCat = fetchedCategories.find((c: any) => c.id === assignedCat.parentId);
+                    if (parentCat) allDefs.push(...(parentCat.fieldDefinitions || []));
+                }
+                allDefs.push(...(assignedCat.fieldDefinitions || []));
+                if (!assignedCat.parentId) {
+                    fetchedCategories
+                        .filter((c: any) => c.parentId === assignedCat.id && c.isActive)
+                        .forEach((child: any) => allDefs.push(...(child.fieldDefinitions || [])));
+                }
             }
+
+            allDefs.forEach((def: FieldDefinition) => {
+                const record = (asset.fieldValues || []).find((fv: any) => fv.fieldDefinitionId === def.id);
+                if (record) {
+                    if (def.fieldType === 'BOOLEAN') existingCustomState[def.name] = record.value === 'true';
+                    else existingCustomState[def.name] = record.value;
+                } else {
+                    existingCustomState[def.name] = def.fieldType === 'BOOLEAN' ? false : '';
+                }
+            });
             setCustomFields(existingCustomState);
             setLoading(false);
 
@@ -152,12 +164,38 @@ export default function EditAssetPage({ params }: { params: Promise<{ id: string
         }
     };
 
+    // Build grouped field definitions: parent fields + selected category fields
+    const getGroupedFields = (category: AssetCategory): { categoryName: string; icon: string; fields: FieldDefinition[] }[] => {
+        const groups: { categoryName: string; icon: string; fields: FieldDefinition[] }[] = [];
+        if (category.parentId) {
+            const parent = categoriesList.find(c => c.id === category.parentId);
+            if (parent && (parent.fieldDefinitions || []).length > 0) {
+                groups.push({ categoryName: parent.name, icon: parent.icon, fields: parent.fieldDefinitions });
+            }
+        }
+        if ((category.fieldDefinitions || []).length > 0) {
+            groups.push({ categoryName: category.name, icon: category.icon, fields: category.fieldDefinitions });
+        }
+        if (!category.parentId) {
+            categoriesList
+                .filter(c => c.parentId === category.id && c.isActive && (c.fieldDefinitions || []).length > 0)
+                .forEach(child => {
+                    groups.push({ categoryName: child.name, icon: child.icon, fields: child.fieldDefinitions });
+                });
+        }
+        return groups;
+    };
+
+    const getAllFieldDefinitions = (category: AssetCategory): FieldDefinition[] => {
+        return getGroupedFields(category).flatMap(g => g.fields);
+    };
+
     const applyCategory = (category: AssetCategory | null) => {
         setSelectedCategory(category);
         if (category) {
             setFormData(prev => ({ ...prev, categoryId: category.id }));
             const initialCustom: Record<string, any> = {};
-            (category.fieldDefinitions || []).forEach((def: FieldDefinition) => {
+            getAllFieldDefinitions(category).forEach((def: FieldDefinition) => {
                 initialCustom[def.name] = def.defaultValue || '';
                 if (def.fieldType === 'BOOLEAN') initialCustom[def.name] = def.defaultValue === 'true';
             });
@@ -171,22 +209,13 @@ export default function EditAssetPage({ params }: { params: Promise<{ id: string
     const handleParentCategorySelect = (categoryId: string) => {
         const parent = categoriesList.find(c => c.id === categoryId) || null;
         setSelectedParentCategory(parent);
-        
-        const children = parent
-            ? categoriesList.filter(c => c.parentId === parent.id && c.isActive)
-            : [];
-            
-        if (!parent || children.length === 0) {
-            applyCategory(parent);
-        } else {
-            setSelectedCategory(null);
-            setCustomFields({});
-            setFormData(prev => ({ ...prev, categoryId: '' }));
-        }
+        setSelectedChildCategory(null);
+        applyCategory(parent);
     };
 
     const handleChildCategorySelect = (categoryId: string) => {
         const child = categoriesList.find(c => c.id === categoryId) || null;
+        setSelectedChildCategory(child);
         applyCategory(child);
     };
 
@@ -342,7 +371,7 @@ export default function EditAssetPage({ params }: { params: Promise<{ id: string
                                                 <select
                                                     required
                                                     className="input w-full"
-                                                    value={selectedCategory?.id || ''}
+                                                    value={selectedChildCategory?.id || ''}
                                                     onChange={e => handleChildCategorySelect(e.target.value)}
                                                 >
                                                     <option value="" disabled>Select sub-category…</option>
@@ -496,65 +525,82 @@ export default function EditAssetPage({ params }: { params: Promise<{ id: string
                 )}
 
                 {/* 2. Dynamic Schema UI */}
-                {selectedCategory && (
+                {selectedCategory && (() => {
+                    const grouped = getGroupedFields(selectedCategory);
+                    const totalFields = grouped.reduce((sum, g) => sum + g.fields.length, 0);
+                    return (
                     <div className="detail-panel border-primary/20">
                         <div className="flex items-center justify-between mb-3 pb-2 border-b border-border/60">
                             <h2 className="text-sm font-semibold text-foreground">2. Custom Matrix Data</h2>
                             <span className="badge text-[11px] px-2.5 py-1 bg-primary/10 text-primary rounded-lg">{selectedCategory.icon} {selectedCategory.name}</span>
                         </div>
 
-                        {(selectedCategory.fieldDefinitions || []).length === 0 ? (
+                        {totalFields === 0 ? (
                             <p className="text-sm text-muted-foreground/70 italic">No custom tracking fields required for this Class.</p>
                         ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                {(selectedCategory.fieldDefinitions || []).map((def) => (
-                                    <div key={def.id} className={def.fieldType === 'JSON' ? 'md:col-span-2' : ''}>
-                                        <label className="block text-sm font-medium text-foreground mb-1.5">
-                                            {def.label} {def.required && <span className="text-destructive">*</span>}
-                                        </label>
-
-                                        {def.fieldType === 'BOOLEAN' ? (
-                                            <div className="flex items-center gap-2.5 mt-2">
-                                                <input
-                                                    type="checkbox"
-                                                    className="h-4 w-4 rounded border-border accent-primary"
-                                                    checked={customFields[def.name] === true || customFields[def.name] === 'true'}
-                                                    onChange={e => handleCustomFieldChange(def.name, e.target.checked)}
-                                                />
-                                                <span className="text-sm text-muted-foreground">Enable</span>
+                            <div className="space-y-6">
+                                {grouped.map((group, gi) => (
+                                    <div key={gi}>
+                                        {grouped.length > 1 && (
+                                            <div className="flex items-center gap-2 mb-3">
+                                                <span className="text-base">{group.icon}</span>
+                                                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{group.categoryName} Fields</span>
+                                                <div className="flex-1 h-px bg-border/40"></div>
                                             </div>
-                                        ) : def.fieldType === 'DATE' ? (
-                                            <input
-                                                type="date"
-                                                required={def.required}
-                                                className="input w-full"
-                                                value={customFields[def.name] || ''}
-                                                onChange={e => handleCustomFieldChange(def.name, e.target.value)}
-                                            />
-                                        ) : def.fieldType === 'JSON' ? (
-                                            <textarea
-                                                required={def.required}
-                                                className="input w-full h-32 font-mono text-xs"
-                                                placeholder='{"key": "value"}'
-                                                value={customFields[def.name] || ''}
-                                                onChange={e => handleCustomFieldChange(def.name, e.target.value)}
-                                            />
-                                        ) : (
-                                            <input
-                                                type={def.fieldType === 'NUMBER' ? 'number' : 'text'}
-                                                required={def.required}
-                                                className="input w-full"
-                                                placeholder={`Enter ${def.label}...`}
-                                                value={customFields[def.name] || ''}
-                                                onChange={e => handleCustomFieldChange(def.name, e.target.value)}
-                                            />
                                         )}
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                            {group.fields.map((def) => (
+                                                <div key={def.id} className={def.fieldType === 'JSON' ? 'md:col-span-2' : ''}>
+                                                    <label className="block text-sm font-medium text-foreground mb-1.5">
+                                                        {def.label} {def.required && <span className="text-destructive">*</span>}
+                                                    </label>
+
+                                                    {def.fieldType === 'BOOLEAN' ? (
+                                                        <div className="flex items-center gap-2.5 mt-2">
+                                                            <input
+                                                                type="checkbox"
+                                                                className="h-4 w-4 rounded border-border accent-primary"
+                                                                checked={customFields[def.name] === true || customFields[def.name] === 'true'}
+                                                                onChange={e => handleCustomFieldChange(def.name, e.target.checked)}
+                                                            />
+                                                            <span className="text-sm text-muted-foreground">Enable</span>
+                                                        </div>
+                                                    ) : def.fieldType === 'DATE' ? (
+                                                        <input
+                                                            type="date"
+                                                            required={def.required}
+                                                            className="input w-full"
+                                                            value={customFields[def.name] || ''}
+                                                            onChange={e => handleCustomFieldChange(def.name, e.target.value)}
+                                                        />
+                                                    ) : def.fieldType === 'JSON' ? (
+                                                        <textarea
+                                                            required={def.required}
+                                                            className="input w-full h-32 font-mono text-xs"
+                                                            placeholder='{"key": "value"}'
+                                                            value={customFields[def.name] || ''}
+                                                            onChange={e => handleCustomFieldChange(def.name, e.target.value)}
+                                                        />
+                                                    ) : (
+                                                        <input
+                                                            type={def.fieldType === 'NUMBER' ? 'number' : 'text'}
+                                                            required={def.required}
+                                                            className="input w-full"
+                                                            placeholder={`Enter ${def.label}...`}
+                                                            value={customFields[def.name] || ''}
+                                                            onChange={e => handleCustomFieldChange(def.name, e.target.value)}
+                                                        />
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
                                     </div>
                                 ))}
                             </div>
                         )}
                     </div>
-                )}
+                    );
+                })()}
 
                 {/* Actions */}
                 <div className="flex items-center justify-end gap-2.5 pt-2">

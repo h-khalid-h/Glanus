@@ -251,6 +251,8 @@ model Workspace {
   networkDevices     NetworkDevice[] // Phase 33: Network Discovery
   discoveryScans     DiscoveryScan[] // Phase 33: Network Discovery
   tickets            Ticket[] // Phase 34: Helpdesk & Support Ticketing
+  payments           Payment[]      @relation("WorkspacePayments")
+  billingEvents      BillingEvent[] @relation("WorkspaceBillingEvents")
 
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
@@ -369,6 +371,7 @@ model User {
   name      String?
   password  String
   role      UserRole @default(USER)
+  isStaff   Boolean  @default(false) // Staff users can only access the super-admin dashboard
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -1444,6 +1447,119 @@ model StripeEvent {
   createdAt DateTime @default(now())
 
   @@index([eventId])
+  @@index([createdAt])
+}
+
+// ============================================
+// BILLING: PLAN CONFIG & PAYMENT TRACKING
+// ============================================
+
+enum PaymentStatus {
+  SUCCEEDED
+  FAILED
+  PENDING
+  REFUNDED
+}
+
+model PlanConfig {
+  id   String @id @default(cuid())
+  plan SubscriptionPlan @unique
+
+  // Display
+  name        String // Human-readable name (e.g. "Personal")
+  description String? @db.Text
+  highlighted Boolean @default(false) // Featured plan on pricing page
+
+  // Stripe price IDs
+  stripePriceId       String? // Server-side Stripe price ID
+  stripePriceIdPublic String? // Client-side Stripe price ID (NEXT_PUBLIC)
+
+  // Pricing display
+  priceMonthly  Int @default(0) // Price in cents
+  priceYearly   Int @default(0) // Yearly price in cents (0 = no yearly option)
+  currency      String @default("usd")
+
+  // Plan limits
+  maxAssets            Int @default(5)
+  maxAICreditsPerMonth Int @default(100)
+  maxStorageMB         Int @default(1024)
+  maxMembers           Int @default(1)
+
+  // Feature flags (JSON for flexibility)
+  features Json? // e.g. ["Priority support", "Custom branding"]
+
+  isActive  Boolean @default(true)
+  sortOrder Int     @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive])
+  @@index([sortOrder])
+}
+
+model Payment {
+  id          String    @id @default(cuid())
+  workspaceId String
+  workspace   Workspace @relation("WorkspacePayments", fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  // Stripe references
+  stripeInvoiceId      String?  @unique
+  stripePaymentIntentId String?
+  stripeCustomerId     String?
+
+  // Payment details
+  amount       Int // Amount in cents
+  currency     String @default("usd")
+  status       PaymentStatus @default(PENDING)
+  plan         SubscriptionPlan?
+  description  String? @db.Text
+
+  // Invoice metadata
+  invoiceUrl   String? // Stripe-hosted invoice URL
+  invoicePdf   String? // PDF download URL
+  periodStart  DateTime?
+  periodEnd    DateTime?
+
+  // Failure info
+  failureReason String?
+
+  paidAt    DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([workspaceId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([stripeCustomerId])
+}
+
+model BillingEvent {
+  id          String    @id @default(cuid())
+  workspaceId String?
+  workspace   Workspace? @relation("WorkspaceBillingEvents", fields: [workspaceId], references: [id], onDelete: SetNull)
+
+  // Event info
+  type        String // e.g. "plan_change", "payment_succeeded", "payment_failed", "subscription_canceled"
+  description String  @db.Text
+
+  // Context
+  previousPlan SubscriptionPlan?
+  newPlan      SubscriptionPlan?
+  amount       Int? // in cents
+  currency     String? @default("usd")
+
+  // Stripe reference
+  stripeEventId String?
+
+  // Actor (admin who made manual change, or "system" for webhooks)
+  actorId   String?
+  actorType String @default("system") // "system" | "admin"
+
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  @@index([workspaceId])
+  @@index([type])
   @@index([createdAt])
 }
 

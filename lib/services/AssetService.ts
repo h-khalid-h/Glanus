@@ -122,10 +122,30 @@ export class AssetService {
 
             if (!selectedCategory) throw new ApiError(404, 'The specified Asset Category does not exist.');
 
+            // Gather all field definitions from the full category chain (parent + child)
+            let allFieldDefinitions = [...selectedCategory.fieldDefinitions];
+            if (selectedCategory.parentId) {
+                const parentCategory = await tx.assetCategory.findUnique({
+                    where: { id: selectedCategory.parentId },
+                    include: { fieldDefinitions: true }
+                });
+                if (parentCategory) {
+                    allFieldDefinitions = [...parentCategory.fieldDefinitions, ...allFieldDefinitions];
+                }
+            } else {
+                const childCategories = await tx.assetCategory.findMany({
+                    where: { parentId: selectedCategory.id, isActive: true },
+                    include: { fieldDefinitions: true }
+                });
+                for (const child of childCategories) {
+                    allFieldDefinitions.push(...child.fieldDefinitions);
+                }
+            }
+
         // Build Payload
         const fieldValuesPayload = [];
         if (data.customFields && Object.keys(data.customFields).length > 0) {
-            for (const def of selectedCategory.fieldDefinitions) {
+            for (const def of allFieldDefinitions) {
                 const incomingValue = data.customFields[def.name];
 
                 // 1. Enforce rigorous Architectural validation
@@ -152,7 +172,7 @@ export class AssetService {
                 }
             }
         } else {
-            const missingRequired = selectedCategory.fieldDefinitions.filter((def) => def.isRequired);
+            const missingRequired = allFieldDefinitions.filter((def) => def.isRequired);
             if (missingRequired.length > 0) {
                 throw new ApiError(400, `Missing required custom field: ${missingRequired[0].label}`);
             }
@@ -359,7 +379,27 @@ export class AssetService {
         }
 
         if (data.customFields && existingAsset.category) {
-            for (const def of existingAsset.category.fieldDefinitions) {
+            // Gather all field definitions from the full category chain
+            let allFieldDefs = [...existingAsset.category.fieldDefinitions];
+            if (existingAsset.category.parentId) {
+                const parentCat = await tx.assetCategory.findUnique({
+                    where: { id: existingAsset.category.parentId },
+                    include: { fieldDefinitions: true }
+                });
+                if (parentCat) {
+                    allFieldDefs = [...parentCat.fieldDefinitions, ...allFieldDefs];
+                }
+            } else {
+                const childCats = await tx.assetCategory.findMany({
+                    where: { parentId: existingAsset.category.id, isActive: true },
+                    include: { fieldDefinitions: true }
+                });
+                for (const child of childCats) {
+                    allFieldDefs.push(...child.fieldDefinitions);
+                }
+            }
+
+            for (const def of allFieldDefs) {
                 const incomingValue = data.customFields[def.name];
                 const existingValueRecord = existingAsset.fieldValues.find((fv) => fv.fieldDefinitionId === def.id);
 

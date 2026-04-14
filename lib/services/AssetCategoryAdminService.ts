@@ -187,7 +187,8 @@ export class AssetCategoryAdminService {
         if (!category) throw new ApiError(404, 'Category not found');
         const existing = await prisma.assetFieldDefinition.findUnique({ where: { categoryId_slug: { categoryId, slug: data.slug } } });
         if (existing) throw new ApiError(409, 'Field with this slug already exists in category');
-        return prisma.assetFieldDefinition.create({ data: { ...data, categoryId, sortOrder: data.sortOrder ?? 0 } });
+        const { workspaceId, ...fieldData } = data;
+        return prisma.assetFieldDefinition.create({ data: { ...fieldData, categoryId, sortOrder: fieldData.sortOrder ?? 0 } });
     }
 
     static async updateField(id: string, data: UpdateFieldInput, userId: string) {
@@ -199,7 +200,8 @@ export class AssetCategoryAdminService {
             if (conflict) throw new ApiError(400, 'A field with this slug already exists in this category');
         }
 
-        const field = await prisma.assetFieldDefinition.update({ where: { id }, data: { ...data, validationRules: data.validationRules as never } });
+        const { workspaceId: _ws, ...updateData } = data;
+        const field = await prisma.assetFieldDefinition.update({ where: { id }, data: { ...updateData, validationRules: updateData.validationRules as never } });
         await prisma.auditLog.create({
             data: { action: 'FIELD_UPDATED', resourceType: 'AssetFieldDefinition', resourceId: id, userId, metadata: { fieldName: field.name, previousName: existing.name, changes: data } },
         });

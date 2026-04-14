@@ -100,7 +100,7 @@ export default function ActionsPage({ params }: { params: Promise<{ id: string }
                 onCancel={() => setConfirmActionId(null)}
             />
             <div className="mb-5">
-                <Link href="/workspaces/manage/categories" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-2">
+                <Link href="/assets/categories" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-2">
                     <ArrowLeft size={14} />
                     Categories
                 </Link>
@@ -110,7 +110,7 @@ export default function ActionsPage({ params }: { params: Promise<{ id: string }
                         {categoryName && <p className="text-sm text-muted-foreground mt-0.5">{categoryName}</p>}
                     </div>
                     <Link
-                        href={`/workspaces/manage/categories/${categoryId}/actions/new`}
+                        href={`/assets/categories/${categoryId}/actions/new`}
                         className="btn-primary h-9 text-sm px-3 inline-flex items-center gap-1.5"
                     >
                         <Plus size={14} />
@@ -127,7 +127,7 @@ export default function ActionsPage({ params }: { params: Promise<{ id: string }
                     <p className="text-sm font-medium text-foreground mb-1">No actions defined yet</p>
                     <p className="text-xs text-muted-foreground mb-4">Actions define automated workflows for assets in this category.</p>
                     <Link
-                        href={`/workspaces/manage/categories/${categoryId}/actions/new`}
+                        href={`/assets/categories/${categoryId}/actions/new`}
                         className="btn-primary h-8 text-xs px-3 inline-flex items-center gap-1.5"
                     >
                         <Plus size={12} /> Create First Action
@@ -162,7 +162,7 @@ export default function ActionsPage({ params }: { params: Promise<{ id: string }
 
                             <div className="flex items-center gap-1.5 pt-2 border-t border-border/60">
                                 <Link
-                                    href={`/workspaces/manage/categories/${categoryId}/actions/${action.id}/edit`}
+                                    href={`/assets/categories/${categoryId}/actions/${action.id}/edit`}
                                     className="flex-1 inline-flex justify-center items-center gap-1.5 h-7 text-xs font-medium text-primary hover:bg-primary/10 rounded transition-colors"
                                 >
                                     <Edit2 size={12} /> Edit

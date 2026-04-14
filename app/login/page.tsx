@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { signIn } from 'next-auth/react';
+import { signIn, getSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
@@ -28,7 +28,13 @@ export default function LoginPage() {
             if (result?.error) {
                 setError(result.error);
             } else {
-                router.push('/dashboard');
+                // Fetch fresh session to check isStaff flag
+                const session = await getSession();
+                if (session?.user?.isStaff) {
+                    router.push('/super-admin');
+                } else {
+                    router.push('/dashboard');
+                }
                 router.refresh();
             }
         } catch (error: unknown) {

@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Users, History, Activity as ActivityIcon, Settings, Shield, Tags } from 'lucide-react';
+import { Users, History, Activity as ActivityIcon, Settings, Shield } from 'lucide-react';
 
 export default function AdminManagementLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
@@ -11,7 +11,6 @@ export default function AdminManagementLayout({ children }: { children: React.Re
         { name: 'Team Management', href: '/workspaces/manage/members', icon: Users },
         { name: 'Audit Logs', href: '/workspaces/manage/audit', icon: History },
         { name: 'Activity Feed', href: '/workspaces/manage/activity', icon: ActivityIcon },
-        { name: 'Asset Categories', href: '/workspaces/manage/categories', icon: Tags },
         { name: 'Workspace Settings', href: '/workspaces/manage/settings', icon: Settings },
     ];
 

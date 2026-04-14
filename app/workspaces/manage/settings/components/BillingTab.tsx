@@ -36,7 +36,18 @@ interface WorkspaceWithSubscription {
     };
 }
 
-const PLANS = [
+interface PlanDisplay {
+    id: string;
+    name: string;
+    price: string;
+    priceLabel: string;
+    features: string[];
+    color: string;
+    priceId?: string;
+    popular?: boolean;
+}
+
+const FALLBACK_PLANS: PlanDisplay[] = [
     {
         id: 'FREE',
         name: 'Free',
@@ -52,7 +63,6 @@ const PLANS = [
         priceLabel: '/month',
         features: ['50 assets', '1,000 AI credits/mo', '10 GB storage', '5 workspace members'],
         color: 'blue',
-        priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_PERSONAL,
     },
     {
         id: 'TEAM',
@@ -62,7 +72,6 @@ const PLANS = [
         features: ['200 assets', '5,000 AI credits/mo', '50 GB storage', 'Unlimited members'],
         color: 'purple',
         popular: true,
-        priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_TEAM,
     },
     {
         id: 'ENTERPRISE',
@@ -74,30 +83,90 @@ const PLANS = [
     },
 ];
 
+function formatPlanPrice(cents: number): string {
+    if (cents === 0) return '$0';
+    return `$${(cents / 100).toFixed(cents % 100 === 0 ? 0 : 2)}`;
+}
+
+const PLAN_COLORS: Record<string, string> = {
+    FREE: 'slate',
+    PERSONAL: 'blue',
+    TEAM: 'purple',
+    ENTERPRISE: 'amber',
+};
+
 export function BillingTab() {
     const { error: showError } = useToast();
     const searchParams = useSearchParams();
-    const { workspace } = useWorkspace();
+    const { workspace, refetchWorkspaces } = useWorkspace();
     const workspaceId = workspace?.id ?? '';
 
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+    const [PLANS, setPlans] = useState(FALLBACK_PLANS);
+
+    // Fetch plan configs from the API (DB-managed prices)
+    useEffect(() => {
+        fetch('/api/plans')
+            .then(res => res.ok ? res.json() : null)
+            .then(json => {
+                if (json?.data && json.data.length > 0) {
+                    interface PlanConfigFromAPI {
+                        plan: string;
+                        name: string;
+                        description?: string;
+                        highlighted?: boolean;
+                        stripePriceIdPublic?: string;
+                        priceMonthly: number;
+                        maxAssets: number;
+                        maxAICreditsPerMonth: number;
+                        maxStorageMB: number;
+                        maxMembers: number;
+                        features?: string[];
+                    }
+                    const mapped = (json.data as PlanConfigFromAPI[]).map((p: PlanConfigFromAPI) => ({
+                        id: p.plan,
+                        name: p.name,
+                        price: p.priceMonthly === 0 ? (p.plan === 'ENTERPRISE' ? 'Custom' : '$0') : formatPlanPrice(p.priceMonthly),
+                        priceLabel: p.priceMonthly === 0 ? (p.plan === 'FREE' ? 'forever' : '') : '/month',
+                        features: p.features && p.features.length > 0
+                            ? p.features
+                            : [
+                                `${p.maxAssets >= 999999 ? 'Unlimited' : p.maxAssets} assets`,
+                                `${p.maxAICreditsPerMonth >= 999999 ? 'Unlimited' : p.maxAICreditsPerMonth.toLocaleString()} AI credits/mo`,
+                                `${p.maxStorageMB >= 999999 ? 'Unlimited' : `${(p.maxStorageMB / 1024).toFixed(0)} GB`} storage`,
+                                `${p.maxMembers >= 999999 ? 'Unlimited' : p.maxMembers} members`,
+                            ],
+                        color: PLAN_COLORS[p.plan] || 'slate',
+                        popular: p.highlighted,
+                        priceId: p.stripePriceIdPublic || undefined,
+                    }));
+                    setPlans(mapped);
+                }
+            })
+            .catch(() => { /* use fallback */ });
+    }, []);
 
     // Check for status from Stripe redirect
     useEffect(() => {
         const status = searchParams.get('status');
         if (status === 'success') {
             setNotification({ type: 'success', message: 'Payment successful! Your plan has been upgraded.' });
+            // Verify and sync the subscription with Stripe to ensure the plan is applied
+            if (workspaceId) {
+                csrfFetch(`/api/workspaces/${workspaceId}/checkout-verify`, { method: 'POST' })
+                    .then(() => refetchWorkspaces())
+                    .catch(() => { /* webhook will handle it eventually */ });
+            }
         } else if (status === 'canceled') {
             setNotification({ type: 'error', message: 'Payment was canceled. No changes were made.' });
         }
-    }, [searchParams]);
+    }, [searchParams, workspaceId, refetchWorkspaces]);
 
     const ws = workspace as unknown as WorkspaceWithSubscription | null;
     const currentPlan = ws?.subscription?.plan || 'FREE';
     const subscriptionStatus = ws?.subscription?.status || 'ACTIVE';
-    const { refetchWorkspaces } = useWorkspace();
 
     // Refetch the workspace data (including asset counts) when opening the billing tab
     useEffect(() => {
@@ -117,12 +186,15 @@ export function BillingTab() {
             const data = await response.json();
 
             if (!response.ok) {
-                throw new Error(data.error || 'Failed to create checkout');
+                throw new Error(data.error?.message || 'Failed to create checkout');
             }
 
             // Redirect to Stripe Checkout
-            if (data.url) {
-                window.location.href = data.url;
+            const checkoutUrl = data.data?.url || data.url;
+            if (checkoutUrl) {
+                window.open(checkoutUrl, '_blank', 'noopener,noreferrer');
+            } else {
+                throw new Error('No checkout URL returned from Stripe');
             }
         } catch (error: unknown) {
             showError('Checkout failed:', error instanceof Error ? error.message : 'An unexpected error occurred');
@@ -143,11 +215,12 @@ export function BillingTab() {
             const data = await response.json();
 
             if (!response.ok) {
-                throw new Error(data.error || 'Failed to open billing portal');
+                throw new Error(data.error?.message || 'Failed to open billing portal');
             }
 
-            if (data.url) {
-                window.location.href = data.url;
+            const portalUrl = data.data?.url || data.url;
+            if (portalUrl) {
+                window.open(portalUrl, '_blank', 'noopener,noreferrer');
             }
         } catch (error: unknown) {
             showError('Portal failed:', error instanceof Error ? error.message : 'An unexpected error occurred');

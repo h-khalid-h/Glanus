@@ -13,11 +13,13 @@ import {
     LogOut,
     ChevronRight,
     Shield,
+    CreditCard,
 } from 'lucide-react';
 
 const NAV = [
     { href: '/super-admin', label: 'Overview', icon: LayoutDashboard, exact: true },
     { href: '/super-admin/workspaces', label: 'Workspaces', icon: Building2 },
+    { href: '/super-admin/billing', label: 'Billing', icon: CreditCard },
     { href: '/super-admin/analytics', label: 'Analytics', icon: BarChart2 },
     { href: '/super-admin/audit', label: 'Audit Log', icon: ScrollText },
 ];

@@ -1,22 +1,27 @@
 import { prisma } from '@/lib/db';
-import { getPlanFromPriceId } from '@/lib/stripe/client';
-import { logInfo, logWarn } from '@/lib/logger';
+import { getPlanFromPriceIdAsync } from '@/lib/stripe/client';
+import { logInfo, logWarn, logError } from '@/lib/logger';
+import { PLAN_LIMITS } from '@/lib/services/WorkspaceService';
+import { BillingService } from '@/lib/services/BillingService';
+import { sendEmail } from '@/lib/email/sendgrid';
+import { getPaymentSuccessEmailTemplate, getPaymentFailedEmailTemplate, getSubscriptionCanceledEmailTemplate, getPaymentActionRequiredEmailTemplate } from '@/lib/email/templates';
 import Stripe from 'stripe';
+import type { SubscriptionPlan, Prisma } from '@prisma/client';
 
 /**
  * Valid subscription status transitions.
  * Each key maps to the set of statuses it is allowed to transition to.
  */
 const VALID_STATUS_TRANSITIONS: Record<string, Set<string>> = {
-    ACTIVE:   new Set(['PAST_DUE', 'CANCELED', 'UNPAID']),
-    TRIALING: new Set(['ACTIVE', 'PAST_DUE', 'CANCELED']),
-    PAST_DUE: new Set(['ACTIVE', 'CANCELED', 'UNPAID']),
-    CANCELED: new Set(['ACTIVE', 'TRIALING']),  // Allow reactivation
-    UNPAID:   new Set(['ACTIVE', 'CANCELED']),
+    ACTIVE:   new Set(['PAST_DUE', 'CANCELED', 'UNPAID', 'ACTIVE']),
+    TRIALING: new Set(['ACTIVE', 'PAST_DUE', 'CANCELED', 'TRIALING']),
+    PAST_DUE: new Set(['ACTIVE', 'CANCELED', 'UNPAID', 'PAST_DUE']),
+    CANCELED: new Set(['ACTIVE', 'TRIALING', 'CANCELED']),
+    UNPAID:   new Set(['ACTIVE', 'CANCELED', 'UNPAID']),
 };
 
 function isValidTransition(from: string, to: string): boolean {
-    if (from === to) return true; // No-op transition is always valid
+    if (from === to) return true;
     return VALID_STATUS_TRANSITIONS[from]?.has(to) ?? false;
 }
 
@@ -71,16 +76,47 @@ export class StripeWebhookService {
         const workspaceId = session.metadata?.workspaceId;
         if (!workspaceId) return;
 
+        // Resolve the plan from the subscription's price ID
+        let plan: string = 'FREE';
+        const subscriptionId = session.subscription as string | null;
+        if (subscriptionId) {
+            try {
+                const { stripe: stripeClient } = await import('@/lib/stripe/client');
+                const sub = await stripeClient.subscriptions.retrieve(subscriptionId);
+                const priceId = sub.items.data[0]?.price?.id;
+                if (priceId) {
+                    plan = await getPlanFromPriceIdAsync(priceId);
+                }
+            } catch (err) {
+                logWarn('[STRIPE] Could not retrieve subscription to resolve plan, defaulting to FREE', err);
+            }
+        }
+
+        const planKey = (plan || 'FREE') as keyof typeof PLAN_LIMITS;
+        const limits = PLAN_LIMITS[planKey] || PLAN_LIMITS.FREE;
+
         await prisma.subscription.update({
             where: { workspaceId },
             data: {
                 stripeCustomerId: session.customer as string,
-                stripeSubscriptionId: session.subscription as string,
+                stripeSubscriptionId: subscriptionId,
+                plan: plan as never,
                 status: 'ACTIVE',
+                maxAssets: limits.maxAssets,
+                maxAICreditsPerMonth: limits.maxAICreditsPerMonth,
+                maxStorageMB: limits.maxStorageMB,
             },
         });
 
-        logInfo(`[STRIPE] Checkout completed for workspace ${workspaceId}`);
+        // Record billing event
+        await BillingService.recordBillingEvent({
+            workspaceId,
+            type: 'checkout_completed',
+            description: `Checkout completed — plan set to ${plan}, Stripe customer ${session.customer}`,
+            stripeEventId: session.id,
+        }).catch(err => logError('[STRIPE] Failed to record billing event', err));
+
+        logInfo(`[STRIPE] Checkout completed for workspace ${workspaceId}, plan: ${plan}`);
     }
 
     static async handleSubscriptionUpdate(subscription: Stripe.Subscription): Promise<void> {
@@ -88,17 +124,25 @@ export class StripeWebhookService {
         if (!workspaceId) return;
 
         const priceId = subscription.items.data[0]?.price?.id;
-        const plan = priceId ? getPlanFromPriceId(priceId) : 'FREE';
+        const plan = priceId ? await getPlanFromPriceIdAsync(priceId) : 'FREE';
 
         const statusMap: Record<string, string> = {
             active: 'ACTIVE',
             past_due: 'PAST_DUE',
             canceled: 'CANCELED',
-            unpaid: 'PAST_DUE',
+            unpaid: 'PAST_DUE', // Mapping 'unpaid' to PAST_DUE for safety, though UNPAID exists
             trialing: 'TRIALING',
+            incomplete: 'PAST_DUE',
+            incomplete_expired: 'CANCELED',
+            paused: 'CANCELED'
         };
 
-        const newStatus = statusMap[subscription.status] || 'ACTIVE';
+        const newStatus = statusMap[subscription.status];
+        if (!newStatus) {
+             logWarn(`[STRIPE] Unrecognized subscription status '${subscription.status}' for workspace ${workspaceId}. Downgrading for safety.`);
+             // Safe default instead of assuming ACTIVE
+             return;
+        }
 
         // Validate status transition
         const current = await prisma.subscription.findUnique({
@@ -111,17 +155,42 @@ export class StripeWebhookService {
             return;
         }
 
-        await prisma.subscription.update({
-            where: { workspaceId },
-            data: {
-                plan: plan as never, // Prisma enum
-                status: newStatus as never,
-                stripeSubscriptionId: subscription.id,
-                // Stripe SDK v20: current_period_end is on the subscription object at runtime
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                currentPeriodEnd: new Date(((subscription as any).current_period_end as number) * 1000),
-            },
-        });
+        const planKey = (plan || 'FREE') as keyof typeof PLAN_LIMITS;
+        const limits = PLAN_LIMITS[planKey] || PLAN_LIMITS.FREE;
+
+        const previousPlan = current?.status ? undefined : 'FREE';
+
+        // Use Prisma interactive transaction to group subscription update and billing event log
+        await prisma.$transaction(async (tx) => {
+            await tx.subscription.update({
+                where: { workspaceId },
+                data: {
+                    plan: plan as never, // Prisma enum
+                    status: newStatus as never,
+                    stripeSubscriptionId: subscription.id,
+                    maxAssets: limits.maxAssets,
+                    maxAICreditsPerMonth: limits.maxAICreditsPerMonth,
+                    maxStorageMB: limits.maxStorageMB,
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    currentPeriodStart: (subscription as any).current_period_start
+                        ? new Date(((subscription as any).current_period_start as number) * 1000)
+                        : undefined,
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    currentPeriodEnd: new Date(((subscription as any).current_period_end as number) * 1000),
+                },
+            });
+
+            await tx.billingEvent.create({
+                data: {
+                    workspaceId,
+                    type: 'plan_change',
+                    description: `Subscription updated to ${plan} (${newStatus})`,
+                    previousPlan: previousPlan as SubscriptionPlan | undefined,
+                    newPlan: plan as SubscriptionPlan,
+                    actorType: 'system',
+                },
+            });
+        }).catch(err => logError('[STRIPE] Failed to process subscription update transaction', err));
 
         logInfo(`[STRIPE] Subscription updated for workspace ${workspaceId}: ${plan} (${newStatus})`);
     }
@@ -130,22 +199,58 @@ export class StripeWebhookService {
         const workspaceId = subscription.metadata?.workspaceId;
         if (!workspaceId) return;
 
-        await prisma.subscription.update({
-            where: { workspaceId },
-            data: {
-                plan: 'FREE',
-                status: 'CANCELED',
-                stripeSubscriptionId: null,
-                // Stripe SDK v20: current_period_end is on the subscription object at runtime
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                currentPeriodEnd: new Date(((subscription as any).current_period_end as number) * 1000),
-                maxAssets: 5,
-                maxAICreditsPerMonth: 100,
-                maxStorageMB: 1024,
-            },
-        });
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const periodEnd = (subscription as any).current_period_end
+            ? new Date(((subscription as any).current_period_end as number) * 1000)
+            : new Date();
+
+        await prisma.$transaction(async (tx) => {
+            await tx.subscription.update({
+                where: { workspaceId },
+                data: {
+                    plan: 'FREE',
+                    status: 'CANCELED',
+                    stripeSubscriptionId: null,
+                    currentPeriodEnd: periodEnd,
+                    maxAssets: PLAN_LIMITS.FREE.maxAssets,
+                    maxAICreditsPerMonth: PLAN_LIMITS.FREE.maxAICreditsPerMonth,
+                    maxStorageMB: PLAN_LIMITS.FREE.maxStorageMB,
+                },
+            });
+
+            await tx.billingEvent.create({
+                data: {
+                    workspaceId,
+                    type: 'subscription_canceled',
+                    description: `Subscription canceled, access until ${periodEnd.toISOString().split('T')[0]}`,
+                    newPlan: 'FREE' as SubscriptionPlan,
+                    actorType: 'system',
+                },
+            });
+        }).catch(err => logError('[STRIPE] Failed to process subscription cancellation transaction', err));
 
         logInfo(`[STRIPE] Subscription canceled for workspace ${workspaceId}`);
+
+        // Send cancellation email to workspace owner
+        try {
+            const workspace = await prisma.workspace.findFirst({
+                where: { id: workspaceId },
+                include: { owner: { select: { name: true, email: true } } },
+            });
+            if (workspace?.owner?.email) {
+                await sendEmail({
+                    to: workspace.owner.email,
+                    subject: `Subscription canceled for ${workspace.name}`,
+                    html: getSubscriptionCanceledEmailTemplate(
+                        workspace.owner.name || 'there',
+                        workspace.name,
+                        periodEnd.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+                    ),
+                });
+            }
+        } catch (emailErr) {
+            logError('[STRIPE] Failed to send cancellation email', emailErr);
+        }
     }
 
     static async handlePaymentSucceeded(invoice: Stripe.Invoice): Promise<void> {
@@ -164,11 +269,87 @@ export class StripeWebhookService {
                 logWarn(`[STRIPE] Invalid status transition ${sub.status} → ACTIVE on payment success for ${subscriptionId}, skipping`);
                 return;
             }
-            await prisma.subscription.update({
-                where: { id: sub.id },
-                data: { aiCreditsUsed: 0, status: 'ACTIVE' },
-            });
+            await prisma.$transaction(async (tx) => {
+                await tx.subscription.update({
+                    where: { id: sub.id },
+                    data: { aiCreditsUsed: 0, status: 'ACTIVE' },
+                });
+
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const paymentIntentId = (invoice as any).payment_intent as string | undefined;
+
+                // Persist payment record
+                if (invoice.id) {
+                    await tx.payment.upsert({
+                        where: { stripeInvoiceId: invoice.id },
+                        create: {
+                            workspaceId: sub.workspaceId,
+                            stripeInvoiceId: invoice.id,
+                            stripePaymentIntentId: paymentIntentId,
+                            stripeCustomerId: sub.stripeCustomerId ?? undefined,
+                            amount: invoice.amount_paid ?? 0,
+                            currency: invoice.currency ?? 'usd',
+                            status: 'SUCCEEDED',
+                            plan: sub.plan as SubscriptionPlan,
+                            description: `Invoice payment for ${sub.plan} plan`,
+                            invoiceUrl: invoice.hosted_invoice_url ?? null,
+                            periodStart: invoice.period_start ? new Date(invoice.period_start * 1000) : null,
+                            periodEnd: invoice.period_end ? new Date(invoice.period_end * 1000) : null,
+                            paidAt: new Date(),
+                        },
+                        update: { status: 'SUCCEEDED', paidAt: new Date(), amount: invoice.amount_paid ?? 0 },
+                    });
+                } else {
+                    await tx.payment.create({
+                        data: {
+                            workspaceId: sub.workspaceId,
+                            stripePaymentIntentId: paymentIntentId,
+                            stripeCustomerId: sub.stripeCustomerId ?? undefined,
+                            amount: invoice.amount_paid ?? 0,
+                            currency: invoice.currency ?? 'usd',
+                            status: 'SUCCEEDED',
+                            plan: sub.plan as SubscriptionPlan,
+                            description: `Invoice payment for ${sub.plan} plan`,
+                            paidAt: new Date(),
+                        }
+                    });
+                }
+
+                await tx.billingEvent.create({
+                    data: {
+                        workspaceId: sub.workspaceId,
+                        type: 'payment_succeeded',
+                        description: `Payment of $${((invoice.amount_paid ?? 0) / 100).toFixed(2)} succeeded`,
+                        amount: invoice.amount_paid ?? 0,
+                        actorType: 'system'
+                    }
+                });
+            }).catch(err => logError('[STRIPE] Failed payment success transaction', err));
+
             logInfo(`[STRIPE] Payment succeeded for subscription ${subscriptionId}`);
+
+            // Send payment success email to workspace owner
+            try {
+                const workspace = await prisma.workspace.findFirst({
+                    where: { subscription: { id: sub.id } },
+                    include: { owner: { select: { name: true, email: true } }, subscription: { select: { plan: true } } },
+                });
+                if (workspace?.owner?.email) {
+                    const amount = invoice.amount_paid ? `$${(invoice.amount_paid / 100).toFixed(2)}` : 'N/A';
+                    await sendEmail({
+                        to: workspace.owner.email,
+                        subject: `Payment received for ${workspace.name}`,
+                        html: getPaymentSuccessEmailTemplate(
+                            workspace.owner.name || 'there',
+                            workspace.name,
+                            workspace.subscription?.plan || 'Unknown',
+                            amount
+                        ),
+                    });
+                }
+            } catch (emailErr) {
+                logError('[STRIPE] Failed to send payment success email', emailErr);
+            }
         }
     }
 
@@ -188,11 +369,129 @@ export class StripeWebhookService {
                 logWarn(`[STRIPE] Invalid status transition ${sub.status} → PAST_DUE on payment failure for ${subscriptionId}, skipping`);
                 return;
             }
+            await prisma.$transaction(async (tx) => {
+                await tx.subscription.update({
+                    where: { id: sub.id },
+                    data: { status: 'PAST_DUE' },
+                });
+
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const paymentIntentId = (invoice as any).payment_intent as string | undefined;
+
+                if (invoice.id) {
+                    await tx.payment.upsert({
+                        where: { stripeInvoiceId: invoice.id },
+                        create: {
+                            workspaceId: sub.workspaceId,
+                            stripeInvoiceId: invoice.id,
+                            stripePaymentIntentId: paymentIntentId,
+                            stripeCustomerId: sub.stripeCustomerId ?? undefined,
+                            amount: invoice.amount_due ?? 0,
+                            currency: invoice.currency ?? 'usd',
+                            status: 'FAILED',
+                            plan: sub.plan as SubscriptionPlan,
+                            description: `Failed payment for ${sub.plan} plan`,
+                            failureReason: 'Payment method declined or insufficient funds',
+                        },
+                        update: { status: 'FAILED', failureReason: 'Payment method declined or insufficient funds' },
+                    });
+                } else {
+                    await tx.payment.create({
+                        data: {
+                            workspaceId: sub.workspaceId,
+                            stripePaymentIntentId: paymentIntentId,
+                            stripeCustomerId: sub.stripeCustomerId ?? undefined,
+                            amount: invoice.amount_due ?? 0,
+                            currency: invoice.currency ?? 'usd',
+                            status: 'FAILED',
+                            plan: sub.plan as SubscriptionPlan,
+                            description: `Failed payment for ${sub.plan} plan`,
+                            failureReason: 'Payment method declined or insufficient funds',
+                        }
+                    });
+                }
+
+                await tx.billingEvent.create({
+                    data: {
+                        workspaceId: sub.workspaceId,
+                        type: 'payment_failed',
+                        description: `Payment of $${((invoice.amount_due ?? 0) / 100).toFixed(2)} failed`,
+                        amount: invoice.amount_due ?? 0,
+                        actorType: 'system'
+                    }
+                });
+            }).catch(err => logError('[STRIPE] Failed payment failed transaction', err));
+
+            logWarn(`[STRIPE] Payment failed for subscription ${subscriptionId}`);
+
+            // Send payment failed email to workspace owner
+            try {
+                const workspace = await prisma.workspace.findFirst({
+                    where: { subscription: { id: sub.id } },
+                    include: { owner: { select: { name: true, email: true } } },
+                });
+                if (workspace?.owner?.email) {
+                    const amount = invoice.amount_due ? `$${(invoice.amount_due / 100).toFixed(2)}` : 'N/A';
+                    await sendEmail({
+                        to: workspace.owner.email,
+                        subject: `Payment failed for ${workspace.name}`,
+                        html: getPaymentFailedEmailTemplate(
+                            workspace.owner.name || 'there',
+                            workspace.name,
+                            amount
+                        ),
+                    });
+                }
+            } catch (emailErr) {
+                logError('[STRIPE] Failed to send payment failed email', emailErr);
+            }
+        }
+    }
+
+    static async handlePaymentActionRequired(invoice: Stripe.Invoice): Promise<void> {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const subscriptionId = (invoice as any).subscription as string | null;
+        if (!subscriptionId) return;
+
+        const sub = await prisma.subscription.findFirst({
+            where: { stripeSubscriptionId: subscriptionId },
+        });
+
+        if (sub) {
             await prisma.subscription.update({
                 where: { id: sub.id },
                 data: { status: 'PAST_DUE' },
             });
-            logWarn(`[STRIPE] Payment failed for subscription ${subscriptionId}`);
+            logWarn(`[STRIPE] Payment action required for subscription ${subscriptionId}`);
+
+            // Record billing event
+            await BillingService.recordBillingEvent({
+                workspaceId: sub.workspaceId,
+                type: 'payment_action_required',
+                description: `Action (like 3D Secure) required for payment of $${((invoice.amount_due ?? 0) / 100).toFixed(2)}`,
+                amount: invoice.amount_due ?? 0,
+            }).catch(err => logError('[STRIPE] Failed to record billing event', err));
+
+            // Send notification
+            try {
+                const workspace = await prisma.workspace.findFirst({
+                    where: { subscription: { id: sub.id } },
+                    include: { owner: { select: { name: true, email: true } } },
+                });
+                if (workspace?.owner?.email && invoice.hosted_invoice_url) {
+                    await sendEmail({
+                        to: workspace.owner.email,
+                        subject: `Action Required: Payment for ${workspace.name}`,
+                        html: getPaymentActionRequiredEmailTemplate(
+                            workspace.owner.name || 'there',
+                            workspace.name,
+                            invoice.hosted_invoice_url
+                        ),
+                    });
+                }
+            } catch (emailErr) {
+                logError('[STRIPE] Failed to send payment action required email', emailErr);
+            }
         }
     }
 }

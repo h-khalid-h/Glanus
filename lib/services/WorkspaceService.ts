@@ -55,7 +55,7 @@ export interface ActivityItem {
     timestamp: string;
 }
 
-const PLAN_LIMITS = {
+export const PLAN_LIMITS = {
     FREE: { maxAssets: 5, maxAICreditsPerMonth: 100, maxStorageMB: 1024 },
     PERSONAL: { maxAssets: 50, maxAICreditsPerMonth: 1000, maxStorageMB: 10240 },
     TEAM: { maxAssets: 200, maxAICreditsPerMonth: 5000, maxStorageMB: 51200 },
@@ -84,13 +84,19 @@ export class WorkspaceService {
      * List all workspaces for a user (owned + member), with plan and member counts.
      */
     static async listWorkspaces(userId: string) {
+        // Check if user is a system admin — admins can see all workspaces
+        const user = await prisma.user.findUnique({ where: { id: userId }, select: { role: true } });
+        const isSystemAdmin = user?.role === 'ADMIN' || user?.role === 'IT_STAFF';
+
         const workspaces = await prisma.workspace.findMany({
             where: {
                 deletedAt: null,
-                OR: [
-                    { ownerId: userId },
-                    { members: { some: { userId } } },
-                ],
+                ...(!isSystemAdmin && {
+                    OR: [
+                        { ownerId: userId },
+                        { members: { some: { userId } } },
+                    ],
+                }),
             },
             include: {
                 subscription: {
@@ -105,7 +111,7 @@ export class WorkspaceService {
         return workspaces.map((workspace) => {
             const membership = workspace.members.find((m) => m.userId === userId);
             const isOwner = workspace.ownerId === userId;
-            return { ...workspace, userRole: isOwner ? 'OWNER' : (membership?.role || 'VIEWER') };
+            return { ...workspace, userRole: isSystemAdmin ? 'OWNER' : isOwner ? 'OWNER' : (membership?.role || 'VIEWER') };
         });
     }
 

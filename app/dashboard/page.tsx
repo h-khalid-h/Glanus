@@ -89,10 +89,14 @@ export default function DashboardPage() {
     const [data, setData] = useState<DashboardData | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const { workspace } = useWorkspace();
+    const { workspace, isLoading: wsLoading } = useWorkspace();
 
     useEffect(() => {
-        if (!workspace?.id) return;
+        if (wsLoading) return;
+        if (!workspace?.id) {
+            setLoading(false);
+            return;
+        }
 
         setLoading(true);
         csrfFetch(`/api/dashboard?workspaceId=${workspace.id}`)
@@ -108,12 +112,22 @@ export default function DashboardPage() {
                 setError(err instanceof Error ? err.message : 'An unexpected error occurred');
                 setLoading(false);
             });
-    }, [workspace?.id]);
+    }, [workspace?.id, wsLoading]);
 
     /* ───── Loading ───── */
-    if (loading) {
+    if (loading || wsLoading) {
         return (
             <PageSpinner text="Loading dashboard…" />
+        );
+    }
+
+    /* ───── No workspace ───── */
+    if (!workspace?.id) {
+        return (
+            <EmptyState
+                title="No workspace selected"
+                description="Create or select a workspace to view your dashboard."
+            />
         );
     }
 

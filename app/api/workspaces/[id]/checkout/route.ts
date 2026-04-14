@@ -1,5 +1,5 @@
 import { apiSuccess, apiError } from '@/lib/api/response';
-import { stripe, PLAN_PRICE_IDS } from '@/lib/stripe/client';
+import { stripe, getPlanPriceIds } from '@/lib/stripe/client';
 import { requireAuth, requireWorkspaceRole, withErrorHandler } from '@/lib/api/withAuth';
 import { checkoutSchema } from '@/lib/schemas/workspace.schemas';
 import { withRateLimit } from '@/lib/security/rateLimit';
@@ -19,8 +19,9 @@ export const POST = withErrorHandler(async (
 
     const { priceId } = checkoutSchema.parse(await request.json());
 
-    // Validate priceId is one of the configured plan prices
-    const allowedPriceIds = Object.values(PLAN_PRICE_IDS).filter(Boolean);
+    // Validate priceId against DB-sourced plan prices (falls back to env)
+    const planPriceIds = await getPlanPriceIds();
+    const allowedPriceIds = Object.values(planPriceIds).filter(Boolean);
     if (!allowedPriceIds.includes(priceId)) {
         return apiError(400, 'Invalid price ID');
     }
@@ -40,8 +41,8 @@ export const POST = withErrorHandler(async (
             subscription_data: {
                 metadata: { workspaceId },
             },
-            success_url: `${baseUrl}/workspaces/${workspaceId}/manage/settings?status=success`,
-            cancel_url: `${baseUrl}/workspaces/${workspaceId}/manage/settings?status=canceled`,
+            success_url: `${baseUrl}/workspaces/manage/settings?status=success`,
+            cancel_url: `${baseUrl}/workspaces/manage/settings?status=canceled`,
         });
 
         return apiSuccess({ url: checkoutSession.url });

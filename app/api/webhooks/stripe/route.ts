@@ -26,6 +26,11 @@ export async function POST(request: Request) {
         return apiError(503, 'Webhook processing not configured');
     }
 
+    if (!stripe) {
+        logError('[STRIPE_WEBHOOK] Stripe client not initialized — STRIPE_SECRET_KEY is missing');
+        return apiError(503, 'Stripe not configured');
+    }
+
     const body = await request.text();
     const headersList = await headers();
     const sig = headersList.get('stripe-signature') || '';
@@ -61,6 +66,9 @@ export async function POST(request: Request) {
                 break;
             case 'invoice.payment_failed':
                 await StripeWebhookService.handlePaymentFailed(event.data.object as Stripe.Invoice);
+                break;
+            case 'invoice.payment_action_required':
+                await StripeWebhookService.handlePaymentActionRequired(event.data.object as Stripe.Invoice);
                 break;
             default:
                 logInfo(`[STRIPE_WEBHOOK] Unhandled event type: ${event.type}`);

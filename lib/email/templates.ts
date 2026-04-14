@@ -301,3 +301,27 @@ export const getPasswordResetEmailTemplate = (resetUrl: string) => {
   `);
 };
 
+/**
+ * Payment action required email - sent when a payment needs 3D secure authentication
+ */
+export const getPaymentActionRequiredEmailTemplate = (
+  userName: string,
+  workspaceName: string,
+  paymentUrl: string
+) => {
+  const eUser = escapeHtml(userName);
+  const eWorkspace = escapeHtml(workspaceName);
+  const ePaymentUrl = sanitizeHrefUrl(paymentUrl);
+  return emailWrapper(`
+    <div class="content">
+      <h2>Action Required for Your Payment ⚠️</h2>
+      <p>Hi <strong>${eUser}</strong>,</p>
+      <p>Your bank requires additional authentication for your recent payment for the <strong>${eWorkspace}</strong> workspace.</p>
+      <p>To avoid service interruption and ensure your subscription remains active, please complete the authentication process.</p>
+      <div style="text-align: center;">
+        <a href="${ePaymentUrl}" class="button">Complete Payment</a>
+      </div>
+    </div>
+  `);
+};
+

@@ -27,13 +27,12 @@ export default async function SuperAdminLayout({ children }: { children: ReactNo
 
     const user = await prisma.user.findUnique({
         where: { email: session.user.email },
-        select: { role: true, name: true, email: true },
+        select: { role: true, isStaff: true, name: true, email: true },
     });
 
-    const isStaff = user?.role === 'ADMIN' || user?.role === 'IT_STAFF';
-    if (!isStaff) {
-        // Regular workspace users should never reach here — send them home
-        redirect('/workspaces');
+    if (!user?.isStaff) {
+        // Non-staff users should never reach here — send them home
+        redirect('/dashboard');
     }
 
     return (

@@ -26,7 +26,7 @@ const PLANS: Plan[] = [
     {
         id: 'PERSONAL',
         name: 'Personal',
-        price: '$19',
+        price: '$9',
         features: [
             '50 Assets',
             '1,000 AI Credits/mo',
@@ -39,7 +39,7 @@ const PLANS: Plan[] = [
     {
         id: 'TEAM',
         name: 'Team',
-        price: '$49',
+        price: '$29',
         features: [
             '200 Assets',
             '5,000 AI Credits/mo',
