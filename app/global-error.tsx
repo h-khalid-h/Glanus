@@ -24,7 +24,7 @@ export default function GlobalError({
 
     return (
         <html>
-            <body className="bg-gradient-midnight text-white flex items-center justify-center min-h-screen">
+            <body className="bg-background text-foreground flex items-center justify-center min-h-screen">
                 <div className="text-center max-w-md px-6">
                     {/* Icon */}
                     <div className="mb-6 inline-flex h-16 w-16 items-center justify-center rounded-full bg-health-critical/10 text-health-critical">
@@ -34,7 +34,7 @@ export default function GlobalError({
                     </div>
 
                     <h2 className="text-2xl font-bold mb-3">Something went wrong</h2>
-                    <p className="text-slate-400 mb-8 text-sm leading-relaxed">
+                    <p className="text-muted-foreground mb-8 text-sm leading-relaxed">
                         An unexpected error occurred. Our team has been notified and is looking into it.
                     </p>
 
@@ -42,20 +42,20 @@ export default function GlobalError({
                         <button type="button"
                             aria-label="Try again"
                             onClick={() => reset()}
-                            className="px-6 py-2.5 bg-nerve text-white font-medium rounded-lg transition-all hover:brightness-110 hover:shadow-lg hover:shadow-nerve/20"
+                            className="px-6 py-2.5 bg-primary text-primary-foreground font-medium rounded-lg transition-all hover:brightness-110 hover:shadow-lg hover:shadow-primary/20"
                         >
                             Try again
                         </button>
                         <Link
                             href="/"
-                            className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-zinc-800 hover:text-white h-10 px-4 py-2"
+                            className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-foreground h-10 px-4 py-2"
                         >
                             Go home
                         </Link>
                     </div>
 
                     {error.digest && (
-                        <p className="mt-8 text-xs text-slate-500">
+                        <p className="mt-8 text-xs text-muted-foreground">
                             Error ID: {error.digest}
                         </p>
                     )}

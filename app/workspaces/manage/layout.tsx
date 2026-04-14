@@ -27,20 +27,20 @@ export default function AdminManagementLayout({ children }: { children: React.Re
             </div>
 
             {/* Tabs Navigation */}
-            <div className="inline-flex h-11 items-center justify-center rounded-xl bg-surface-container-low/50 p-1 border border-slate-800/40 w-fit">
+            <div className="inline-flex h-11 items-center justify-center rounded-xl bg-surface-container-low/50 p-1 border border-border/40 w-fit">
                 {tabs.map(tab => {
                     const isActive = pathname.startsWith(tab.href);
                     return (
                         <Link
                             key={tab.href}
                             href={tab.href}
-                            className={`inline-flex items-center justify-center whitespace-nowrap rounded-lg px-4 py-1.5 text-sm font-medium transition-all ${
+                            className={`inline-flex items-center justify-center whitespace-nowrap rounded-xl px-4 py-1.5 text-sm font-medium transition-all ${
                                 isActive 
-                                    ? 'bg-surface-1 text-primary shadow-sm border border-slate-700/50 text-foreground' 
-                                    : 'text-slate-400 hover:text-slate-200 hover:bg-surface-2/30'
+                                    ? 'bg-surface-1 text-primary shadow-sm border border-border text-foreground' 
+                                    : 'text-muted-foreground hover:text-foreground hover:bg-surface-2/30'
                             }`}
                         >
-                            <tab.icon className={`mr-2 h-4 w-4 ${isActive ? 'text-primary' : 'text-slate-400'}`} />
+                            <tab.icon className={`mr-2 h-4 w-4 ${isActive ? 'text-primary' : 'text-muted-foreground'}`} />
                             {tab.name}
                         </Link>
                     )

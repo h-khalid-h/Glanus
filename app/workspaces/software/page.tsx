@@ -83,24 +83,24 @@ function SoftwareInventoryContent() {
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
                     <h1 className="text-2xl font-bold text-foreground">Software Inventory</h1>
-                    <p className="text-sm text-slate-400 mt-1">Aggregated installed applications across all active endpoint agents.</p>
+                    <p className="text-sm text-muted-foreground mt-1">Aggregated installed applications across all active endpoint agents.</p>
                 </div>
             </div>
 
-            <div className="rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm overflow-hidden flex flex-col min-h-[500px]">
+            <div className="rounded-xl border border-border bg-card backdrop-blur-sm overflow-hidden flex flex-col min-h-[500px]">
                 {/* Toolbar */}
-                <div className="p-4 border-b border-slate-800 flex flex-col sm:flex-row justify-between items-center gap-4 bg-slate-900/50">
+                <div className="p-4 border-b border-border flex flex-col sm:flex-row justify-between items-center gap-4 bg-card">
                     <div className="relative w-full sm:w-96">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4" />
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
                         <input
                             type="text"
                             placeholder="Search applications, publishers, or versions..."
                             value={query}
                             onChange={(e) => setQuery(e.target.value)}
-                            className="w-full bg-slate-950 border border-slate-800 rounded-lg pl-9 pr-4 py-2 text-sm text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-health-good focus:ring-1 focus:ring-health-good transition"
+                            className="w-full bg-background border border-border rounded-xl pl-9 pr-4 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-health-good focus:ring-1 focus:ring-health-good transition"
                         />
                     </div>
-                    <div className="text-sm text-slate-500 shrink-0">
+                    <div className="text-sm text-muted-foreground shrink-0">
                         {sortedFilteredSoftware.length} Unique Titles Found
                     </div>
                 </div>
@@ -115,52 +115,52 @@ function SoftwareInventoryContent() {
                     <div className="overflow-x-auto flex-grow">
                         <table className="w-full text-left border-collapse">
                             <thead>
-                                <tr className="border-b border-slate-800 bg-slate-900/50 text-xs text-slate-400 uppercase tracking-wider">
-                                    <th className="p-4 font-medium hover:text-slate-200 cursor-pointer select-none" onClick={() => handleSort('name')}>
+                                <tr className="border-b border-border bg-card text-xs text-muted-foreground uppercase tracking-wider">
+                                    <th className="p-4 font-medium hover:text-foreground cursor-pointer select-none" onClick={() => handleSort('name')}>
                                         <div className="flex items-center gap-1">
                                             Application {sortField === 'name' && <ArrowUpDown className="w-3 h-3" />}
                                         </div>
                                     </th>
-                                    <th className="p-4 font-medium hover:text-slate-200 cursor-pointer select-none" onClick={() => handleSort('publisher')}>
+                                    <th className="p-4 font-medium hover:text-foreground cursor-pointer select-none" onClick={() => handleSort('publisher')}>
                                         <div className="flex items-center gap-1">
                                             Publisher {sortField === 'publisher' && <ArrowUpDown className="w-3 h-3" />}
                                         </div>
                                     </th>
-                                    <th className="p-4 font-medium hover:text-slate-200 cursor-pointer select-none" onClick={() => handleSort('version')}>
+                                    <th className="p-4 font-medium hover:text-foreground cursor-pointer select-none" onClick={() => handleSort('version')}>
                                         <div className="flex items-center gap-1">
                                             Version {sortField === 'version' && <ArrowUpDown className="w-3 h-3" />}
                                         </div>
                                     </th>
-                                    <th className="p-4 font-medium text-right hover:text-slate-200 cursor-pointer select-none" onClick={() => handleSort('installCount')}>
+                                    <th className="p-4 font-medium text-right hover:text-foreground cursor-pointer select-none" onClick={() => handleSort('installCount')}>
                                         <div className="flex items-center justify-end gap-1">
                                             Endpoints Installed {sortField === 'installCount' && <ArrowUpDown className="w-3 h-3" />}
                                         </div>
                                     </th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-800/50">
+                            <tbody className="divide-y divide-border/50">
                                 {sortedFilteredSoftware.length === 0 ? (
                                     <tr>
-                                        <td colSpan={4} className="p-8 text-center text-slate-500">
+                                        <td colSpan={4} className="p-8 text-center text-muted-foreground">
                                             No software matched your search query.
                                         </td>
                                     </tr>
                                 ) : (
                                     sortedFilteredSoftware.map((sw, idx) => (
-                                        <tr key={idx} className="hover:bg-slate-800/30 transition group">
+                                        <tr key={idx} className="hover:bg-muted/30 transition group">
                                             <td className="p-4">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="w-8 h-8 rounded-md bg-slate-800 flex items-center justify-center shrink-0 border border-slate-700 group-hover:bg-slate-700 transition">
-                                                        <Box className="w-4 h-4 text-slate-400 group-hover:text-slate-300" />
+                                                    <div className="w-8 h-8 rounded-md bg-muted flex items-center justify-center shrink-0 border border-border group-hover:bg-muted transition">
+                                                        <Box className="w-4 h-4 text-muted-foreground group-hover:text-foreground" />
                                                     </div>
-                                                    <span className="font-medium text-slate-200">{sw.name}</span>
+                                                    <span className="font-medium text-foreground">{sw.name}</span>
                                                 </div>
                                             </td>
-                                            <td className="p-4 text-sm text-slate-400">
+                                            <td className="p-4 text-sm text-muted-foreground">
                                                 {sw.publisher || 'Unknown Publisher'}
                                             </td>
                                             <td className="p-4">
-                                                <span className="px-2 py-1 text-xs font-mono bg-slate-950 border border-slate-800 text-slate-300 rounded overflow-hidden text-ellipsis max-w-[150px] inline-block whitespace-nowrap">
+                                                <span className="px-2 py-1 text-xs font-mono bg-background border border-border text-foreground rounded overflow-hidden text-ellipsis max-w-[150px] inline-block whitespace-nowrap">
                                                     {sw.version || 'Unknown'}
                                                 </span>
                                             </td>

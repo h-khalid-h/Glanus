@@ -75,11 +75,11 @@ export default function RemoteSessionsPage() {
             case 'ACTIVE':
                 return 'bg-health-good/15 text-health-good';
             case 'ENDED':
-                return 'bg-slate-800/50 text-slate-200';
+                return 'bg-muted/50 text-foreground';
             case 'FAILED':
                 return 'bg-health-critical/15 text-health-critical';
             default:
-                return 'bg-slate-800/50 text-slate-200';
+                return 'bg-muted/50 text-foreground';
         }
     };
 
@@ -117,7 +117,7 @@ export default function RemoteSessionsPage() {
                             setAssetsLoading(false);
                         }
                     }}
-                    className="flex items-center gap-2 px-4 py-2 bg-nerve text-white rounded-lg hover:brightness-110 transition-all"
+                    className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:brightness-110 transition-all"
                 >
                     <Plus size={16} />
                     New Session
@@ -129,14 +129,14 @@ export default function RemoteSessionsPage() {
                 <div className="mb-6 rounded-xl border border-nerve/30 bg-nerve/5 p-4 animate-in slide-in-from-top-2 duration-200">
                     <div className="flex items-center justify-between mb-3">
                         <h3 className="text-sm font-semibold text-foreground">Select an asset to connect to</h3>
-                        <button type="button" onClick={() => setShowNewSession(false)} className="text-slate-400 hover:text-white">
+                        <button type="button" onClick={() => setShowNewSession(false)} className="text-muted-foreground hover:text-foreground">
                             <X size={16} />
                         </button>
                     </div>
                     {assetsLoading ? (
-                        <p className="text-sm text-slate-400">Loading assets…</p>
+                        <p className="text-sm text-muted-foreground">Loading assets…</p>
                     ) : assets.length === 0 ? (
-                        <p className="text-sm text-slate-400">No assets found. Make sure assets are added to a workspace.</p>
+                        <p className="text-sm text-muted-foreground">No assets found. Make sure assets are added to a workspace.</p>
                     ) : (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                             {assets.map((asset) => (
@@ -164,12 +164,12 @@ export default function RemoteSessionsPage() {
                                         }
                                     }}
                                     disabled={connectingAssetId === asset.id}
-                                    className="flex items-center gap-2 p-3 rounded-lg border border-slate-700 hover:border-nerve/50 hover:bg-nerve/5 transition-all text-left disabled:opacity-50"
+                                    className="flex items-center gap-2 p-3 rounded-lg border border-border hover:border-nerve/50 hover:bg-nerve/5 transition-all text-left disabled:opacity-50"
                                 >
                                     <Monitor size={16} className="text-nerve shrink-0" />
                                     <div className="min-w-0">
-                                        <p className="text-sm font-medium text-white truncate">{asset.name}</p>
-                                        <p className="text-xs text-slate-400 truncate">{asset.category}</p>
+                                        <p className="text-sm font-medium text-foreground truncate">{asset.name}</p>
+                                        <p className="text-xs text-muted-foreground truncate">{asset.category}</p>
                                     </div>
                                     {connectingAssetId === asset.id && (
                                         <span className="text-xs text-nerve ml-auto">Connecting…</span>
@@ -187,7 +187,7 @@ export default function RemoteSessionsPage() {
                     <span className="font-semibold">Requirements:</span>{' '}
                     Remote desktop connections require the Glanus Agent installed on target machines
                     and a WebRTC signaling server. See the{' '}
-                    <Link href="/download-agent" className="underline hover:text-white">agent download page</Link>
+                    <Link href="/download-agent" className="underline hover:text-foreground">agent download page</Link>
                     {' '}for setup instructions.
                 </p>
             </div>
@@ -202,7 +202,7 @@ export default function RemoteSessionsPage() {
                                 key={status}
                                 onClick={() => setStatusFilter(status)}
                                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${statusFilter === status
-                                    ? 'bg-nerve text-white'
+                                    ? 'bg-primary text-primary-foreground'
                                     : 'bg-muted text-muted-foreground hover:bg-muted/80'
                                     }`}
                             >

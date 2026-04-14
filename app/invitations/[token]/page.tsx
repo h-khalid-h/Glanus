@@ -71,7 +71,7 @@ export default function InvitationPage({ params: paramsPromise }: { params: Prom
 
     if (inviteState.loading || status === 'loading') {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gradient-midnight">
+            <div className="min-h-screen flex items-center justify-center bg-background">
                 <Loader2 className="w-8 h-8 animate-spin text-nerve" />
             </div>
         );
@@ -79,13 +79,13 @@ export default function InvitationPage({ params: paramsPromise }: { params: Prom
 
     if (inviteState.error) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gradient-midnight p-4">
-                <div className="max-w-md w-full bg-slate-900/50 backdrop-blur-sm shadow-xl rounded-2xl p-8 text-center border border-slate-800">
+            <div className="min-h-screen flex items-center justify-center bg-background p-4">
+                <div className="max-w-md w-full bg-card backdrop-blur-sm shadow-xl rounded-2xl p-8 text-center border border-border">
                     <div className="w-16 h-16 bg-health-critical/10 rounded-full flex items-center justify-center mx-auto mb-4 text-health-critical">
                         <XCircle className="w-8 h-8" />
                     </div>
                     <h2 className="text-xl font-bold text-foreground mb-2">Invitation Error</h2>
-                    <p className="text-slate-500 mb-6">{inviteState.error}</p>
+                    <p className="text-muted-foreground mb-6">{inviteState.error}</p>
                     <Button onClick={() => router.push('/')} variant="secondary" className="w-full">
                         Go Home
                     </Button>
@@ -101,8 +101,8 @@ export default function InvitationPage({ params: paramsPromise }: { params: Prom
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-midnight p-4">
-            <div className="max-w-md w-full bg-slate-900/50 backdrop-blur-sm shadow-xl rounded-2xl p-8 text-center border border-slate-800 animate-in zoom-in-95 duration-300">
+        <div className="min-h-screen flex items-center justify-center bg-background p-4">
+            <div className="max-w-md w-full bg-card backdrop-blur-sm shadow-xl rounded-2xl p-8 text-center border border-border animate-in zoom-in-95 duration-300">
                 <div className="w-16 h-16 bg-nerve/10 rounded-full flex items-center justify-center mx-auto mb-4 text-nerve">
                     <Mail className="w-8 h-8" />
                 </div>
@@ -111,13 +111,13 @@ export default function InvitationPage({ params: paramsPromise }: { params: Prom
                     You've been invited!
                 </h1>
 
-                <p className="text-slate-500 mb-6">
-                    <span className="font-semibold text-white">{invite.inviter.name}</span> has invited you to join the workspace <span className="font-semibold text-white">{invite.workspace.name}</span> as a <span className="uppercase text-xs font-bold bg-slate-800 px-1.5 py-0.5 rounded">{invite.role}</span>.
+                <p className="text-muted-foreground mb-6">
+                    <span className="font-semibold text-foreground">{invite.inviter.name}</span> has invited you to join the workspace <span className="font-semibold text-foreground">{invite.workspace.name}</span> as a <span className="uppercase text-xs font-bold bg-muted px-1.5 py-0.5 rounded">{invite.role}</span>.
                 </p>
 
                 {!session ? (
                     <div className="space-y-4">
-                        <p className="text-sm text-slate-500 bg-health-warn/10 p-3 rounded-lg border border-health-warn/20">
+                        <p className="text-sm text-muted-foreground bg-health-warn/10 p-3 rounded-lg border border-health-warn/20">
                             Please sign in or create an account to accept this invitation.
                         </p>
                         <div className="flex gap-3">
@@ -131,11 +131,11 @@ export default function InvitationPage({ params: paramsPromise }: { params: Prom
                     </div>
                 ) : (
                     <div className="space-y-4">
-                        <div className="bg-slate-800/50 p-4 rounded-xl border border-slate-700">
-                            <p className="text-sm font-medium text-slate-400 mb-1">Signed in as</p>
+                        <div className="bg-muted/50 p-4 rounded-xl border border-border">
+                            <p className="text-sm font-medium text-muted-foreground mb-1">Signed in as</p>
                             <div className="flex items-center justify-center gap-2">
                                 {(session.user as typeof session.user & { image?: string })?.image && <Image src={(session.user as typeof session.user & { image?: string }).image!} alt="Your avatar" width={24} height={24} className="w-6 h-6 rounded-full" />}
-                                <span className="text-white font-semibold">{session.user?.email}</span>
+                                <span className="text-foreground font-semibold">{session.user?.email}</span>
                             </div>
                         </div>
 

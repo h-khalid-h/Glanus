@@ -335,7 +335,7 @@ export default function EditAssetPage({ params }: { params: Promise<{ id: string
                         </div>
 
                         <div className="md:col-span-2">
-                            <label className="block text-sm font-medium text-nerve mb-2">Base Category *</label>
+                            <label className="block text-sm font-medium text-primary mb-2">Base Category *</label>
                             {(() => {
                                 const parentCats = categoriesList.filter(
                                     c => !c.parentId && c.isActive && c.assetTypeValue === formData.assetType
@@ -347,7 +347,7 @@ export default function EditAssetPage({ params }: { params: Promise<{ id: string
                                     <div className="space-y-3">
                                         <select
                                             required
-                                            className="input w-full border-nerve/50 focus:border-nerve"
+                                            className="input w-full border-nerve/50 focus:border-primary"
                                             value={selectedParentCategory?.id || ''}
                                             onChange={e => handleParentCategorySelect(e.target.value)}
                                         >

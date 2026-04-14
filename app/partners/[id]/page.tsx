@@ -77,16 +77,16 @@ export default function PublicPartnerProfilePage() {
     }
 
     return (
-        <div className="min-h-screen bg-slate-900/30">
+        <div className="min-h-screen bg-muted/30">
             {/* Hero Section */}
-            <div className="bg-gradient-to-r from-nerve to-nerve/70 text-white py-16 px-4 sm:px-6 lg:px-8">
+            <div className="bg-gradient-to-r from-nerve to-nerve/70 text-foreground py-16 px-4 sm:px-6 lg:px-8">
                 <div className="max-w-7xl mx-auto">
                     <div className="flex items-start space-x-6">
                         {partner.logo && (
                             <img
                                 src={partner.logo}
                                 alt={partner.companyName}
-                                className="w-24 h-24 rounded-lg bg-slate-800 object-cover"
+                                className="w-24 h-24 rounded-xl bg-muted object-cover"
                             />
                         )}
                         <div className="flex-1">
@@ -113,7 +113,7 @@ export default function PublicPartnerProfilePage() {
                                 </p>
                                 {partner.website && (
                                     <p>
-                                        🌐 <a href={partner.website} target="_blank" rel="noopener noreferrer" className="underline hover:text-white/80">
+                                        🌐 <a href={partner.website} target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground/80">
                                             {partner.website}
                                         </a>
                                     </p>
@@ -130,23 +130,23 @@ export default function PublicPartnerProfilePage() {
                     <div className="lg:col-span-2 space-y-8">
                         {/* About */}
                         {partner.bio && (
-                            <div className="rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm p-6">
+                            <div className="rounded-xl border border-border bg-card backdrop-blur-sm p-6">
                                 <h2 className="text-2xl font-semibold mb-4">About</h2>
-                                <p className="text-slate-300 whitespace-pre-wrap">{partner.bio}</p>
+                                <p className="text-foreground whitespace-pre-wrap">{partner.bio}</p>
                             </div>
                         )}
 
                         {/* Reviews */}
-                        <div className="rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm p-6">
+                        <div className="rounded-xl border border-border bg-card backdrop-blur-sm p-6">
                             <h2 className="text-2xl font-semibold mb-4">Client Reviews</h2>
 
                             {/* Rating Overview */}
                             {partner.averageRating && (
-                                <div className="mb-6 pb-6 border-b border-slate-800">
+                                <div className="mb-6 pb-6 border-b border-border">
                                     <div className="flex items-center space-x-8">
                                         <div className="text-center">
-                                            <p className="text-5xl font-bold text-white">{Number(partner.averageRating).toFixed(1)}</p>
-                                            <p className="text-sm text-slate-400 mt-1">out of 5</p>
+                                            <p className="text-5xl font-bold text-foreground">{Number(partner.averageRating).toFixed(1)}</p>
+                                            <p className="text-sm text-muted-foreground mt-1">out of 5</p>
                                         </div>
                                         <div className="flex-1">
                                             {[5, 4, 3, 2, 1].map((star) => {
@@ -154,14 +154,14 @@ export default function PublicPartnerProfilePage() {
                                                 const percentage = partner.totalReviews > 0 ? (count / partner.totalReviews) * 100 : 0;
                                                 return (
                                                     <div key={star} className="flex items-center space-x-2 mb-1">
-                                                        <span className="text-sm text-slate-400 w-8">{star} ⭐</span>
-                                                        <div className="flex-1 h-2 bg-slate-700 rounded-full overflow-hidden">
+                                                        <span className="text-sm text-muted-foreground w-8">{star} ⭐</span>
+                                                        <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
                                                             <div
                                                                 className="h-full bg-health-warn"
                                                                 style={{ width: `${percentage}%` }}
                                                             />
                                                         </div>
-                                                        <span className="text-sm text-slate-400 w-8">{count}</span>
+                                                        <span className="text-sm text-muted-foreground w-8">{count}</span>
                                                     </div>
                                                 );
                                             })}
@@ -172,27 +172,27 @@ export default function PublicPartnerProfilePage() {
 
                             {/* Individual Reviews */}
                             {partner.assignments.length === 0 ? (
-                                <p className="text-slate-400">No reviews yet</p>
+                                <p className="text-muted-foreground">No reviews yet</p>
                             ) : (
                                 <div className="space-y-6">
                                     {partner.assignments.map((assignment, index) => (
-                                        <div key={index} className="border-b border-slate-800 last:border-0 pb-6 last:pb-0">
+                                        <div key={index} className="border-b border-border last:border-0 pb-6 last:pb-0">
                                             <div className="flex items-start justify-between mb-2">
                                                 <div>
-                                                    <p className="font-semibold text-white">{assignment.workspace.name}</p>
-                                                    <p className="text-sm text-slate-400">
+                                                    <p className="font-semibold text-foreground">{assignment.workspace.name}</p>
+                                                    <p className="text-sm text-muted-foreground">
                                                         {formatDate(assignment.ratedAt)}
                                                     </p>
                                                 </div>
                                                 <div className="flex">
                                                     {Array.from({ length: 5 }).map((_, i) => (
-                                                        <span key={i} className={i < assignment.rating ? 'text-health-warn' : 'text-slate-600'}>
+                                                        <span key={i} className={i < assignment.rating ? 'text-health-warn' : 'text-muted-foreground/60'}>
                                                             ⭐
                                                         </span>
                                                     ))}
                                                 </div>
                                             </div>
-                                            <p className="text-slate-300">{assignment.review}</p>
+                                            <p className="text-foreground">{assignment.review}</p>
                                         </div>
                                     ))}
                                 </div>
@@ -203,9 +203,9 @@ export default function PublicPartnerProfilePage() {
                     {/* Sidebar */}
                     <div className="space-y-6">
                         {/* Service Area */}
-                        <div className="rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm p-6">
+                        <div className="rounded-xl border border-border bg-card backdrop-blur-sm p-6">
                             <h3 className="text-lg font-semibold mb-4">Service Area</h3>
-                            <div className="space-y-2 text-sm text-slate-300">
+                            <div className="space-y-2 text-sm text-foreground">
                                 <p><strong>Location:</strong> {[partner.city, partner.region].filter(Boolean).join(', ') || 'Not specified'}</p>
                                 {partner.serviceRadius && !partner.remoteOnly && (
                                     <p><strong>Service Radius:</strong> {partner.serviceRadius} miles</p>
@@ -216,13 +216,13 @@ export default function PublicPartnerProfilePage() {
 
                         {/* Industries */}
                         {partner.industries && partner.industries.length > 0 && (
-                            <div className="rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm p-6">
+                            <div className="rounded-xl border border-border bg-card backdrop-blur-sm p-6">
                                 <h3 className="text-lg font-semibold mb-4">Industries Served</h3>
                                 <div className="flex flex-wrap gap-2">
                                     {partner.industries.map((industry) => (
                                         <span
                                             key={industry}
-                                            className="px-3 py-1 bg-nerve/10 text-nerve rounded-full text-sm font-medium"
+                                            className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm font-medium"
                                         >
                                             {industry}
                                         </span>
@@ -233,9 +233,9 @@ export default function PublicPartnerProfilePage() {
 
                         {/* Certifications */}
                         {partner.certifications && partner.certifications.length > 0 && (
-                            <div className="rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm p-6">
+                            <div className="rounded-xl border border-border bg-card backdrop-blur-sm p-6">
                                 <h3 className="text-lg font-semibold mb-4">Certifications</h3>
-                                <ul className="space-y-2 text-sm text-slate-300">
+                                <ul className="space-y-2 text-sm text-foreground">
                                     {partner.certifications.map((cert) => (
                                         <li key={cert} className="flex items-center">
                                             <span className="text-health-good mr-2">✓</span>
@@ -247,13 +247,13 @@ export default function PublicPartnerProfilePage() {
                         )}
 
                         {/* Languages */}
-                        <div className="rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm p-6">
+                        <div className="rounded-xl border border-border bg-card backdrop-blur-sm p-6">
                             <h3 className="text-lg font-semibold mb-4">Languages</h3>
                             <div className="flex flex-wrap gap-2">
                                 {partner.languages.map((lang) => (
                                     <span
                                         key={lang}
-                                        className="px-3 py-1 bg-slate-800/50 text-slate-200 rounded-full text-sm"
+                                        className="px-3 py-1 bg-muted/50 text-foreground rounded-full text-sm"
                                     >
                                         {lang}
                                     </span>
@@ -263,9 +263,9 @@ export default function PublicPartnerProfilePage() {
 
                         {/* Contact */}
                         {partner.phone && (
-                            <div className="rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm p-6">
+                            <div className="rounded-xl border border-border bg-card backdrop-blur-sm p-6">
                                 <h3 className="text-lg font-semibold mb-4">Contact</h3>
-                                <p className="text-sm text-slate-300">
+                                <p className="text-sm text-foreground">
                                     <strong>Phone:</strong> {partner.phone}
                                 </p>
                             </div>

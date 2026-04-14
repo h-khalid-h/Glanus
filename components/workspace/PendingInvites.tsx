@@ -126,23 +126,23 @@ export default function PendingInvites({ workspaceId }: { workspaceId: string })
     return (
         <>
             {confirmDialog}
-            <div className="bg-slate-900/50 backdrop-blur-sm rounded-xl shadow-sm border border-slate-800 overflow-hidden mt-8">
-                <div className="px-6 py-4 border-b border-slate-800">
-                    <h3 className="text-lg font-medium text-white">Pending Invitations</h3>
+            <div className="bg-card backdrop-blur-sm rounded-xl shadow-sm border border-border overflow-hidden mt-8">
+                <div className="px-6 py-4 border-b border-border">
+                    <h3 className="text-lg font-medium text-foreground">Pending Invitations</h3>
                 </div>
 
-                <div className="divide-y divide-slate-800">
+                <div className="divide-y divide-border">
                     {invitations.map((invite) => (
-                        <div key={invite.id} className="px-6 py-4 flex items-center justify-between hover:bg-slate-800/50 transition-colors">
+                        <div key={invite.id} className="px-6 py-4 flex items-center justify-between hover:bg-muted/50 transition-colors">
                             <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-slate-400">
+                                <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-muted-foreground">
                                     <Mail className="w-5 h-5" />
                                 </div>
                                 <div>
-                                    <div className="text-sm font-medium text-white">
+                                    <div className="text-sm font-medium text-foreground">
                                         {invite.email}
                                     </div>
-                                    <div className="text-xs text-slate-500">
+                                    <div className="text-xs text-muted-foreground">
                                         Invited by {invite.inviter.name || invite.inviter.email} • Expires {new Date(invite.expiresAt).toLocaleDateString()}
                                     </div>
                                 </div>
@@ -158,7 +158,7 @@ export default function PendingInvites({ workspaceId }: { workspaceId: string })
                                         <button type="button"
                                             onClick={() => handleResend(invite)}
                                             disabled={!!actionLoading}
-                                            className="p-1.5 rounded-md hover:bg-nerve/10 text-nerve hover:text-nerve transition-colors"
+                                            className="p-1.5 rounded-md hover:bg-primary/10 text-primary hover:text-primary transition-colors"
                                             title="Resend Invitation"
                                         >
                                             <RefreshCw className="w-4 h-4" />
@@ -166,7 +166,7 @@ export default function PendingInvites({ workspaceId }: { workspaceId: string })
                                         <button type="button"
                                             onClick={() => requestRevoke(invite.id)}
                                             disabled={!!actionLoading}
-                                            className="p-1.5 rounded-md hover:bg-health-critical/10 text-slate-400 hover:text-health-critical transition-colors"
+                                            className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
                                             title="Revoke Invitation"
                                         >
                                             <Trash2 className="w-4 h-4" />

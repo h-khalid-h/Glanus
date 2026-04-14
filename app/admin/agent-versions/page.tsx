@@ -27,7 +27,7 @@ export default async function AgentVersionsPage() {
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-2xl font-bold text-foreground mb-2">Agent Versions</h1>
-                    <p className="text-slate-400">Manage OTA update payloads and installer distributions.</p>
+                    <p className="text-muted-foreground">Manage OTA update payloads and installer distributions.</p>
                 </div>
                 <Link href="/admin/agent-versions/new">
                     <Button className="gap-2">
@@ -48,20 +48,20 @@ export default async function AgentVersionsPage() {
 
                     <div className="grid gap-4">
                         {platVersions.length === 0 ? (
-                            <div className="p-6 rounded-lg border border-dashed border-slate-700 text-center text-slate-500">
+                            <div className="p-6 rounded-xl border border-dashed border-border text-center text-muted-foreground">
                                 No releases published yet.
                             </div>
                         ) : (
                             platVersions.map((version: any) => (
-                                <Card key={version.id} className="p-4 flex items-center justify-between hover:border-slate-600 transition-colors">
+                                <Card key={version.id} className="p-4 flex items-center justify-between hover:border-border transition-colors">
                                     <div className="flex items-center gap-4">
-                                        <div className="w-10 h-10 rounded bg-slate-800 flex items-center justify-center">
+                                        <div className="w-10 h-10 rounded bg-muted flex items-center justify-center">
                                             {version.status === 'ACTIVE' ? (
                                                 <CheckCircle2 className="w-5 h-5 text-health-good" />
                                             ) : version.status === 'BETA' ? (
                                                 <AlertCircle className="w-5 h-5 text-health-warn" />
                                             ) : (
-                                                <AlertCircle className="w-5 h-5 text-slate-500" />
+                                                <AlertCircle className="w-5 h-5 text-muted-foreground" />
                                             )}
                                         </div>
                                         <div>
@@ -79,12 +79,12 @@ export default async function AgentVersionsPage() {
                                                     </Badge>
                                                 )}
                                             </div>
-                                            <div className="flex items-center gap-4 text-sm text-slate-400">
+                                            <div className="flex items-center gap-4 text-sm text-muted-foreground">
                                                 <span className="flex items-center gap-1.5">
                                                     <FileText className="w-3.5 h-3.5" />
                                                     {new Date(version.createdAt).toLocaleDateString()}
                                                 </span>
-                                                <code className="px-1.5 py-0.5 rounded bg-slate-900 text-xs font-mono">
+                                                <code className="px-1.5 py-0.5 rounded bg-surface-1 text-xs font-mono">
                                                     SHA-256: {version.checksum.substring(0, 12)}...
                                                 </code>
                                             </div>

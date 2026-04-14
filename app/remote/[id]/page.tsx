@@ -210,10 +210,10 @@ export default function ActiveSessionPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+            <div className="min-h-screen bg-background flex items-center justify-center">
                 <div className="text-center">
                     <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-nerve mx-auto mb-4" />
-                    <p className="text-white text-lg">Loading session...</p>
+                    <p className="text-foreground text-lg">Loading session...</p>
                 </div>
             </div>
         );
@@ -221,9 +221,9 @@ export default function ActiveSessionPage() {
 
     if (!session) {
         return (
-            <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+            <div className="min-h-screen bg-background flex items-center justify-center">
                 <div className="text-center">
-                    <p className="text-white text-lg mb-4">Session not found</p>
+                    <p className="text-foreground text-lg mb-4">Session not found</p>
                     <button type="button" onClick={() => router.push('/remote')} className="btn-primary">
                         Back to Sessions
                     </button>
@@ -233,17 +233,17 @@ export default function ActiveSessionPage() {
     }
 
     return (
-        <div className="min-h-screen bg-slate-950">
+        <div className="min-h-screen bg-background">
             {/* Header (only show when not fullscreen) */}
             {!isFullscreen && (
-                <div className="bg-slate-900 border-b border-slate-800 px-6 py-4">
+                <div className="bg-surface-1 border-b border-border px-6 py-4">
                     <div className="max-w-7xl mx-auto flex items-center justify-between">
                         <div>
                             <h1 className="text-xl font-bold text-foreground">{session.asset.name}</h1>
-                            <p className="text-sm text-slate-400">{session.asset.category}</p>
+                            <p className="text-sm text-muted-foreground">{session.asset.category}</p>
                         </div>
-                        <div className="text-sm text-slate-400">
-                            Connected as: <span className="text-white">{session.user.name}</span>
+                        <div className="text-sm text-muted-foreground">
+                            Connected as: <span className="text-foreground">{session.user.name}</span>
                         </div>
                     </div>
                 </div>
@@ -252,7 +252,7 @@ export default function ActiveSessionPage() {
             {/* Main Viewer Container */}
             <div
                 ref={viewerContainerRef}
-                className={`${isFullscreen ? 'h-screen' : 'h-[calc(100vh-200px)]'} bg-slate-950 relative`}
+                className={`${isFullscreen ? 'h-screen' : 'h-[calc(100vh-200px)]'} bg-background relative`}
             >
                 <div className="max-w-7xl mx-auto h-full p-4">
                     <RemoteDesktopViewer

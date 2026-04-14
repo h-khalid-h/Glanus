@@ -178,7 +178,7 @@ export default function WorkspaceAlertsPage() {
         return (
             <>
                 <div className="max-w-5xl mx-auto space-y-6">
-                    <div className="h-8 w-64 animate-pulse rounded-lg bg-surface-2" />
+                    <div className="h-8 w-64 animate-pulse rounded-xl bg-surface-2" />
                     <div className="h-4 w-96 animate-pulse rounded bg-surface-2" />
                     <div className="space-y-4">
                         {[...Array(4)].map((_, i) => (
@@ -200,7 +200,7 @@ export default function WorkspaceAlertsPage() {
         if (action.includes('delete') || action.includes('removed')) return 'bg-destructive/10 text-destructive';
         if (action.includes('create') || action.includes('added')) return 'bg-reflex/10 text-reflex';
         if (action.includes('invite')) return 'bg-cortex/10 text-cortex';
-        return 'bg-nerve/10 text-nerve';
+        return 'bg-primary/10 text-primary';
     };
 
     const getNotificationIcon = (type: string, action: string) => {
@@ -218,7 +218,7 @@ export default function WorkspaceAlertsPage() {
             <div className="mb-8">
                 <button type="button"
                     onClick={() => router.push(`/workspaces/agents`)}
-                    className="text-sm text-nerve hover:underline mb-4"
+                    className="text-sm text-primary hover:underline mb-4"
                 >
                     ← Back to Agents
                 </button>
@@ -229,7 +229,7 @@ export default function WorkspaceAlertsPage() {
                     </div>
                     <button type="button"
                         onClick={createNewRule}
-                        className="flex items-center gap-2 px-4 py-2.5 bg-nerve text-white rounded-lg text-sm font-medium hover:brightness-110 transition-all hover:shadow-lg hover:shadow-nerve/20"
+                        className="flex items-center gap-2 px-4 py-2.5 bg-primary text-foreground rounded-xl text-sm font-medium hover:brightness-110 transition-all hover:shadow-lg hover:shadow-primary/20"
                     >
                         <Bell className="w-4 h-4" />
                         Create Alert Rule
@@ -238,12 +238,12 @@ export default function WorkspaceAlertsPage() {
             </div>
 
             {/* Custom Tab Bar */}
-            <div className="flex space-x-1 border-b border-slate-800 mb-8">
+            <div className="flex space-x-1 border-b border-border mb-8">
                 <button
                     onClick={() => setActiveTab('inbox')}
                     className={`px-4 py-3 text-sm font-medium transition-colors border-b-2 ${activeTab === 'inbox'
-                        ? 'border-nerve text-nerve'
-                        : 'border-transparent text-slate-400 hover:text-slate-300 hover:border-slate-700'
+                        ? 'border-primary text-primary'
+                        : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
                         }`}
                 >
                     Inbox Feed
@@ -251,13 +251,13 @@ export default function WorkspaceAlertsPage() {
                 <button
                     onClick={() => setActiveTab('configuration')}
                     className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors border-b-2 ${activeTab === 'configuration'
-                        ? 'border-nerve text-nerve'
-                        : 'border-transparent text-slate-400 hover:text-slate-300 hover:border-slate-700'
+                        ? 'border-primary text-primary'
+                        : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
                         }`}
                 >
                     Configuration & Rules
                     {rules.filter(r => r.enabled).length > 0 && (
-                        <span className="bg-slate-800 text-slate-300 text-xs px-2 py-0.5 rounded-full">
+                        <span className="bg-muted text-foreground text-xs px-2 py-0.5 rounded-full">
                             {rules.filter(r => r.enabled).length} Active
                         </span>
                     )}
@@ -274,9 +274,9 @@ export default function WorkspaceAlertsPage() {
                             ))}
                         </div>
                     ) : notifications.length === 0 ? (
-                        <div className="text-center py-16 px-4 rounded-xl border border-slate-800 bg-slate-900/10">
-                            <div className="mx-auto w-12 h-12 rounded-full bg-slate-800/50 flex items-center justify-center mb-4">
-                                <Bell className="w-6 h-6 text-slate-400" />
+                        <div className="text-center py-16 px-4 rounded-xl border border-border bg-surface-1/10">
+                            <div className="mx-auto w-12 h-12 rounded-full bg-muted/50 flex items-center justify-center mb-4">
+                                <Bell className="w-6 h-6 text-muted-foreground" />
                             </div>
                             <h3 className="text-lg font-medium text-foreground mb-2">Inbox is Clear</h3>
                             <p className="text-sm text-muted-foreground max-w-sm mx-auto">
@@ -284,12 +284,12 @@ export default function WorkspaceAlertsPage() {
                             </p>
                         </div>
                     ) : (
-                        <div className="rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm divide-y divide-slate-800/50">
+                        <div className="rounded-xl border border-border bg-card backdrop-blur-sm divide-y divide-border/50">
                             {notifications.map((item) => {
                                 const actionStr = (item.action || '').toLowerCase();
                                 return (
-                                <div key={item.id} className="p-4 hover:bg-slate-800/30 transition-colors flex items-start gap-4">
-                                    <div className={`mt-1 shrink-0 w-8 h-8 rounded-lg flex items-center justify-center ${getNotificationColor(item.type, actionStr)}`}>
+                                <div key={item.id} className="p-4 hover:bg-muted/30 transition-colors flex items-start gap-4">
+                                    <div className={`mt-1 shrink-0 w-8 h-8 rounded-xl flex items-center justify-center ${getNotificationColor(item.type, actionStr)}`}>
                                         {getNotificationIcon(item.type, actionStr)}
                                     </div>
                                     <div className="flex-1">
@@ -297,13 +297,13 @@ export default function WorkspaceAlertsPage() {
                                             <p className="text-sm font-medium text-foreground">
                                                 {item.type === 'insight' ? item.action : `${item.actor} performed: ${item.action}`}
                                             </p>
-                                            <span className="text-xs text-slate-500 whitespace-nowrap ml-4">
+                                            <span className="text-xs text-muted-foreground whitespace-nowrap ml-4">
                                                 {new Date(item.createdAt).toLocaleString()}
                                             </span>
                                         </div>
                                         {item.assetName && (
-                                            <p className="text-xs text-slate-400">
-                                                Target: <span className="font-medium text-slate-300">{item.assetName}</span>
+                                            <p className="text-xs text-muted-foreground">
+                                                Target: <span className="font-medium text-foreground">{item.assetName}</span>
                                             </p>
                                         )}
                                         {item.type === 'insight' && item.metadata?.severity && (
@@ -328,9 +328,9 @@ export default function WorkspaceAlertsPage() {
             {activeTab === 'configuration' && (
                 <div className="animate-in fade-in duration-300">
                     {/* Info Box */}
-                    <div className="mb-8 bg-nerve/5 border border-nerve/20 rounded-lg p-6">
-                        <h3 className="text-lg font-semibold text-nerve mb-2">How Alerts Work</h3>
-                        <ul className="list-disc list-inside space-y-1 text-nerve text-sm">
+                    <div className="mb-8 bg-primary/5 border border-primary/20 rounded-xl p-6">
+                        <h3 className="text-lg font-semibold text-primary mb-2">How Alerts Work</h3>
+                        <ul className="list-disc list-inside space-y-1 text-primary text-sm">
                             <li>Alerts trigger when thresholds are exceeded for the specified duration</li>
                             <li>Email notifications sent to all workspace admins</li>
                             <li>Webhooks can be configured for integration with Slack, PagerDuty, etc.</li>
@@ -341,9 +341,9 @@ export default function WorkspaceAlertsPage() {
                     {/* Alert Rules */}
                     <div className="space-y-4">
                         {rules.length === 0 && (
-                            <div className="text-center py-12 px-4 rounded-xl border-2 border-dashed border-slate-800 bg-slate-900/10">
-                                <div className="mx-auto w-12 h-12 rounded-full bg-slate-800/50 flex items-center justify-center mb-4">
-                                    <Bell className="w-6 h-6 text-slate-400" />
+                            <div className="text-center py-12 px-4 rounded-xl border-2 border-dashed border-border bg-surface-1/10">
+                                <div className="mx-auto w-12 h-12 rounded-full bg-muted/50 flex items-center justify-center mb-4">
+                                    <Bell className="w-6 h-6 text-muted-foreground" />
                                 </div>
                                 <h3 className="text-lg font-medium text-foreground mb-2">No Alert Rules Configured</h3>
                                 <p className="text-sm text-muted-foreground max-w-sm mx-auto">
@@ -352,18 +352,18 @@ export default function WorkspaceAlertsPage() {
                             </div>
                         )}
                         {rules.map((rule) => (
-                            <div key={rule.id} className="rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm p-6">
+                            <div key={rule.id} className="rounded-xl border border-border bg-card backdrop-blur-sm p-6">
                                 <div className="flex items-start justify-between">
                                     <div className="flex-1">
                                         <div className="flex items-center space-x-3 mb-2">
                                             <h3 className="text-lg font-semibold text-foreground">{rule.name}</h3>
-                                            <span className={`px-2 py-1 rounded text-xs font-semibold ${rule.enabled ? 'bg-health-good/15 text-health-good' : 'bg-slate-800/50 text-slate-200'
+                                            <span className={`px-2 py-1 rounded text-xs font-semibold ${rule.enabled ? 'bg-health-good/15 text-health-good' : 'bg-muted/50 text-foreground'
                                                 }`}>
                                                 {rule.enabled ? 'Enabled' : 'Disabled'}
                                             </span>
                                         </div>
 
-                                        <div className="text-sm text-slate-400 space-y-1">
+                                        <div className="text-sm text-muted-foreground space-y-1">
                                             <p>
                                                 <span className="font-medium">Trigger:</span> {getMetricLabel(rule.metric)} {' '}
                                                 {rule.metric === 'offline' ? 'for more than' : '>'} {' '}
@@ -383,15 +383,15 @@ export default function WorkspaceAlertsPage() {
                                     <div className="flex items-center space-x-2 ml-4">
                                         <button type="button"
                                             onClick={() => setEditingRule(rule)}
-                                            className="px-4 py-2 text-sm text-nerve hover:bg-nerve/5 rounded-md transition"
+                                            className="px-4 py-2 text-sm text-primary hover:bg-primary/5 rounded-md transition"
                                         >
                                             Edit
                                         </button>
                                         <button type="button"
                                             onClick={() => toggleRule(rule.id)}
                                             className={`px-4 py-2 text-sm rounded-md transition ${rule.enabled
-                                                ? 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-                                                : 'bg-health-good text-white hover:bg-health-good/80'
+                                                ? 'bg-muted text-foreground hover:bg-muted'
+                                                : 'bg-health-good text-foreground hover:bg-health-good/80'
                                                 }`}
                                         >
                                             {rule.enabled ? 'Disable' : 'Enable'}
@@ -405,30 +405,30 @@ export default function WorkspaceAlertsPage() {
                     {/* Edit Modal */}
                     {editingRule && (
                         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-                            <div className="rounded-xl border border-slate-800 bg-slate-900/95 backdrop-blur-xl max-w-2xl w-full p-6">
+                            <div className="rounded-xl border border-border bg-card/95 backdrop-blur-xl max-w-2xl w-full p-6">
                                 <h2 className="text-2xl font-bold text-foreground mb-6">{isCreating ? 'Create Alert Rule' : 'Edit Alert Rule'}</h2>
 
                                 <div className="space-y-4">
                                     <div>
-                                        <label className="block text-sm font-medium text-slate-300 mb-2">
+                                        <label className="block text-sm font-medium text-foreground mb-2">
                                             Rule Name
                                         </label>
                                         <input
                                             type="text"
                                             value={editingRule.name}
                                             onChange={(e) => setEditingRule({ ...editingRule, name: e.target.value })}
-                                            className="w-full px-4 py-2 border border-slate-700 rounded-lg bg-slate-800/50 text-white placeholder:text-slate-500 focus:ring-2 focus:ring-nerve/50 focus:border-nerve/30 focus:outline-none"
+                                            className="w-full px-4 py-2 border border-border rounded-xl bg-muted/50 text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/50 focus:border-primary/30 focus:outline-none"
                                         />
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-medium text-slate-300 mb-2">
+                                        <label className="block text-sm font-medium text-foreground mb-2">
                                             Metric
                                         </label>
                                         <select
                                             value={editingRule.metric}
                                             onChange={(e) => setEditingRule({ ...editingRule, metric: e.target.value as AlertRule['metric'] })}
-                                            className="w-full px-4 py-2 border border-slate-700 rounded-lg bg-slate-800/50 text-white focus:ring-2 focus:ring-nerve/50 focus:border-nerve/30 focus:outline-none"
+                                            className="w-full px-4 py-2 border border-border rounded-xl bg-muted/50 text-foreground focus:ring-2 focus:ring-primary/50 focus:border-primary/30 focus:outline-none"
                                         >
                                             <option value="cpu">CPU Usage</option>
                                             <option value="ram">RAM Usage</option>
@@ -438,7 +438,7 @@ export default function WorkspaceAlertsPage() {
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-medium text-slate-300 mb-2">
+                                        <label className="block text-sm font-medium text-foreground mb-2">
                                             Threshold ({getMetricUnit(editingRule.metric)})
                                         </label>
                                         <input
@@ -447,12 +447,12 @@ export default function WorkspaceAlertsPage() {
                                             onChange={(e) => setEditingRule({ ...editingRule, threshold: parseInt(e.target.value) })}
                                             min="0"
                                             max={editingRule.metric === 'offline' ? '1440' : '100'}
-                                            className="w-full px-4 py-2 border border-slate-700 rounded-lg bg-slate-800/50 text-white focus:ring-2 focus:ring-nerve/50 focus:border-nerve/30 focus:outline-none"
+                                            className="w-full px-4 py-2 border border-border rounded-xl bg-muted/50 text-foreground focus:ring-2 focus:ring-primary/50 focus:border-primary/30 focus:outline-none"
                                         />
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-medium text-slate-300 mb-2">
+                                        <label className="block text-sm font-medium text-foreground mb-2">
                                             Duration (minutes)
                                         </label>
                                         <input
@@ -461,9 +461,9 @@ export default function WorkspaceAlertsPage() {
                                             onChange={(e) => setEditingRule({ ...editingRule, duration: parseInt(e.target.value) })}
                                             min="0"
                                             max="60"
-                                            className="w-full px-4 py-2 border border-slate-700 rounded-lg bg-slate-800/50 text-white focus:ring-2 focus:ring-nerve/50 focus:border-nerve/30 focus:outline-none"
+                                            className="w-full px-4 py-2 border border-border rounded-xl bg-muted/50 text-foreground focus:ring-2 focus:ring-primary/50 focus:border-primary/30 focus:outline-none"
                                         />
-                                        <p className="text-xs text-slate-500 mt-1">
+                                        <p className="text-xs text-muted-foreground mt-1">
                                             Alert triggers after metric exceeds threshold for this long (0 = immediate)
                                         </p>
                                     </div>
@@ -474,9 +474,9 @@ export default function WorkspaceAlertsPage() {
                                                 type="checkbox"
                                                 checked={editingRule.notifyEmail}
                                                 onChange={(e) => setEditingRule({ ...editingRule, notifyEmail: e.target.checked })}
-                                                className="w-4 h-4 text-nerve border-slate-700 rounded focus:ring-nerve/50"
+                                                className="w-4 h-4 text-primary border-border rounded focus:ring-primary/50"
                                             />
-                                            <span className="ml-2 text-sm text-slate-300">Send email notifications</span>
+                                            <span className="ml-2 text-sm text-foreground">Send email notifications</span>
                                         </label>
 
                                         <label className="flex items-center">
@@ -484,9 +484,9 @@ export default function WorkspaceAlertsPage() {
                                                 type="checkbox"
                                                 checked={editingRule.notifyWebhook}
                                                 onChange={(e) => setEditingRule({ ...editingRule, notifyWebhook: e.target.checked })}
-                                                className="w-4 h-4 text-nerve border-slate-700 rounded focus:ring-nerve/50"
+                                                className="w-4 h-4 text-primary border-border rounded focus:ring-primary/50"
                                             />
-                                            <span className="ml-2 text-sm text-slate-300">Send webhook notifications</span>
+                                            <span className="ml-2 text-sm text-foreground">Send webhook notifications</span>
                                         </label>
                                     </div>
                                 </div>
@@ -494,14 +494,14 @@ export default function WorkspaceAlertsPage() {
                                 <div className="mt-6 flex justify-end space-x-3">
                                     <button type="button"
                                         onClick={() => setEditingRule(null)}
-                                        className="px-4 py-2 text-sm text-slate-300 hover:bg-slate-800/50 rounded-md transition"
+                                        className="px-4 py-2 text-sm text-foreground hover:bg-muted/50 rounded-md transition"
                                     >
                                         Cancel
                                     </button>
                                     <button type="button"
                                         onClick={saveRule}
                                         disabled={saving}
-                                        className="px-4 py-2 text-sm bg-nerve text-white rounded-md hover:brightness-110 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                        className="px-4 py-2 text-sm bg-primary text-foreground rounded-md hover:brightness-110 transition disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
                                         {saving ? 'Saving...' : 'Save Changes'}
                                     </button>
@@ -511,15 +511,15 @@ export default function WorkspaceAlertsPage() {
                     )}
 
                     {/* Webhook Configuration */}
-                    <div className="mt-8 rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm p-6">
+                    <div className="mt-8 rounded-xl border border-border bg-card backdrop-blur-sm p-6">
                         <h2 className="text-xl font-semibold mb-4">Webhook Configuration</h2>
-                        <p className="text-sm text-slate-400 mb-4">
+                        <p className="text-sm text-muted-foreground mb-4">
                             Configure webhook URL to receive alert notifications via HTTP POST
                         </p>
 
                         <div className="space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-slate-300 mb-2">
+                                <label className="block text-sm font-medium text-foreground mb-2">
                                     Webhook URL
                                 </label>
                                 <input
@@ -527,22 +527,22 @@ export default function WorkspaceAlertsPage() {
                                     value={webhookUrl}
                                     onChange={(e) => setWebhookUrl(e.target.value)}
                                     placeholder="https://hooks.slack.com/services/..."
-                                    className="w-full px-4 py-2 border border-slate-700 rounded-lg bg-slate-800/50 text-white placeholder:text-slate-500 focus:ring-2 focus:ring-nerve/50 focus:border-nerve/30 focus:outline-none"
+                                    className="w-full px-4 py-2 border border-border rounded-xl bg-muted/50 text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/50 focus:border-primary/30 focus:outline-none"
                                 />
                             </div>
 
                             <button type="button"
                                 onClick={saveWebhook}
                                 disabled={savingWebhook || !webhookUrl}
-                                className="px-4 py-2 bg-nerve text-white rounded-lg hover:brightness-110 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="px-4 py-2 bg-primary text-foreground rounded-xl hover:brightness-110 transition disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {savingWebhook ? 'Saving...' : 'Save Webhook'}
                             </button>
                         </div>
 
-                        <div className="mt-4 p-4 bg-slate-900/30 rounded-md">
-                            <p className="text-xs text-slate-400 font-medium mb-2">Example Payload:</p>
-                            <pre className="text-xs text-slate-200 overflow-x-auto">
+                        <div className="mt-4 p-4 bg-muted/30 rounded-md">
+                            <p className="text-xs text-muted-foreground font-medium mb-2">Example Payload:</p>
+                            <pre className="text-xs text-foreground overflow-x-auto">
                                 {`{
   "alert": "High CPU Usage",
   "asset": "Server-01",

@@ -59,23 +59,23 @@ export default function SignupPage() {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-midnight relative overflow-hidden flex flex-col">
+        <div className="min-h-screen bg-background relative overflow-hidden flex flex-col">
             {/* Background */}
-            <div className="absolute inset-0 bg-grid opacity-30" />
-            <div className="absolute top-1/4 left-1/3 w-80 h-80 rounded-full opacity-8 blur-3xl bg-cortex" />
-            <div className="absolute bottom-1/3 right-1/4 w-64 h-64 rounded-full opacity-6 blur-3xl bg-nerve" />
+            <div className="absolute inset-0 bg-grid opacity-15" />
+            <div className="absolute top-1/4 left-1/3 w-80 h-80 rounded-full opacity-5 blur-3xl bg-cortex" />
+            <div className="absolute bottom-1/3 right-1/4 w-64 h-64 rounded-full opacity-4 blur-3xl bg-primary" />
 
             {/* Header */}
-            <header className="relative z-10 flex items-center justify-between px-6 py-4 md:px-12">
-                <Link href="/" className="flex items-center gap-2">
+            <header className="relative z-10 flex items-center justify-between px-6 py-5 md:px-12">
+                <Link href="/" className="flex items-center gap-2.5">
                     <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M10 6C6.134 6 3 9.134 3 13s3.134 7 7 7"
-                            stroke="hsl(168, 100%, 45%)" strokeWidth="2.5" strokeLinecap="round" />
+                            stroke="hsl(166, 84%, 39%)" strokeWidth="2.5" strokeLinecap="round" />
                         <path d="M22 26c3.866 0 7-3.134 7-7s-3.134-7-7-7"
-                            stroke="hsl(168, 100%, 45%)" strokeWidth="2.5" strokeLinecap="round" />
-                        <circle cx="16" cy="16" r="2" fill="hsl(168, 100%, 45%)" opacity="0.6" />
+                            stroke="hsl(166, 84%, 39%)" strokeWidth="2.5" strokeLinecap="round" />
+                        <circle cx="16" cy="16" r="2" fill="hsl(166, 84%, 39%)" opacity="0.6" />
                     </svg>
-                    <span className="text-lg font-semibold text-white">Glanus</span>
+                    <span className="text-lg font-bold text-foreground">Glanus</span>
                 </Link>
             </header>
 
@@ -83,21 +83,21 @@ export default function SignupPage() {
             <main className="relative z-10 flex flex-1 items-center justify-center px-4">
                 <div className="w-full max-w-md animate-fade-in">
                     <div className="mb-8 text-center">
-                        <h1 className="mb-2 text-3xl font-bold text-white">Create your account</h1>
-                        <p className="text-slate-400">Start managing your infrastructure in minutes</p>
+                        <h1 className="mb-2 text-3xl font-extrabold text-foreground">Create your account</h1>
+                        <p className="text-muted-foreground">Start managing your infrastructure in minutes</p>
                     </div>
 
-                    <div className="rounded-2xl border border-slate-800/80 bg-slate-900/60 backdrop-blur-xl p-8 shadow-2xl">
+                    <div className="rounded-2xl border border-border bg-card/80 backdrop-blur-xl p-8" style={{ boxShadow: 'var(--shadow-xl)' }}>
                         <form onSubmit={handleSubmit} className="space-y-5">
                             {error && (
-                                <div className="rounded-lg bg-health-critical/10 border border-health-critical/20 p-3 text-sm text-health-critical">
+                                <div className="rounded-xl bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive">
                                     {error}
                                 </div>
                             )}
 
                             {/* Name */}
                             <div>
-                                <label htmlFor="name" className="mb-1.5 block text-sm font-medium text-slate-300">
+                                <label htmlFor="name" className="mb-1.5 block text-sm font-medium text-foreground">
                                     Full Name
                                 </label>
                                 <input
@@ -109,15 +109,15 @@ export default function SignupPage() {
                                     required
                                     minLength={2}
                                     autoComplete="name"
-                                    className="w-full rounded-xl border border-slate-700/80 bg-slate-800/50 px-4 py-3 text-sm text-white
-                                               placeholder:text-slate-500 transition-all duration-200
-                                               focus:border-nerve/50 focus:outline-none focus:ring-2 focus:ring-nerve/20"
+                                    className="w-full rounded-xl border border-border bg-muted/40 px-4 py-3 text-sm text-foreground
+                                               placeholder:text-muted-foreground/50 transition-all duration-200
+                                               focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20"
                                 />
                             </div>
 
                             {/* Email */}
                             <div>
-                                <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-slate-300">
+                                <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-foreground">
                                     Email
                                 </label>
                                 <input
@@ -128,15 +128,15 @@ export default function SignupPage() {
                                     placeholder="you@company.com"
                                     required
                                     autoComplete="email"
-                                    className="w-full rounded-xl border border-slate-700/80 bg-slate-800/50 px-4 py-3 text-sm text-white
-                                               placeholder:text-slate-500 transition-all duration-200
-                                               focus:border-nerve/50 focus:outline-none focus:ring-2 focus:ring-nerve/20"
+                                    className="w-full rounded-xl border border-border bg-muted/40 px-4 py-3 text-sm text-foreground
+                                               placeholder:text-muted-foreground/50 transition-all duration-200
+                                               focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20"
                                 />
                             </div>
 
                             {/* Password */}
                             <div>
-                                <label htmlFor="password" className="mb-1.5 block text-sm font-medium text-slate-300">
+                                <label htmlFor="password" className="mb-1.5 block text-sm font-medium text-foreground">
                                     Password
                                 </label>
                                 <input
@@ -148,9 +148,9 @@ export default function SignupPage() {
                                     required
                                     minLength={8}
                                     autoComplete="new-password"
-                                    className="w-full rounded-xl border border-slate-700/80 bg-slate-800/50 px-4 py-3 text-sm text-white
-                                               placeholder:text-slate-500 transition-all duration-200
-                                               focus:border-nerve/50 focus:outline-none focus:ring-2 focus:ring-nerve/20"
+                                    className="w-full rounded-xl border border-border bg-muted/40 px-4 py-3 text-sm text-foreground
+                                               placeholder:text-muted-foreground/50 transition-all duration-200
+                                               focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20"
                                 />
                                 <PasswordStrengthMeter password={password} />
                             </div>
@@ -159,9 +159,9 @@ export default function SignupPage() {
                             <button
                                 type="submit"
                                 disabled={isLoading}
-                                className="w-full rounded-xl bg-nerve px-4 py-3 text-sm font-semibold text-white
-                                           transition-all duration-200 hover:brightness-110 hover:shadow-lg hover:shadow-nerve/20
-                                           disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="w-full rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground
+                                           transition-all duration-200 hover:brightness-110 hover:shadow-lg hover:shadow-primary/20
+                                           active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {isLoading ? (
                                     <span className="flex items-center justify-center gap-2">
@@ -175,22 +175,22 @@ export default function SignupPage() {
                             </button>
                         </form>
 
-                        <p className="mt-4 text-center text-xs text-slate-500">
+                        <p className="mt-4 text-center text-xs text-muted-foreground">
                             By creating an account, you agree to our{' '}
-                            <Link href="/terms" className="text-nerve hover:text-nerve/80 transition-colors underline">
+                            <Link href="/terms" className="text-primary hover:text-primary/80 transition-colors underline">
                                 Terms of Service
                             </Link>{' '}
                             and{' '}
-                            <Link href="/privacy" className="text-nerve hover:text-nerve/80 transition-colors underline">
+                            <Link href="/privacy" className="text-primary hover:text-primary/80 transition-colors underline">
                                 Privacy Policy
                             </Link>
                         </p>
                     </div>
 
                     {/* Footer link */}
-                    <p className="mt-6 text-center text-sm text-slate-500">
+                    <p className="mt-6 text-center text-sm text-muted-foreground">
                         Already have an account?{' '}
-                        <Link href="/login" className="text-nerve hover:text-nerve/80 transition-colors">
+                        <Link href="/login" className="text-primary hover:text-primary/80 font-medium transition-colors">
                             Sign in →
                         </Link>
                     </p>
@@ -213,7 +213,7 @@ function PasswordStrengthMeter({ password }: { password: string }) {
 
     if (!password) {
         return (
-            <p className="mt-1.5 text-xs text-slate-500">
+            <p className="mt-1.5 text-xs text-muted-foreground">
                 Must include uppercase, lowercase, number, and special character
             </p>
         );
@@ -229,7 +229,7 @@ function PasswordStrengthMeter({ password }: { password: string }) {
                 {Array.from({ length: 5 }).map((_, i) => (
                     <div
                         key={i}
-                        className={`h-1 flex-1 rounded-full transition-all duration-300 ${i < score ? strengthColor : 'bg-slate-700'
+                        className={`h-1 flex-1 rounded-full transition-all duration-300 ${i < score ? strengthColor : 'bg-muted'
                             }`}
                     />
                 ))}
@@ -240,7 +240,7 @@ function PasswordStrengthMeter({ password }: { password: string }) {
                     {checks.map((check) => (
                         <span
                             key={check.label}
-                            className={`text-[10px] transition-colors ${check.met ? 'text-slate-400' : 'text-slate-500'}`}
+                            className={`text-[10px] transition-colors ${check.met ? 'text-muted-foreground' : 'text-muted-foreground'}`}
                         >
                             {check.met ? '✓' : '○'} {check.label}
                         </span>

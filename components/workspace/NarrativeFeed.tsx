@@ -57,7 +57,7 @@ function narrativeForAction(entry: AuditLogEntry): { icon: string; text: string;
         return {
             icon: '↗',
             text: `${actor} invited a team member`,
-            accent: 'bg-nerve/10 text-nerve',
+            accent: 'bg-primary/10 text-primary',
         };
     }
     if (action.includes('alert') || action.includes('trigger')) {
@@ -78,7 +78,7 @@ function narrativeForAction(entry: AuditLogEntry): { icon: string; text: string;
         return {
             icon: '→',
             text: `${actor} signed in`,
-            accent: 'bg-nerve/10 text-nerve',
+            accent: 'bg-primary/10 text-primary',
         };
     }
 
@@ -118,7 +118,7 @@ export function NarrativeFeed({ activities, maxItems = 8 }: NarrativeFeedProps) 
             {items.map((item, i) => (
                 <div
                     key={item.id}
-                    className="group flex items-start gap-3 rounded-lg px-3 py-2.5 transition-colors hover:bg-accent/50"
+                    className="group flex items-start gap-3 rounded-xl px-3 py-2.5 transition-colors hover:bg-accent/50"
                     style={{ animationDelay: `${i * 0.05}s` }}
                 >
                     {/* Icon */}

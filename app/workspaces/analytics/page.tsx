@@ -210,28 +210,28 @@ export default function AnalyticsPage() {
                 <div className="card">
                     <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-2">
-                            <Wrench size={16} className="text-nerve" />
+                            <Wrench size={16} className="text-primary" />
                             <h3 className="text-sm font-semibold text-foreground">Maintenance Overview</h3>
                         </div>
-                        <Link href={`/workspaces/maintenance`} className="text-xs text-nerve hover:underline">
+                        <Link href={`/workspaces/maintenance`} className="text-xs text-primary hover:underline">
                             View All →
                         </Link>
                     </div>
                     <div className="grid grid-cols-3 gap-4">
-                        <div className="rounded-lg bg-blue-500/5 border border-blue-500/10 p-3 text-center">
-                            <Calendar size={18} className="mx-auto text-blue-400 mb-1" />
-                            <p className="text-2xl font-bold text-blue-400">{analytics.maintenance.upcoming}</p>
-                            <p className="text-[10px] text-slate-500 uppercase tracking-wider">Upcoming</p>
+                        <div className="rounded-xl bg-cortex/5 border border-cortex/10 p-3 text-center">
+                            <Calendar size={18} className="mx-auto text-cortex mb-1" />
+                            <p className="text-2xl font-bold text-cortex">{analytics.maintenance.upcoming}</p>
+                            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Upcoming</p>
                         </div>
-                        <div className="rounded-lg bg-amber-500/5 border border-amber-500/10 p-3 text-center">
-                            <Clock size={18} className="mx-auto text-amber-400 mb-1" />
-                            <p className="text-2xl font-bold text-amber-400">{analytics.maintenance.inProgress}</p>
-                            <p className="text-[10px] text-slate-500 uppercase tracking-wider">In Progress</p>
+                        <div className="rounded-xl bg-amber-500/5 border border-amber-500/10 p-3 text-center">
+                            <Clock size={18} className="mx-auto text-warning mb-1" />
+                            <p className="text-2xl font-bold text-warning">{analytics.maintenance.inProgress}</p>
+                            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">In Progress</p>
                         </div>
-                        <div className="rounded-lg bg-red-500/5 border border-red-500/10 p-3 text-center">
-                            <AlertTriangle size={18} className="mx-auto text-red-400 mb-1" />
-                            <p className="text-2xl font-bold text-red-400">{analytics.maintenance.overdue}</p>
-                            <p className="text-[10px] text-slate-500 uppercase tracking-wider">Overdue</p>
+                        <div className="rounded-xl bg-destructive/5 border border-destructive/10 p-3 text-center">
+                            <AlertTriangle size={18} className="mx-auto text-destructive mb-1" />
+                            <p className="text-2xl font-bold text-destructive">{analytics.maintenance.overdue}</p>
+                            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Overdue</p>
                         </div>
                     </div>
                 </div>
@@ -239,23 +239,23 @@ export default function AnalyticsPage() {
 
             {/* Partner Marketplace CTA */}
             {(!analytics.partnerAssignment || analytics.partnerAssignment.status === 'PENDING') && (
-                <div className="relative overflow-hidden rounded-xl border border-nerve/30 bg-gradient-to-r from-nerve/5 to-transparent p-6 shadow-lg shadow-nerve/5">
-                    <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-nerve/10 blur-3xl"></div>
+                <div className="relative overflow-hidden rounded-xl border border-primary/30 bg-gradient-to-r from-nerve/5 to-transparent p-6 shadow-lg shadow-primary/5">
+                    <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-primary/10 blur-3xl"></div>
                     <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
                         <div className="max-w-xl">
                             <div className="flex items-center gap-2 mb-2">
                                 <span className="text-xl">🤝</span>
                                 <h3 className="text-lg font-bold text-foreground">Glanus Partner Network</h3>
-                                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-nerve/20 text-nerve uppercase tracking-widest border border-nerve/30">Managed Services</span>
+                                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-primary/20 text-primary uppercase tracking-widest border border-primary/30">Managed Services</span>
                             </div>
-                            <p className="text-sm text-slate-400">
+                            <p className="text-sm text-muted-foreground">
                                 Overwhelmed by IT management? Instantly hire a certified Managed Service Provider (MSP) to monitor your fleet, handle REFLEX automations, and resolve alerts 24/7.
                             </p>
                         </div>
                         <div className="flex-shrink-0">
                             <Link
                                 href={`/workspaces/partner`}
-                                className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-nerve text-white hover:brightness-110 font-medium transition-all shadow-md shadow-nerve/20 w-full md:w-auto"
+                                className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-primary text-foreground hover:brightness-110 font-medium transition-all shadow-md shadow-primary/20 w-full md:w-auto"
                             >
                                 Find an IT Partner
                                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -303,8 +303,8 @@ function IntelligenceBar({ summary, workspaceId }: { summary: IntelligenceSummar
         },
         attention: {
             label: 'Attention Required',
-            color: 'text-health-critical',
-            bg: 'bg-health-critical/10',
+            color: 'text-destructive',
+            bg: 'bg-destructive/10',
             icon: '⚠',
         },
     };
@@ -323,7 +323,7 @@ function IntelligenceBar({ summary, workspaceId }: { summary: IntelligenceSummar
                         <p className="text-xs text-muted-foreground">
                             {summary.totalForecasts} forecast{summary.totalForecasts !== 1 ? 's' : ''}
                             {summary.criticalForecasts > 0 && (
-                                <span className="text-health-critical"> · {summary.criticalForecasts} critical</span>
+                                <span className="text-destructive"> · {summary.criticalForecasts} critical</span>
                             )}
                             {summary.criticalResources > 0 && (
                                 <span className="text-oracle"> · {summary.criticalResources} resource warning{summary.criticalResources !== 1 ? 's' : ''}</span>
@@ -355,7 +355,7 @@ function EmptyWorkspaceGuide({ workspaceId }: { workspaceId: string }) {
             description: 'Deploy the Glanus agent on your first machine',
             href: `/workspaces/download-agent`,
             icon: '📡',
-            accent: 'bg-nerve/10 text-nerve border-nerve/20',
+            accent: 'bg-primary/10 text-primary border-primary/20',
         },
         {
             step: 2,

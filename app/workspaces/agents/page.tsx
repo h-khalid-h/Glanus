@@ -76,10 +76,10 @@ export default function WorkspaceAgentsPage() {
     const getStatusColor = (status: string) => {
         switch (status) {
             case 'ONLINE': return 'bg-health-good/15 text-health-good';
-            case 'OFFLINE': return 'bg-slate-800/50 text-slate-200';
-            case 'ERROR': return 'bg-health-critical/15 text-health-critical';
-            case 'UPDATING': return 'bg-nerve/10 text-nerve';
-            default: return 'bg-slate-800/50 text-slate-200';
+            case 'OFFLINE': return 'bg-muted/50 text-foreground';
+            case 'ERROR': return 'bg-destructive/15 text-destructive';
+            case 'UPDATING': return 'bg-primary/10 text-primary';
+            default: return 'bg-muted/50 text-foreground';
         }
     };
 
@@ -123,42 +123,42 @@ export default function WorkspaceAgentsPage() {
 
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                <div className="rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm p-6">
-                    <p className="text-sm text-slate-400 mb-1">Total Agents</p>
+                <div className="rounded-xl border border-border bg-card backdrop-blur-sm p-6">
+                    <p className="text-sm text-muted-foreground mb-1">Total Agents</p>
                     <p className="text-3xl font-bold text-foreground">{stats.total}</p>
                 </div>
-                <div className="rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm p-6">
-                    <p className="text-sm text-slate-400 mb-1">Online</p>
+                <div className="rounded-xl border border-border bg-card backdrop-blur-sm p-6">
+                    <p className="text-sm text-muted-foreground mb-1">Online</p>
                     <p className="text-3xl font-bold text-health-good">{stats.online}</p>
                 </div>
-                <div className="rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm p-6">
-                    <p className="text-sm text-slate-400 mb-1">Offline</p>
-                    <p className="text-3xl font-bold text-slate-400">{stats.offline}</p>
+                <div className="rounded-xl border border-border bg-card backdrop-blur-sm p-6">
+                    <p className="text-sm text-muted-foreground mb-1">Offline</p>
+                    <p className="text-3xl font-bold text-muted-foreground">{stats.offline}</p>
                 </div>
-                <div className="rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm p-6">
-                    <p className="text-sm text-slate-400 mb-1">Issues</p>
-                    <p className="text-3xl font-bold text-health-critical">{stats.error}</p>
+                <div className="rounded-xl border border-border bg-card backdrop-blur-sm p-6">
+                    <p className="text-sm text-muted-foreground mb-1">Issues</p>
+                    <p className="text-3xl font-bold text-destructive">{stats.error}</p>
                 </div>
             </div>
 
             {/* Agents Table */}
-            <div className="rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm overflow-hidden">
-                <div className="px-6 py-4 border-b border-slate-800">
+            <div className="rounded-xl border border-border bg-card backdrop-blur-sm overflow-hidden">
+                <div className="px-6 py-4 border-b border-border">
                     <h2 className="text-xl font-semibold">Connected Agents</h2>
                 </div>
 
                 {agents.length === 0 ? (
-                    <div className="text-center py-12 px-4 rounded-xl border-2 border-dashed border-slate-800 bg-slate-900/10 m-6">
-                        <div className="mx-auto w-12 h-12 rounded-full bg-slate-800/50 flex items-center justify-center mb-4">
-                            <Server className="w-6 h-6 text-slate-400" />
+                    <div className="text-center py-12 px-4 rounded-xl border-2 border-dashed border-border bg-surface-1/10 m-6">
+                        <div className="mx-auto w-12 h-12 rounded-full bg-muted/50 flex items-center justify-center mb-4">
+                            <Server className="w-6 h-6 text-muted-foreground" />
                         </div>
                         <h3 className="text-lg font-medium text-foreground mb-2">No Agents Installed</h3>
-                        <p className="text-sm text-slate-500 max-w-sm mx-auto mb-6">
+                        <p className="text-sm text-muted-foreground max-w-sm mx-auto mb-6">
                             Install the Glanus agent on your assets to enable remote monitoring and management.
                         </p>
                         <Link
                             href={`/workspaces/download-agent`}
-                            className="inline-block px-6 py-2 bg-nerve text-white text-sm rounded-md font-semibold hover:brightness-110 transition"
+                            className="inline-block px-6 py-2 bg-primary text-foreground text-sm rounded-md font-semibold hover:brightness-110 transition"
                         >
                             Download Agent
                         </Link>
@@ -166,30 +166,30 @@ export default function WorkspaceAgentsPage() {
                 ) : (
                     <div className="overflow-x-auto">
                         <table className="w-full">
-                            <thead className="bg-slate-900/30">
+                            <thead className="bg-muted/30">
                                 <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Asset</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Platform</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Status</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Metrics</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Last Seen</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Actions</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Asset</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Platform</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Status</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Metrics</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Last Seen</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-800">
+                            <tbody className="divide-y divide-border">
                                 {agents.map((agent) => (
-                                    <tr key={agent.id} className="hover:bg-slate-900/30">
+                                    <tr key={agent.id} className="hover:bg-muted/30">
                                         <td className="px-6 py-4">
                                             <div>
                                                 <Link
                                                     href={`/assets/${agent.asset.id}`}
-                                                    className="font-medium text-nerve hover:underline"
+                                                    className="font-medium text-primary hover:underline"
                                                 >
                                                     {agent.asset.name}
                                                 </Link>
-                                                <p className="text-sm text-slate-400">{agent.hostname}</p>
+                                                <p className="text-sm text-muted-foreground">{agent.hostname}</p>
                                                 {agent.asset.serialNumber && (
-                                                    <p className="text-xs text-slate-500">SN: {agent.asset.serialNumber}</p>
+                                                    <p className="text-xs text-muted-foreground">SN: {agent.asset.serialNumber}</p>
                                                 )}
                                             </div>
                                         </td>
@@ -199,7 +199,7 @@ export default function WorkspaceAgentsPage() {
                                                 <div>
                                                     <p className="text-sm font-medium text-foreground">{agent.platform}</p>
                                                     <div className="flex items-center gap-2">
-                                                        <p className="text-xs text-slate-500">v{agent.agentVersion}</p>
+                                                        <p className="text-xs text-muted-foreground">v{agent.agentVersion}</p>
                                                         {agent.isOutdated && (
                                                             <span className="text-[10px] font-semibold tracking-wide bg-amber-500/20 text-amber-500 px-1.5 py-0.5 rounded border border-amber-500/30">
                                                                 UPDATE AVAIL
@@ -218,24 +218,24 @@ export default function WorkspaceAgentsPage() {
                                             {agent.status === 'ONLINE' && agent.cpuUsage !== null ? (
                                                 <div className="text-sm space-y-1">
                                                     <div className="flex items-center space-x-2">
-                                                        <span className="text-slate-400">CPU:</span>
+                                                        <span className="text-muted-foreground">CPU:</span>
                                                         <span className="font-medium">{agent.cpuUsage.toFixed(1)}%</span>
                                                     </div>
                                                     <div className="flex items-center space-x-2">
-                                                        <span className="text-slate-400">RAM:</span>
+                                                        <span className="text-muted-foreground">RAM:</span>
                                                         <span className="font-medium">{agent.ramUsage?.toFixed(1)}%</span>
                                                     </div>
                                                     <div className="flex items-center space-x-2">
-                                                        <span className="text-slate-400">Disk:</span>
+                                                        <span className="text-muted-foreground">Disk:</span>
                                                         <span className="font-medium">{agent.diskUsage?.toFixed(1)}%</span>
                                                     </div>
                                                 </div>
                                             ) : (
-                                                <span className="text-sm text-slate-500">No data</span>
+                                                <span className="text-sm text-muted-foreground">No data</span>
                                             )}
                                         </td>
                                         <td className="px-6 py-4">
-                                            <span className="text-sm text-slate-400">{getTimeSince(agent.lastSeen)}</span>
+                                            <span className="text-sm text-muted-foreground">{getTimeSince(agent.lastSeen)}</span>
                                         </td>
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-3">
@@ -263,7 +263,7 @@ export default function WorkspaceAgentsPage() {
                                                             }
                                                         }}
                                                         disabled={connectingAgentId === agent.id}
-                                                        className="flex items-center gap-1.5 text-sm px-3 py-1.5 bg-nerve text-white rounded-lg hover:brightness-110 disabled:opacity-50 transition-all"
+                                                        className="flex items-center gap-1.5 text-sm px-3 py-1.5 bg-primary text-foreground rounded-xl hover:brightness-110 disabled:opacity-50 transition-all"
                                                     >
                                                         <Monitor size={14} />
                                                         {connectingAgentId === agent.id ? 'Connecting…' : 'Connect'}
@@ -271,7 +271,7 @@ export default function WorkspaceAgentsPage() {
                                                 )}
                                                 <Link
                                                     href={`/workspaces/agents/${agent.id}`}
-                                                    className="text-sm text-nerve hover:underline"
+                                                    className="text-sm text-primary hover:underline"
                                                 >
                                                     View Details
                                                 </Link>
@@ -287,9 +287,9 @@ export default function WorkspaceAgentsPage() {
 
             {/* Info Box */}
             {agents.length > 0 && (
-                <div className="mt-8 bg-nerve/5 border border-nerve/20 rounded-lg p-6">
-                    <h3 className="text-lg font-semibold text-nerve mb-2">About Glanus Agent</h3>
-                    <ul className="list-disc list-inside space-y-1 text-nerve text-sm">
+                <div className="mt-8 bg-primary/5 border border-primary/20 rounded-xl p-6">
+                    <h3 className="text-lg font-semibold text-primary mb-2">About Glanus Agent</h3>
+                    <ul className="list-disc list-inside space-y-1 text-primary text-sm">
                         <li>Agents check in every 60 seconds with latest metrics</li>
                         <li>Metrics are collected every 5 minutes and stored for 30 days</li>
                         <li>Agents marked offline if no check-in for 10 minutes</li>

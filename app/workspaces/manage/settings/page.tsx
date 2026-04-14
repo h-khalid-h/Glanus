@@ -290,7 +290,7 @@ export default function WorkspaceSettingsPage() {
     if (isLoading) {
         return (
             <div className="max-w-4xl  space-y-6">
-                <div className="h-8 w-64 animate-pulse rounded-lg bg-surface-2" />
+                <div className="h-8 w-64 animate-pulse rounded-xl bg-surface-2" />
                 <div className="space-y-4">
                     <div className="h-64 animate-pulse rounded-xl bg-surface-2" />
                     <div className="h-48 animate-pulse rounded-xl bg-surface-2" />
@@ -304,7 +304,7 @@ export default function WorkspaceSettingsPage() {
             <div className="text-center py-12">
                 <ShieldAlert className="w-12 h-12 text-destructive mx-auto mb-4" />
                 <h3 className="text-xl font-bold text-foreground mb-2">Access Denied</h3>
-                <p className="text-slate-400">You must be the Workspace Owner to view this page.</p>
+                <p className="text-muted-foreground">You must be the Workspace Owner to view this page.</p>
             </div>
         );
     }
@@ -322,25 +322,25 @@ export default function WorkspaceSettingsPage() {
             {/* Header */}
             <div className="mb-8">
                 <div className="flex items-center gap-3 mb-2">
-                    <div className="w-10 h-10 rounded-lg bg-nerve/10 flex items-center justify-center">
-                        <Settings className="w-5 h-5 text-nerve" />
+                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                        <Settings className="w-5 h-5 text-primary" />
                     </div>
                     <div>
                         <h1 className="text-3xl font-bold text-foreground">Workspace Settings</h1>
-                        <p className="text-slate-400">Manage workspace configuration, security, and integrations</p>
+                        <p className="text-muted-foreground">Manage workspace configuration, security, and integrations</p>
                     </div>
                 </div>
             </div>
 
             {/* Tab Navigation */}
-            <div className="flex gap-1 mb-8 bg-slate-900/50 rounded-lg p-1 border border-slate-800">
+            <div className="flex gap-1 mb-8 bg-card rounded-xl p-1 border border-border">
                 {tabs.map(tab => (
                     <button
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id)}
                         className={`flex items-center gap-2 px-4 py-2.5 rounded-md text-sm font-medium transition-all ${activeTab === tab.id
-                            ? 'bg-nerve text-white shadow-lg shadow-nerve/20'
-                            : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                            ? 'bg-primary text-foreground shadow-lg shadow-primary/20'
+                            : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                             }`}
                     >
                         {tab.icon}
@@ -353,33 +353,33 @@ export default function WorkspaceSettingsPage() {
             {activeTab === 'general' && (
                 <div className="space-y-8">
                     <form onSubmit={handleSave} className="space-y-8">
-                        <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-6 backdrop-blur-sm">
+                        <div className="bg-card border border-border rounded-xl p-6 backdrop-blur-sm">
                             <div className="flex items-center gap-2 mb-6">
-                                <Building2 className="w-5 h-5 text-slate-400" />
+                                <Building2 className="w-5 h-5 text-muted-foreground" />
                                 <h2 className="text-xl font-semibold text-foreground">General Information</h2>
                             </div>
                             <div className="space-y-5">
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-300 mb-1.5">Workspace Name</label>
-                                    <input type="text" required value={name} onChange={e => setName(e.target.value)} className="w-full bg-slate-800 border-slate-700 text-white rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-nerve/50" />
+                                    <label className="block text-sm font-medium text-foreground mb-1.5">Workspace Name</label>
+                                    <input type="text" required value={name} onChange={e => setName(e.target.value)} className="w-full bg-muted border-border text-foreground rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-primary/50" />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-300 mb-1.5">Description</label>
-                                    <textarea value={description} onChange={e => setDescription(e.target.value)} rows={3} className="w-full bg-slate-800 border-slate-700 text-white rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-nerve/50 resize-y" placeholder="A brief description of this organization..." />
+                                    <label className="block text-sm font-medium text-foreground mb-1.5">Description</label>
+                                    <textarea value={description} onChange={e => setDescription(e.target.value)} rows={3} className="w-full bg-muted border-border text-foreground rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-primary/50 resize-y" placeholder="A brief description of this organization..." />
                                 </div>
                             </div>
                         </div>
 
-                        <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-6 backdrop-blur-sm overflow-hidden relative">
+                        <div className="bg-card border border-border rounded-xl p-6 backdrop-blur-sm overflow-hidden relative">
                             {/* Decorative background element showing the primary color */}
                             <div className="absolute -top-24 -right-24 w-48 h-48 rounded-full blur-[80px] opacity-20 pointer-events-none" style={{ backgroundColor: primaryColor }} />
                             
                             <div className="flex items-center gap-2 mb-6 relative">
-                                <Paintbrush className="w-5 h-5 text-slate-400" />
+                                <Paintbrush className="w-5 h-5 text-muted-foreground" />
                                 <h2 className="text-xl font-semibold text-foreground">Brand Profile</h2>
                             </div>
 
-                            <p className="text-sm text-slate-400 mb-6 max-w-2xl">
+                            <p className="text-sm text-muted-foreground mb-6 max-w-2xl">
                                 Customize the platform's visual identity to match your company's branding. 
                                 Changes will be instantly applied across the sidebar, buttons, and active interactive elements for all workspace members.
                             </p>
@@ -389,7 +389,7 @@ export default function WorkspaceSettingsPage() {
                                 {/* Color Controls */}
                                 <div className="space-y-6">
                                     <div>
-                                        <label className="block text-sm font-medium text-slate-300 mb-3">Primary Theme Color</label>
+                                        <label className="block text-sm font-medium text-foreground mb-3">Primary Theme Color</label>
                                         <div className="flex flex-wrap gap-3 mb-4">
                                             {/* Predefined beautiful colors */}
                                             {[
@@ -404,7 +404,7 @@ export default function WorkspaceSettingsPage() {
                                                     key={preset.hex}
                                                     type="button"
                                                     onClick={() => setPrimaryColor(preset.hex)}
-                                                    className={`w-8 h-8 rounded-full shadow-inner border-2 transition-all hover:scale-110 ${primaryColor.toUpperCase() === preset.hex ? 'border-white scale-110 ring-2 ring-slate-700 ring-offset-2 ring-offset-slate-900' : 'border-transparent opacity-80 hover:opacity-100'}`}
+                                                    className={`w-8 h-8 rounded-full shadow-inner border-2 transition-all hover:scale-110 ${primaryColor.toUpperCase() === preset.hex ? 'border-white scale-110 ring-2 ring-border ring-offset-2 ring-offset-background' : 'border-transparent opacity-80 hover:opacity-100'}`}
                                                     style={{ backgroundColor: preset.hex }}
                                                     title={preset.name}
                                                 />
@@ -423,13 +423,13 @@ export default function WorkspaceSettingsPage() {
                                                 value={primaryColor} 
                                                 onChange={e => setPrimaryColor(e.target.value)} 
                                                 pattern="^#[0-9A-Fa-f]{6}$" 
-                                                className="w-40 bg-slate-800 border-slate-700 text-white rounded-lg px-4 py-2 outline-none focus:ring-2 uppercase" 
+                                                className="w-40 bg-muted border-border text-foreground rounded-xl px-4 py-2 outline-none focus:ring-2 uppercase" 
                                             />
                                         </div>
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-medium text-slate-300 mb-3">Accent / Highlight Color</label>
+                                        <label className="block text-sm font-medium text-foreground mb-3">Accent / Highlight Color</label>
                                         <div className="flex items-center gap-3">
                                             <input 
                                                 type="color" 
@@ -442,24 +442,24 @@ export default function WorkspaceSettingsPage() {
                                                 value={accentColor} 
                                                 onChange={e => setAccentColor(e.target.value)} 
                                                 pattern="^#[0-9A-Fa-f]{6}$" 
-                                                className="w-40 bg-slate-800 border-slate-700 text-white rounded-lg px-4 py-2 outline-none focus:ring-2 uppercase" 
+                                                className="w-40 bg-muted border-border text-foreground rounded-xl px-4 py-2 outline-none focus:ring-2 uppercase" 
                                             />
                                         </div>
-                                        <p className="text-xs text-slate-500 mt-2">Used for hover states and subtle backgrounds.</p>
+                                        <p className="text-xs text-muted-foreground mt-2">Used for hover states and subtle backgrounds.</p>
                                     </div>
                                 </div>
 
                                 {/* Live Preview Box */}
-                                <div className="bg-slate-950/80 border border-slate-800 rounded-lg p-5 flex flex-col justify-center gap-4">
-                                    <div className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-1">Live Preview</div>
+                                <div className="bg-background/80 border border-border rounded-xl p-5 flex flex-col justify-center gap-4">
+                                    <div className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-1">Live Preview</div>
                                     
-                                    <div className="flex items-center justify-between p-3 rounded-md border border-slate-800 bg-slate-900/50">
-                                        <span className="text-sm font-medium text-slate-200">System Component</span>
+                                    <div className="flex items-center justify-between p-3 rounded-md border border-border bg-card">
+                                        <span className="text-sm font-medium text-foreground">System Component</span>
                                         <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ backgroundColor: `${accentColor}20`, color: accentColor }}>Active (Accent)</span>
                                     </div>
 
                                     <div className="flex gap-2">
-                                        <button type="button" className="px-4 py-1.5 rounded-md text-sm font-medium text-white shadow-lg transition-transform hover:-translate-y-0.5" style={{ backgroundColor: primaryColor, boxShadow: `0 4px 14px -4px ${primaryColor}a0` }}>
+                                        <button type="button" className="px-4 py-1.5 rounded-md text-sm font-medium text-foreground shadow-lg transition-transform hover:-translate-y-0.5" style={{ backgroundColor: primaryColor, boxShadow: `0 4px 14px -4px ${primaryColor}a0` }}>
                                             Primary Action
                                         </button>
                                         <button type="button" className="px-4 py-1.5 rounded-md text-sm font-medium border transition-colors" style={{ borderColor: primaryColor, color: primaryColor, backgroundColor: 'transparent' }}>
@@ -467,29 +467,29 @@ export default function WorkspaceSettingsPage() {
                                         </button>
                                     </div>
 
-                                    <div className="w-full h-1 mt-2 rounded-full overflow-hidden bg-slate-800">
+                                    <div className="w-full h-1 mt-2 rounded-full overflow-hidden bg-muted">
                                         <div className="h-full rounded-full" style={{ width: '65%', backgroundColor: accentColor }} />
                                     </div>
                                 </div>
                             </div>
                             
-                            <div className="mt-8 flex justify-end pt-5 border-t border-slate-800/60">
-                                <button type="submit" disabled={isSaving} className="px-6 py-2.5 text-white text-sm font-medium rounded-lg transition-all disabled:opacity-50 shadow-lg hover:brightness-110" style={{ backgroundColor: primaryColor, boxShadow: `0 4px 14px -4px ${primaryColor}a0` }}>
+                            <div className="mt-8 flex justify-end pt-5 border-t border-border/60">
+                                <button type="submit" disabled={isSaving} className="px-6 py-2.5 text-foreground text-sm font-medium rounded-xl transition-all disabled:opacity-50 shadow-lg hover:brightness-110" style={{ backgroundColor: primaryColor, boxShadow: `0 4px 14px -4px ${primaryColor}a0` }}>
                                     {isSaving ? 'Applying Theme...' : 'Apply Theme'}
                                 </button>
                             </div>
                         </div>
                     </form>
 
-                    <hr className="border-slate-800" />
+                    <hr className="border-border" />
 
                     <div className="border border-destructive/30 bg-destructive/5 rounded-xl p-6 relative overflow-hidden">
                         <div className="absolute top-0 left-0 w-1 h-full bg-destructive" />
                         <h2 className="text-xl font-bold text-destructive mb-2">Danger Zone</h2>
-                        <p className="text-sm text-slate-400 max-w-2xl mb-6">
+                        <p className="text-sm text-muted-foreground max-w-2xl mb-6">
                             Deleting a workspace is an irreversible action. All assets, agent telemetry data, and member associations will be permanently destroyed.
                         </p>
-                        <button type="button" onClick={() => setIsDeleteModalOpen(true)} className="px-6 py-2.5 bg-destructive text-white text-sm font-medium rounded-lg hover:bg-destructive/90 transition-colors shadow-lg shadow-destructive/20">
+                        <button type="button" onClick={() => setIsDeleteModalOpen(true)} className="px-6 py-2.5 bg-destructive text-foreground text-sm font-medium rounded-xl hover:bg-destructive/90 transition-colors shadow-lg shadow-destructive/20">
                             Delete Workspace
                         </button>
                     </div>
@@ -499,7 +499,7 @@ export default function WorkspaceSettingsPage() {
             {/* ═══ BILLING TAB ═══ */}
             {activeTab === 'billing' && (
                 <Suspense fallback={
-                    <div className="flex justify-center p-8"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-nerve" /></div>
+                    <div className="flex justify-center p-8"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div>
                 }>
                     <BillingTab />
                 </Suspense>
@@ -508,32 +508,32 @@ export default function WorkspaceSettingsPage() {
             {/* ═══ API KEYS TAB ═══ */}
             {activeTab === 'api-keys' && (
                 <div className="space-y-6">
-                    <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-6 backdrop-blur-sm">
+                    <div className="bg-card border border-border rounded-xl p-6 backdrop-blur-sm">
                         <div className="flex items-center justify-between mb-6">
                             <div className="flex items-center gap-2">
-                                <Key className="w-5 h-5 text-nerve" />
+                                <Key className="w-5 h-5 text-primary" />
                                 <h2 className="text-xl font-semibold text-foreground">API Keys</h2>
                             </div>
-                            <button onClick={() => { setShowCreateKey(true); setNewlyCreatedKey(null); }} className="flex items-center gap-2 px-4 py-2 bg-nerve text-white rounded-lg hover:brightness-110 transition text-sm font-medium">
+                            <button onClick={() => { setShowCreateKey(true); setNewlyCreatedKey(null); }} className="flex items-center gap-2 px-4 py-2 bg-primary text-foreground rounded-xl hover:brightness-110 transition text-sm font-medium">
                                 <Plus size={16} /> Generate Key
                             </button>
                         </div>
 
-                        <p className="text-sm text-slate-400 mb-6">
+                        <p className="text-sm text-muted-foreground mb-6">
                             API keys allow external systems to access your workspace&apos;s data programmatically. Keys are hashed and cannot be recovered after creation.
                         </p>
 
                         {/* Newly Created Key Banner */}
                         {newlyCreatedKey && (
-                            <div className="mb-6 bg-green-500/10 border border-green-500/20 rounded-lg p-4">
-                                <div className="flex items-center gap-2 text-green-400 text-sm font-medium mb-2">
+                            <div className="mb-6 bg-success/10 border border-success/20 rounded-xl p-4">
+                                <div className="flex items-center gap-2 text-success text-sm font-medium mb-2">
                                     <Shield size={16} />
                                     Your new API key — copy it now, it will not be shown again:
                                 </div>
-                                <div className="flex items-center gap-2 bg-slate-950 rounded-lg p-3">
-                                    <code className="flex-1 text-sm text-green-300 font-mono break-all">{newlyCreatedKey}</code>
-                                    <button onClick={() => copyToClipboard(newlyCreatedKey)} className="p-1.5 text-slate-400 hover:text-white transition rounded">
-                                        {copiedKey ? <Check size={16} className="text-green-400" /> : <Copy size={16} />}
+                                <div className="flex items-center gap-2 bg-background rounded-xl p-3">
+                                    <code className="flex-1 text-sm text-success font-mono break-all">{newlyCreatedKey}</code>
+                                    <button onClick={() => copyToClipboard(newlyCreatedKey)} className="p-1.5 text-muted-foreground hover:text-foreground transition rounded">
+                                        {copiedKey ? <Check size={16} className="text-success" /> : <Copy size={16} />}
                                     </button>
                                 </div>
                             </div>
@@ -541,15 +541,15 @@ export default function WorkspaceSettingsPage() {
 
                         {/* Create Key Form */}
                         {showCreateKey && (
-                            <form onSubmit={handleCreateKey} className="mb-6 bg-slate-950 rounded-lg p-5 border border-slate-800 space-y-4">
+                            <form onSubmit={handleCreateKey} className="mb-6 bg-background rounded-xl p-5 border border-border space-y-4">
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-sm font-medium text-slate-300 mb-1">Key Name</label>
-                                        <input required value={newKeyName} onChange={e => setNewKeyName(e.target.value)} className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm outline-none focus:border-nerve" placeholder="e.g., CI/CD Pipeline" />
+                                        <label className="block text-sm font-medium text-foreground mb-1">Key Name</label>
+                                        <input required value={newKeyName} onChange={e => setNewKeyName(e.target.value)} className="w-full bg-surface-1 border border-border rounded-xl px-3 py-2 text-sm outline-none focus:border-primary" placeholder="e.g., CI/CD Pipeline" />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-slate-300 mb-1">Expiration</label>
-                                        <select value={newKeyExpiry} onChange={e => setNewKeyExpiry(e.target.value)} className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm outline-none focus:border-nerve">
+                                        <label className="block text-sm font-medium text-foreground mb-1">Expiration</label>
+                                        <select value={newKeyExpiry} onChange={e => setNewKeyExpiry(e.target.value)} className="w-full bg-surface-1 border border-border rounded-xl px-3 py-2 text-sm outline-none focus:border-primary">
                                             <option value="never">Never</option>
                                             <option value="30d">30 Days</option>
                                             <option value="90d">90 Days</option>
@@ -558,18 +558,18 @@ export default function WorkspaceSettingsPage() {
                                     </div>
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-300 mb-2">Permission Scopes</label>
+                                    <label className="block text-sm font-medium text-foreground mb-2">Permission Scopes</label>
                                     <div className="flex flex-wrap gap-2">
                                         {['read', 'write', 'admin', 'agents', 'scripts'].map(scope => (
-                                            <button key={scope} type="button" onClick={() => toggleScope(scope)} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition border ${newKeyScopes.includes(scope) ? 'bg-nerve/10 border-nerve text-nerve' : 'border-slate-700 text-slate-400 hover:border-slate-500'}`}>
+                                            <button key={scope} type="button" onClick={() => toggleScope(scope)} className={`px-3 py-1.5 rounded-xl text-xs font-medium transition border ${newKeyScopes.includes(scope) ? 'bg-primary/10 border-primary text-primary' : 'border-border text-muted-foreground hover:border-primary/30'}`}>
                                                 {scope}
                                             </button>
                                         ))}
                                     </div>
                                 </div>
                                 <div className="flex justify-end gap-3 pt-2">
-                                    <button type="button" onClick={() => setShowCreateKey(false)} className="px-4 py-2 text-sm text-slate-300 hover:bg-slate-800 rounded-lg transition">Cancel</button>
-                                    <button type="submit" disabled={creatingKey || newKeyScopes.length === 0} className="px-5 py-2 bg-nerve text-white rounded-lg text-sm font-medium hover:brightness-110 disabled:opacity-50 transition">
+                                    <button type="button" onClick={() => setShowCreateKey(false)} className="px-4 py-2 text-sm text-foreground hover:bg-muted rounded-xl transition">Cancel</button>
+                                    <button type="submit" disabled={creatingKey || newKeyScopes.length === 0} className="px-5 py-2 bg-primary text-foreground rounded-xl text-sm font-medium hover:brightness-110 disabled:opacity-50 transition">
                                         {creatingKey ? 'Generating...' : 'Generate Key'}
                                     </button>
                                 </div>
@@ -578,34 +578,34 @@ export default function WorkspaceSettingsPage() {
 
                         {/* Keys List */}
                         {loadingKeys ? (
-                            <div className="flex justify-center py-8"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-nerve" /></div>
+                            <div className="flex justify-center py-8"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div>
                         ) : apiKeys.length === 0 ? (
-                            <div className="text-center py-8 text-slate-500">
+                            <div className="text-center py-8 text-muted-foreground">
                                 <Key className="w-8 h-8 mx-auto mb-2 opacity-50" />
                                 <p>No API keys configured. Generate one to enable programmatic access.</p>
                             </div>
                         ) : (
                             <div className="space-y-3">
                                 {apiKeys.map(key => (
-                                    <div key={key.id} className={`flex items-center justify-between px-4 py-3 rounded-lg border transition ${key.revokedAt ? 'border-slate-800 bg-slate-900/30 opacity-60' : 'border-slate-800 bg-slate-900/50 hover:border-slate-700'}`}>
+                                    <div key={key.id} className={`flex items-center justify-between px-4 py-3 rounded-xl border transition ${key.revokedAt ? 'border-border bg-muted/30 opacity-60' : 'border-border bg-card hover:border-border'}`}>
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center gap-2">
                                                 <span className="font-medium text-foreground">{key.name}</span>
-                                                {key.revokedAt && <span className="text-xs px-1.5 py-0.5 rounded bg-red-500/10 text-red-400">Revoked</span>}
-                                                {key.expiresAt && new Date(key.expiresAt) < new Date() && !key.revokedAt && <span className="text-xs px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400">Expired</span>}
+                                                {key.revokedAt && <span className="text-xs px-1.5 py-0.5 rounded bg-destructive/10 text-destructive">Revoked</span>}
+                                                {key.expiresAt && new Date(key.expiresAt) < new Date() && !key.revokedAt && <span className="text-xs px-1.5 py-0.5 rounded bg-amber-500/10 text-warning">Expired</span>}
                                             </div>
-                                            <div className="flex items-center gap-3 mt-1 text-xs text-slate-500">
+                                            <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
                                                 <code className="font-mono">{key.prefix}•••••••</code>
                                                 <span className="flex items-center gap-1"><Clock size={10} /> {new Date(key.createdAt).toLocaleDateString()}</span>
                                                 <span>{key.usageCount} uses</span>
                                                 {key.lastUsedAt && <span>Last: {new Date(key.lastUsedAt).toLocaleDateString()}</span>}
                                             </div>
                                             <div className="flex gap-1 mt-1.5">
-                                                {key.scopes.map(s => <span key={s} className="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 uppercase">{s}</span>)}
+                                                {key.scopes.map(s => <span key={s} className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-foreground uppercase">{s}</span>)}
                                             </div>
                                         </div>
                                         {!key.revokedAt && (
-                                            <button onClick={() => requestRevokeKey(key.id)} className="p-2 text-slate-500 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition" title="Revoke Key" aria-label="Revoke API key">
+                                            <button onClick={() => requestRevokeKey(key.id)} className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-xl transition" title="Revoke Key" aria-label="Revoke API key">
                                                 <Trash2 size={16} />
                                             </button>
                                         )}
@@ -620,35 +620,35 @@ export default function WorkspaceSettingsPage() {
             {/* ═══ WEBHOOKS TAB ═══ */}
             {activeTab === 'webhooks' && (
                 <div className="space-y-6">
-                    <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-6 backdrop-blur-sm">
+                    <div className="bg-card border border-border rounded-xl p-6 backdrop-blur-sm">
                         <div className="flex items-center justify-between mb-6">
                             <div className="flex items-center gap-2">
-                                <Webhook className="w-5 h-5 text-nerve" />
+                                <Webhook className="w-5 h-5 text-primary" />
                                 <h2 className="text-xl font-semibold text-foreground">Webhook Endpoints</h2>
                             </div>
-                            <button onClick={() => setShowAddWebhook(true)} className="flex items-center gap-2 px-4 py-2 bg-nerve text-white rounded-lg hover:brightness-110 transition text-sm font-medium">
+                            <button onClick={() => setShowAddWebhook(true)} className="flex items-center gap-2 px-4 py-2 bg-primary text-foreground rounded-xl hover:brightness-110 transition text-sm font-medium">
                                 <Plus size={16} /> Add Endpoint
                             </button>
                         </div>
 
-                        <p className="text-sm text-slate-400 mb-6">
+                        <p className="text-sm text-muted-foreground mb-6">
                             Webhook endpoints receive real-time HTTP POST notifications for alerts, automation actions, and script deployments. Payloads are signed with HMAC-SHA256.
                         </p>
 
                         {/* Add Webhook Form */}
                         {showAddWebhook && (
-                            <form onSubmit={handleAddWebhook} className="mb-6 bg-slate-950 rounded-lg p-5 border border-slate-800 space-y-4">
+                            <form onSubmit={handleAddWebhook} className="mb-6 bg-background rounded-xl p-5 border border-border space-y-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-300 mb-1">Endpoint URL</label>
-                                    <input type="url" required value={webhookUrl} onChange={e => setWebhookUrl(e.target.value)} className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm outline-none focus:border-nerve font-mono" placeholder="https://your-app.com/webhooks/glanus" />
+                                    <label className="block text-sm font-medium text-foreground mb-1">Endpoint URL</label>
+                                    <input type="url" required value={webhookUrl} onChange={e => setWebhookUrl(e.target.value)} className="w-full bg-surface-1 border border-border rounded-xl px-3 py-2 text-sm outline-none focus:border-primary font-mono" placeholder="https://your-app.com/webhooks/glanus" />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-300 mb-1">Secret (optional — for HMAC signature verification)</label>
-                                    <input type="text" value={webhookSecret} onChange={e => setWebhookSecret(e.target.value)} className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm outline-none focus:border-nerve font-mono" placeholder="whsec_..." />
+                                    <label className="block text-sm font-medium text-foreground mb-1">Secret (optional — for HMAC signature verification)</label>
+                                    <input type="text" value={webhookSecret} onChange={e => setWebhookSecret(e.target.value)} className="w-full bg-surface-1 border border-border rounded-xl px-3 py-2 text-sm outline-none focus:border-primary font-mono" placeholder="whsec_..." />
                                 </div>
                                 <div className="flex justify-end gap-3 pt-2">
-                                    <button type="button" onClick={() => setShowAddWebhook(false)} className="px-4 py-2 text-sm text-slate-300 hover:bg-slate-800 rounded-lg transition">Cancel</button>
-                                    <button type="submit" disabled={addingWebhook} className="px-5 py-2 bg-nerve text-white rounded-lg text-sm font-medium hover:brightness-110 disabled:opacity-50 transition">
+                                    <button type="button" onClick={() => setShowAddWebhook(false)} className="px-4 py-2 text-sm text-foreground hover:bg-muted rounded-xl transition">Cancel</button>
+                                    <button type="submit" disabled={addingWebhook} className="px-5 py-2 bg-primary text-foreground rounded-xl text-sm font-medium hover:brightness-110 disabled:opacity-50 transition">
                                         {addingWebhook ? 'Adding...' : 'Add Webhook'}
                                     </button>
                                 </div>
@@ -657,29 +657,29 @@ export default function WorkspaceSettingsPage() {
 
                         {/* Webhooks List */}
                         {loadingWebhooks ? (
-                            <div className="flex justify-center py-8"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-nerve" /></div>
+                            <div className="flex justify-center py-8"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div>
                         ) : webhooks.length === 0 ? (
-                            <div className="text-center py-8 text-slate-500">
+                            <div className="text-center py-8 text-muted-foreground">
                                 <Globe className="w-8 h-8 mx-auto mb-2 opacity-50" />
                                 <p>No webhook endpoints configured.</p>
                             </div>
                         ) : (
                             <div className="space-y-3">
                                 {webhooks.map(wh => (
-                                    <div key={wh.id} className="flex items-center justify-between px-4 py-3 rounded-lg border border-slate-800 bg-slate-900/50 hover:border-slate-700 transition">
+                                    <div key={wh.id} className="flex items-center justify-between px-4 py-3 rounded-xl border border-border bg-card hover:border-border transition">
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center gap-2">
-                                                <span className={`w-2 h-2 rounded-full ${wh.enabled ? 'bg-green-400' : 'bg-slate-500'}`} />
+                                                <span className={`w-2 h-2 rounded-full ${wh.enabled ? 'bg-success' : 'bg-muted'}`} />
                                                 <code className="font-mono text-sm text-foreground truncate">{wh.url}</code>
                                             </div>
-                                            <div className="flex items-center gap-3 mt-1 text-xs text-slate-500">
+                                            <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
                                                 <span>{wh.enabled ? 'Active' : 'Disabled'}</span>
                                                 <span>{wh.secret ? '🔒 Signed' : '🔓 Unsigned'}</span>
-                                                {wh.lastSuccess && <span className="text-green-400">Last OK: {new Date(wh.lastSuccess).toLocaleDateString()}</span>}
-                                                {wh.failureCount > 0 && <span className="text-red-400">{wh.failureCount} failures</span>}
+                                                {wh.lastSuccess && <span className="text-success">Last OK: {new Date(wh.lastSuccess).toLocaleDateString()}</span>}
+                                                {wh.failureCount > 0 && <span className="text-destructive">{wh.failureCount} failures</span>}
                                             </div>
                                         </div>
-                                        <button onClick={() => requestDeleteWebhook(wh.id)} className="p-2 text-slate-500 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition" title="Remove">
+                                        <button onClick={() => requestDeleteWebhook(wh.id)} className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-xl transition" title="Remove">
                                             <Trash2 size={16} />
                                         </button>
                                     </div>
@@ -693,63 +693,63 @@ export default function WorkspaceSettingsPage() {
             {/* ═══ NOTIFICATIONS TAB ═══ */}
             {activeTab === 'notifications' && (
                 <div className="space-y-6">
-                    <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-6 backdrop-blur-sm">
+                    <div className="bg-card border border-border rounded-xl p-6 backdrop-blur-sm">
                         <div className="flex items-center gap-2 mb-6">
-                            <Bell className="w-5 h-5 text-nerve" />
+                            <Bell className="w-5 h-5 text-primary" />
                             <h2 className="text-xl font-semibold text-foreground">Notification Preferences</h2>
                         </div>
 
-                        <p className="text-sm text-slate-400 mb-6">
+                        <p className="text-sm text-muted-foreground mb-6">
                             Control how and when this workspace sends alert notifications. Preferences apply to all workspace members.
                         </p>
 
                         <div className="space-y-6">
                             {/* Email Notifications */}
-                            <div className="flex items-center justify-between py-3 border-b border-slate-800">
+                            <div className="flex items-center justify-between py-3 border-b border-border">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-9 h-9 rounded-lg bg-blue-500/10 flex items-center justify-center">
-                                        <Bell size={16} className="text-blue-400" />
+                                    <div className="w-9 h-9 rounded-xl bg-cortex/10 flex items-center justify-center">
+                                        <Bell size={16} className="text-cortex" />
                                     </div>
                                     <div>
                                         <div className="font-medium text-foreground">Email Notifications</div>
-                                        <div className="text-xs text-slate-500">Send alert notifications to workspace admin emails</div>
+                                        <div className="text-xs text-muted-foreground">Send alert notifications to workspace admin emails</div>
                                     </div>
                                 </div>
-                                <button type="button" onClick={() => setEmailNotifs(!emailNotifs)} className="text-nerve">
-                                    {emailNotifs ? <ToggleRight size={32} /> : <ToggleLeft size={32} className="text-slate-500" />}
+                                <button type="button" onClick={() => setEmailNotifs(!emailNotifs)} className="text-primary">
+                                    {emailNotifs ? <ToggleRight size={32} /> : <ToggleLeft size={32} className="text-muted-foreground" />}
                                 </button>
                             </div>
 
                             {/* Webhook Notifications */}
-                            <div className="flex items-center justify-between py-3 border-b border-slate-800">
+                            <div className="flex items-center justify-between py-3 border-b border-border">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-9 h-9 rounded-lg bg-purple-500/10 flex items-center justify-center">
+                                    <div className="w-9 h-9 rounded-xl bg-purple-500/10 flex items-center justify-center">
                                         <Webhook size={16} className="text-purple-400" />
                                     </div>
                                     <div>
                                         <div className="font-medium text-foreground">Webhook Notifications</div>
-                                        <div className="text-xs text-slate-500">Deliver alert payloads to configured webhook endpoints</div>
+                                        <div className="text-xs text-muted-foreground">Deliver alert payloads to configured webhook endpoints</div>
                                     </div>
                                 </div>
-                                <button type="button" onClick={() => setWebhookNotifs(!webhookNotifs)} className="text-nerve">
-                                    {webhookNotifs ? <ToggleRight size={32} /> : <ToggleLeft size={32} className="text-slate-500" />}
+                                <button type="button" onClick={() => setWebhookNotifs(!webhookNotifs)} className="text-primary">
+                                    {webhookNotifs ? <ToggleRight size={32} /> : <ToggleLeft size={32} className="text-muted-foreground" />}
                                 </button>
                             </div>
 
                             {/* Alert Severity Filter */}
                             <div className="py-3">
                                 <div className="flex items-center gap-3 mb-3">
-                                    <div className="w-9 h-9 rounded-lg bg-amber-500/10 flex items-center justify-center">
-                                        <AlertTriangle size={16} className="text-amber-400" />
+                                    <div className="w-9 h-9 rounded-xl bg-amber-500/10 flex items-center justify-center">
+                                        <AlertTriangle size={16} className="text-warning" />
                                     </div>
                                     <div>
                                         <div className="font-medium text-foreground">Alert Severity Filter</div>
-                                        <div className="text-xs text-slate-500">Only send notifications for alerts at or above this severity</div>
+                                        <div className="text-xs text-muted-foreground">Only send notifications for alerts at or above this severity</div>
                                     </div>
                                 </div>
                                 <div className="flex gap-2 ml-12">
                                     {['all', 'INFO', 'WARNING', 'CRITICAL'].map(level => (
-                                        <button key={level} type="button" onClick={() => setAlertSeverityFilter(level)} className={`px-4 py-2 rounded-lg text-sm font-medium transition border ${alertSeverityFilter === level ? 'bg-nerve/10 border-nerve text-nerve' : 'border-slate-700 text-slate-400 hover:border-slate-500'}`}>
+                                        <button key={level} type="button" onClick={() => setAlertSeverityFilter(level)} className={`px-4 py-2 rounded-xl text-sm font-medium transition border ${alertSeverityFilter === level ? 'bg-primary/10 border-primary text-primary' : 'border-border text-muted-foreground hover:border-primary/30'}`}>
                                             {level === 'all' ? 'All Severities' : level}
                                         </button>
                                     ))}
@@ -770,7 +770,7 @@ export default function WorkspaceSettingsPage() {
                                 } catch {
                                     toastError('Save Failed', 'Could not save notification preferences.');
                                 }
-                            }} className="px-6 py-2.5 bg-nerve hover:brightness-110 text-white text-sm font-medium rounded-lg transition-all">
+                            }} className="px-6 py-2.5 bg-primary hover:brightness-110 text-foreground text-sm font-medium rounded-xl transition-all">
                                 Save Preferences
                             </button>
                         </div>
@@ -781,25 +781,25 @@ export default function WorkspaceSettingsPage() {
             {/* Delete Modal */}
             {isDeleteModalOpen && (
                 <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-slate-900 border border-destructive/20 rounded-xl max-w-lg w-full shadow-2xl overflow-hidden">
+                    <div className="bg-surface-1 border border-destructive/20 rounded-xl max-w-lg w-full shadow-2xl overflow-hidden">
                         <div className="p-6">
                             <div className="flex items-center gap-3 mb-4 text-destructive">
                                 <AlertTriangle className="w-6 h-6" />
                                 <h2 className="text-xl font-bold">Delete Workspace?</h2>
                             </div>
-                            <p className="text-sm text-slate-300 mb-6 leading-relaxed">
-                                This action <span className="font-bold text-white">cannot be undone</span>. This will permanently delete the
-                                <span className="font-bold text-white px-1">{workspace.name}</span> workspace, its members, assets, and all AI insight history.
+                            <p className="text-sm text-foreground mb-6 leading-relaxed">
+                                This action <span className="font-bold text-foreground">cannot be undone</span>. This will permanently delete the
+                                <span className="font-bold text-foreground px-1">{workspace.name}</span> workspace, its members, assets, and all AI insight history.
                             </p>
-                            <div className="bg-slate-950 rounded-lg p-4 mb-6 border border-slate-800">
-                                <label className="block text-sm font-medium text-slate-400 mb-2">
-                                    Please type <span className="font-bold text-white select-all">{workspace.name}</span> to confirm.
+                            <div className="bg-background rounded-xl p-4 mb-6 border border-border">
+                                <label className="block text-sm font-medium text-muted-foreground mb-2">
+                                    Please type <span className="font-bold text-foreground select-all">{workspace.name}</span> to confirm.
                                 </label>
-                                <input type="text" value={deleteConfirmText} onChange={e => setDeleteConfirmText(e.target.value)} className="w-full bg-black border-slate-800 text-white rounded-lg px-4 py-3 outline-none focus:ring-1 focus:ring-destructive focus:border-destructive font-mono text-sm" placeholder={workspace.name} />
+                                <input type="text" value={deleteConfirmText} onChange={e => setDeleteConfirmText(e.target.value)} className="w-full bg-black border-border text-foreground rounded-xl px-4 py-3 outline-none focus:ring-1 focus:ring-destructive focus:border-destructive font-mono text-sm" placeholder={workspace.name} />
                             </div>
                             <div className="flex items-center justify-end gap-3">
-                                <button type="button" onClick={() => { setIsDeleteModalOpen(false); setDeleteConfirmText(''); }} className="px-4 py-2.5 text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg transition-colors">Cancel</button>
-                                <button type="button" onClick={handleDelete} disabled={deleteConfirmText !== workspace.name || isDeleting} className="px-6 py-2.5 bg-destructive hover:bg-destructive/90 text-white text-sm font-medium rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                                <button type="button" onClick={() => { setIsDeleteModalOpen(false); setDeleteConfirmText(''); }} className="px-4 py-2.5 text-sm font-medium text-foreground hover:text-foreground hover:bg-muted rounded-xl transition-colors">Cancel</button>
+                                <button type="button" onClick={handleDelete} disabled={deleteConfirmText !== workspace.name || isDeleting} className="px-6 py-2.5 bg-destructive hover:bg-destructive/90 text-foreground text-sm font-medium rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed">
                                     {isDeleting ? 'Deleting...' : 'I understand, delete workspace'}
                                 </button>
                             </div>

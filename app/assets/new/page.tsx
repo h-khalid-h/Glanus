@@ -206,20 +206,20 @@ export default function DynamicAssetCreatePage() {
     if (loading) return <PageSpinner text="Loading Engine Definitions..." />;
 
     // Reusable input styling pattern
-    const inputClasses = "w-full bg-surface-container-low border border-slate-700/50 rounded-lg focus:border-primary focus:ring-1 focus:ring-primary transition-all py-2.5 px-3 text-on-surface text-sm outline-none placeholder:text-slate-500";
-    const labelClasses = "block text-sm font-medium text-slate-400 mb-1.5";
-    const panelClasses = "bg-surface-container rounded-xl shadow-sm border border-slate-800/20 p-6";
+    const inputClasses = "w-full bg-surface-container-low border border-border rounded-lg focus:border-primary focus:ring-1 focus:ring-primary transition-all py-2.5 px-3 text-on-surface text-sm outline-none placeholder:text-muted-foreground";
+    const labelClasses = "block text-sm font-medium text-muted-foreground mb-1.5";
+    const panelClasses = "bg-surface-container rounded-xl shadow-sm border border-border/40 p-6";
 
     return (
         <div className="max-w-4xl mx-auto animate-fade-in pb-12">
             <div className="flex items-center justify-between mb-8">
                 <div>
-                    <Link href="/assets" className="inline-flex items-center gap-1.5 text-sm text-slate-400 hover:text-primary transition-colors mb-2 font-medium">
+                    <Link href="/assets" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors mb-2 font-medium">
                         <ArrowLeft size={14} />
                         Back to Assets
                     </Link>
                     <h1 className="text-2xl font-semibold tracking-tight text-on-surface">Provision New Asset</h1>
-                    <p className="text-sm text-slate-400 mt-1">Register and configure a tracked resource within this environment.</p>
+                    <p className="text-sm text-muted-foreground mt-1">Register and configure a tracked resource within this environment.</p>
                 </div>
             </div>
 
@@ -227,7 +227,7 @@ export default function DynamicAssetCreatePage() {
                 <form onSubmit={handleSubmit} className="space-y-6">
                     {/* Step 1: Core Configuration */}
                     <div className={panelClasses}>
-                        <div className="flex items-center gap-2 mb-6 border-b border-slate-800/60 pb-3">
+                        <div className="flex items-center gap-2 mb-6 border-b border-border/60 pb-3">
                             <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/20 text-primary text-xs font-bold">1</span>
                             <h2 className="text-base font-semibold text-on-surface">Core Configuration</h2>
                         </div>
@@ -264,27 +264,27 @@ export default function DynamicAssetCreatePage() {
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                     <button
                                         type="button"
-                                        className={`p-4 border rounded-xl text-left transition-all duration-200 ${assetType === 'PHYSICAL' ? 'border-primary bg-primary/10 ring-1 ring-primary/30' : 'border-slate-700/50 bg-surface-container-low hover:border-slate-500'}`}
+                                        className={`p-4 border rounded-xl text-left transition-all duration-200 ${assetType === 'PHYSICAL' ? 'border-primary bg-primary/10 ring-1 ring-primary/30' : 'border-border bg-surface-container-low hover:border-muted'}`}
                                         onClick={() => setAssetType('PHYSICAL')}
                                     >
                                         <div className={`text-sm font-semibold mb-1 ${assetType === 'PHYSICAL' ? 'text-primary' : 'text-on-surface'}`}>Physical Hardware</div>
-                                        <div className="text-xs text-slate-500">Laptops, Servers, Network gear</div>
+                                        <div className="text-xs text-muted-foreground">Laptops, Servers, Network gear</div>
                                     </button>
                                     <button
                                         type="button"
-                                        className={`p-4 border rounded-xl text-left transition-all duration-200 ${assetType === 'DIGITAL' ? 'border-oracle bg-oracle/10 ring-1 ring-oracle/30' : 'border-slate-700/50 bg-surface-container-low hover:border-slate-500'}`}
+                                        className={`p-4 border rounded-xl text-left transition-all duration-200 ${assetType === 'DIGITAL' ? 'border-oracle bg-oracle/10 ring-1 ring-oracle/30' : 'border-border bg-surface-container-low hover:border-muted'}`}
                                         onClick={() => setAssetType('DIGITAL')}
                                     >
                                         <div className={`text-sm font-semibold mb-1 ${assetType === 'DIGITAL' ? 'text-oracle' : 'text-on-surface'}`}>Digital Subscription</div>
-                                        <div className="text-xs text-slate-500">SaaS, Cloud Software, Licenses</div>
+                                        <div className="text-xs text-muted-foreground">SaaS, Cloud Software, Licenses</div>
                                     </button>
                                     <button
                                         type="button"
-                                        className={`p-4 border rounded-xl text-left transition-all duration-200 ${assetType === 'DYNAMIC' ? 'border-cortex bg-cortex/10 ring-1 ring-cortex/30' : 'border-slate-700/50 bg-surface-container-low hover:border-slate-500'}`}
+                                        className={`p-4 border rounded-xl text-left transition-all duration-200 ${assetType === 'DYNAMIC' ? 'border-cortex bg-cortex/10 ring-1 ring-cortex/30' : 'border-border bg-surface-container-low hover:border-muted'}`}
                                         onClick={() => setAssetType('DYNAMIC')}
                                     >
                                         <div className={`text-sm font-semibold mb-1 ${assetType === 'DYNAMIC' ? 'text-cortex' : 'text-on-surface'}`}>Custom Schema</div>
-                                        <div className="text-xs text-slate-500">Freeform dynamic matrix assets</div>
+                                        <div className="text-xs text-muted-foreground">Freeform dynamic matrix assets</div>
                                     </button>
                                 </div>
                             </div>
@@ -299,7 +299,7 @@ export default function DynamicAssetCreatePage() {
                                         ? categories.filter(c => c.parentId === selectedParentCategory.id && c.isActive)
                                         : [];
                                     return (
-                                        <div className="space-y-4 p-4 rounded-xl border border-slate-700/50 bg-surface-container-low/50">
+                                        <div className="space-y-4 p-4 rounded-xl border border-border bg-surface-container-low/50">
                                             <div>
                                                 <select
                                                     required
@@ -323,8 +323,8 @@ export default function DynamicAssetCreatePage() {
                                             {childCats.length > 0 && (
                                                 <div className="animate-fade-in">
                                                     <div className="flex items-center gap-2 mb-2 ml-1">
-                                                        <div className="w-4 h-4 border-l-2 border-b-2 border-slate-600 rounded-bl-sm"></div>
-                                                        <label className="block text-xs font-medium text-slate-400">
+                                                        <div className="w-4 h-4 border-l-2 border-b-2 border-border rounded-bl-sm"></div>
+                                                        <label className="block text-xs font-medium text-muted-foreground">
                                                             Select Sub-category for {selectedParentCategory?.name} *
                                                         </label>
                                                     </div>
@@ -346,8 +346,8 @@ export default function DynamicAssetCreatePage() {
                                         </div>
                                     );
                                 })()}
-                                <p className="text-xs text-slate-500 mt-2.5 ml-1 flex items-center gap-1.5">
-                                    <span className="inline-block w-1.5 h-1.5 rounded-full bg-slate-500"></span> 
+                                <p className="text-xs text-muted-foreground mt-2.5 ml-1 flex items-center gap-1.5">
+                                    <span className="inline-block w-1.5 h-1.5 rounded-full bg-muted"></span> 
                                     Category selection dictates the custom technical properties applicable below.
                                 </p>
                             </div>
@@ -357,7 +357,7 @@ export default function DynamicAssetCreatePage() {
                     {/* Step 1.5: Hardware / Software Specifics */}
                     {assetType === 'PHYSICAL' && (
                         <div className={`${panelClasses} border-primary/20 bg-primary/[0.02]`}>
-                            <div className="flex items-center gap-2 mb-6 border-b border-slate-800/60 pb-3">
+                            <div className="flex items-center gap-2 mb-6 border-b border-border/60 pb-3">
                                 <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/20 text-primary text-xs font-bold">A</span>
                                 <h2 className="text-base font-semibold text-on-surface">Hardware Specifications</h2>
                             </div>
@@ -412,7 +412,7 @@ export default function DynamicAssetCreatePage() {
 
                     {assetType === 'DIGITAL' && (
                         <div className={`${panelClasses} border-oracle/20 bg-oracle/[0.02]`}>
-                            <div className="flex items-center gap-2 mb-6 border-b border-slate-800/60 pb-3">
+                            <div className="flex items-center gap-2 mb-6 border-b border-border/60 pb-3">
                                 <span className="flex items-center justify-center w-6 h-6 rounded-full bg-oracle/20 text-oracle text-xs font-bold">A</span>
                                 <h2 className="text-base font-semibold text-on-surface">Software &amp; Access Metrics</h2>
                             </div>
@@ -457,7 +457,7 @@ export default function DynamicAssetCreatePage() {
                         const totalFields = grouped.reduce((sum, g) => sum + g.fields.length, 0);
                         return (
                         <div className={`${panelClasses} relative overflow-hidden animate-slide-up`}>
-                             <div className="flex items-center justify-between mb-6 border-b border-slate-800/60 pb-3">
+                             <div className="flex items-center justify-between mb-6 border-b border-border/60 pb-3">
                                 <div className="flex items-center gap-2">
                                     <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/20 text-primary text-xs font-bold">2</span>
                                     <h2 className="text-base font-semibold text-on-surface">Custom Matrix Data</h2>
@@ -468,8 +468,8 @@ export default function DynamicAssetCreatePage() {
                             </div>
 
                             {totalFields === 0 ? (
-                                <div className="flex flex-col items-center justify-center py-10 bg-surface-container-low/30 rounded-xl border border-dashed border-slate-700/50">
-                                    <p className="text-sm text-slate-500">No custom tracking fields defined for this category.</p>
+                                <div className="flex flex-col items-center justify-center py-10 bg-surface-container-low/30 rounded-xl border border-dashed border-border">
+                                    <p className="text-sm text-muted-foreground">No custom tracking fields defined for this category.</p>
                                 </div>
                             ) : (
                                 <div className="space-y-6">
@@ -478,8 +478,8 @@ export default function DynamicAssetCreatePage() {
                                             {grouped.length > 1 && (
                                                 <div className="flex items-center gap-2 mb-3">
                                                     <span className="text-base">{group.icon}</span>
-                                                    <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">{group.categoryName} Fields</span>
-                                                    <div className="flex-1 h-px bg-slate-700/40"></div>
+                                                    <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{group.categoryName} Fields</span>
+                                                    <div className="flex-1 h-px bg-muted/40"></div>
                                                 </div>
                                             )}
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -490,14 +490,14 @@ export default function DynamicAssetCreatePage() {
                                                         </label>
 
                                                         {def.fieldType === 'BOOLEAN' ? (
-                                                            <div className="flex items-center gap-3 mt-3 bg-surface-container-low p-3 rounded-lg border border-slate-700/30">
+                                                            <div className="flex items-center gap-3 mt-3 bg-surface-container-low p-3 rounded-lg border border-border">
                                                                 <input
                                                                     type="checkbox"
-                                                                    className="h-4 w-4 rounded border-slate-600 bg-surface-container accent-primary transition-all"
+                                                                    className="h-4 w-4 rounded border-border bg-surface-container accent-primary transition-all"
                                                                     checked={customFields[def.name] || false}
                                                                     onChange={e => handleCustomFieldChange(def.name, e.target.checked)}
                                                                 />
-                                                                <span className="text-sm font-medium text-slate-300">Enable Feature</span>
+                                                                <span className="text-sm font-medium text-foreground">Enable Feature</span>
                                                             </div>
                                                         ) : def.fieldType === 'DATE' ? (
                                                             <input
@@ -537,8 +537,8 @@ export default function DynamicAssetCreatePage() {
                     })()}
 
                     {/* Submit Bar */}
-                    <div className="sticky bottom-6 flex justify-between items-center bg-surface-container/95 border border-slate-700/50 p-4 rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.4)] backdrop-blur-md z-10">
-                        <div className="text-sm text-slate-400 hidden sm:block">
+                    <div className="sticky bottom-6 flex justify-between items-center bg-surface-container/95 border border-border p-4 rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.4)] backdrop-blur-md z-10">
+                        <div className="text-sm text-muted-foreground hidden sm:block">
                             {!selectedCategory ? 'Please select a core category to complete provisioning.' : 'Ready to provision asset.'}
                         </div>
                         <div className="flex items-center gap-3 w-full sm:w-auto justify-end">

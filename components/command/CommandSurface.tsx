@@ -498,8 +498,8 @@ export function CommandSurface() {
                                                                 </div>
                                                             </div>
                                                             <span className={`text-2xs px-1.5 py-0.5 rounded font-medium ${asset.status === 'AVAILABLE' ? 'bg-emerald-500/10 text-emerald-400' :
-                                                                asset.status === 'ASSIGNED' ? 'bg-blue-500/10 text-blue-400' :
-                                                                    'bg-slate-500/10 text-slate-400'
+                                                                asset.status === 'ASSIGNED' ? 'bg-cortex/10 text-cortex' :
+                                                                    'bg-muted/30 text-muted-foreground'
                                                                 }`}>{asset.status}</span>
                                                         </div>
                                                     );
@@ -533,8 +533,8 @@ export function CommandSurface() {
                                                                 </div>
                                                             </div>
                                                             <span className={`text-2xs px-1.5 py-0.5 rounded font-medium ${agent.status === 'ONLINE' ? 'bg-emerald-500/10 text-emerald-400' :
-                                                                agent.status === 'OFFLINE' ? 'bg-red-500/10 text-red-400' :
-                                                                    'bg-amber-500/10 text-amber-400'
+                                                                agent.status === 'OFFLINE' ? 'bg-destructive/10 text-destructive' :
+                                                                    'bg-amber-500/10 text-warning'
                                                                 }`}>{agent.status}</span>
                                                         </div>
                                                     );
@@ -567,9 +567,9 @@ export function CommandSurface() {
                                                                     {insight.confidence ? ` · ${(insight.confidence * 100).toFixed(0)}% conf.` : ''}
                                                                 </div>
                                                             </div>
-                                                            <span className={`text-2xs px-1.5 py-0.5 rounded font-medium ${insight.severity === 'CRITICAL' ? 'bg-red-500/10 text-red-400' :
-                                                                insight.severity === 'WARNING' ? 'bg-amber-500/10 text-amber-400' :
-                                                                    'bg-blue-500/10 text-blue-400'
+                                                            <span className={`text-2xs px-1.5 py-0.5 rounded font-medium ${insight.severity === 'CRITICAL' ? 'bg-destructive/10 text-destructive' :
+                                                                insight.severity === 'WARNING' ? 'bg-amber-500/10 text-warning' :
+                                                                    'bg-cortex/10 text-cortex'
                                                                 }`}>{insight.severity || 'INFO'}</span>
                                                         </div>
                                                     );

@@ -78,13 +78,13 @@ export default function PlanSelector({ selectedPlan, onChange }: PlanSelectorPro
                     className={clsx(
                         'relative rounded-xl border p-6 shadow-sm transition-all duration-200 cursor-pointer hover:shadow-md',
                         selectedPlan === plan.id
-                            ? 'border-blue-600 ring-2 ring-blue-600 bg-nerve/10'
-                            : 'border-slate-700 hover:border-nerve/50'
+                            ? 'border-primary ring-2 ring-primary bg-primary/10'
+                            : 'border-border hover:border-primary/50'
                     )}
                     onClick={() => onChange(plan.id)}
                 >
                     {plan.recommended && (
-                        <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-nerve text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-sm">
+                        <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-foreground text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-sm">
                             Recommended
                         </div>
                     )}
@@ -97,15 +97,15 @@ export default function PlanSelector({ selectedPlan, onChange }: PlanSelectorPro
                                     {plan.price}
                                 </span>
                                 {plan.price !== 'Custom' && (
-                                    <span className="text-slate-500">/mo</span>
+                                    <span className="text-muted-foreground">/mo</span>
                                 )}
                             </div>
                         </div>
 
                         <ul className="space-y-3 mb-6 flex-1">
                             {plan.features.map((feature) => (
-                                <li key={feature} className="flex items-start gap-2 text-sm text-slate-400">
-                                    <CheckIcon className="w-4 h-4 text-green-500 mt-0.5 shrink-0" />
+                                <li key={feature} className="flex items-start gap-2 text-sm text-muted-foreground">
+                                    <CheckIcon className="w-4 h-4 text-success mt-0.5 shrink-0" />
                                     <span>{feature}</span>
                                 </li>
                             ))}
@@ -113,10 +113,10 @@ export default function PlanSelector({ selectedPlan, onChange }: PlanSelectorPro
 
                         <div
                             className={clsx(
-                                'w-full py-2 px-4 rounded-lg text-sm font-medium text-center transition-colors',
+                                'w-full py-2 px-4 rounded-xl text-sm font-medium text-center transition-colors',
                                 selectedPlan === plan.id
-                                    ? 'bg-nerve text-white'
-                                    : 'bg-slate-800 text-white group-hover:bg-slate-700'
+                                    ? 'bg-primary text-foreground'
+                                    : 'bg-muted text-foreground group-hover:bg-muted'
                             )}
                         >
                             {selectedPlan === plan.id ? 'Selected' : 'Select Plan'}

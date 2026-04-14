@@ -108,9 +108,9 @@ export default function NotificationsPage() {
 
     const filterTabs: Array<{ key: SeverityFilter; label: string; icon: typeof Bell; color: string }> = [
         { key: 'ALL', label: 'All', icon: Bell, color: 'text-foreground' },
-        { key: 'CRITICAL', label: 'Critical', icon: AlertTriangle, color: 'text-red-400' },
-        { key: 'WARNING', label: 'Warning', icon: AlertTriangle, color: 'text-amber-400' },
-        { key: 'INFO', label: 'Info', icon: Info, color: 'text-blue-400' },
+        { key: 'CRITICAL', label: 'Critical', icon: AlertTriangle, color: 'text-destructive' },
+        { key: 'WARNING', label: 'Warning', icon: AlertTriangle, color: 'text-warning' },
+        { key: 'INFO', label: 'Info', icon: Info, color: 'text-cortex' },
         { key: 'AI_INSIGHT', label: 'AI Insights', icon: Sparkles, color: 'text-cortex' },
     ];
 
@@ -126,7 +126,7 @@ export default function NotificationsPage() {
                 </div>
                 <div className="flex items-center gap-2">
                     <button onClick={() => { fetchNotifications(); setVisibleCount(PAGE_SIZE); }}
-                        className="flex items-center gap-1.5 px-3 py-2 border border-slate-700 text-slate-300 rounded-lg text-xs hover:bg-slate-800/50 transition">
+                        className="flex items-center gap-1.5 px-3 py-2 border border-border text-foreground rounded-xl text-xs hover:bg-muted/50 transition">
                         <RefreshCw size={13} />
                         Refresh
                     </button>
@@ -134,20 +134,20 @@ export default function NotificationsPage() {
             </div>
 
             {/* Filter Tabs */}
-            <div className="flex items-center gap-1 p-1 bg-slate-900/50 border border-slate-800 rounded-xl">
+            <div className="flex items-center gap-1 p-1 bg-card border border-border rounded-xl">
                 {filterTabs.map(tab => (
                     <button key={tab.key}
                         onClick={() => { setActiveFilter(tab.key); setVisibleCount(PAGE_SIZE); }}
-                        className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ${activeFilter === tab.key
-                            ? 'bg-slate-800 text-foreground shadow-sm'
-                            : 'text-slate-400 hover:text-foreground hover:bg-slate-800/50'
+                        className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium transition-all ${activeFilter === tab.key
+                            ? 'bg-muted text-foreground shadow-sm'
+                            : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
                             }`}>
                         <tab.icon size={13} className={activeFilter === tab.key ? tab.color : ''} />
                         {tab.label}
                         {counts[tab.key] > 0 && (
-                            <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold ${tab.key === 'CRITICAL' ? 'bg-red-500/20 text-red-400' :
-                                tab.key === 'WARNING' ? 'bg-amber-500/20 text-amber-400' :
-                                    'bg-slate-700 text-slate-300'
+                            <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold ${tab.key === 'CRITICAL' ? 'bg-destructive/20 text-destructive' :
+                                tab.key === 'WARNING' ? 'bg-amber-500/20 text-warning' :
+                                    'bg-muted text-foreground'
                                 }`}>{counts[tab.key]}</span>
                         )}
                     </button>
@@ -157,23 +157,23 @@ export default function NotificationsPage() {
             {/* Action Bar */}
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                    <label className="flex items-center gap-2 text-xs text-slate-400 cursor-pointer">
+                    <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
                         <input type="checkbox" checked={showDismissed} onChange={e => setShowDismissed(e.target.checked)}
-                            className="rounded border-slate-600 bg-slate-800 text-nerve focus:ring-nerve/50" />
+                            className="rounded border-border bg-muted text-primary focus:ring-primary/50" />
                         Show dismissed
                     </label>
                 </div>
                 <div className="flex items-center gap-2">
                     {dismissed.size > 0 && (
                         <button onClick={handleRestoreAll}
-                            className="flex items-center gap-1 px-2.5 py-1.5 text-xs text-slate-400 hover:text-foreground border border-slate-700 rounded-lg transition">
+                            className="flex items-center gap-1 px-2.5 py-1.5 text-xs text-muted-foreground hover:text-foreground border border-border rounded-xl transition">
                             <CheckCheck size={12} />
                             Restore All ({dismissed.size})
                         </button>
                     )}
                     {filteredNotifications.length > 0 && (
                         <button onClick={handleDismissAll}
-                            className="flex items-center gap-1 px-2.5 py-1.5 text-xs text-slate-400 hover:text-red-400 border border-slate-700 rounded-lg transition">
+                            className="flex items-center gap-1 px-2.5 py-1.5 text-xs text-muted-foreground hover:text-destructive border border-border rounded-xl transition">
                             <Trash2 size={12} />
                             Dismiss All
                         </button>
@@ -185,10 +185,10 @@ export default function NotificationsPage() {
             <div className="card">
                 {isLoading ? (
                     <div className="flex items-center justify-center p-12">
-                        <div className="h-8 w-8 animate-spin rounded-full border-4 border-nerve border-t-transparent" />
+                        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
                     </div>
                 ) : error ? (
-                    <div className="rounded-lg border border-red-500/20 bg-red-500/10 p-4 text-center text-sm text-red-500">
+                    <div className="rounded-xl border border-destructive/20 bg-destructive/10 p-4 text-center text-sm text-destructive">
                         {error}
                     </div>
                 ) : filteredNotifications.length === 0 ? (
@@ -214,7 +214,7 @@ export default function NotificationsPage() {
                             return (
                                 <div key={notif.id || idx} className={`relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active ${dismissed.has(notif.id) ? 'opacity-40' : ''}`}>
                                     {/* Timeline Dot */}
-                                    <div className={`flex items-center justify-center w-10 h-10 rounded-full border-4 border-surface-1 bg-surface-2 text-muted-foreground shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10 ${notif.severity === 'CRITICAL' ? 'bg-red-500/20 text-red-500 border-red-500/20' :
+                                    <div className={`flex items-center justify-center w-10 h-10 rounded-full border-4 border-surface-1 bg-surface-2 text-muted-foreground shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10 ${notif.severity === 'CRITICAL' ? 'bg-destructive/20 text-destructive border-destructive/20' :
                                         notif.severity === 'WARNING' ? 'bg-amber-500/20 text-amber-500 border-amber-500/20' :
                                             notif.type === 'AI_INSIGHT' ? 'bg-cortex/20 text-cortex border-cortex/20' : ''
                                         }`}>
@@ -232,7 +232,7 @@ export default function NotificationsPage() {
                                         {/* Dismiss button */}
                                         {!dismissed.has(notif.id) && (
                                             <button onClick={() => handleDismiss(notif.id)}
-                                                className="absolute top-2 right-2 p-1 rounded text-slate-600 hover:text-red-400 hover:bg-red-500/10 transition opacity-0 group-hover:opacity-100">
+                                                className="absolute top-2 right-2 p-1 rounded text-muted-foreground/60 hover:text-destructive hover:bg-destructive/10 transition opacity-0 group-hover:opacity-100">
                                                 <X size={14} />
                                             </button>
                                         )}
@@ -240,17 +240,17 @@ export default function NotificationsPage() {
                                             <div className="flex items-center justify-between pr-6">
                                                 <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
                                                     {notif.type === 'AI_INSIGHT' && (
-                                                        <span className="text-xs uppercase font-bold text-nerve bg-nerve/10 px-2 py-0.5 rounded-sm">
+                                                        <span className="text-xs uppercase font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-sm">
                                                             Oracle
                                                         </span>
                                                     )}
                                                     {notif.severity === 'CRITICAL' && (
-                                                        <span className="text-xs uppercase font-bold text-red-400 bg-red-500/10 px-2 py-0.5 rounded-sm">
+                                                        <span className="text-xs uppercase font-bold text-destructive bg-destructive/10 px-2 py-0.5 rounded-sm">
                                                             Critical
                                                         </span>
                                                     )}
                                                     {notif.severity === 'WARNING' && notif.type !== 'AI_INSIGHT' && (
-                                                        <span className="text-xs uppercase font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-sm">
+                                                        <span className="text-xs uppercase font-bold text-warning bg-amber-500/10 px-2 py-0.5 rounded-sm">
                                                             Warning
                                                         </span>
                                                     )}
@@ -269,19 +269,19 @@ export default function NotificationsPage() {
 
                                             {/* Actor info */}
                                             {actorName && (
-                                                <div className="text-xs text-slate-500 mt-1">By {actorName}</div>
+                                                <div className="text-xs text-muted-foreground mt-1">By {actorName}</div>
                                             )}
 
                                             {/* AI Recommendations */}
                                             {recommendations && (
-                                                <div className="mt-3 rounded-lg bg-surface-2 p-3 border border-border/50">
+                                                <div className="mt-3 rounded-xl bg-surface-2 p-3 border border-border/50">
                                                     <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 flex items-center gap-1">
                                                         <Sparkles size={12} className="text-oracle" />
                                                         Mitigation Strategy
                                                     </h4>
                                                     <ul className="list-inside list-disc space-y-1 pl-1">
                                                         {recommendations.map((rec, rIdx) => (
-                                                            <li key={rIdx} className="text-xs text-slate-400">
+                                                            <li key={rIdx} className="text-xs text-muted-foreground">
                                                                 {rec}
                                                             </li>
                                                         ))}
@@ -297,7 +297,7 @@ export default function NotificationsPage() {
                         {hasMore && (
                             <div className="text-center pt-4">
                                 <button onClick={() => setVisibleCount(c => c + PAGE_SIZE)}
-                                    className="flex items-center gap-1.5 mx-auto px-4 py-2 text-xs font-medium text-nerve hover:text-foreground border border-nerve/20 hover:border-nerve/50 rounded-lg transition">
+                                    className="flex items-center gap-1.5 mx-auto px-4 py-2 text-xs font-medium text-primary hover:text-foreground border border-primary/20 hover:border-primary/50 rounded-xl transition">
                                     <ChevronDown size={14} />
                                     Load More ({filteredNotifications.length - visibleCount} remaining)
                                 </button>

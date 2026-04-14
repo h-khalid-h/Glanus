@@ -196,14 +196,14 @@ export default function ReportsPage() {
             title: 'Complete Asset Inventory',
             description: 'A full CSV export of all tracked assets, dynamic attributes, lifecycles, and assigned users.',
             icon: Server,
-            color: 'text-blue-500'
+            color: 'text-cortex'
         },
         {
             id: 'rmm_health',
             title: 'Agent Health & Uptime',
             description: 'Aggregated telemetry covering online/offline states, latency dropouts, and CPU usage norms.',
             icon: Activity,
-            color: 'text-green-500'
+            color: 'text-success'
         },
         {
             id: 'cortex_insights',
@@ -223,13 +223,13 @@ export default function ReportsPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {reports.map(report => (
-                    <Card key={report.id} className="p-6 flex flex-col items-start gap-4 hover:border-slate-700 transition-colors">
-                        <div className={`p-3 rounded-lg bg-slate-800 ${report.color}`}>
+                    <Card key={report.id} className="p-6 flex flex-col items-start gap-4 hover:border-border transition-colors">
+                        <div className={`p-3 rounded-xl bg-muted ${report.color}`}>
                             <report.icon className="w-6 h-6" />
                         </div>
                         <div className="flex-1">
                             <h3 className="text-lg font-semibold text-foreground mb-2">{report.title}</h3>
-                            <p className="text-sm text-slate-400 leading-relaxed">{report.description}</p>
+                            <p className="text-sm text-muted-foreground leading-relaxed">{report.description}</p>
                         </div>
                         <Button
                             className="w-full mt-4"
@@ -255,7 +255,7 @@ export default function ReportsPage() {
                 <div className="flex justify-between items-center mb-6">
                     <div>
                         <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
-                            <Clock className="w-5 h-5 text-nerve" />
+                            <Clock className="w-5 h-5 text-primary" />
                             Scheduled Report Deliveries
                         </h2>
                         <p className="text-sm text-muted-foreground mt-1">Automate recurring CSV exports delivered directly to stakeholder inboxes.</p>
@@ -263,7 +263,7 @@ export default function ReportsPage() {
                     {!isCreatingSchedule && (
                         <button
                             onClick={() => setIsCreatingSchedule(true)}
-                            className="flex items-center gap-2 px-4 py-2 bg-nerve text-white rounded-lg hover:brightness-110 transition-colors shadow-lg shadow-nerve/20"
+                            className="flex items-center gap-2 px-4 py-2 bg-primary text-foreground rounded-xl hover:brightness-110 transition-colors shadow-lg shadow-primary/20"
                         >
                             <Plus size={18} />
                             <span>New Schedule</span>
@@ -273,29 +273,29 @@ export default function ReportsPage() {
 
                 {/* Schedule Creation Form */}
                 {isCreatingSchedule && (
-                    <Card className="p-6 mb-6 border-nerve/30">
+                    <Card className="p-6 mb-6 border-primary/30">
                         <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
-                            <Mail className="w-5 h-5 text-nerve" />
+                            <Mail className="w-5 h-5 text-primary" />
                             Configure Delivery Schedule
                         </h3>
                         <form onSubmit={handleCreateSchedule} className="space-y-4">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-300 mb-1">Schedule Name</label>
+                                    <label className="block text-sm font-medium text-foreground mb-1">Schedule Name</label>
                                     <input
                                         required
                                         value={scheduleForm.name}
                                         onChange={e => setScheduleForm({ ...scheduleForm, name: e.target.value })}
-                                        className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm focus:border-nerve focus:ring-1 focus:ring-nerve outline-none"
+                                        className="w-full bg-background border border-border rounded-xl px-3 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none"
                                         placeholder="e.g., Weekly Compliance Report"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-300 mb-1">Report Type</label>
+                                    <label className="block text-sm font-medium text-foreground mb-1">Report Type</label>
                                     <select
                                         value={scheduleForm.reportType}
                                         onChange={e => setScheduleForm({ ...scheduleForm, reportType: e.target.value })}
-                                        className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm focus:border-nerve focus:ring-1 focus:ring-nerve outline-none"
+                                        className="w-full bg-background border border-border rounded-xl px-3 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none"
                                     >
                                         <option value="asset_inventory">Asset Inventory</option>
                                         <option value="rmm_health">Agent Health & Uptime</option>
@@ -306,11 +306,11 @@ export default function ReportsPage() {
 
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-300 mb-1">Frequency</label>
+                                    <label className="block text-sm font-medium text-foreground mb-1">Frequency</label>
                                     <select
                                         value={scheduleForm.frequency}
                                         onChange={e => setScheduleForm({ ...scheduleForm, frequency: e.target.value })}
-                                        className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm focus:border-nerve focus:ring-1 focus:ring-nerve outline-none"
+                                        className="w-full bg-background border border-border rounded-xl px-3 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none"
                                     >
                                         <option value="daily">Daily</option>
                                         <option value="weekly">Weekly</option>
@@ -320,11 +320,11 @@ export default function ReportsPage() {
 
                                 {scheduleForm.frequency === 'weekly' && (
                                     <div>
-                                        <label className="block text-sm font-medium text-slate-300 mb-1">Day of Week</label>
+                                        <label className="block text-sm font-medium text-foreground mb-1">Day of Week</label>
                                         <select
                                             value={scheduleForm.dayOfWeek}
                                             onChange={e => setScheduleForm({ ...scheduleForm, dayOfWeek: parseInt(e.target.value) })}
-                                            className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm focus:border-nerve focus:ring-1 focus:ring-nerve outline-none"
+                                            className="w-full bg-background border border-border rounded-xl px-3 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none"
                                         >
                                             {DAY_NAMES.map((day, i) => (
                                                 <option key={i} value={i}>{day}</option>
@@ -335,43 +335,43 @@ export default function ReportsPage() {
 
                                 {scheduleForm.frequency === 'monthly' && (
                                     <div>
-                                        <label className="block text-sm font-medium text-slate-300 mb-1">Day of Month</label>
+                                        <label className="block text-sm font-medium text-foreground mb-1">Day of Month</label>
                                         <input
                                             type="number"
                                             min={1}
                                             max={31}
                                             value={scheduleForm.dayOfMonth}
                                             onChange={e => setScheduleForm({ ...scheduleForm, dayOfMonth: parseInt(e.target.value) })}
-                                            className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm focus:border-nerve focus:ring-1 focus:ring-nerve outline-none"
+                                            className="w-full bg-background border border-border rounded-xl px-3 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none"
                                         />
                                     </div>
                                 )}
 
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-300 mb-1">Time (UTC)</label>
+                                    <label className="block text-sm font-medium text-foreground mb-1">Time (UTC)</label>
                                     <input
                                         type="time"
                                         value={scheduleForm.timeOfDay}
                                         onChange={e => setScheduleForm({ ...scheduleForm, timeOfDay: e.target.value })}
-                                        className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm focus:border-nerve focus:ring-1 focus:ring-nerve outline-none"
+                                        className="w-full bg-background border border-border rounded-xl px-3 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none"
                                     />
                                 </div>
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-slate-300 mb-1">Recipient Emails (comma-separated)</label>
+                                <label className="block text-sm font-medium text-foreground mb-1">Recipient Emails (comma-separated)</label>
                                 <input
                                     required
                                     value={scheduleForm.recipients}
                                     onChange={e => setScheduleForm({ ...scheduleForm, recipients: e.target.value })}
-                                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm focus:border-nerve focus:ring-1 focus:ring-nerve outline-none"
+                                    className="w-full bg-background border border-border rounded-xl px-3 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none"
                                     placeholder="cto@company.com, ops-team@company.com"
                                 />
                             </div>
 
-                            <div className="flex justify-end gap-3 pt-2 border-t border-slate-800">
-                                <button type="button" onClick={() => setIsCreatingSchedule(false)} className="px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-800 text-slate-300 transition">Cancel</button>
-                                <button type="submit" disabled={isSubmitting} className="px-5 py-2 rounded-lg bg-nerve text-white text-sm font-medium hover:brightness-110 disabled:opacity-50 flex items-center gap-2 transition">
+                            <div className="flex justify-end gap-3 pt-2 border-t border-border">
+                                <button type="button" onClick={() => setIsCreatingSchedule(false)} className="px-4 py-2 rounded-xl text-sm font-medium hover:bg-muted text-foreground transition">Cancel</button>
+                                <button type="submit" disabled={isSubmitting} className="px-5 py-2 rounded-xl bg-primary text-foreground text-sm font-medium hover:brightness-110 disabled:opacity-50 flex items-center gap-2 transition">
                                     {isSubmitting ? 'Creating...' : 'Activate Schedule'}
                                 </button>
                             </div>
@@ -382,35 +382,35 @@ export default function ReportsPage() {
                 {/* Schedule List */}
                 {loadingSchedules ? (
                     <div className="flex items-center justify-center py-12">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-nerve" />
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
                     </div>
                 ) : schedules.length === 0 && !isCreatingSchedule ? (
-                    <Card className="p-8 text-center border-dashed border-slate-700 bg-slate-900/30">
-                        <FileText className="w-10 h-10 text-slate-600 mx-auto mb-3" />
+                    <Card className="p-8 text-center border-dashed border-border bg-muted/30">
+                        <FileText className="w-10 h-10 text-muted-foreground/60 mx-auto mb-3" />
                         <h3 className="text-lg font-medium text-foreground mb-2">No Scheduled Deliveries</h3>
-                        <p className="text-sm text-slate-500 max-w-md mx-auto mb-4">
+                        <p className="text-sm text-muted-foreground max-w-md mx-auto mb-4">
                             Set up automated report deliveries to receive compliance-ready CSV exports on a recurring basis directly in your inbox.
                         </p>
-                        <button onClick={() => setIsCreatingSchedule(true)} className="px-5 py-2 bg-nerve text-white rounded-md hover:brightness-110 transition text-sm font-medium">
+                        <button onClick={() => setIsCreatingSchedule(true)} className="px-5 py-2 bg-primary text-foreground rounded-md hover:brightness-110 transition text-sm font-medium">
                             Create First Schedule
                         </button>
                     </Card>
                 ) : (
                     <div className="space-y-3">
                         {schedules.map(schedule => (
-                            <Card key={schedule.id} className={`p-5 flex items-center justify-between hover:border-slate-700 transition-colors ${!schedule.enabled ? 'opacity-50' : ''}`}>
+                            <Card key={schedule.id} className={`p-5 flex items-center justify-between hover:border-border transition-colors ${!schedule.enabled ? 'opacity-50' : ''}`}>
                                 <div className="flex items-center gap-4">
                                     <button onClick={() => handleToggleSchedule(schedule.id, schedule.enabled)} className="flex-shrink-0" title={schedule.enabled ? 'Pause schedule' : 'Enable schedule'}>
                                         {schedule.enabled ? (
-                                            <ToggleRight className="w-7 h-7 text-nerve" />
+                                            <ToggleRight className="w-7 h-7 text-primary" />
                                         ) : (
-                                            <ToggleLeft className="w-7 h-7 text-slate-600" />
+                                            <ToggleLeft className="w-7 h-7 text-muted-foreground/60" />
                                         )}
                                     </button>
                                     <div>
                                         <h4 className="font-medium text-foreground">{schedule.name}</h4>
-                                        <div className="flex items-center gap-3 mt-1 text-xs text-slate-500">
-                                            <span className="bg-slate-800 px-2 py-0.5 rounded">{REPORT_TYPE_LABELS[schedule.reportType] || schedule.reportType}</span>
+                                        <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
+                                            <span className="bg-muted px-2 py-0.5 rounded">{REPORT_TYPE_LABELS[schedule.reportType] || schedule.reportType}</span>
                                             <span>{FREQUENCY_LABELS[schedule.frequency] || schedule.frequency}</span>
                                             {schedule.frequency === 'weekly' && schedule.dayOfWeek !== null && (
                                                 <span>on {DAY_NAMES[schedule.dayOfWeek]}</span>
@@ -421,23 +421,23 @@ export default function ReportsPage() {
                                             <span>at {schedule.timeOfDay} UTC</span>
                                         </div>
                                         <div className="flex items-center gap-2 mt-1">
-                                            <Mail className="w-3 h-3 text-slate-500" />
-                                            <span className="text-xs text-slate-500">{schedule.recipients.join(', ')}</span>
+                                            <Mail className="w-3 h-3 text-muted-foreground" />
+                                            <span className="text-xs text-muted-foreground">{schedule.recipients.join(', ')}</span>
                                         </div>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-4">
-                                    <div className="text-right text-xs text-slate-500">
+                                    <div className="text-right text-xs text-muted-foreground">
                                         <div>{schedule.runCount} deliveries</div>
                                         {schedule.lastRunAt && (
-                                            <div className={schedule.lastStatus === 'failed' ? 'text-red-400' : 'text-green-400'}>
+                                            <div className={schedule.lastStatus === 'failed' ? 'text-destructive' : 'text-success'}>
                                                 Last: {new Date(schedule.lastRunAt).toLocaleDateString()}
                                             </div>
                                         )}
                                     </div>
                                     <button
                                         onClick={() => setConfirmState({ open: true, scheduleId: schedule.id })}
-                                        className="p-1.5 text-slate-500 hover:text-red-400 hover:bg-red-400/10 rounded-md transition"
+                                        className="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-md transition"
                                         title="Delete schedule"
                                     >
                                         <Trash2 size={16} />

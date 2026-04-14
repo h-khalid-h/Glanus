@@ -247,7 +247,7 @@ export function BillingTab() {
                 );
             case 'CANCELED':
                 return (
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium bg-health-critical/10 text-health-critical">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium bg-destructive/10 text-destructive">
                         <XCircle className="w-4 h-4" /> Canceled
                     </span>
                 );
@@ -278,10 +278,10 @@ export function BillingTab() {
             {/* Notification Banner */}
             {notification && (
                 <div className={clsx(
-                    'p-4 rounded-lg border flex items-center gap-3',
+                    'p-4 rounded-xl border flex items-center gap-3',
                     notification.type === 'success'
                         ? 'bg-health-good/10 border-health-good/20 text-health-good'
-                        : 'bg-health-critical/10 border-health-critical/20 text-health-critical'
+                        : 'bg-destructive/10 border-destructive/20 text-destructive'
                 )}>
                     {notification.type === 'success' ? <CheckCircle2 className="w-5 h-5" /> : <XCircle className="w-5 h-5" />}
                     {notification.message}
@@ -295,17 +295,17 @@ export function BillingTab() {
             )}
 
             {/* Current Plan */}
-            <div className="rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm p-6">
+            <div className="rounded-xl border border-border bg-card backdrop-blur-sm p-6">
                 <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-lg bg-nerve/5 flex items-center justify-center text-nerve">
+                        <div className="w-12 h-12 rounded-xl bg-primary/5 flex items-center justify-center text-primary">
                             <CreditCard className="w-6 h-6" />
                         </div>
                         <div>
                             <h2 className="text-xl font-semibold text-foreground">
                                 {PLANS.find(p => p.id === currentPlan)?.name || 'Free'} Plan
                             </h2>
-                            <p className="text-sm text-slate-500">
+                            <p className="text-sm text-muted-foreground">
                                 {PLANS.find(p => p.id === currentPlan)?.price}
                                 {PLANS.find(p => p.id === currentPlan)?.priceLabel}
                             </p>
@@ -354,13 +354,13 @@ export function BillingTab() {
                                     plan.popular
                                         ? 'border-purple-500 shadow-lg shadow-purple-100'
                                         : isCurrent
-                                            ? 'border-nerve'
-                                            : 'border-slate-700 hover:border-slate-600',
-                                    'bg-slate-900/50 backdrop-blur-sm'
+                                            ? 'border-primary'
+                                            : 'border-border hover:border-border',
+                                    'bg-card backdrop-blur-sm'
                                 )}
                             >
                                 {plan.popular && (
-                                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 bg-purple-500 text-white text-xs font-semibold rounded-full">
+                                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 bg-purple-500 text-foreground text-xs font-semibold rounded-full">
                                         Most Popular
                                     </div>
                                 )}
@@ -368,13 +368,13 @@ export function BillingTab() {
                                 <h3 className="text-lg font-semibold text-foreground">{plan.name}</h3>
                                 <div className="mt-2 mb-4">
                                     <span className="text-3xl font-bold text-foreground">{plan.price}</span>
-                                    <span className="text-slate-500 text-sm">{plan.priceLabel}</span>
+                                    <span className="text-muted-foreground text-sm">{plan.priceLabel}</span>
                                 </div>
 
                                 <ul className="space-y-2 mb-6">
                                     {plan.features.map((feature, i) => (
-                                        <li key={i} className="flex items-center gap-2 text-sm text-slate-400">
-                                            <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0" />
+                                        <li key={i} className="flex items-center gap-2 text-sm text-muted-foreground">
+                                            <CheckCircle2 className="w-4 h-4 text-success flex-shrink-0" />
                                             {feature}
                                         </li>
                                     ))}
@@ -437,21 +437,21 @@ function UsageMeter({
                 </div>
                 <span className={clsx(
                     'text-sm font-medium',
-                    isOverLimit ? 'text-health-critical' : isNearLimit ? 'text-health-warn' : 'text-muted-foreground'
+                    isOverLimit ? 'text-destructive' : isNearLimit ? 'text-health-warn' : 'text-muted-foreground'
                 )}>
                     {current.toLocaleString()}{unit ? ` ${unit}` : ''} / {limit.toLocaleString()}{unit ? ` ${unit}` : ''}
                 </span>
             </div>
-            <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
+            <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
                 <div
                     className={clsx(
                         'h-full rounded-full transition-all duration-500',
-                        isOverLimit ? 'bg-health-critical' : isNearLimit ? 'bg-health-warn' : 'bg-nerve/50'
+                        isOverLimit ? 'bg-destructive' : isNearLimit ? 'bg-health-warn' : 'bg-primary/50'
                     )}
                     style={{ width: `${percentage}%` }}
                 />
             </div>
-            <p className="text-xs text-slate-500">{percentage}% used</p>
+            <p className="text-xs text-muted-foreground">{percentage}% used</p>
         </div>
     );
 }

@@ -54,7 +54,7 @@ export function BulkActions({
                                 }
                             }}
                             disabled={disabled}
-                            className="px-3 py-1.5 text-sm border border-slate-700 rounded-md bg-slate-800/50 text-white focus:ring-2 focus:ring-nerve/50 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="px-3 py-1.5 text-sm border border-border rounded-md bg-muted/50 text-foreground focus:ring-2 focus:ring-primary/50 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             <option value="">Update Status</option>
                             <option value="AVAILABLE">Available</option>
@@ -78,7 +78,7 @@ export function BulkActions({
                 <button type="button"
                     onClick={onClearSelection}
                     disabled={disabled}
-                    className="text-sm text-slate-400 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="text-sm text-muted-foreground hover:text-foreground disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     Clear selection
                 </button>

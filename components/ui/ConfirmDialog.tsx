@@ -52,15 +52,15 @@ export function ConfirmDialog({
     if (!open) return null;
 
     const confirmColors = {
-        danger: 'bg-destructive hover:bg-destructive/80 text-white',
-        warning: 'bg-yellow-600 hover:bg-yellow-700 text-white',
-        default: 'bg-nerve hover:bg-nerve/90 text-white',
+        danger: 'bg-destructive hover:bg-destructive/80 text-destructive-foreground',
+        warning: 'bg-warning hover:bg-warning/80 text-warning-foreground',
+        default: 'bg-primary hover:bg-primary/90 text-primary-foreground',
     };
 
     const iconColors = {
-        danger: 'text-health-critical bg-health-critical/10',
-        warning: 'text-health-warn bg-health-warn/10',
-        default: 'text-nerve bg-nerve/10',
+        danger: 'text-destructive bg-destructive/10',
+        warning: 'text-warning bg-warning/10',
+        default: 'text-primary bg-primary/10',
     };
 
     return (
@@ -77,17 +77,17 @@ export function ConfirmDialog({
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="confirm-title"
-                className="relative z-10 mx-4 w-full max-w-md rounded-xl border border-slate-700 bg-slate-900 p-6 shadow-2xl animate-fade-in"
+                className="relative z-10 mx-4 w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-2xl animate-fade-in"
             >
                 <div className="flex gap-4">
                     <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${iconColors[variant]}`}>
                         <AlertTriangle className="h-5 w-5" />
                     </div>
                     <div className="flex-1">
-                        <h3 id="confirm-title" className="text-base font-semibold text-white">
+                        <h3 id="confirm-title" className="text-base font-semibold text-foreground">
                             {title}
                         </h3>
-                        <p className="mt-2 text-sm text-slate-400 leading-relaxed">
+                        <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
                             {message}
                         </p>
                     </div>
@@ -96,13 +96,13 @@ export function ConfirmDialog({
                 <div className="mt-6 flex justify-end gap-3">
                     <button type="button"
                         onClick={onCancel}
-                        className="rounded-lg border border-slate-700 bg-slate-800 px-4 py-2 text-sm font-medium text-slate-300 transition-colors hover:bg-slate-700 hover:text-white"
+                        className="rounded-xl border border-border bg-muted px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-foreground"
                     >
                         {cancelLabel}
                     </button>
                     <button type="button"
                         onClick={onConfirm}
-                        className={`rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${confirmColors[variant]}`}
+                        className={`rounded-xl px-4 py-2 text-sm font-semibold transition-all active:scale-[0.97] ${confirmColors[variant]}`}
                     >
                         {confirmLabel}
                     </button>

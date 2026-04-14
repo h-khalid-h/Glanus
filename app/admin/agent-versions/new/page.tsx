@@ -52,7 +52,7 @@ export default function NewAgentVersionPage() {
         <div className="max-w-2xl mx-auto space-y-6">
             <div>
                 <h1 className="text-2xl font-bold text-foreground mb-2">Publish New Release</h1>
-                <p className="text-slate-400">
+                <p className="text-muted-foreground">
                     Draft a new glanus-agent OTA package. Agents pinging the updater will pull the highest semantic Active release.
                 </p>
             </div>
@@ -61,7 +61,7 @@ export default function NewAgentVersionPage() {
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                            <label className="text-sm font-medium text-slate-300">Semantic Version</label>
+                            <label className="text-sm font-medium text-foreground">Semantic Version</label>
                             <Input
                                 required
                                 placeholder="0.1.0"
@@ -70,9 +70,9 @@ export default function NewAgentVersionPage() {
                             />
                         </div>
                         <div className="space-y-2">
-                            <label className="text-sm font-medium text-slate-300">Platform</label>
+                            <label className="text-sm font-medium text-foreground">Platform</label>
                             <select
-                                className="w-full h-10 px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-nerve"
+                                className="w-full h-10 px-3 py-2 bg-surface-1 border border-border rounded-xl text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                                 value={formData.platform}
                                 onChange={e => setFormData({ ...formData, platform: e.target.value })}
                             >
@@ -84,7 +84,7 @@ export default function NewAgentVersionPage() {
                     </div>
 
                     <div className="space-y-2">
-                        <label className="text-sm font-medium text-slate-300">Download URL</label>
+                        <label className="text-sm font-medium text-foreground">Download URL</label>
                         <Input
                             required
                             type="url"
@@ -92,25 +92,25 @@ export default function NewAgentVersionPage() {
                             value={formData.downloadUrl}
                             onChange={e => setFormData({ ...formData, downloadUrl: e.target.value })}
                         />
-                        <p className="text-xs text-slate-500">Must be a direct, unauthenticated download link.</p>
+                        <p className="text-xs text-muted-foreground">Must be a direct, unauthenticated download link.</p>
                     </div>
 
                     <div className="space-y-2">
-                        <label className="text-sm font-medium text-slate-300">SHA-256 Checksum</label>
+                        <label className="text-sm font-medium text-foreground">SHA-256 Checksum</label>
                         <Input
                             required
                             placeholder="e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
                             value={formData.checksum}
                             onChange={e => setFormData({ ...formData, checksum: e.target.value })}
                         />
-                        <p className="text-xs text-slate-500">The agent daemon will abort installation if the binary hash mismatches.</p>
+                        <p className="text-xs text-muted-foreground">The agent daemon will abort installation if the binary hash mismatches.</p>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                            <label className="text-sm font-medium text-slate-300">Release Status</label>
+                            <label className="text-sm font-medium text-foreground">Release Status</label>
                             <select
-                                className="w-full h-10 px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-nerve"
+                                className="w-full h-10 px-3 py-2 bg-surface-1 border border-border rounded-xl text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                                 value={formData.status}
                                 onChange={e => setFormData({ ...formData, status: e.target.value })}
                             >
@@ -119,33 +119,33 @@ export default function NewAgentVersionPage() {
                             </select>
                         </div>
                         <div className="space-y-2">
-                            <label className="text-sm font-medium text-slate-300">Enforcement</label>
-                            <label className="flex items-center gap-3 p-2 bg-slate-900 border border-slate-700 rounded-lg cursor-pointer hover:border-slate-600 transition-colors">
+                            <label className="text-sm font-medium text-foreground">Enforcement</label>
+                            <label className="flex items-center gap-3 p-2 bg-surface-1 border border-border rounded-xl cursor-pointer hover:border-border transition-colors">
                                 <input
                                     type="checkbox"
                                     checked={formData.required}
                                     onChange={e => setFormData({ ...formData, required: e.target.checked })}
-                                    className="w-4 h-4 rounded text-nerve focus:ring-nerve bg-slate-800 border-slate-600"
+                                    className="w-4 h-4 rounded text-primary focus:ring-primary bg-muted border-border"
                                 />
                                 <div className="text-sm">
-                                    <div className="text-white font-medium">Critical Update</div>
-                                    <div className="text-slate-400 text-xs">Forced OTA upgrade</div>
+                                    <div className="text-foreground font-medium">Critical Update</div>
+                                    <div className="text-muted-foreground text-xs">Forced OTA upgrade</div>
                                 </div>
                             </label>
                         </div>
                     </div>
 
                     <div className="space-y-2">
-                        <label className="text-sm font-medium text-slate-300">Release Notes (Markdown)</label>
+                        <label className="text-sm font-medium text-foreground">Release Notes (Markdown)</label>
                         <textarea
-                            className="w-full h-32 px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-nerve/50"
+                            className="w-full h-32 px-3 py-2 bg-surface-1 border border-border rounded-xl text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
                             placeholder="- Fixed memory leak in heartbeat loop&#10;- Added WebRTC video codec support"
                             value={formData.releaseNotes}
                             onChange={e => setFormData({ ...formData, releaseNotes: e.target.value })}
                         />
                     </div>
 
-                    <div className="pt-4 flex justify-end gap-3 border-t border-slate-800">
+                    <div className="pt-4 flex justify-end gap-3 border-t border-border">
                         <Button
                             type="button"
                             variant="secondary"

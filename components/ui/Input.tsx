@@ -13,7 +13,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
         return (
             <div className="w-full">
                 {label && (
-                    <label htmlFor={inputId} className="mb-1.5 block text-sm font-medium text-slate-300">
+                    <label htmlFor={inputId} className="mb-2 block text-sm font-medium text-foreground">
                         {label}
                     </label>
                 )}
@@ -22,18 +22,25 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
                     id={inputId}
                     ref={ref}
                     className={cn(
-                        'w-full rounded-lg border border-slate-700 bg-slate-800/50 px-4 py-2 text-sm text-white transition-colors',
-                        'focus:outline-none focus:ring-2 focus:ring-nerve/20',
+                        'w-full rounded-xl border bg-background px-4 py-2.5 text-sm text-foreground transition-all duration-200',
+                        'placeholder:text-muted-foreground',
+                        'focus:outline-none focus:ring-2',
+                        'hover:border-border/80',
                         error
-                            ? 'border-health-critical focus:border-health-critical focus:ring-red-500/20'
-                            : 'border-slate-700 focus:border-nerve/50',
-                        'disabled:cursor-not-allowed disabled:opacity-50',
+                            ? 'border-destructive focus:border-destructive focus:ring-destructive/15'
+                            : 'border-input focus:border-primary/40 focus:ring-primary/15',
+                        'disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-muted',
                         className
                     )}
                     {...props}
                 />
                 {error && (
-                    <p className="mt-1 text-sm text-health-critical">{error}</p>
+                    <p className="mt-1.5 text-sm text-destructive flex items-center gap-1">
+                        <svg className="h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+                        </svg>
+                        {error}
+                    </p>
                 )}
             </div>
         );

@@ -136,7 +136,7 @@ function PartnerDashboardContent() {
             <div className="max-w-7xl mx-auto">
                 {/* Welcome Banner */}
                 {showWelcome && (
-                    <div className="mb-8 bg-health-good/10 border border-health-good/20 rounded-lg p-6">
+                    <div className="mb-8 bg-health-good/10 border border-health-good/20 rounded-xl p-6">
                         <h2 className="text-2xl font-bold text-health-good mb-2">Welcome to Glanus Partners! 🎉</h2>
                         <p className="text-health-good">
                             Your application has been submitted. Our team will review it within 1-2 business days.
@@ -149,9 +149,9 @@ function PartnerDashboardContent() {
                     <h1 className="text-3xl font-bold text-foreground mb-2">{partner.companyName}</h1>
                     <div className="flex items-center space-x-4">
                         <span className={`px-3 py-1 rounded-full text-sm font-semibold ${partner.status === 'ACTIVE' ? 'bg-health-good/15 text-health-good' :
-                            partner.status === 'VERIFIED' ? 'bg-nerve/10 text-nerve' :
+                            partner.status === 'VERIFIED' ? 'bg-primary/10 text-primary' :
                                 partner.status === 'PENDING' ? 'bg-health-warn/15 text-health-warn' :
-                                    'bg-slate-800/50 text-slate-200'
+                                    'bg-muted/50 text-foreground'
                             }`}>
                             {partner.status}
                         </span>
@@ -159,7 +159,7 @@ function PartnerDashboardContent() {
                             {partner.certificationLevel}
                         </span>
                         {partner.averageRating && (
-                            <span className="flex items-center text-sm text-slate-400">
+                            <span className="flex items-center text-sm text-muted-foreground">
                                 ⭐ {Number(partner.averageRating).toFixed(1)} ({partner.totalReviews} reviews)
                             </span>
                         )}
@@ -168,26 +168,26 @@ function PartnerDashboardContent() {
 
                 {/* Stats Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                    <div className="rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm p-6">
-                        <p className="text-sm text-slate-400 mb-1">Total Earnings</p>
-                        <p className="text-3xl font-bold text-white">${Number(partner.totalEarnings).toFixed(2)}</p>
+                    <div className="rounded-xl border border-border bg-card backdrop-blur-sm p-6">
+                        <p className="text-sm text-muted-foreground mb-1">Total Earnings</p>
+                        <p className="text-3xl font-bold text-foreground">${Number(partner.totalEarnings).toFixed(2)}</p>
                     </div>
 
-                    <div className="rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm p-6">
-                        <p className="text-sm text-slate-400 mb-1">Active Workspaces</p>
-                        <p className="text-3xl font-bold text-white">{activeAssignments.length}</p>
+                    <div className="rounded-xl border border-border bg-card backdrop-blur-sm p-6">
+                        <p className="text-sm text-muted-foreground mb-1">Active Workspaces</p>
+                        <p className="text-3xl font-bold text-foreground">{activeAssignments.length}</p>
                     </div>
 
-                    <div className="rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm p-6">
-                        <p className="text-sm text-slate-400 mb-1">Available Capacity</p>
-                        <p className="text-3xl font-bold text-white">
+                    <div className="rounded-xl border border-border bg-card backdrop-blur-sm p-6">
+                        <p className="text-sm text-muted-foreground mb-1">Available Capacity</p>
+                        <p className="text-3xl font-bold text-foreground">
                             {partner.availableSlots} / {partner.maxWorkspaces}
                         </p>
                     </div>
 
-                    <div className="rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm p-6">
-                        <p className="text-sm text-slate-400 mb-1">Pending Requests</p>
-                        <p className="text-3xl font-bold text-white">{pendingAssignments.length}</p>
+                    <div className="rounded-xl border border-border bg-card backdrop-blur-sm p-6">
+                        <p className="text-sm text-muted-foreground mb-1">Pending Requests</p>
+                        <p className="text-3xl font-bold text-foreground">{pendingAssignments.length}</p>
                     </div>
                 </div>
 
@@ -196,15 +196,15 @@ function PartnerDashboardContent() {
                     <div className="lg:col-span-2 space-y-6">
                         {/* Pending Assignments */}
                         {pendingAssignments.length > 0 && (
-                            <div className="rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm p-6">
+                            <div className="rounded-xl border border-border bg-card backdrop-blur-sm p-6">
                                 <h2 className="text-xl font-semibold mb-4">Pending Workspace Requests</h2>
                                 <div className="space-y-4">
                                     {pendingAssignments.map((assignment) => (
-                                        <div key={assignment.id} className="border border-slate-800 rounded-lg p-4">
+                                        <div key={assignment.id} className="border border-border rounded-xl p-4">
                                             <div className="flex items-start justify-between mb-3">
                                                 <div>
                                                     <h3 className="font-semibold text-foreground">{assignment.workspace.name}</h3>
-                                                    <p className="text-sm text-slate-400">
+                                                    <p className="text-sm text-muted-foreground">
                                                         Requested {formatDate(assignment.assignedAt)}
                                                     </p>
                                                 </div>
@@ -212,19 +212,19 @@ function PartnerDashboardContent() {
                                             <div className="flex space-x-3">
                                                 <button type="button"
                                                     onClick={() => handleAssignmentAction(assignment.id, 'accept')}
-                                                    className="px-4 py-2 bg-health-good text-white rounded-md hover:bg-health-good/80 transition text-sm"
+                                                    className="px-4 py-2 bg-health-good text-foreground rounded-md hover:bg-health-good/80 transition text-sm"
                                                 >
                                                     Accept
                                                 </button>
                                                 <button type="button"
                                                     onClick={() => handleAssignmentAction(assignment.id, 'reject')}
-                                                    className="px-4 py-2 bg-destructive text-white rounded-md hover:bg-destructive/80 transition text-sm"
+                                                    className="px-4 py-2 bg-destructive text-foreground rounded-md hover:bg-destructive/80 transition text-sm"
                                                 >
                                                     Decline
                                                 </button>
                                                 <Link
                                                     href={`/workspaces/${assignment.workspace.id}`}
-                                                    className="px-4 py-2 border border-slate-700 rounded-md hover:bg-slate-900/30 transition text-sm"
+                                                    className="px-4 py-2 border border-border rounded-md hover:bg-muted/30 transition text-sm"
                                                 >
                                                     View Details
                                                 </Link>
@@ -236,28 +236,28 @@ function PartnerDashboardContent() {
                         )}
 
                         {/* Active Workspaces */}
-                        <div className="rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm p-6">
+                        <div className="rounded-xl border border-border bg-card backdrop-blur-sm p-6">
                             <h2 className="text-xl font-semibold mb-4">Active Workspaces</h2>
                             {activeAssignments.length === 0 ? (
-                                <p className="text-slate-400">No active workspaces yet. Accept pending requests to get started!</p>
+                                <p className="text-muted-foreground">No active workspaces yet. Accept pending requests to get started!</p>
                             ) : (
                                 <div className="space-y-3">
                                     {activeAssignments.map((assignment) => (
                                         <Link
                                             key={assignment.id}
                                             href={`/workspaces/${assignment.workspace.id}`}
-                                            className="block border border-slate-800 rounded-lg p-4 hover:bg-slate-900/30 transition"
+                                            className="block border border-border rounded-xl p-4 hover:bg-muted/30 transition"
                                         >
                                             <div className="flex justify-between items-center">
                                                 <div>
                                                     <h3 className="font-semibold text-foreground">{assignment.workspace.name}</h3>
-                                                    <p className="text-sm text-slate-400">Status: {assignment.status}</p>
+                                                    <p className="text-sm text-muted-foreground">Status: {assignment.status}</p>
                                                 </div>
                                                 <div className="text-right">
                                                     <p className="text-lg font-semibold text-health-good">
                                                         ${Number(assignment.totalEarnings).toFixed(2)}
                                                     </p>
-                                                    <p className="text-xs text-slate-500">Total earned</p>
+                                                    <p className="text-xs text-muted-foreground">Total earned</p>
                                                 </div>
                                             </div>
                                         </Link>
@@ -270,7 +270,7 @@ function PartnerDashboardContent() {
                     {/* Sidebar */}
                     <div className="space-y-6">
                         {/* Certification Card */}
-                        <div className="bg-gradient-to-br from-purple-500 to-purple-700 rounded-lg shadow p-6 text-white">
+                        <div className="bg-gradient-to-br from-purple-500 to-purple-700 rounded-xl shadow p-6 text-foreground">
                             <h3 className="text-lg font-semibold mb-3">Certification</h3>
                             <div className="mb-4">
                                 <p className="text-sm opacity-90 mb-2">Current Level</p>
@@ -287,7 +287,7 @@ function PartnerDashboardContent() {
                                     </p>
                                     <Link
                                         href="/partners/certification"
-                                        className="block w-full bg-slate-800/50 text-slate-200 text-center py-2 rounded-md font-semibold hover:bg-slate-800/50 transition"
+                                        className="block w-full bg-muted/50 text-foreground text-center py-2 rounded-md font-semibold hover:bg-muted/50 transition"
                                     >
                                         Take {nextLevel} Exam
                                     </Link>
@@ -298,18 +298,18 @@ function PartnerDashboardContent() {
                         </div>
 
                         {/* Quick Actions */}
-                        <div className="rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm p-6">
+                        <div className="rounded-xl border border-border bg-card backdrop-blur-sm p-6">
                             <h3 className="text-lg font-semibold mb-4">Quick Actions</h3>
                             <div className="space-y-3">
                                 <Link
                                     href="/partners/earnings"
-                                    className="block w-full px-4 py-2 bg-nerve text-white rounded-md text-center hover:brightness-110 transition"
+                                    className="block w-full px-4 py-2 bg-primary text-foreground rounded-md text-center hover:brightness-110 transition"
                                 >
                                     View Earnings
                                 </Link>
                                 <Link
                                     href="/partners/me"
-                                    className="block w-full px-4 py-2 border border-slate-700 rounded-md text-center hover:bg-slate-900/30 transition"
+                                    className="block w-full px-4 py-2 border border-border rounded-md text-center hover:bg-muted/30 transition"
                                 >
                                     Edit Profile
                                 </Link>
@@ -331,8 +331,8 @@ function PartnerDashboardContent() {
                                         }
                                     }}
                                     className={`block w-full px-4 py-2 rounded-md text-center transition ${partner.acceptingNew
-                                        ? 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-                                        : 'bg-health-good text-white hover:bg-health-good/80'
+                                        ? 'bg-muted text-foreground hover:bg-muted'
+                                        : 'bg-health-good text-foreground hover:bg-health-good/80'
                                         }`}
                                 >
                                     {partner.acceptingNew ? 'Pause New Requests' : 'Accept New Requests'}
@@ -342,14 +342,14 @@ function PartnerDashboardContent() {
 
                         {/* Exam History */}
                         {exams.length > 0 && (
-                            <div className="rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm p-6">
+                            <div className="rounded-xl border border-border bg-card backdrop-blur-sm p-6">
                                 <h3 className="text-lg font-semibold mb-4">Recent Exams</h3>
                                 <div className="space-y-2">
                                     {exams.slice(0, 3).map((exam) => (
                                         <div key={exam.id} className="text-sm">
                                             <div className="flex justify-between items-center">
-                                                <span className="text-slate-300">{exam.level}</span>
-                                                <span className={`font-semibold ${exam.status === 'PASSED' ? 'text-health-good' : 'text-health-critical'
+                                                <span className="text-foreground">{exam.level}</span>
+                                                <span className={`font-semibold ${exam.status === 'PASSED' ? 'text-health-good' : 'text-destructive'
                                                     }`}>
                                                     {exam.status} ({exam.score}%)
                                                 </span>

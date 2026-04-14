@@ -66,7 +66,7 @@ export function NotificationPopover() {
         <div className="relative" ref={popoverRef}>
             <button
                 type="button"
-                className="relative flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-surface-2 hover:text-foreground"
+                className="relative flex h-8 w-8 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-surface-2 hover:text-foreground"
                 onClick={() => {
                     setIsOpen(!isOpen);
                     if (!isOpen) { fetchNotifications(); setHasUnread(false); }
@@ -96,12 +96,12 @@ export function NotificationPopover() {
                     <div className="max-h-96 overflow-y-auto p-2 scrollbar-thin">
                         {isLoading && notifications.length === 0 ? (
                             <div className="flex items-center justify-center p-4">
-                                <div className="h-4 w-4 animate-spin rounded-full border-2 border-nerve border-t-transparent"></div>
+                                <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
                             </div>
                         ) : notifications.length > 0 ? (
                             <div className="flex flex-col gap-1">
                                 {notifications.map((notif) => (
-                                    <div key={notif.id} className="flex gap-3 rounded-lg p-2 hover:bg-surface-2 transition-colors">
+                                    <div key={notif.id} className="flex gap-3 rounded-xl p-2 hover:bg-surface-2 transition-colors">
                                         <div className="mt-0.5 shrink-0">
                                             {notif.type === 'AI_INSIGHT' ? (
                                                 <div className={`flex h-6 w-6 items-center justify-center rounded-md ${notif.severity === 'CRITICAL' ? 'bg-oracle/20 text-oracle' :
@@ -121,7 +121,7 @@ export function NotificationPopover() {
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <p className="text-sm font-medium leading-tight text-foreground">
-                                                {notif.type === 'AI_INSIGHT' ? <span className="text-xs uppercase mr-1.5 font-bold tracking-wider text-nerve">NERVE</span> : null}
+                                                {notif.type === 'AI_INSIGHT' ? <span className="text-xs uppercase mr-1.5 font-bold tracking-wider text-primary">NERVE</span> : null}
                                                 {notif.title}
                                             </p>
                                             <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
@@ -145,7 +145,7 @@ export function NotificationPopover() {
                         <Link
                             href={`/workspaces/notifications`}
                             onClick={() => setIsOpen(false)}
-                            className="flex w-full items-center justify-center rounded-lg px-2.5 py-1.5 text-xs font-semibold text-nerve hover:bg-nerve/10 transition-colors"
+                            className="flex w-full items-center justify-center rounded-xl px-2.5 py-1.5 text-xs font-semibold text-primary hover:bg-primary/10 transition-colors"
                         >
                             View All Events
                         </Link>

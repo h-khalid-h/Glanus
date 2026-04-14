@@ -44,11 +44,11 @@ export function SessionControls({
     };
 
     return (
-        <div className="bg-slate-900 border border-slate-800 rounded-lg p-4 shadow-lg">
+        <div className="bg-surface-1 border border-border rounded-lg p-4 shadow-lg">
             <div className="flex items-center justify-between gap-4">
                 {/* Session Duration */}
-                <div className="flex items-center gap-2 text-white">
-                    <svg className="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="flex items-center gap-2 text-foreground">
+                    <svg className="w-5 h-5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path
                             strokeLinecap="round"
                             strokeLinejoin="round"
@@ -65,8 +65,8 @@ export function SessionControls({
                     <button type="button"
                         onClick={isRecording ? onStopRecording : onStartRecording}
                         className={`btn px-3 py-2 text-sm ${isRecording
-                            ? 'bg-destructive hover:bg-destructive/80 text-white'
-                            : 'bg-slate-800 hover:bg-slate-700 text-white'
+                            ? 'bg-destructive hover:bg-destructive/80 text-foreground'
+                            : 'bg-muted hover:bg-muted text-foreground'
                             }`}
                         title={isRecording ? 'Stop Recording' : 'Start Recording'}
                     >
@@ -80,7 +80,7 @@ export function SessionControls({
                     <div className="relative">
                         <button type="button"
                             onClick={() => setShowQualityMenu(!showQualityMenu)}
-                            className="btn bg-slate-800 hover:bg-slate-700 text-white px-3 py-2 text-sm"
+                            className="btn bg-muted hover:bg-muted text-foreground px-3 py-2 text-sm"
                             title="Quality Settings"
                         >
                             <div className="flex items-center gap-2">
@@ -103,12 +103,12 @@ export function SessionControls({
                         </button>
 
                         {showQualityMenu && (
-                            <div className="absolute right-0 mt-2 w-32 bg-slate-800 border border-slate-700 rounded-lg shadow-lg overflow-hidden z-10">
+                            <div className="absolute right-0 mt-2 w-32 bg-muted border border-border rounded-lg shadow-lg overflow-hidden z-10">
                                 {['AUTO', 'HIGH', 'MEDIUM', 'LOW'].map((q) => (
                                     <button type="button"
                                         key={q}
                                         onClick={() => handleQualityChange(q)}
-                                        className={`w-full px-4 py-2 text-sm text-left hover:bg-slate-700 ${quality === q ? 'bg-slate-700 text-nerve' : 'text-white'
+                                        className={`w-full px-4 py-2 text-sm text-left hover:bg-muted ${quality === q ? 'bg-muted text-nerve' : 'text-foreground'
                                             }`}
                                     >
                                         {q}
@@ -121,7 +121,7 @@ export function SessionControls({
                     {/* Screenshot */}
                     <button type="button"
                         onClick={onScreenshot}
-                        className="btn bg-slate-800 hover:bg-slate-700 text-white p-2"
+                        className="btn bg-muted hover:bg-muted text-foreground p-2"
                         title="Capture Screenshot"
                         aria-label="Capture Screenshot"
                     >
@@ -144,7 +144,7 @@ export function SessionControls({
                     {/* Fullscreen */}
                     <button type="button"
                         onClick={onFullscreen}
-                        className="btn bg-slate-800 hover:bg-slate-700 text-white p-2"
+                        className="btn bg-muted hover:bg-muted text-foreground p-2"
                         title="Toggle Fullscreen"
                         aria-label="Toggle Fullscreen"
                     >
@@ -161,7 +161,7 @@ export function SessionControls({
                     {/* Disconnect */}
                     <button type="button"
                         onClick={onDisconnect}
-                        className="btn bg-destructive hover:bg-destructive/80 text-white px-3 py-2 text-sm"
+                        className="btn bg-destructive hover:bg-destructive/80 text-foreground px-3 py-2 text-sm"
                         title="End Session"
                         aria-label="End Session"
                     >

@@ -29,7 +29,7 @@ function getStatusBadge(status: string) {
         case 'OPEN': return <span className="badge text-[10px] px-2 py-0.5 rounded-md bg-health-good/15 text-health-good border border-health-good/20">Open</span>;
         case 'IN_PROGRESS': return <span className="badge text-[10px] px-2 py-0.5 rounded-md bg-indigo-500/15 text-indigo-400 border border-indigo-500/20">In Progress</span>;
         case 'WAITING_ON_CUSTOMER': return <span className="badge text-[10px] px-2 py-0.5 rounded-md bg-health-warn/15 text-health-warn border border-health-warn/20">Waiting on Customer</span>;
-        case 'RESOLVED': return <span className="badge text-[10px] px-2 py-0.5 rounded-md bg-slate-500/15 text-slate-400 border border-slate-500/20">Resolved</span>;
+        case 'RESOLVED': return <span className="badge text-[10px] px-2 py-0.5 rounded-md bg-muted/40 text-muted-foreground border border-muted">Resolved</span>;
         case 'CLOSED': return <span className="badge text-[10px] px-2 py-0.5 rounded-md bg-muted text-muted-foreground border border-border">Closed</span>;
         default: return <span className="badge text-[10px] px-2 py-0.5 rounded-md bg-muted text-muted-foreground border border-border">{status}</span>;
     }
@@ -37,10 +37,10 @@ function getStatusBadge(status: string) {
 
 function getPriorityIcon(priority: string) {
     switch (priority) {
-        case 'URGENT': return <AlertTriangle className="w-4 h-4 text-health-critical" />;
+        case 'URGENT': return <AlertTriangle className="w-4 h-4 text-destructive" />;
         case 'HIGH': return <div className="w-2 h-2 rounded-full bg-orange-500" />;
-        case 'NORMAL': return <div className="w-2 h-2 rounded-full bg-blue-500" />;
-        case 'LOW': return <div className="w-2 h-2 rounded-full bg-slate-500" />;
+        case 'NORMAL': return <div className="w-2 h-2 rounded-full bg-cortex" />;
+        case 'LOW': return <div className="w-2 h-2 rounded-full bg-muted" />;
         default: return null;
     }
 }
@@ -89,7 +89,7 @@ function HelpdeskDashboardContent() {
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
                 <div>
                     <h1 className="text-2xl font-semibold tracking-tight text-on-surface">Helpdesk Tickets</h1>
-                    <p className="text-sm text-slate-400 mt-1">
+                    <p className="text-sm text-muted-foreground mt-1">
                         {loading 
                             ? 'Loading…' 
                             : `${tickets.length} ticket${tickets.length !== 1 ? 's' : ''}${hasActiveFilters ? ' matched' : ' total'}`}
@@ -103,9 +103,9 @@ function HelpdeskDashboardContent() {
                 </div>
             </div>
 
-            <div className="flex flex-wrap gap-3 mb-8 p-3 bg-surface-container rounded-xl shadow-sm border border-slate-800/20">
+            <div className="flex flex-wrap gap-3 mb-8 p-3 bg-surface-container rounded-xl shadow-sm border border-border/40">
                 <select
-                    className="bg-surface-container-low border-none rounded-lg focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-surface-container transition-all py-2 pl-3 pr-8 text-on-surface text-sm outline-none appearance-none"
+                    className="bg-surface-container-low border-none rounded-xl focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-surface-container transition-all py-2 pl-3 pr-8 text-on-surface text-sm outline-none appearance-none"
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value)}
                 >
@@ -196,7 +196,7 @@ function HelpdeskDashboardContent() {
                                     <div className="min-w-[100px] hidden md:block">
                                         {ticket.assignee ? (
                                             <div className="flex items-center gap-2">
-                                                <div className="w-6 h-6 rounded-full bg-slate-800 flex items-center justify-center text-[10px] font-bold text-slate-300 border border-slate-700 shrink-0">
+                                                <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center text-[10px] font-bold text-foreground border border-border shrink-0">
                                                     {(ticket.assignee.user.name || ticket.assignee.user.email).charAt(0).toUpperCase()}
                                                 </div>
                                                 <span className="text-muted-foreground text-xs font-medium truncate max-w-[80px]">{ticket.assignee.user.name || 'Agent'}</span>

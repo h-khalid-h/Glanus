@@ -7,7 +7,7 @@ export const metadata = {
 
 export default function PrivacyPage() {
     return (
-        <div className="min-h-screen bg-gradient-midnight relative overflow-hidden">
+        <div className="min-h-screen bg-background relative overflow-hidden">
             <div className="absolute inset-0 bg-grid opacity-15" />
 
             <div className="relative z-10 max-w-3xl mx-auto px-6 py-16">
@@ -16,24 +16,24 @@ export default function PrivacyPage() {
                 </Link>
 
                 <h1 className="text-3xl font-bold text-foreground mb-2">Privacy Policy</h1>
-                <p className="text-slate-400 text-sm mb-10">Last updated: February 2026</p>
+                <p className="text-muted-foreground text-sm mb-10">Last updated: February 2026</p>
 
-                <div className="space-y-8 text-slate-300 leading-relaxed">
+                <div className="space-y-8 text-foreground leading-relaxed">
                     <section>
                         <h2 className="text-lg font-semibold text-foreground mb-3">1. Information We Collect</h2>
                         <p className="mb-3">We collect the following categories of information:</p>
-                        <ul className="list-disc list-inside space-y-2 text-slate-400">
-                            <li><strong className="text-slate-200">Account Information</strong> — Name, email address, password (hashed), and role within workspaces.</li>
-                            <li><strong className="text-slate-200">Asset Data</strong> — IT asset details, configurations, and metadata you submit to the platform.</li>
-                            <li><strong className="text-slate-200">Usage Data</strong> — Login timestamps, IP addresses, user agent strings, and feature usage patterns.</li>
-                            <li><strong className="text-slate-200">Agent Data</strong> — System metrics, heartbeat data, and command execution results from deployed agents.</li>
-                            <li><strong className="text-slate-200">Payment Information</strong> — Processed securely via Stripe; we do not store card numbers directly.</li>
+                        <ul className="list-disc list-inside space-y-2 text-muted-foreground">
+                            <li><strong className="text-foreground">Account Information</strong> — Name, email address, password (hashed), and role within workspaces.</li>
+                            <li><strong className="text-foreground">Asset Data</strong> — IT asset details, configurations, and metadata you submit to the platform.</li>
+                            <li><strong className="text-foreground">Usage Data</strong> — Login timestamps, IP addresses, user agent strings, and feature usage patterns.</li>
+                            <li><strong className="text-foreground">Agent Data</strong> — System metrics, heartbeat data, and command execution results from deployed agents.</li>
+                            <li><strong className="text-foreground">Payment Information</strong> — Processed securely via Stripe; we do not store card numbers directly.</li>
                         </ul>
                     </section>
 
                     <section>
                         <h2 className="text-lg font-semibold text-foreground mb-3">2. How We Use Your Information</h2>
-                        <ul className="list-disc list-inside space-y-2 text-slate-400">
+                        <ul className="list-disc list-inside space-y-2 text-muted-foreground">
                             <li>Providing, maintaining, and improving the Glanus platform.</li>
                             <li>Processing transactions and managing your subscription.</li>
                             <li>Sending transactional emails (invitations, alerts, password resets).</li>
@@ -63,10 +63,10 @@ export default function PrivacyPage() {
                     <section>
                         <h2 className="text-lg font-semibold text-foreground mb-3">5. Data Sharing</h2>
                         <p className="mb-2">We do not sell your personal data. We may share data with:</p>
-                        <ul className="list-disc list-inside space-y-2 text-slate-400">
-                            <li><strong className="text-slate-200">Service Providers</strong> — Stripe (payments), SendGrid (email), Sentry (error tracking).</li>
-                            <li><strong className="text-slate-200">Partners</strong> — Certified partners assigned to your workspace may access relevant workspace data to deliver services.</li>
-                            <li><strong className="text-slate-200">Legal Requirements</strong> — When required by law, court order, or to protect safety.</li>
+                        <ul className="list-disc list-inside space-y-2 text-muted-foreground">
+                            <li><strong className="text-foreground">Service Providers</strong> — Stripe (payments), SendGrid (email), Sentry (error tracking).</li>
+                            <li><strong className="text-foreground">Partners</strong> — Certified partners assigned to your workspace may access relevant workspace data to deliver services.</li>
+                            <li><strong className="text-foreground">Legal Requirements</strong> — When required by law, court order, or to protect safety.</li>
                         </ul>
                     </section>
 
@@ -82,13 +82,13 @@ export default function PrivacyPage() {
                     <section>
                         <h2 className="text-lg font-semibold text-foreground mb-3">7. Your Rights (GDPR)</h2>
                         <p className="mb-2">Under the General Data Protection Regulation, you have the right to:</p>
-                        <ul className="list-disc list-inside space-y-2 text-slate-400">
-                            <li><strong className="text-slate-200">Access</strong> — Request a copy of your personal data.</li>
-                            <li><strong className="text-slate-200">Rectification</strong> — Request correction of inaccurate data.</li>
-                            <li><strong className="text-slate-200">Erasure</strong> — Request deletion of your personal data.</li>
-                            <li><strong className="text-slate-200">Portability</strong> — Request your data in a structured, machine-readable format.</li>
-                            <li><strong className="text-slate-200">Restriction</strong> — Request restriction of processing in certain circumstances.</li>
-                            <li><strong className="text-slate-200">Objection</strong> — Object to processing based on legitimate interests.</li>
+                        <ul className="list-disc list-inside space-y-2 text-muted-foreground">
+                            <li><strong className="text-foreground">Access</strong> — Request a copy of your personal data.</li>
+                            <li><strong className="text-foreground">Rectification</strong> — Request correction of inaccurate data.</li>
+                            <li><strong className="text-foreground">Erasure</strong> — Request deletion of your personal data.</li>
+                            <li><strong className="text-foreground">Portability</strong> — Request your data in a structured, machine-readable format.</li>
+                            <li><strong className="text-foreground">Restriction</strong> — Request restriction of processing in certain circumstances.</li>
+                            <li><strong className="text-foreground">Objection</strong> — Object to processing based on legitimate interests.</li>
                         </ul>
                     </section>
 
@@ -129,8 +129,8 @@ export default function PrivacyPage() {
                         </p>
                     </section>
 
-                    <div className="border-t border-slate-800 pt-8 mt-12">
-                        <p className="text-sm text-slate-500">
+                    <div className="border-t border-border pt-8 mt-12">
+                        <p className="text-sm text-muted-foreground">
                             See also: <Link href="/terms" className="text-nerve hover:text-nerve/80 transition-colors">Terms of Service</Link>
                         </p>
                     </div>

@@ -43,21 +43,21 @@ export default function SuperAdminAnalyticsPage() {
             {/* Header */}
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold tracking-tight text-slate-100">Usage Analytics</h1>
-                    <p className="mt-1 text-sm text-slate-500">Cross-tenant usage breakdown by workspace</p>
+                    <h1 className="text-2xl font-bold tracking-tight text-foreground">Usage Analytics</h1>
+                    <p className="mt-1 text-sm text-muted-foreground">Cross-tenant usage breakdown by workspace</p>
                 </div>
                 {/* Date range picker */}
-                <div className="flex items-center gap-1 rounded-xl border border-slate-800 bg-slate-900/60 p-1">
+                <div className="flex items-center gap-1 rounded-xl border border-border bg-card p-1">
                     {RANGE_OPTIONS.map(({ label, value }) => (
                         <button
                             key={value}
                             type="button"
                             onClick={() => handleRangeChange(value)}
                             className={[
-                                'rounded-lg px-3 py-1.5 text-xs font-medium transition-all',
+                                'rounded-xl px-3 py-1.5 text-xs font-medium transition-all',
                                 days === value
                                     ? 'bg-indigo-500/20 text-indigo-300 shadow-inner'
-                                    : 'text-slate-500 hover:text-slate-300',
+                                    : 'text-muted-foreground hover:text-foreground',
                             ].join(' ')}
                         >
                             {label}
@@ -108,17 +108,17 @@ export default function SuperAdminAnalyticsPage() {
             </div>
 
             {/* Full usage table */}
-            <div className="rounded-2xl border border-slate-800/60 bg-slate-900/50 overflow-hidden">
-                <div className="border-b border-slate-800/60 px-5 py-4">
-                    <h2 className="text-base font-semibold text-slate-100">Workspace Usage Summary</h2>
-                    <p className="text-xs text-slate-500 mt-0.5">Last {days} days · ordered by activity</p>
+            <div className="rounded-2xl border border-border/60 bg-card overflow-hidden">
+                <div className="border-b border-border/60 px-5 py-4">
+                    <h2 className="text-base font-semibold text-foreground">Workspace Usage Summary</h2>
+                    <p className="text-xs text-muted-foreground mt-0.5">Last {days} days · ordered by activity</p>
                 </div>
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                         <thead>
-                            <tr className="border-b border-slate-800/60">
+                            <tr className="border-b border-border/60">
                                 {['Workspace', 'Assets', 'Users', 'Agents', `Events (${days}d)`, 'Open Tickets'].map((h) => (
-                                    <th key={h} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 whitespace-nowrap">
+                                    <th key={h} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">
                                         {h}
                                     </th>
                                 ))}
@@ -127,27 +127,27 @@ export default function SuperAdminAnalyticsPage() {
                         <tbody>
                             {loading ? (
                                 Array.from({ length: 8 }).map((_, i) => (
-                                    <tr key={i} className="border-b border-slate-800/40 animate-pulse">
+                                    <tr key={i} className="border-b border-border/40 animate-pulse">
                                         {Array.from({ length: 6 }).map((__, j) => (
                                             <td key={j} className="px-4 py-3">
-                                                <div className="h-4 w-16 rounded bg-slate-800" />
+                                                <div className="h-4 w-16 rounded bg-muted" />
                                             </td>
                                         ))}
                                     </tr>
                                 ))
                             ) : (analytics?.workspaceUsage ?? []).length === 0 ? (
                                 <tr>
-                                    <td colSpan={6} className="px-4 py-10 text-center text-slate-500">No data available</td>
+                                    <td colSpan={6} className="px-4 py-10 text-center text-muted-foreground">No data available</td>
                                 </tr>
                             ) : (
                                 analytics?.workspaceUsage.map((ws) => (
-                                    <tr key={ws.workspaceId} className="border-b border-slate-800/40 hover:bg-slate-800/20 transition-colors">
-                                        <td className="px-4 py-3 font-medium text-slate-200">{ws.workspaceName}</td>
-                                        <td className="px-4 py-3 font-mono text-xs text-slate-400">{ws.assetCount.toLocaleString()}</td>
-                                        <td className="px-4 py-3 font-mono text-xs text-slate-400">{ws.userCount.toLocaleString()}</td>
-                                        <td className="px-4 py-3 font-mono text-xs text-slate-400">{ws.agentCount.toLocaleString()}</td>
+                                    <tr key={ws.workspaceId} className="border-b border-border/40 hover:bg-muted/20 transition-colors">
+                                        <td className="px-4 py-3 font-medium text-foreground">{ws.workspaceName}</td>
+                                        <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{ws.assetCount.toLocaleString()}</td>
+                                        <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{ws.userCount.toLocaleString()}</td>
+                                        <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{ws.agentCount.toLocaleString()}</td>
                                         <td className="px-4 py-3 font-mono text-xs text-indigo-400 font-semibold">{ws.auditEvents.toLocaleString()}</td>
-                                        <td className="px-4 py-3 font-mono text-xs text-amber-400">{ws.openTickets.toLocaleString()}</td>
+                                        <td className="px-4 py-3 font-mono text-xs text-warning">{ws.openTickets.toLocaleString()}</td>
                                     </tr>
                                 ))
                             )}

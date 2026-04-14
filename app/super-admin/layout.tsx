@@ -36,7 +36,7 @@ export default async function SuperAdminLayout({ children }: { children: ReactNo
     }
 
     return (
-        <div className="flex min-h-screen bg-[#060b14] text-slate-100 antialiased">
+        <div className="flex min-h-screen bg-[#060b14] text-foreground antialiased">
             <SuperAdminSidebar />
             <div className="flex flex-1 flex-col lg:pl-64">
                 <main className="flex-1 overflow-y-auto">

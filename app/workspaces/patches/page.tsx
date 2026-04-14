@@ -176,7 +176,7 @@ function PatchPoliciesContent() {
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
                 <div>
                     <h1 className="text-2xl font-semibold tracking-tight text-on-surface">Patch Management</h1>
-                    <p className="text-sm text-slate-400 mt-1">Cross-reference installed software and deploy bulk remediation scripts.</p>
+                    <p className="text-sm text-muted-foreground mt-1">Cross-reference installed software and deploy bulk remediation scripts.</p>
                 </div>
                 <button onClick={() => setIsCreateOpen(true)} className="inline-flex items-center gap-1.5 primary-gradient-btn text-on-primary font-bold shadow-lg shadow-primary/20 active:scale-95 transition-all rounded-full px-6 py-2 text-sm">
                     <Plus className="h-4 w-4" /> New Patch Policy
@@ -213,17 +213,17 @@ function PatchPoliciesContent() {
                                             <p className="text-xs text-muted-foreground mt-0.5">Targets: <span className="font-mono text-on-surface bg-surface-container-low px-1.5 py-0.5 rounded border border-border">{policy.targetSoftware}</span></p>
                                         </div>
                                     </div>
-                                    <button onClick={() => handleDelete(policy.id)} className="btn-ghost h-8 w-8 p-0 text-muted-foreground hover:text-red-400">
+                                    <button onClick={() => handleDelete(policy.id)} className="btn-ghost h-8 w-8 p-0 text-muted-foreground hover:text-destructive">
                                         <Trash2 className="h-4 w-4" />
                                     </button>
                                 </div>
 
                                 <div className="flex flex-col gap-2.5 mb-6">
-                                    <div className="flex items-center gap-2.5 text-sm text-muted-foreground p-2.5 bg-surface-container-low rounded-lg border border-border/50">
+                                    <div className="flex items-center gap-2.5 text-sm text-muted-foreground p-2.5 bg-surface-container-low rounded-xl border border-border/50">
                                         <Terminal className="h-4 w-4 shrink-0" />
                                         <span className="truncate">Action: <span className="text-on-surface font-medium">{policy.actionScript?.name || 'Unknown Script'}</span></span>
                                     </div>
-                                    <div className="flex items-center gap-2.5 text-sm text-muted-foreground p-2.5 bg-surface-container-low rounded-lg border border-border/50">
+                                    <div className="flex items-center gap-2.5 text-sm text-muted-foreground p-2.5 bg-surface-container-low rounded-xl border border-border/50">
                                         <Server className="h-4 w-4 shrink-0" />
                                         <span>Vulnerable Endpoints: <span className={policy.vulnerableCount && policy.vulnerableCount > 0 ? 'text-amber-500 font-bold' : 'text-health-good font-bold'}>{policy.vulnerableCount || 0}</span></span>
                                     </div>
@@ -268,7 +268,7 @@ function PatchPoliciesContent() {
                                     value={formData.name}
                                     onChange={e => setFormData({ ...formData, name: e.target.value })}
                                     placeholder="Zero-Day Chrome Refactor"
-                                    className="w-full bg-surface-container-low border-none rounded-lg px-4 py-2.5 text-sm text-on-surface placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-surface-container transition-all"
+                                    className="w-full bg-surface-container-low border-none rounded-xl px-4 py-2.5 text-sm text-on-surface placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-surface-container transition-all"
                                 />
                             </div>
 
@@ -279,7 +279,7 @@ function PatchPoliciesContent() {
                                     value={formData.targetSoftware}
                                     onChange={e => setFormData({ ...formData, targetSoftware: e.target.value })}
                                     placeholder="Google Chrome"
-                                    className="w-full bg-surface-container-low border-none rounded-lg px-4 py-2.5 text-sm text-on-surface placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-surface-container transition-all"
+                                    className="w-full bg-surface-container-low border-none rounded-xl px-4 py-2.5 text-sm text-on-surface placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-surface-container transition-all"
                                 />
                                 <p className="text-[11px] text-muted-foreground leading-relaxed">Agents containing this case-insensitive string in their software inventory will be targeted.</p>
                             </div>
@@ -287,10 +287,10 @@ function PatchPoliciesContent() {
                             <div className="flex flex-col gap-2">
                                 <label className="text-sm font-medium text-on-surface">Remediation Script</label>
                                 {scripts.length === 0 ? (
-                                    <div className="text-sm text-amber-500 bg-amber-500/10 p-3 rounded-lg border border-amber-500/20">No scripts available. Add a script in the Script Library first.</div>
+                                    <div className="text-sm text-amber-500 bg-amber-500/10 p-3 rounded-xl border border-amber-500/20">No scripts available. Add a script in the Script Library first.</div>
                                 ) : (
                                     <select
-                                        className="w-full bg-surface-container-low border-none rounded-lg px-4 py-2.5 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-surface-container transition-all appearance-none"
+                                        className="w-full bg-surface-container-low border-none rounded-xl px-4 py-2.5 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-surface-container transition-all appearance-none"
                                         value={formData.actionScriptId}
                                         onChange={e => setFormData({ ...formData, actionScriptId: e.target.value })}
                                     >

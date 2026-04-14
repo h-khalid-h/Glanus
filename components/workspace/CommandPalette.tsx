@@ -144,10 +144,10 @@ export function CommandPalette() {
 
     const getIcon = (type: string) => {
         switch (type) {
-            case 'asset': return <Server size={16} className="text-nerve" />;
-            case 'agent': return <Cpu size={16} className="text-blue-400" />;
+            case 'asset': return <Server size={16} className="text-primary" />;
+            case 'agent': return <Cpu size={16} className="text-cortex" />;
             case 'insight': return <Brain size={16} className="text-purple-400" />;
-            default: return <FileText size={16} className="text-slate-400" />;
+            default: return <FileText size={16} className="text-muted-foreground" />;
         }
     };
 
@@ -159,20 +159,20 @@ export function CommandPalette() {
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setOpen(false)} />
 
             {/* Palette */}
-            <div className="relative w-full max-w-xl bg-slate-900 border border-slate-700 rounded-xl shadow-2xl overflow-hidden" role="dialog" aria-modal="true" aria-label="Command Palette">
+            <div className="relative w-full max-w-xl bg-surface-1 border border-border rounded-xl shadow-2xl overflow-hidden" role="dialog" aria-modal="true" aria-label="Command Palette">
                 {/* Search Input */}
-                <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-800">
-                    <Search size={18} className={loading ? 'text-nerve animate-pulse' : 'text-slate-500'} />
+                <div className="flex items-center gap-3 px-4 py-3 border-b border-border">
+                    <Search size={18} className={loading ? 'text-primary animate-pulse' : 'text-muted-foreground'} />
                     <input
                         ref={inputRef}
                         type="text"
                         value={query}
                         onChange={e => handleQueryChange(e.target.value)}
                         onKeyDown={handleKeyDown}
-                        className="flex-1 bg-transparent text-white text-sm outline-none placeholder:text-slate-500"
+                        className="flex-1 bg-transparent text-foreground text-sm outline-none placeholder:text-muted-foreground"
                         placeholder="Search assets, agents, insights…"
                     />
-                    <kbd className="hidden sm:inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono text-slate-500 bg-slate-800 border border-slate-700">
+                    <kbd className="hidden sm:inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono text-muted-foreground bg-muted border border-border">
                         ESC
                     </kbd>
                 </div>
@@ -180,13 +180,13 @@ export function CommandPalette() {
                 {/* Results */}
                 <div className="max-h-80 overflow-y-auto">
                     {query.length > 0 && query.length < 2 && (
-                        <div className="px-4 py-6 text-center text-sm text-slate-500">
+                        <div className="px-4 py-6 text-center text-sm text-muted-foreground">
                             Type at least 2 characters to search…
                         </div>
                     )}
 
                     {query.length >= 2 && !loading && allItems.length === 0 && results && (
-                        <div className="px-4 py-6 text-center text-sm text-slate-500">
+                        <div className="px-4 py-6 text-center text-sm text-muted-foreground">
                             No results found for &ldquo;{query}&rdquo;
                         </div>
                     )}
@@ -196,21 +196,21 @@ export function CommandPalette() {
                             {/* Group headers */}
                             {results && results.assets.length > 0 && (
                                 <>
-                                    <div className="px-4 py-1.5 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Assets</div>
+                                    <div className="px-4 py-1.5 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Assets</div>
                                     {results.assets.map((a, i) => {
                                         const idx = i;
                                         return (
                                             <button
                                                 key={a.id}
                                                 onClick={() => { router.push(`/assets/${a.id}`); setOpen(false); }}
-                                                className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition ${selectedIndex === idx ? 'bg-nerve/10 text-white' : 'text-slate-300 hover:bg-slate-800'}`}
+                                                className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition ${selectedIndex === idx ? 'bg-primary/10 text-foreground' : 'text-foreground hover:bg-muted'}`}
                                             >
                                                 {getIcon('asset')}
                                                 <div className="flex-1 min-w-0">
                                                     <div className="text-sm font-medium truncate">{a.name}</div>
-                                                    <div className="text-xs text-slate-500">{a.category?.name || a.assetType} • {a.status}</div>
+                                                    <div className="text-xs text-muted-foreground">{a.category?.name || a.assetType} • {a.status}</div>
                                                 </div>
-                                                <ArrowRight size={14} className="text-slate-600 shrink-0" />
+                                                <ArrowRight size={14} className="text-muted-foreground/60 shrink-0" />
                                             </button>
                                         );
                                     })}
@@ -219,21 +219,21 @@ export function CommandPalette() {
 
                             {results && results.agents.length > 0 && (
                                 <>
-                                    <div className="px-4 py-1.5 text-[10px] font-semibold text-slate-500 uppercase tracking-wider mt-1">Agents</div>
+                                    <div className="px-4 py-1.5 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mt-1">Agents</div>
                                     {results.agents.map((a, i) => {
                                         const idx = (results?.assets.length || 0) + i;
                                         return (
                                             <button
                                                 key={a.id}
                                                 onClick={() => { router.push(`/workspaces/agents/${a.id}`); setOpen(false); }}
-                                                className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition ${selectedIndex === idx ? 'bg-nerve/10 text-white' : 'text-slate-300 hover:bg-slate-800'}`}
+                                                className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition ${selectedIndex === idx ? 'bg-primary/10 text-foreground' : 'text-foreground hover:bg-muted'}`}
                                             >
                                                 {getIcon('agent')}
                                                 <div className="flex-1 min-w-0">
                                                     <div className="text-sm font-medium truncate">{a.hostname}</div>
-                                                    <div className="text-xs text-slate-500">{a.platform} • {a.status} • {a.ipAddress || 'No IP'}</div>
+                                                    <div className="text-xs text-muted-foreground">{a.platform} • {a.status} • {a.ipAddress || 'No IP'}</div>
                                                 </div>
-                                                <ArrowRight size={14} className="text-slate-600 shrink-0" />
+                                                <ArrowRight size={14} className="text-muted-foreground/60 shrink-0" />
                                             </button>
                                         );
                                     })}
@@ -242,21 +242,21 @@ export function CommandPalette() {
 
                             {results && results.insights.length > 0 && (
                                 <>
-                                    <div className="px-4 py-1.5 text-[10px] font-semibold text-slate-500 uppercase tracking-wider mt-1">Insights</div>
+                                    <div className="px-4 py-1.5 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mt-1">Insights</div>
                                     {results.insights.map((ins, i) => {
                                         const idx = (results?.assets.length || 0) + (results?.agents.length || 0) + i;
                                         return (
                                             <button
                                                 key={ins.id}
                                                 onClick={() => { router.push(`/workspaces/intelligence`); setOpen(false); }}
-                                                className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition ${selectedIndex === idx ? 'bg-nerve/10 text-white' : 'text-slate-300 hover:bg-slate-800'}`}
+                                                className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition ${selectedIndex === idx ? 'bg-primary/10 text-foreground' : 'text-foreground hover:bg-muted'}`}
                                             >
                                                 {getIcon('insight')}
                                                 <div className="flex-1 min-w-0">
                                                     <div className="text-sm font-medium truncate">{ins.title}</div>
-                                                    <div className="text-xs text-slate-500">{ins.type} • {ins.severity || 'info'}</div>
+                                                    <div className="text-xs text-muted-foreground">{ins.type} • {ins.severity || 'info'}</div>
                                                 </div>
-                                                <ArrowRight size={14} className="text-slate-600 shrink-0" />
+                                                <ArrowRight size={14} className="text-muted-foreground/60 shrink-0" />
                                             </button>
                                         );
                                     })}
@@ -267,11 +267,11 @@ export function CommandPalette() {
                 </div>
 
                 {/* Footer */}
-                <div className="px-4 py-2 border-t border-slate-800 flex items-center justify-between text-[10px] text-slate-500">
+                <div className="px-4 py-2 border-t border-border flex items-center justify-between text-[10px] text-muted-foreground">
                     <div className="flex items-center gap-3">
-                        <span className="flex items-center gap-1"><kbd className="px-1 rounded bg-slate-800 border border-slate-700">↑↓</kbd> navigate</span>
-                        <span className="flex items-center gap-1"><kbd className="px-1 rounded bg-slate-800 border border-slate-700">↵</kbd> open</span>
-                        <span className="flex items-center gap-1"><kbd className="px-1 rounded bg-slate-800 border border-slate-700">esc</kbd> close</span>
+                        <span className="flex items-center gap-1"><kbd className="px-1 rounded bg-muted border border-border">↑↓</kbd> navigate</span>
+                        <span className="flex items-center gap-1"><kbd className="px-1 rounded bg-muted border border-border">↵</kbd> open</span>
+                        <span className="flex items-center gap-1"><kbd className="px-1 rounded bg-muted border border-border">esc</kbd> close</span>
                     </div>
                     <span className="flex items-center gap-1">
                         <Command size={10} />

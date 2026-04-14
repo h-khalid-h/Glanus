@@ -95,25 +95,25 @@ function NewTicketContent() {
                     <form onSubmit={handleCreateTicket} className="space-y-6">
 
                         <div className="space-y-2">
-                            <label className="text-sm font-medium text-on-surface">Ticket Subject <span className="text-health-critical">*</span></label>
+                            <label className="text-sm font-medium text-on-surface">Ticket Subject <span className="text-destructive">*</span></label>
                             <input
                                 type="text"
                                 required
                                 value={title}
                                 onChange={e => setTitle(e.target.value)}
-                                className="w-full bg-surface-container-low border-none rounded-lg px-4 py-2.5 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-surface-container placeholder:text-muted-foreground transition-all"
+                                className="w-full bg-surface-container-low border-none rounded-xl px-4 py-2.5 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-surface-container placeholder:text-muted-foreground transition-all"
                                 placeholder="E.g., Cannot access office VPN"
                             />
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-sm font-medium text-on-surface">Detailed Description <span className="text-health-critical">*</span></label>
+                            <label className="text-sm font-medium text-on-surface">Detailed Description <span className="text-destructive">*</span></label>
                             <textarea
                                 required
                                 rows={6}
                                 value={description}
                                 onChange={e => setDescription(e.target.value)}
-                                className="w-full bg-surface-container-low border-none rounded-lg px-4 py-2.5 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-surface-container resize-y placeholder:text-muted-foreground transition-all"
+                                className="w-full bg-surface-container-low border-none rounded-xl px-4 py-2.5 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-surface-container resize-y placeholder:text-muted-foreground transition-all"
                                 placeholder="Describe step-by-step what is happening..."
                             />
                         </div>
@@ -124,7 +124,7 @@ function NewTicketContent() {
                                 <select
                                     value={priority}
                                     onChange={e => setPriority(e.target.value)}
-                                    className="w-full bg-surface-container-low border-none rounded-lg px-4 py-2.5 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-surface-container transition-all appearance-none"
+                                    className="w-full bg-surface-container-low border-none rounded-xl px-4 py-2.5 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-surface-container transition-all appearance-none"
                                 >
                                     <option value="LOW">Low - No rush</option>
                                     <option value="NORMAL">Normal - Standard issue</option>
@@ -141,7 +141,7 @@ function NewTicketContent() {
                                 <select
                                     value={assetId}
                                     onChange={e => setAssetId(e.target.value)}
-                                    className="w-full bg-surface-container-low border-none rounded-lg px-4 py-2.5 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-surface-container transition-all appearance-none"
+                                    className="w-full bg-surface-container-low border-none rounded-xl px-4 py-2.5 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-surface-container transition-all appearance-none"
                                 >
                                     <option value="">No specific asset</option>
                                     {assets.map(asset => (

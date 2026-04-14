@@ -93,29 +93,29 @@ export default function ReflexDashboardPage() {
         switch (risk) {
             case 'high':
             case 'dangerous':
-                return 'bg-red-500/10 text-red-400 border-red-500/20';
+                return 'bg-destructive/10 text-destructive border-destructive/20';
             case 'medium':
-                return 'bg-amber-500/10 text-amber-400 border-amber-500/20';
+                return 'bg-amber-500/10 text-warning border-amber-500/20';
             default:
-                return 'bg-green-500/10 text-green-400 border-green-500/20';
+                return 'bg-success/10 text-success border-success/20';
         }
     };
 
     const getStatusToken = (status: string) => {
         switch (status) {
-            case 'pending': return 'bg-amber-500/10 text-amber-400 border-amber-500/20';
-            case 'executing': return 'bg-blue-500/10 text-blue-400 border-blue-500/20';
-            case 'completed': return 'bg-green-500/10 text-green-400 border-green-500/20';
+            case 'pending': return 'bg-amber-500/10 text-warning border-amber-500/20';
+            case 'executing': return 'bg-cortex/10 text-cortex border-cortex/20';
+            case 'completed': return 'bg-success/10 text-success border-success/20';
             case 'failed':
-            case 'rejected': return 'bg-red-500/10 text-red-400 border-red-500/20';
-            default: return 'bg-slate-800 text-slate-300 border-slate-700';
+            case 'rejected': return 'bg-destructive/10 text-destructive border-destructive/20';
+            default: return 'bg-muted text-foreground border-border';
         }
     }
 
     if (loading) {
         return (
             <div className="flex-1 flex items-center justify-center min-h-[400px]">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-nerve" />
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
             </div>
         );
     }
@@ -125,10 +125,10 @@ export default function ReflexDashboardPage() {
             <div className="flex justify-between items-start">
                 <div>
                     <h1 className="text-2xl font-bold text-foreground flex items-center gap-3">
-                        <Zap className="text-nerve h-6 w-6" />
+                        <Zap className="text-primary h-6 w-6" />
                         Reflex Automation Engine
                     </h1>
-                    <p className="text-slate-400 mt-1 max-w-2xl">
+                    <p className="text-muted-foreground mt-1 max-w-2xl">
                         Autonomous operations orchestration. Review pending actions queued by CORTEX and define consequence boundaries for automatic remediations.
                     </p>
                 </div>
@@ -140,15 +140,15 @@ export default function ReflexDashboardPage() {
             </div>
 
             {/* Tab Navigation */}
-            <div className="border-b border-slate-800">
+            <div className="border-b border-border">
                 <nav className="-mb-px flex space-x-8">
                     <button
                         onClick={() => { setActiveTab('queue'); setIsCreatingRule(false); }}
                         className={`
                             whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors
                             ${activeTab === 'queue'
-                                ? 'border-nerve text-nerve'
-                                : 'border-transparent text-slate-400 hover:text-slate-300 hover:border-slate-700'
+                                ? 'border-primary text-primary'
+                                : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
                             }
                         `}
                     >
@@ -159,8 +159,8 @@ export default function ReflexDashboardPage() {
                         className={`
                             whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors
                             ${activeTab === 'rules'
-                                ? 'border-nerve text-nerve'
-                                : 'border-transparent text-slate-400 hover:text-slate-300 hover:border-slate-700'
+                                ? 'border-primary text-primary'
+                                : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
                             }
                         `}
                     >
@@ -173,16 +173,16 @@ export default function ReflexDashboardPage() {
             {activeTab === 'queue' && (
                 <div className="space-y-4">
                     {queue.length === 0 ? (
-                        <div className="bg-slate-900 border border-slate-800 rounded-xl p-12 text-center">
-                            <ShieldAlert className="w-12 h-12 text-slate-600 mx-auto mb-4" />
+                        <div className="bg-surface-1 border border-border rounded-xl p-12 text-center">
+                            <ShieldAlert className="w-12 h-12 text-muted-foreground/60 mx-auto mb-4" />
                             <h3 className="text-lg font-medium text-foreground mb-2">No Actions Queued</h3>
-                            <p className="text-slate-400">
+                            <p className="text-muted-foreground">
                                 The Reflex engine resolves CORTEX recommendations against your rules natively. Any actions awaiting required Admin validation will appear here.
                             </p>
                         </div>
                     ) : (
                         queue.map((item) => (
-                            <div key={item.id} className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden hover:border-slate-700 transition-colors">
+                            <div key={item.id} className="bg-surface-1 border border-border rounded-xl overflow-hidden hover:border-border transition-colors">
                                 <div className="p-6">
                                     <div className="flex items-start justify-between">
                                         <div className="space-y-1">
@@ -192,46 +192,46 @@ export default function ReflexDashboardPage() {
                                                     {item.status.toUpperCase()}
                                                 </span>
                                             </div>
-                                            <p className="text-sm text-slate-400">{item.rule.description}</p>
+                                            <p className="text-sm text-muted-foreground">{item.rule.description}</p>
                                         </div>
-                                        <span className="text-xs text-slate-500 bg-slate-800/50 px-3 py-1.5 rounded-lg flex items-center gap-2">
+                                        <span className="text-xs text-muted-foreground bg-muted/50 px-3 py-1.5 rounded-xl flex items-center gap-2">
                                             <Clock className="w-3.5 h-3.5" />
                                             {new Date(item.triggeredAt).toLocaleString()}
                                         </span>
                                     </div>
 
                                     <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div className="bg-slate-950/50 rounded-lg p-4 border border-slate-800/50">
-                                            <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Consequence Assessment</h4>
+                                        <div className="bg-background/50 rounded-xl p-4 border border-border/50">
+                                            <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Consequence Assessment</h4>
                                             <div className="space-y-3">
                                                 <div className="flex justify-between items-center text-sm">
-                                                    <span className="text-slate-400">Blast Radius</span>
-                                                    <span className="text-slate-200 font-medium">{item.consequence?.affectedAssets} system(s)</span>
+                                                    <span className="text-muted-foreground">Blast Radius</span>
+                                                    <span className="text-foreground font-medium">{item.consequence?.affectedAssets} system(s)</span>
                                                 </div>
                                                 <div className="flex justify-between items-center text-sm">
-                                                    <span className="text-slate-400">Calculated Risk</span>
+                                                    <span className="text-muted-foreground">Calculated Risk</span>
                                                     <span className={`px-2 py-0.5 rounded text-xs font-medium ${getRiskToken(item.consequence?.riskLevel || 'medium')}`}>
                                                         {item.consequence?.riskLevel?.toUpperCase() || 'UNKNOWN'}
                                                     </span>
                                                 </div>
                                                 <div className="text-sm">
-                                                    <p className="text-slate-500 mt-2 truncate w-full" title={item.consequence?.reasoning}>
+                                                    <p className="text-muted-foreground mt-2 truncate w-full" title={item.consequence?.reasoning}>
                                                         {item.consequence?.reasoning}
                                                     </p>
                                                 </div>
                                             </div>
                                         </div>
 
-                                        <div className="bg-slate-950/50 rounded-lg p-4 border border-slate-800/50">
-                                            <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Proposed Action</h4>
+                                        <div className="bg-background/50 rounded-xl p-4 border border-border/50">
+                                            <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Proposed Action</h4>
                                             <div className="space-y-3">
                                                 <div className="flex items-center gap-3 mt-1">
-                                                    <div className="p-2 bg-slate-800 rounded-lg text-slate-300">
+                                                    <div className="p-2 bg-muted rounded-xl text-foreground">
                                                         <Activity className="w-5 h-5" />
                                                     </div>
                                                     <div>
                                                         <p className="text-sm font-medium text-foreground">Execute `{item.rule.action.scriptName || item.rule.action.type}`</p>
-                                                        <p className="text-xs text-slate-400">Autonomy Required: {item.rule.autonomyLevel?.toUpperCase()}</p>
+                                                        <p className="text-xs text-muted-foreground">Autonomy Required: {item.rule.autonomyLevel?.toUpperCase()}</p>
                                                     </div>
                                                 </div>
                                             </div>
@@ -239,7 +239,7 @@ export default function ReflexDashboardPage() {
                                     </div>
 
                                     {item.status === 'pending' && (
-                                        <div className="mt-6 pt-6 border-t border-slate-800 flex justify-end gap-3">
+                                        <div className="mt-6 pt-6 border-t border-border flex justify-end gap-3">
                                             <button
                                                 onClick={() => handleActionApproval(item.id, 'reject')}
                                                 className="btn-secondary"
@@ -248,7 +248,7 @@ export default function ReflexDashboardPage() {
                                             </button>
                                             <button
                                                 onClick={() => handleActionApproval(item.id, 'approve')}
-                                                className="bg-nerve/10 hover:bg-nerve/20 text-nerve px-4 py-2 rounded-lg font-medium transition-colors"
+                                                className="bg-primary/10 hover:bg-primary/20 text-primary px-4 py-2 rounded-xl font-medium transition-colors"
                                             >
                                                 Approve Execution
                                             </button>
@@ -256,8 +256,8 @@ export default function ReflexDashboardPage() {
                                     )}
 
                                     {(item.status === 'completed' || item.status === 'failed') && item.result && (
-                                        <div className="mt-4 p-3 bg-slate-950 rounded-lg border border-slate-800">
-                                            <p className="text-xs text-slate-400 font-mono">{item.result}</p>
+                                        <div className="mt-4 p-3 bg-background rounded-xl border border-border">
+                                            <p className="text-xs text-muted-foreground font-mono">{item.result}</p>
                                         </div>
                                     )}
                                 </div>
@@ -270,7 +270,7 @@ export default function ReflexDashboardPage() {
             {activeTab === 'rules' && (
                 <div className="space-y-4">
                     {isCreatingRule ? (
-                        <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
+                        <div className="bg-surface-1 border border-border rounded-xl p-6">
                             <h2 className="text-lg font-bold text-foreground mb-6">Create Automation Rule</h2>
                             <ReflexRuleForm
                                 workspaceId={workspaceId}
@@ -281,10 +281,10 @@ export default function ReflexDashboardPage() {
                     ) : (
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                             {rules.length === 0 ? (
-                                <div className="col-span-full bg-slate-900 border border-slate-800 rounded-xl p-12 text-center">
-                                    <ListFilter className="w-12 h-12 text-slate-600 mx-auto mb-4" />
+                                <div className="col-span-full bg-surface-1 border border-border rounded-xl p-12 text-center">
+                                    <ListFilter className="w-12 h-12 text-muted-foreground/60 mx-auto mb-4" />
                                     <h3 className="text-lg font-medium text-foreground mb-2">No Rules Configured</h3>
-                                    <p className="text-slate-400 mb-6">
+                                    <p className="text-muted-foreground mb-6">
                                         Define how Glanus automatically responds to metric thresholds or intelligence insights.
                                     </p>
                                     <button onClick={() => setIsCreatingRule(true)} className="btn-primary">
@@ -293,36 +293,36 @@ export default function ReflexDashboardPage() {
                                 </div>
                             ) : (
                                 rules.map(rule => (
-                                    <div key={rule.id} className="bg-slate-900 border border-slate-800 rounded-xl p-5 hover:border-slate-700 transition-colors">
+                                    <div key={rule.id} className="bg-surface-1 border border-border rounded-xl p-5 hover:border-border transition-colors">
                                         <div className="flex justify-between items-start mb-4">
                                             <div>
                                                 <h3 className="text-foreground font-medium flex items-center gap-2">
                                                     {rule.name}
-                                                    {!rule.enabled && <span className="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded">DISABLED</span>}
+                                                    {!rule.enabled && <span className="text-[10px] bg-muted text-muted-foreground px-2 py-0.5 rounded">DISABLED</span>}
                                                 </h3>
-                                                <p className="text-sm text-slate-500 mt-1">{rule.description}</p>
+                                                <p className="text-sm text-muted-foreground mt-1">{rule.description}</p>
                                             </div>
-                                            <button onClick={() => setConfirmState({ open: true, ruleId: rule.id })} className="text-slate-500 hover:text-red-400">
+                                            <button onClick={() => setConfirmState({ open: true, ruleId: rule.id })} className="text-muted-foreground hover:text-destructive">
                                                 <XCircle className="w-5 h-5" />
                                             </button>
                                         </div>
 
-                                        <div className="bg-slate-950 rounded-lg p-3 text-sm border flex items-center gap-3 border-slate-800/50 mb-3">
+                                        <div className="bg-background rounded-xl p-3 text-sm border flex items-center gap-3 border-border/50 mb-3">
                                             <div className="bg-amber-500/10 p-1.5 rounded text-amber-500">
                                                 {rule.trigger.metric === 'cpu' ? <Cpu className="w-4 h-4" /> : <Activity className="w-4 h-4" />}
                                             </div>
                                             <div>
-                                                <span className="text-slate-400">When</span> <span className="text-slate-200">{rule.trigger.type}</span>
+                                                <span className="text-muted-foreground">When</span> <span className="text-foreground">{rule.trigger.type}</span>
                                             </div>
                                         </div>
 
-                                        <div className="bg-slate-950 rounded-lg p-3 text-sm border flex items-center gap-3 border-slate-800/50">
-                                            <div className="bg-nerve/10 p-1.5 rounded text-nerve">
+                                        <div className="bg-background rounded-xl p-3 text-sm border flex items-center gap-3 border-border/50">
+                                            <div className="bg-primary/10 p-1.5 rounded text-primary">
                                                 <Play className="w-4 h-4" />
                                             </div>
                                             <div>
-                                                <span className="text-slate-400">Execute</span> <span className="text-slate-200">{rule.action.type}</span>
-                                                <span className="text-xs text-slate-500 block mt-0.5">Autonomy Level: {rule.autonomyLevel}</span>
+                                                <span className="text-muted-foreground">Execute</span> <span className="text-foreground">{rule.action.type}</span>
+                                                <span className="text-xs text-muted-foreground block mt-0.5">Autonomy Level: {rule.autonomyLevel}</span>
                                             </div>
                                         </div>
                                     </div>

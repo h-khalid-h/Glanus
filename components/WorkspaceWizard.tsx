@@ -105,9 +105,9 @@ export default function WorkspaceWizard({ onComplete, showSampleDataOption = fal
     };
 
     return (
-        <div className="bg-slate-900/50 backdrop-blur-sm rounded-2xl shadow-xl border border-slate-800 overflow-hidden max-w-4xl w-full mx-auto">
+        <div className="bg-card backdrop-blur-sm rounded-2xl shadow-xl border border-border overflow-hidden max-w-4xl w-full mx-auto">
             {/* Progress Header */}
-            <div className="bg-slate-800/50 border-b border-slate-700 p-6">
+            <div className="bg-muted/50 border-b border-border p-6">
                 <div className="flex justify-between items-center max-w-2xl mx-auto">
                     {STEPS.map((step, index) => {
                         const Icon = step.icon;
@@ -120,10 +120,10 @@ export default function WorkspaceWizard({ onComplete, showSampleDataOption = fal
                                     className={clsx(
                                         'w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300',
                                         isActive
-                                            ? 'bg-nerve text-white ring-4 ring-nerve/20'
+                                            ? 'bg-primary text-foreground ring-4 ring-primary/20'
                                             : isCompleted
-                                                ? 'bg-health-good text-white'
-                                                : 'bg-slate-700 text-slate-500'
+                                                ? 'bg-health-good text-foreground'
+                                                : 'bg-muted text-muted-foreground'
                                     )}
                                 >
                                     {isCompleted ? <CheckCircle2 className="w-6 h-6" /> : <Icon className="w-5 h-5" />}
@@ -131,7 +131,7 @@ export default function WorkspaceWizard({ onComplete, showSampleDataOption = fal
                                 <span
                                     className={clsx(
                                         'mt-2 text-xs font-medium uppercase tracking-wider',
-                                        isActive ? 'text-nerve' : 'text-slate-500'
+                                        isActive ? 'text-primary' : 'text-muted-foreground'
                                     )}
                                 >
                                     {step.name}
@@ -142,7 +142,7 @@ export default function WorkspaceWizard({ onComplete, showSampleDataOption = fal
                                     <div className="absolute top-5 left-full w-full h-[2px] -translate-y-1/2 -z-10">
                                         <div className={clsx(
                                             "h-full w-[calc(100%_-_2.5rem)] ml-10 transition-colors duration-300",
-                                            step.id < currentStep ? "bg-health-good" : "bg-slate-700"
+                                            step.id < currentStep ? "bg-health-good" : "bg-muted"
                                         )} />
                                     </div>
                                 )}
@@ -155,7 +155,7 @@ export default function WorkspaceWizard({ onComplete, showSampleDataOption = fal
             {/* Content Area */}
             <div className="p-8 min-h-[400px]">
                 {error && (
-                    <div className="mb-6 bg-health-critical/10 text-health-critical p-4 rounded-lg flex items-center gap-2 border border-health-critical/20">
+                    <div className="mb-6 bg-destructive/10 text-destructive p-4 rounded-xl flex items-center gap-2 border border-destructive/20">
                         <span className="font-semibold">Error:</span> {error}
                     </div>
                 )}
@@ -164,7 +164,7 @@ export default function WorkspaceWizard({ onComplete, showSampleDataOption = fal
                     <div className="space-y-6 max-w-lg mx-auto animate-in fade-in slide-in-from-right-4 duration-300">
                         <div className="text-center mb-8">
                             <h2 className="text-2xl font-bold text-foreground">Let's build your workspace</h2>
-                            <p className="text-slate-500 mt-2">Give your new workspace a home.</p>
+                            <p className="text-muted-foreground mt-2">Give your new workspace a home.</p>
                         </div>
 
                         <Input
@@ -192,17 +192,17 @@ export default function WorkspaceWizard({ onComplete, showSampleDataOption = fal
                                 onChange={handleSlugChange}
                                 className="pl-[10.5rem]"
                             />
-                            <p className="text-xs text-slate-500 mt-1.5 ml-1">
-                                Your workspace will be accessible at <span className="font-mono bg-slate-800 px-1 rounded">glanus.com/{formData.slug || 'your-slug'}</span>
+                            <p className="text-xs text-muted-foreground mt-1.5 ml-1">
+                                Your workspace will be accessible at <span className="font-mono bg-muted px-1 rounded">glanus.com/{formData.slug || 'your-slug'}</span>
                             </p>
                         </div>
 
                         <div className="space-y-1.5">
-                            <label className="block text-sm font-medium text-slate-300">
-                                Description <span className="text-slate-400 font-normal">(Optional)</span>
+                            <label className="block text-sm font-medium text-foreground">
+                                Description <span className="text-muted-foreground font-normal">(Optional)</span>
                             </label>
                             <textarea
-                                className="w-full rounded-lg border border-slate-700 bg-slate-900/50 backdrop-blur-sm px-4 py-2 text-sm focus:ring-2 focus:ring-nerve/50 focus:border-nerve/50 min-h-[100px] resize-none"
+                                className="w-full rounded-xl border border-border bg-card backdrop-blur-sm px-4 py-2 text-sm focus:ring-2 focus:ring-primary/50 focus:border-primary/50 min-h-[100px] resize-none"
                                 placeholder="What is this workspace for?"
                                 value={formData.description}
                                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
@@ -215,15 +215,15 @@ export default function WorkspaceWizard({ onComplete, showSampleDataOption = fal
                     <div className="space-y-8 max-w-lg mx-auto animate-in fade-in slide-in-from-right-4 duration-300">
                         <div className="text-center mb-8">
                             <h2 className="text-2xl font-bold text-foreground">Brand your workspace</h2>
-                            <p className="text-slate-500 mt-2">Choose colors that match your company identity.</p>
+                            <p className="text-muted-foreground mt-2">Choose colors that match your company identity.</p>
                         </div>
 
                         <div className="grid grid-cols-2 gap-6">
                             <div>
-                                <label className="block text-sm font-medium text-slate-300 mb-2">Primary Color</label>
+                                <label className="block text-sm font-medium text-foreground mb-2">Primary Color</label>
                                 <div className="flex items-center gap-3">
                                     <div
-                                        className="w-12 h-12 rounded-lg shadow-sm border border-slate-700"
+                                        className="w-12 h-12 rounded-xl shadow-sm border border-border"
                                         style={{ backgroundColor: formData.primaryColor }}
                                     />
                                     <input
@@ -236,10 +236,10 @@ export default function WorkspaceWizard({ onComplete, showSampleDataOption = fal
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-slate-300 mb-2">Accent Color</label>
+                                <label className="block text-sm font-medium text-foreground mb-2">Accent Color</label>
                                 <div className="flex items-center gap-3">
                                     <div
-                                        className="w-12 h-12 rounded-lg shadow-sm border border-slate-700"
+                                        className="w-12 h-12 rounded-xl shadow-sm border border-border"
                                         style={{ backgroundColor: formData.accentColor }}
                                     />
                                     <input
@@ -252,17 +252,17 @@ export default function WorkspaceWizard({ onComplete, showSampleDataOption = fal
                             </div>
                         </div>
 
-                        <div className="bg-slate-800/50 p-6 rounded-xl border border-slate-700">
-                            <h3 className="text-sm font-medium text-slate-400 uppercase tracking-wider mb-4">Preview</h3>
+                        <div className="bg-muted/50 p-6 rounded-xl border border-border">
+                            <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-4">Preview</h3>
                             <div className="flex items-center gap-4">
                                 <button type="button"
-                                    className="px-4 py-2 rounded-lg text-white font-medium shadow-sm"
+                                    className="px-4 py-2 rounded-xl text-foreground font-medium shadow-sm"
                                     style={{ backgroundColor: formData.primaryColor }}
                                 >
                                     Primary Button
                                 </button>
                                 <button type="button"
-                                    className="px-4 py-2 rounded-lg font-medium border border-slate-700 bg-slate-800/50"
+                                    className="px-4 py-2 rounded-xl font-medium border border-border bg-muted/50"
                                     style={{ color: formData.primaryColor, borderColor: formData.primaryColor }}
                                 >
                                     Secondary Button
@@ -279,7 +279,7 @@ export default function WorkspaceWizard({ onComplete, showSampleDataOption = fal
                     <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
                         <div className="text-center mb-8">
                             <h2 className="text-2xl font-bold text-foreground">Select a Plan</h2>
-                            <p className="text-slate-500 mt-2">Start for free, upgrade as you grow.</p>
+                            <p className="text-muted-foreground mt-2">Start for free, upgrade as you grow.</p>
                         </div>
 
                         <PlanSelector
@@ -288,17 +288,17 @@ export default function WorkspaceWizard({ onComplete, showSampleDataOption = fal
                         />
 
                         {showSampleDataOption && (
-                            <div className="max-w-md mx-auto mt-8 bg-nerve/5 p-4 rounded-xl border border-nerve/20">
+                            <div className="max-w-md mx-auto mt-8 bg-primary/5 p-4 rounded-xl border border-primary/20">
                                 <label className="flex items-start gap-3 cursor-pointer">
                                     <input
                                         type="checkbox"
                                         checked={createSampleData}
                                         onChange={(e) => setCreateSampleData(e.target.checked)}
-                                        className="mt-0.5 rounded border-blue-300 text-nerve focus:ring-nerve/50"
+                                        className="mt-0.5 rounded border-primary/40 text-primary focus:ring-primary/50"
                                     />
                                     <div>
                                         <div className="text-sm font-medium text-foreground">Create sample data</div>
-                                        <div className="text-xs text-slate-500 mt-0.5">
+                                        <div className="text-xs text-muted-foreground mt-0.5">
                                             Add demo assets, locations, and alerts to help you get started
                                         </div>
                                     </div>
@@ -310,7 +310,7 @@ export default function WorkspaceWizard({ onComplete, showSampleDataOption = fal
             </div>
 
             {/* Footer Controls */}
-            <div className="bg-slate-800/50 px-8 py-5 border-t border-slate-700 flex justify-between items-center">
+            <div className="bg-muted/50 px-8 py-5 border-t border-border flex justify-between items-center">
                 <Button
                     variant="secondary"
                     onClick={handleBack}

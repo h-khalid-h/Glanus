@@ -147,7 +147,7 @@ export default function DashboardPage() {
         <>
             {/* Header */}
             <div className="mb-8 animate-fade-in">
-                <h1 className="mb-2 text-3xl font-bold text-foreground">
+                <h1 className="mb-2 text-3xl font-extrabold text-foreground tracking-tight">
                     Operations <span className="text-gradient">Dashboard</span>
                 </h1>
                 <p className="text-muted-foreground">Welcome to your IT operations center</p>
@@ -161,15 +161,15 @@ export default function DashboardPage() {
                     return (
                         <div
                             key={card.key}
-                            className={`group rounded-xl border ${c.border} bg-slate-900/50 backdrop-blur-sm p-5 
-                                                transition-all duration-300 hover:bg-slate-900/70`}
+                            className={`group rounded-2xl border ${c.border} bg-card p-6 
+                                                transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg`}
                         >
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <p className="text-sm text-slate-400">{card.label}</p>
-                                    <p className="mt-1 text-3xl font-bold text-white">{value}</p>
+                                    <p className="text-sm text-muted-foreground">{card.label}</p>
+                                    <p className="mt-1.5 text-3xl font-bold text-foreground">{value}</p>
                                 </div>
-                                <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${c.bg} ${c.text}`}>
+                                <div className={`flex h-11 w-11 items-center justify-center rounded-xl ${c.bg} ${c.text}`}>
                                     {card.icon}
                                 </div>
                             </div>
@@ -181,25 +181,25 @@ export default function DashboardPage() {
             {/* Recent Assets & Active Sessions */}
             <div className="grid gap-6 lg:grid-cols-2 animate-slide-up [animation-delay:0.1s]">
                 {/* Recent Assets */}
-                <div className="rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm overflow-hidden">
-                    <div className="border-b border-slate-800 px-5 py-4">
-                        <h2 className="text-sm font-semibold text-foreground">Recent Assets</h2>
-                        <p className="text-xs text-muted-foreground">Latest assets added to the system</p>
+                <div className="rounded-2xl border border-border bg-card overflow-hidden">
+                    <div className="border-b border-border px-6 py-4">
+                        <h2 className="text-sm font-bold text-foreground">Recent Assets</h2>
+                        <p className="text-xs text-muted-foreground mt-0.5">Latest assets added to the system</p>
                     </div>
-                    <div className="p-5">
+                    <div className="p-6">
                         {data && data.recentAssets?.length > 0 ? (
                             <div className="space-y-3">
                                 {data.recentAssets.map((asset) => (
-                                    <div key={asset.id} className="flex items-center justify-between border-b border-slate-800/50 pb-3 last:border-0 last:pb-0">
+                                    <div key={asset.id} className="flex items-center justify-between border-b border-border/50 pb-3 last:border-0 last:pb-0">
                                         <div>
-                                            <p className="text-sm font-medium text-slate-200">{asset.name}</p>
-                                            <p className="text-xs text-slate-500">
+                                            <p className="text-sm font-medium text-foreground">{asset.name}</p>
+                                            <p className="text-xs text-muted-foreground">
                                                 {asset.category} • {asset.assignedTo?.name || 'Unassigned'}
                                             </p>
                                         </div>
-                                        <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-medium ${asset.status === 'AVAILABLE'
+                                        <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-semibold ${asset.status === 'AVAILABLE'
                                             ? 'bg-health-good/10 text-health-good border border-health-good/20'
-                                            : 'bg-nerve/10 text-nerve border border-nerve/20'
+                                            : 'bg-primary/10 text-primary border border-primary/20'
                                             }`}>
                                             {asset.status}
                                         </span>
@@ -224,32 +224,32 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Active Sessions */}
-                <div className="rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm overflow-hidden">
-                    <div className="border-b border-slate-800 px-5 py-4 flex items-center justify-between">
+                <div className="rounded-2xl border border-border bg-card overflow-hidden">
+                    <div className="border-b border-border px-6 py-4 flex items-center justify-between">
                         <div>
-                            <h2 className="text-sm font-semibold text-foreground">Active Remote Sessions</h2>
-                            <p className="text-xs text-muted-foreground">Currently active remote desktop connections</p>
+                            <h2 className="text-sm font-bold text-foreground">Active Remote Sessions</h2>
+                            <p className="text-xs text-muted-foreground mt-0.5">Currently active remote desktop connections</p>
                         </div>
-                        <Link href="/remote" className="text-xs text-nerve hover:text-nerve/80 transition-colors">
+                        <Link href="/remote" className="text-xs text-primary hover:text-primary/80 font-medium transition-colors">
                             View All →
                         </Link>
                     </div>
-                    <div className="p-5">
+                    <div className="p-6">
                         {data && data.activeSessionsList?.length > 0 ? (
                             <div className="space-y-3">
                                 {data.activeSessionsList.map((session) => (
-                                    <div key={session.id} className="flex items-center justify-between border-b border-slate-800/50 pb-3 last:border-0 last:pb-0">
+                                    <div key={session.id} className="flex items-center justify-between border-b border-border/50 pb-3 last:border-0 last:pb-0">
                                         <div>
-                                            <Link href={`/assets/${session.asset.id}`} className="text-sm font-medium text-slate-200 hover:text-nerve transition-colors">
+                                            <Link href={`/assets/${session.asset.id}`} className="text-sm font-medium text-foreground hover:text-primary transition-colors">
                                                 {session.asset.name}
                                             </Link>
-                                            <p className="text-xs text-slate-500">
+                                            <p className="text-xs text-muted-foreground">
                                                 {session.user?.name || 'Unknown'} • {formatDateTime(session.startedAt || session.lastSeen)}
                                             </p>
                                         </div>
                                         <Link
                                             href={`/remote/${session.id}`}
-                                            className="flex items-center gap-1.5 px-3 py-1 bg-nerve/10 text-nerve rounded-lg text-xs font-medium hover:bg-nerve/20 transition-colors"
+                                            className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 text-primary rounded-xl text-xs font-semibold hover:bg-primary/20 transition-all"
                                         >
                                             <span className="h-2 w-2 rounded-full bg-health-good animate-pulse" />
                                             Join
@@ -275,12 +275,12 @@ export default function DashboardPage() {
             </div>
 
             {/* Footer */}
-            <div className="mt-10 text-center text-xs text-slate-500">
+            <div className="mt-12 text-center text-xs text-muted-foreground">
                 <div className="flex items-center justify-center gap-4">
                     <p>Glanus — AI-Native IT Operations Platform</p>
-                    <span className="text-slate-800">·</span>
-                    <Link href="/privacy" className="hover:text-slate-400 transition-colors">Privacy</Link>
-                    <Link href="/terms" className="hover:text-slate-400 transition-colors">Terms</Link>
+                    <span className="text-border">·</span>
+                    <Link href="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
+                    <Link href="/terms" className="hover:text-foreground transition-colors">Terms</Link>
                 </div>
             </div>
         </>

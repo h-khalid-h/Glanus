@@ -186,7 +186,7 @@ export default function IntelligencePage() {
     if (isLoading) {
         return (
             <div className="space-y-6">
-                <div className="h-8 w-48 animate-pulse rounded-lg bg-surface-2" />
+                <div className="h-8 w-48 animate-pulse rounded-xl bg-surface-2" />
                 <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                     {[...Array(4)].map((_, i) => (
                         <div key={i} className="h-40 animate-pulse rounded-xl bg-surface-2" />
@@ -210,11 +210,11 @@ export default function IntelligencePage() {
             </div>
 
             {/* Tab bar */}
-            <div className="flex gap-1 rounded-lg bg-surface-1 p-1">
+            <div className="flex gap-1 rounded-xl bg-surface-1 p-1">
                 <button type="button"
                     onClick={() => setActiveTab('nerve')}
                     className={`flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-all ${activeTab === 'nerve'
-                        ? 'bg-nerve/10 text-nerve shadow-sm'
+                        ? 'bg-primary/10 text-primary shadow-sm'
                         : 'text-muted-foreground hover:text-foreground'
                         }`}
                 >
@@ -289,7 +289,7 @@ export default function IntelligencePage() {
                                         key={agent.id}
                                         onClick={() => runAnalysis(agent.id)}
                                         disabled={cortexLoading}
-                                        className={`flex items-center gap-3 rounded-lg border px-4 py-3 text-left transition-all ${selectedAgent === agent.id
+                                        className={`flex items-center gap-3 rounded-xl border px-4 py-3 text-left transition-all ${selectedAgent === agent.id
                                             ? 'border-cortex/40 bg-cortex/5'
                                             : 'border-border hover:border-cortex/20 hover:bg-surface-1'
                                             } ${cortexLoading ? 'opacity-50 cursor-wait' : ''}`}

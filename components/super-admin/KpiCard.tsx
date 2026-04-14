@@ -20,10 +20,10 @@ const accentMap = {
         border: 'hover:border-emerald-500/20',
     },
     blue: {
-        icon: 'bg-blue-500/10 text-blue-400',
+        icon: 'bg-cortex/10 text-cortex',
         glow: 'hover:shadow-blue-500/10',
-        badge: 'text-blue-400 bg-blue-500/10',
-        border: 'hover:border-blue-500/20',
+        badge: 'text-cortex bg-cortex/10',
+        border: 'hover:border-cortex/20',
     },
     violet: {
         icon: 'bg-violet-500/10 text-violet-400',
@@ -32,9 +32,9 @@ const accentMap = {
         border: 'hover:border-violet-500/20',
     },
     amber: {
-        icon: 'bg-amber-500/10 text-amber-400',
+        icon: 'bg-amber-500/10 text-warning',
         glow: 'hover:shadow-amber-500/10',
-        badge: 'text-amber-400 bg-amber-500/10',
+        badge: 'text-warning bg-amber-500/10',
         border: 'hover:border-amber-500/20',
     },
     rose: {
@@ -64,14 +64,14 @@ export function KpiCard({
 
     if (loading) {
         return (
-            <div className="relative overflow-hidden rounded-2xl border border-slate-800/60 bg-slate-900/50 p-5 backdrop-blur-sm animate-pulse">
+            <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-card p-5 backdrop-blur-sm animate-pulse">
                 <div className="flex items-start justify-between">
-                    <div className="h-10 w-10 rounded-xl bg-slate-800" />
-                    <div className="h-5 w-16 rounded-full bg-slate-800" />
+                    <div className="h-10 w-10 rounded-xl bg-muted" />
+                    <div className="h-5 w-16 rounded-full bg-muted" />
                 </div>
                 <div className="mt-4 space-y-2">
-                    <div className="h-8 w-24 rounded-lg bg-slate-800" />
-                    <div className="h-4 w-32 rounded bg-slate-800" />
+                    <div className="h-8 w-24 rounded-lg bg-muted" />
+                    <div className="h-4 w-32 rounded bg-muted" />
                 </div>
             </div>
         );
@@ -80,7 +80,7 @@ export function KpiCard({
     return (
         <div
             className={[
-                'group relative overflow-hidden rounded-2xl border border-slate-800/60 bg-slate-900/50',
+                'group relative overflow-hidden rounded-2xl border border-border/60 bg-card',
                 'p-5 backdrop-blur-sm transition-all duration-300',
                 'hover:shadow-lg hover:-translate-y-0.5',
                 colors.glow,
@@ -104,12 +104,12 @@ export function KpiCard({
             </div>
 
             <div className="mt-4">
-                <p className="text-3xl font-bold tracking-tight text-slate-100">
+                <p className="text-3xl font-bold tracking-tight text-foreground">
                     {typeof value === 'number' ? value.toLocaleString() : value}
                 </p>
-                <p className="mt-1 text-sm font-medium text-slate-400">{title}</p>
+                <p className="mt-1 text-sm font-medium text-muted-foreground">{title}</p>
                 {subtitle && (
-                    <p className="mt-0.5 text-xs text-slate-600">{subtitle}</p>
+                    <p className="mt-0.5 text-xs text-muted-foreground/60">{subtitle}</p>
                 )}
             </div>
         </div>

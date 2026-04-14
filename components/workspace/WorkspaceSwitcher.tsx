@@ -33,8 +33,8 @@ export function WorkspaceSwitcher() {
 
     if (isLoading) {
         return (
-            <div className="flex items-center gap-2 px-3 py-2 bg-slate-800/50 rounded-lg animate-pulse">
-                <div className="h-5 w-32 bg-slate-600 rounded"></div>
+            <div className="flex items-center gap-2 px-3 py-2 bg-muted/50 rounded-xl animate-pulse">
+                <div className="h-5 w-32 bg-muted rounded"></div>
             </div>
         );
     }
@@ -47,13 +47,13 @@ export function WorkspaceSwitcher() {
         <div className="relative" ref={menuRef}>
             <button type="button"
                 onClick={() => setIsOpen(!isOpen)}
-                className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-300 bg-slate-900/50 backdrop-blur-sm hover:bg-slate-900/30 border border-slate-700 rounded-lg transition-colors"
+                className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-foreground bg-card backdrop-blur-sm hover:bg-muted/30 border border-border rounded-xl transition-colors"
                 aria-expanded={isOpen}
                 aria-haspopup="true"
             >
                 {/* Workspace Logo or Initial */}
                 <div
-                    className="flex items-center justify-center w-6 h-6 rounded text-white text-xs font-bold"
+                    className="flex items-center justify-center w-6 h-6 rounded text-foreground text-xs font-bold"
                     style={{ backgroundColor: workspace.primaryColor }}
                 >
                     {workspace.logo ? (
@@ -71,16 +71,16 @@ export function WorkspaceSwitcher() {
                 <span className="max-w-[150px] truncate">{workspace.name}</span>
 
                 {/* Chevron */}
-                <ChevronDownIcon className="w-4 h-4 text-slate-500" />
+                <ChevronDownIcon className="w-4 h-4 text-muted-foreground" />
             </button>
 
             {isOpen && (
                 <div
-                    className="absolute left-0 mt-2 w-64 origin-top-left bg-slate-900/50 backdrop-blur-sm border border-slate-800 rounded-lg shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-50 animate-in fade-in zoom-in-95 duration-100"
+                    className="absolute left-0 mt-2 w-64 origin-top-left bg-card backdrop-blur-sm border border-border rounded-xl shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-50 animate-in fade-in zoom-in-95 duration-100"
                     role="menu"
                 >
-                    <div className="px-3 py-2 border-b border-slate-800">
-                        <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                    <div className="px-3 py-2 border-b border-border">
+                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                             Workspaces
                         </p>
                     </div>
@@ -92,14 +92,14 @@ export function WorkspaceSwitcher() {
                                 onClick={() => { switchWorkspace(ws.id); setIsOpen(false); }}
                                 className={`
                                     w-full flex items-center gap-3 px-3 py-2 text-sm transition-colors
-                                    hover:bg-slate-800/50
-                                    ${ws.id === workspace.id ? 'text-nerve' : 'text-slate-300'}
+                                    hover:bg-muted/50
+                                    ${ws.id === workspace.id ? 'text-primary' : 'text-foreground'}
                                 `}
                                 role="menuitem"
                             >
                                 {/* Workspace Logo/Initial */}
                                 <div
-                                    className="flex items-center justify-center w-8 h-8 rounded text-white text-xs font-bold flex-shrink-0"
+                                    className="flex items-center justify-center w-8 h-8 rounded text-foreground text-xs font-bold flex-shrink-0"
                                     style={{ backgroundColor: ws.primaryColor }}
                                 >
                                     {ws.logo ? (
@@ -116,7 +116,7 @@ export function WorkspaceSwitcher() {
                                 {/* Workspace Info */}
                                 <div className="flex-1 text-left min-w-0">
                                     <p className="font-medium truncate">{ws.name}</p>
-                                    <p className="text-xs text-slate-500">
+                                    <p className="text-xs text-muted-foreground">
                                         {ws.subscription.plan} • {ws._count.assets} assets
                                     </p>
                                 </div>
@@ -130,10 +130,10 @@ export function WorkspaceSwitcher() {
                     </div>
 
                     {/* Create New Workspace */}
-                    <div className="border-t border-slate-800 py-1">
+                    <div className="border-t border-border py-1">
                         <button type="button"
                             onClick={() => { setIsOpen(false); router.push('/workspaces/new'); }}
-                            className="w-full flex items-center gap-2 px-3 py-2 text-sm font-medium hover:bg-slate-800/50 text-nerve transition-colors"
+                            className="w-full flex items-center gap-2 px-3 py-2 text-sm font-medium hover:bg-muted/50 text-primary transition-colors"
                             role="menuitem"
                         >
                             <PlusIcon className="w-5 h-5" />

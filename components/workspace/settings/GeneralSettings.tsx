@@ -59,9 +59,9 @@ export default function GeneralSettings({ workspace }: { workspace: Workspace })
 
             <form onSubmit={handleSubmit} className="space-y-4 max-w-xl">
                 {message && (
-                    <div className={`p-4 rounded-lg text-sm ${message.type === 'success'
+                    <div className={`p-4 rounded-xl text-sm ${message.type === 'success'
                         ? 'bg-health-good/10 text-health-good border border-health-good/20'
-                        : 'bg-health-critical/10 text-health-critical border border-health-critical/20'
+                        : 'bg-destructive/10 text-destructive border border-destructive/20'
                         }`}>
                         {message.text}
                     </div>
@@ -75,31 +75,31 @@ export default function GeneralSettings({ workspace }: { workspace: Workspace })
                 />
 
                 <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-1.5">
+                    <label className="block text-sm font-medium text-foreground mb-1.5">
                         Workspace URL
                     </label>
-                    <div className="flex rounded-lg shadow-sm">
-                        <span className="inline-flex items-center px-3 rounded-l-lg border border-r-0 border-slate-700 bg-slate-800 text-slate-400 text-sm">
+                    <div className="flex rounded-xl shadow-sm">
+                        <span className="inline-flex items-center px-3 rounded-l-lg border border-r-0 border-border bg-muted text-muted-foreground text-sm">
                             glanus.com/
                         </span>
                         <input
                             type="text"
                             value={formData.slug}
                             readOnly
-                            className="flex-1 min-w-0 block w-full px-3 py-2 rounded-none rounded-r-lg border border-slate-700 bg-slate-800 text-slate-500 sm:text-sm focus:ring-nerve/50 focus:border-nerve/50 cursor-not-allowed"
+                            className="flex-1 min-w-0 block w-full px-3 py-2 rounded-none rounded-r-lg border border-border bg-muted text-muted-foreground sm:text-sm focus:ring-primary/50 focus:border-primary/50 cursor-not-allowed"
                         />
                     </div>
-                    <p className="mt-1 text-xs text-slate-500">
+                    <p className="mt-1 text-xs text-muted-foreground">
                         Workspace URL cannot be changed after creation.
                     </p>
                 </div>
 
                 <div className="space-y-1.5">
-                    <label className="block text-sm font-medium text-slate-300">
+                    <label className="block text-sm font-medium text-foreground">
                         Description
                     </label>
                     <textarea
-                        className="w-full rounded-lg border border-slate-700 bg-slate-900/50 backdrop-blur-sm px-4 py-2 text-sm focus:ring-2 focus:ring-nerve/50 focus:border-nerve/50 min-h-[100px] resize-none"
+                        className="w-full rounded-xl border border-border bg-card backdrop-blur-sm px-4 py-2 text-sm focus:ring-2 focus:ring-primary/50 focus:border-primary/50 min-h-[100px] resize-none"
                         value={formData.description}
                         onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                         placeholder="What is this workspace for?"
@@ -114,7 +114,7 @@ export default function GeneralSettings({ workspace }: { workspace: Workspace })
                 </div>
             </form>
 
-            <div className="mt-12 space-y-4 max-w-xl border-t border-slate-800 pt-8">
+            <div className="mt-12 space-y-4 max-w-xl border-t border-border pt-8">
                 <div>
                     <h3 className="text-lg font-medium text-foreground">Storage & Files</h3>
                     <p className="text-sm text-muted-foreground">
@@ -154,7 +154,7 @@ export default function GeneralSettings({ workspace }: { workspace: Workspace })
                     />
                     <label
                         htmlFor="workspace-upload"
-                        className={`inline-flex items-center justify-center px-4 py-2 text-sm font-medium rounded-md shadow-sm text-white bg-slate-800 border border-slate-700 transition-colors ${isLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-slate-700'}`}
+                        className={`inline-flex items-center justify-center px-4 py-2 text-sm font-medium rounded-md shadow-sm text-foreground bg-muted border border-border transition-colors ${isLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-muted'}`}
                     >
                         {isLoading ? 'Uploading...' : 'Upload File to Storage'}
                     </label>

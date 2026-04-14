@@ -81,7 +81,7 @@ export function MissionControl({ data, workspaceName, workspaceId, plan }: Missi
                                 window.location.href = `/api/workspaces/${workspaceId}/reports?type=asset_inventory&format=csv`;
                             }
                         }}
-                        className="hidden sm:flex items-center gap-2 rounded-lg bg-nerve/10 hover:bg-nerve/20 transition-colors border border-nerve/20 px-3 py-1.5 text-xs font-semibold text-nerve"
+                        className="hidden sm:flex items-center gap-2 rounded-xl bg-primary/10 hover:bg-primary/20 transition-colors border border-primary/20 px-3 py-1.5 text-xs font-semibold text-primary"
                     >
                         <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
@@ -90,7 +90,7 @@ export function MissionControl({ data, workspaceName, workspaceId, plan }: Missi
                     </button>
 
                     {/* Cmd+K hint */}
-                    <div className="hidden sm:flex items-center gap-2 rounded-lg border border-border bg-surface-1 px-3 py-1.5 text-xs text-muted-foreground">
+                    <div className="hidden sm:flex items-center gap-2 rounded-xl border border-border bg-surface-1 px-3 py-1.5 text-xs text-muted-foreground">
                         <kbd className="command-kbd">⌘</kbd>
                         <kbd className="command-kbd">K</kbd>
                         <span>Quick Actions</span>
@@ -122,7 +122,7 @@ export function MissionControl({ data, workspaceName, workspaceId, plan }: Missi
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 17.25v-.228a4.5 4.5 0 0 0-.12-1.03l-2.268-9.64a3.375 3.375 0 0 0-3.285-2.602H7.923a3.375 3.375 0 0 0-3.285 2.602l-2.268 9.64a4.5 4.5 0 0 0-.12 1.03v.228m19.5 0a3 3 0 0 1-3 3H5.25a3 3 0 0 1-3-3m19.5 0a3 3 0 0 0-3-3H5.25a3 3 0 0 0-3 3m16.5 0h.008v.008h-.008v-.008Zm-3 0h.008v.008h-.008v-.008Z" />
                             </svg>
                         }
-                        accentClass="text-nerve bg-nerve/10"
+                        accentClass="text-primary bg-primary/10"
                     />
                     <MetricCard
                         label="Agents Online"
@@ -187,7 +187,7 @@ export function MissionControl({ data, workspaceName, workspaceId, plan }: Missi
                                 <QuickAction
                                     label="Add Asset"
                                     icon="＋"
-                                    accentClass="bg-nerve/10 text-nerve"
+                                    accentClass="bg-primary/10 text-primary"
                                     onClick={() => router.push('/assets/new')}
                                 />
                                 <QuickAction
@@ -248,7 +248,7 @@ function MetricCard({
     return (
         <div className="metric-card">
             <div className="flex items-center justify-between">
-                <div className={`flex h-9 w-9 items-center justify-center rounded-lg ${accentClass}`}>
+                <div className={`flex h-9 w-9 items-center justify-center rounded-xl ${accentClass}`}>
                     {icon}
                 </div>
                 {status === 'online' && <span className="status-online" />}
@@ -276,7 +276,7 @@ function QuickAction({
     return (
         <button type="button"
             onClick={onClick}
-            className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium 
+            className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium 
                        text-foreground transition-colors hover:bg-accent/50"
         >
             <span className={`flex h-7 w-7 items-center justify-center rounded-md text-xs ${accentClass}`}>
@@ -296,12 +296,12 @@ function HealthMeter({ label, value, icon, color }: {
     color: 'nerve' | 'cortex' | 'reflex';
 }) {
     const colorMap = {
-        nerve: { bg: 'bg-nerve', text: 'text-nerve' },
+        nerve: { bg: 'bg-primary', text: 'text-primary' },
         cortex: { bg: 'bg-cortex', text: 'text-cortex' },
         reflex: { bg: 'bg-reflex', text: 'text-reflex' },
     };
-    const barColor = value > 85 ? 'bg-red-500' : value > 65 ? 'bg-amber-500' : colorMap[color].bg;
-    const textColor = value > 85 ? 'text-red-400' : value > 65 ? 'text-amber-400' : colorMap[color].text;
+    const barColor = value > 85 ? 'bg-destructive' : value > 65 ? 'bg-amber-500' : colorMap[color].bg;
+    const textColor = value > 85 ? 'text-destructive' : value > 65 ? 'text-warning' : colorMap[color].text;
 
     return (
         <div className="flex-1 min-w-[120px]">
@@ -326,7 +326,7 @@ function SystemHealthWidget({ health }: { health: SystemHealth }) {
         <div className="card">
             <div className="flex items-center justify-between mb-5">
                 <h2 className="text-sm font-semibold flex items-center gap-2">
-                    <svg className="h-4 w-4 text-nerve" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <svg className="h-4 w-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
                     </svg>
                     System Health Pulse
@@ -338,13 +338,13 @@ function SystemHealthWidget({ health }: { health: SystemHealth }) {
                     </span>
                     {health.agentsOffline > 0 && (
                         <span className="flex items-center gap-1">
-                            <span className="h-2 w-2 rounded-full bg-slate-500" />
+                            <span className="h-2 w-2 rounded-full bg-muted" />
                             {health.agentsOffline} offline
                         </span>
                     )}
                     {health.agentsError > 0 && (
                         <span className="flex items-center gap-1">
-                            <span className="h-2 w-2 rounded-full bg-red-500" />
+                            <span className="h-2 w-2 rounded-full bg-destructive" />
                             {health.agentsError} error
                         </span>
                     )}

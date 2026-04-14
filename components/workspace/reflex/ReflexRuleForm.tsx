@@ -77,7 +77,7 @@ export function ReflexRuleForm({ workspaceId, onSuccess, onCancel }: ReflexRuleF
                             required
                             value={formData.name}
                             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                            className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-nerve transition-colors"
+                            className="w-full bg-background border border-border rounded-xl px-4 py-2 text-foreground focus:outline-none focus:border-primary transition-colors"
                             placeholder="e.g., Auto-restart frozen agents"
                         />
                     </div>
@@ -87,7 +87,7 @@ export function ReflexRuleForm({ workspaceId, onSuccess, onCancel }: ReflexRuleF
                     <textarea
                         value={formData.description}
                         onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                        className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-nerve transition-colors h-20"
+                        className="w-full bg-background border border-border rounded-xl px-4 py-2 text-foreground focus:outline-none focus:border-primary transition-colors h-20"
                         placeholder="Describe the condition and intent of this rule..."
                     />
                 </div>
@@ -102,7 +102,7 @@ export function ReflexRuleForm({ workspaceId, onSuccess, onCancel }: ReflexRuleF
                         <select
                             value={trigger.metric}
                             onChange={(e) => setTrigger({ ...trigger, metric: e.target.value as any })}
-                            className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-nerve"
+                            className="w-full bg-background border border-border rounded-xl px-4 py-2 text-foreground focus:outline-none focus:border-primary"
                         >
                             <option value="cpu">CPU Utilization %</option>
                             <option value="ram">RAM Usage %</option>
@@ -114,7 +114,7 @@ export function ReflexRuleForm({ workspaceId, onSuccess, onCancel }: ReflexRuleF
                         <select
                             value={trigger.operator}
                             onChange={(e) => setTrigger({ ...trigger, operator: e.target.value as any })}
-                            className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-nerve"
+                            className="w-full bg-background border border-border rounded-xl px-4 py-2 text-foreground focus:outline-none focus:border-primary"
                         >
                             <option value="gt">Greater Than (&gt;)</option>
                             <option value="lt">Less Than (&lt;)</option>
@@ -130,7 +130,7 @@ export function ReflexRuleForm({ workspaceId, onSuccess, onCancel }: ReflexRuleF
                             max="100"
                             value={trigger.value}
                             onChange={(e) => setTrigger({ ...trigger, value: parseInt(e.target.value) })}
-                            className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-nerve"
+                            className="w-full bg-background border border-border rounded-xl px-4 py-2 text-foreground focus:outline-none focus:border-primary"
                         />
                     </div>
                 </div>
@@ -148,7 +148,7 @@ export function ReflexRuleForm({ workspaceId, onSuccess, onCancel }: ReflexRuleF
                         <select
                             value={action.type}
                             onChange={(e) => setAction({ ...action, type: e.target.value as any })}
-                            className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-nerve"
+                            className="w-full bg-background border border-border rounded-xl px-4 py-2 text-foreground focus:outline-none focus:border-primary"
                         >
                             <option value="run_script">Execute Background Script</option>
                             <option value="restart_agent">Restart Native Agent Daemon</option>
@@ -164,22 +164,22 @@ export function ReflexRuleForm({ workspaceId, onSuccess, onCancel }: ReflexRuleF
                                 required
                                 value={action.scriptName}
                                 onChange={(e) => setAction({ ...action, scriptName: e.target.value })}
-                                className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-nerve"
+                                className="w-full bg-background border border-border rounded-xl px-4 py-2 text-foreground focus:outline-none focus:border-primary"
                                 placeholder="Reflex will execute this inside the Agent process"
                             />
                         </div>
                     )}
                 </div>
 
-                <div className="bg-slate-950 p-4 rounded-lg border border-slate-800 space-y-4">
+                <div className="bg-background p-4 rounded-xl border border-border space-y-4">
                     <div className="space-y-1.5">
                         <label className="text-foreground font-medium ml-1 flex items-center gap-2">
                             Autonomy Level
                         </label>
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                             <label className={`
-                                border rounded-lg p-3 cursor-pointer transition-colors flex flex-col items-center text-center
-                                ${formData.autonomyLevel === 'suggest' ? 'border-amber-500/50 bg-amber-500/5' : 'border-slate-800 hover:border-slate-700 bg-slate-900'}
+                                border rounded-xl p-3 cursor-pointer transition-colors flex flex-col items-center text-center
+                                ${formData.autonomyLevel === 'suggest' ? 'border-amber-500/50 bg-amber-500/5' : 'border-border hover:border-border bg-surface-1'}
                             `}>
                                 <input
                                     type="radio"
@@ -188,13 +188,13 @@ export function ReflexRuleForm({ workspaceId, onSuccess, onCancel }: ReflexRuleF
                                     checked={formData.autonomyLevel === 'suggest'}
                                     onChange={() => setFormData({ ...formData, autonomyLevel: 'suggest' })}
                                 />
-                                <span className={`font-medium ${formData.autonomyLevel === 'suggest' ? 'text-amber-400' : 'text-slate-300'}`}>SUGGEST</span>
-                                <span className="text-xs text-slate-500 mt-1">Inbox Recommendation Only</span>
+                                <span className={`font-medium ${formData.autonomyLevel === 'suggest' ? 'text-warning' : 'text-foreground'}`}>SUGGEST</span>
+                                <span className="text-xs text-muted-foreground mt-1">Inbox Recommendation Only</span>
                             </label>
 
                             <label className={`
-                                border rounded-lg p-3 cursor-pointer transition-colors flex flex-col items-center text-center
-                                ${formData.autonomyLevel === 'confirm' ? 'border-nerve/50 bg-nerve/5' : 'border-slate-800 hover:border-slate-700 bg-slate-900'}
+                                border rounded-xl p-3 cursor-pointer transition-colors flex flex-col items-center text-center
+                                ${formData.autonomyLevel === 'confirm' ? 'border-primary/50 bg-primary/5' : 'border-border hover:border-border bg-surface-1'}
                             `}>
                                 <input
                                     type="radio"
@@ -203,13 +203,13 @@ export function ReflexRuleForm({ workspaceId, onSuccess, onCancel }: ReflexRuleF
                                     checked={formData.autonomyLevel === 'confirm'}
                                     onChange={() => setFormData({ ...formData, autonomyLevel: 'confirm' })}
                                 />
-                                <span className={`font-medium ${formData.autonomyLevel === 'confirm' ? 'text-nerve' : 'text-slate-300'}`}>CONFIRM</span>
-                                <span className="text-xs text-slate-500 mt-1">Queue for Admin Approval</span>
+                                <span className={`font-medium ${formData.autonomyLevel === 'confirm' ? 'text-primary' : 'text-foreground'}`}>CONFIRM</span>
+                                <span className="text-xs text-muted-foreground mt-1">Queue for Admin Approval</span>
                             </label>
 
                             <label className={`
-                                border rounded-lg p-3 cursor-pointer transition-colors flex flex-col items-center text-center
-                                ${formData.autonomyLevel === 'auto' ? 'border-red-500/50 bg-red-500/5' : 'border-slate-800 hover:border-slate-700 bg-slate-900'}
+                                border rounded-xl p-3 cursor-pointer transition-colors flex flex-col items-center text-center
+                                ${formData.autonomyLevel === 'auto' ? 'border-destructive/50 bg-destructive/5' : 'border-border hover:border-border bg-surface-1'}
                             `}>
                                 <input
                                     type="radio"
@@ -218,12 +218,12 @@ export function ReflexRuleForm({ workspaceId, onSuccess, onCancel }: ReflexRuleF
                                     checked={formData.autonomyLevel === 'auto'}
                                     onChange={() => setFormData({ ...formData, autonomyLevel: 'auto' })}
                                 />
-                                <span className={`font-medium ${formData.autonomyLevel === 'auto' ? 'text-red-400' : 'text-slate-300'}`}>AUTO</span>
-                                <span className="text-xs text-slate-500 mt-1">Immediate Execution Pipeline</span>
+                                <span className={`font-medium ${formData.autonomyLevel === 'auto' ? 'text-destructive' : 'text-foreground'}`}>AUTO</span>
+                                <span className="text-xs text-muted-foreground mt-1">Immediate Execution Pipeline</span>
                             </label>
                         </div>
                         {formData.autonomyLevel === 'auto' && (
-                            <div className="flex gap-2 items-start mt-3 text-red-400 bg-red-400/10 p-3 rounded-lg border border-red-500/20">
+                            <div className="flex gap-2 items-start mt-3 text-destructive bg-destructive/10 p-3 rounded-xl border border-destructive/20">
                                 <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5" />
                                 <p className="text-xs leading-relaxed">
                                     <strong>Warning:</strong> The Reflex engine will bypass human verification if the Consequence Assessment computes a Blast Radius smaller than your defined thresholds. High-impact operations will still force human validation.
@@ -234,7 +234,7 @@ export function ReflexRuleForm({ workspaceId, onSuccess, onCancel }: ReflexRuleF
                 </div>
             </div>
 
-            <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-800">
+            <div className="flex items-center justify-end gap-3 pt-4 border-t border-border">
                 <button
                     type="button"
                     onClick={onCancel}
@@ -245,7 +245,7 @@ export function ReflexRuleForm({ workspaceId, onSuccess, onCancel }: ReflexRuleF
                 <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="bg-nerve text-black hover:bg-nerve/90 px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 disabled:opacity-50"
+                    className="bg-primary text-black hover:bg-primary/90 px-4 py-2 rounded-xl font-medium transition-colors flex items-center gap-2 disabled:opacity-50"
                 >
                     <Save className="w-4 h-4" />
                     {isSubmitting ? 'Provisioning...' : 'Deploy Rule'}

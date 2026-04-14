@@ -26,26 +26,26 @@ export function EmptyState({
     const getIconColor = () => {
         switch (variant) {
             case 'error':
-                return 'text-red-500';
+                return 'text-destructive';
             case 'no-results':
-                return 'text-yellow-500';
+                return 'text-warning';
             default:
-                return 'text-slate-500';
+                return 'text-muted-foreground';
         }
     };
 
     return (
-        <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
-            <div className={`text-6xl mb-4 ${typeof icon === 'string' ? '' : getIconColor()}`}>
+        <div className="flex flex-col items-center justify-center py-16 px-6 text-center animate-fade-in">
+            <div className={`text-5xl mb-5 ${typeof icon === 'string' ? '' : getIconColor()}`}>
                 {icon}
             </div>
 
-            <h3 className="text-xl font-semibold text-white mb-2">
+            <h3 className="text-lg font-semibold text-foreground mb-2">
                 {title}
             </h3>
 
             {description && (
-                <p className="text-slate-400 max-w-md mb-6">
+                <p className="text-sm text-muted-foreground max-w-md mb-8 leading-relaxed">
                     {description}
                 </p>
             )}
@@ -53,10 +53,10 @@ export function EmptyState({
             {action && (
                 action.href ? (
                     <Link href={action.href}>
-                        <Button>{action.label}</Button>
+                        <Button size="md">{action.label}</Button>
                     </Link>
                 ) : (
-                    <Button onClick={action.onClick}>{action.label}</Button>
+                    <Button onClick={action.onClick} size="md">{action.label}</Button>
                 )
             )}
         </div>

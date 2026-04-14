@@ -135,7 +135,7 @@ export default function WebhooksPage() {
                     </p>
                 </div>
                 <button onClick={fetchWebhook} disabled={isLoading}
-                    className="flex items-center gap-2 px-4 py-2 bg-surface-2 text-white rounded-lg hover:bg-surface-3 transition-colors disabled:opacity-50">
+                    className="flex items-center gap-2 px-4 py-2 bg-surface-2 text-foreground rounded-xl hover:bg-surface-3 transition-colors disabled:opacity-50">
                     <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
                     Refresh
                 </button>
@@ -152,7 +152,7 @@ export default function WebhooksPage() {
             {webhook && (
                 <div className={`flex items-center gap-3 p-4 rounded-xl border ${webhook.enabled
                     ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-400'
-                    : 'bg-amber-500/5 border-amber-500/20 text-amber-400'
+                    : 'bg-amber-500/5 border-amber-500/20 text-warning'
                     }`}>
                     {webhook.enabled ? <CheckCircle2 className="w-5 h-5" /> : <AlertTriangle className="w-5 h-5" />}
                     <div>
@@ -183,7 +183,7 @@ export default function WebhooksPage() {
                         value={url}
                         onChange={(e) => setUrl(e.target.value)}
                         placeholder="https://your-server.com/webhook"
-                        className="w-full px-4 py-2.5 bg-surface-2 border border-border rounded-lg text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-nerve/50 font-mono"
+                        className="w-full px-4 py-2.5 bg-surface-2 border border-border rounded-xl text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 font-mono"
                     />
                 </div>
 
@@ -198,7 +198,7 @@ export default function WebhooksPage() {
                     <button
                         type="button"
                         onClick={() => setEnabled(!enabled)}
-                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${enabled ? 'bg-nerve' : 'bg-surface-3'
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${enabled ? 'bg-primary' : 'bg-surface-3'
                             }`}
                     >
                         <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${enabled ? 'translate-x-6' : 'translate-x-1'
@@ -212,7 +212,7 @@ export default function WebhooksPage() {
                         Signing Secret
                     </label>
                     <p className="text-xs text-muted-foreground mb-3">
-                        Used to generate HMAC-SHA256 signatures for verifying webhook authenticity. Include in the <code className="text-nerve">X-Glanus-Signature</code> header.
+                        Used to generate HMAC-SHA256 signatures for verifying webhook authenticity. Include in the <code className="text-primary">X-Glanus-Signature</code> header.
                     </p>
                     <div className="flex gap-2">
                         <div className="relative flex-1">
@@ -221,7 +221,7 @@ export default function WebhooksPage() {
                                 value={secret}
                                 onChange={(e) => setSecret(e.target.value)}
                                 placeholder="Enter or generate a signing secret..."
-                                className="w-full px-4 py-2.5 pr-20 bg-surface-2 border border-border rounded-lg text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-nerve/50 font-mono"
+                                className="w-full px-4 py-2.5 pr-20 bg-surface-2 border border-border rounded-xl text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 font-mono"
                             />
                             <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1">
                                 <button onClick={() => setShowSecret(!showSecret)}
@@ -241,7 +241,7 @@ export default function WebhooksPage() {
                             </div>
                         </div>
                         <button onClick={generateSecret}
-                            className="px-4 py-2.5 text-xs font-medium bg-surface-2 border border-border rounded-lg hover:bg-surface-3 transition-colors text-muted-foreground whitespace-nowrap">
+                            className="px-4 py-2.5 text-xs font-medium bg-surface-2 border border-border rounded-xl hover:bg-surface-3 transition-colors text-muted-foreground whitespace-nowrap">
                             Generate
                         </button>
                     </div>
@@ -271,14 +271,14 @@ export default function WebhooksPage() {
                 <div>
                     {webhook && (
                         <button onClick={handleDelete} disabled={isDeleting}
-                            className="flex items-center gap-2 px-4 py-2 text-sm font-medium border border-red-500/30 text-red-400 rounded-lg hover:bg-red-500/10 transition-colors disabled:opacity-50">
+                            className="flex items-center gap-2 px-4 py-2 text-sm font-medium border border-destructive/30 text-destructive rounded-xl hover:bg-destructive/10 transition-colors disabled:opacity-50">
                             <Trash2 className="w-4 h-4" />
                             {isDeleting ? 'Deleting...' : 'Delete Webhook'}
                         </button>
                     )}
                 </div>
                 <button onClick={handleSave} disabled={isSaving || !url.trim()}
-                    className="flex items-center gap-2 px-6 py-2.5 text-sm font-semibold bg-nerve text-white rounded-lg hover:bg-nerve/90 transition-colors disabled:opacity-50 shadow-lg shadow-nerve/20">
+                    className="flex items-center gap-2 px-6 py-2.5 text-sm font-semibold bg-primary text-foreground rounded-xl hover:bg-primary/90 transition-colors disabled:opacity-50 shadow-lg shadow-primary/20">
                     <Save className="w-4 h-4" />
                     {isSaving ? 'Saving...' : webhook ? 'Update Webhook' : 'Register Webhook'}
                 </button>
@@ -287,10 +287,10 @@ export default function WebhooksPage() {
             {/* Signature Verification Guide */}
             <div className="bg-surface-1 border border-border rounded-xl p-6">
                 <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
-                    <Webhook className="w-4 h-4 text-nerve" />
+                    <Webhook className="w-4 h-4 text-primary" />
                     How to Verify Signatures
                 </h3>
-                <pre className="text-xs text-muted-foreground bg-surface-2 p-4 rounded-lg overflow-x-auto font-mono leading-relaxed">
+                <pre className="text-xs text-muted-foreground bg-surface-2 p-4 rounded-xl overflow-x-auto font-mono leading-relaxed">
                     {`const crypto = require('crypto');
 
 function verifySignature(payload, signature, secret) {

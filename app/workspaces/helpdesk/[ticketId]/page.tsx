@@ -57,7 +57,7 @@ function TicketHeader({ ticket, onStatusChange }: { ticket: TicketDetail, onStat
 
             <div className="flex items-center gap-3">
                 <select
-                    className="bg-surface-container-low border-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-surface-container transition-all text-sm rounded-lg px-3 py-2 text-on-surface outline-none appearance-none"
+                    className="bg-surface-container-low border-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-surface-container transition-all text-sm rounded-xl px-3 py-2 text-on-surface outline-none appearance-none"
                     value={ticket.status}
                     onChange={(e) => onStatusChange(e.target.value)}
                 >
@@ -213,13 +213,13 @@ function TicketThreadContent() {
                         {/* Reply Composer */}
                         <div className="p-4 bg-surface-container-low border-t border-border">
                             {isClosed ? (
-                                <div className="text-center p-4 text-sm text-muted-foreground bg-surface-container rounded-lg border border-border border-dashed">
+                                <div className="text-center p-4 text-sm text-muted-foreground bg-surface-container rounded-xl border border-border border-dashed">
                                     This ticket has been resolved. You cannot send new messages unless it is reopened.
                                 </div>
                             ) : (
                                 <div className="flex flex-col gap-3">
                                     <textarea
-                                        className={`w-full border rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all resize-none min-h-[100px] shadow-sm
+                                        className={`w-full border rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all resize-none min-h-[100px] shadow-sm
                                             ${isInternal 
                                                 ? 'bg-amber-500/5 text-amber-100 border-amber-500/30 focus:ring-amber-500 focus:ring-offset-surface-container-low placeholder:text-amber-500/50' 
                                                 : 'bg-surface-container text-on-surface border-border focus:ring-primary focus:ring-offset-surface-container-low placeholder:text-muted-foreground'}
@@ -251,7 +251,7 @@ function TicketThreadContent() {
                                             <button
                                                 onClick={handleSendReply}
                                                 disabled={!replyContent.trim() || sending}
-                                                className={`btn-primary h-9 px-4 gap-2 ${isInternal ? '!bg-amber-600 hover:!bg-amber-700 !text-white !shadow-amber-500/20' : ''}`}
+                                                className={`btn-primary h-9 px-4 gap-2 ${isInternal ? '!bg-amber-600 hover:!bg-amber-700 !text-foreground !shadow-amber-500/20' : ''}`}
                                             >
                                                 <Send className="h-4 w-4" /> {sending ? 'Sending...' : 'Send Reply'}
                                             </button>
@@ -269,8 +269,8 @@ function TicketThreadContent() {
                         <div className="p-5 space-y-5">
                             <div>
                                 <h3 className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-2.5">Priority</h3>
-                                <div className="flex items-center gap-2 text-sm font-semibold text-on-surface bg-surface-container-low p-2 rounded-lg border border-border">
-                                    {ticket.priority === 'URGENT' && <AlertTriangle className="h-4 w-4 text-health-critical" />}
+                                <div className="flex items-center gap-2 text-sm font-semibold text-on-surface bg-surface-container-low p-2 rounded-xl border border-border">
+                                    {ticket.priority === 'URGENT' && <AlertTriangle className="h-4 w-4 text-destructive" />}
                                     {ticket.priority}
                                 </div>
                             </div>
@@ -280,7 +280,7 @@ function TicketThreadContent() {
                             <div>
                                 <h3 className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-2.5">Assignment</h3>
                                 {ticket.assignee ? (
-                                    <div className="flex items-center gap-3 bg-surface-container-low p-2.5 rounded-lg border border-border">
+                                    <div className="flex items-center gap-3 bg-surface-container-low p-2.5 rounded-xl border border-border">
                                         <div className="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center text-xs font-bold text-on-surface border border-border/50 shrink-0 shadow-sm">
                                             {(ticket.assignee.user.name || ticket.assignee.user.email).charAt(0).toUpperCase()}
                                         </div>
@@ -290,7 +290,7 @@ function TicketThreadContent() {
                                         </div>
                                     </div>
                                 ) : (
-                                    <div className="text-sm text-muted-foreground italic bg-surface-container-low p-3 rounded-lg border border-border border-dashed text-center">Unassigned</div>
+                                    <div className="text-sm text-muted-foreground italic bg-surface-container-low p-3 rounded-xl border border-border border-dashed text-center">Unassigned</div>
                                 )}
                             </div>
                         </div>

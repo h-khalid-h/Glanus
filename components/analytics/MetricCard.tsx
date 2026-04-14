@@ -43,14 +43,14 @@ export default function MetricCard({
     };
 
     const getTrendColor = () => {
-        if (!change || change === 0) return 'text-slate-500';
+        if (!change || change === 0) return 'text-muted-foreground';
         return change > 0 ? 'text-health-good' : 'text-health-critical';
     };
 
     return (
-        <div className="bg-slate-900/50 backdrop-blur-sm rounded-xl p-6 border border-slate-800 shadow-sm hover:shadow-md transition-shadow">
+        <div className="bg-card backdrop-blur-sm rounded-xl p-6 border border-border shadow-sm hover:shadow-md transition-shadow">
             <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-medium text-slate-400 uppercase tracking-wider">
+                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
                     {title}
                 </h3>
                 {Icon && (
@@ -61,11 +61,11 @@ export default function MetricCard({
             </div>
 
             <div className="flex items-baseline gap-2">
-                <span className="text-3xl font-bold text-white">
+                <span className="text-3xl font-bold text-foreground">
                     {formatValue(value)}
                 </span>
                 {suffix && (
-                    <span className="text-lg text-slate-500">
+                    <span className="text-lg text-muted-foreground">
                         {suffix}
                     </span>
                 )}
@@ -89,7 +89,7 @@ export default function MetricCard({
                             </>
                         )}
                     </span>
-                    <span className="text-slate-500 font-normal">vs last month</span>
+                    <span className="text-muted-foreground font-normal">vs last month</span>
                 </div>
             )}
         </div>

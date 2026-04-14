@@ -7,9 +7,9 @@ function actionColor(action: string): string {
     const lower = action.toLowerCase();
     if (lower.includes('delete') || lower.includes('remove')) return 'bg-rose-500/10 text-rose-400';
     if (lower.includes('create') || lower.includes('add') || lower.includes('invite')) return 'bg-emerald-500/10 text-emerald-400';
-    if (lower.includes('update') || lower.includes('edit')) return 'bg-blue-500/10 text-blue-400';
+    if (lower.includes('update') || lower.includes('edit')) return 'bg-cortex/10 text-cortex';
     if (lower.includes('login') || lower.includes('auth')) return 'bg-violet-500/10 text-violet-400';
-    return 'bg-slate-700/60 text-slate-400';
+    return 'bg-muted text-muted-foreground';
 }
 
 function formatAction(action: string): string {
@@ -42,14 +42,14 @@ export default function SuperAdminAuditPage() {
         <div className="space-y-6">
             <div className="flex items-start justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold tracking-tight text-slate-100">Global Audit Log</h1>
-                    <p className="mt-1 text-sm text-slate-500">All actions across every workspace</p>
+                    <h1 className="text-2xl font-bold tracking-tight text-foreground">Global Audit Log</h1>
+                    <p className="mt-1 text-sm text-muted-foreground">All actions across every workspace</p>
                 </div>
                 <button
                     type="button"
                     onClick={fetchData}
                     disabled={loading}
-                    className="rounded-xl border border-slate-800 bg-slate-900/60 px-3 py-2 text-xs text-slate-400 transition-colors hover:border-slate-700 hover:text-slate-300 disabled:opacity-50"
+                    className="rounded-xl border border-border bg-card px-3 py-2 text-xs text-muted-foreground transition-colors hover:border-border hover:text-foreground disabled:opacity-50"
                 >
                     Refresh
                 </button>
@@ -61,13 +61,13 @@ export default function SuperAdminAuditPage() {
                 </div>
             )}
 
-            <div className="rounded-2xl border border-slate-800/60 bg-slate-900/50 overflow-hidden">
+            <div className="rounded-2xl border border-border/60 bg-card overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                         <thead>
-                            <tr className="border-b border-slate-800/60">
+                            <tr className="border-b border-border/60">
                                 {['Time', 'Action', 'Resource Type', 'Workspace', 'User'].map((h) => (
-                                    <th key={h} className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500 whitespace-nowrap">
+                                    <th key={h} className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">
                                         {h}
                                     </th>
                                 ))}
@@ -76,22 +76,22 @@ export default function SuperAdminAuditPage() {
                         <tbody>
                             {loading ? (
                                 Array.from({ length: 12 }).map((_, i) => (
-                                    <tr key={i} className="border-b border-slate-800/40 animate-pulse">
+                                    <tr key={i} className="border-b border-border/40 animate-pulse">
                                         {Array.from({ length: 5 }).map((__, j) => (
                                             <td key={j} className="px-5 py-3.5">
-                                                <div className="h-4 rounded bg-slate-800 w-24" />
+                                                <div className="h-4 rounded bg-muted w-24" />
                                             </td>
                                         ))}
                                     </tr>
                                 ))
                             ) : events.length === 0 ? (
                                 <tr>
-                                    <td colSpan={5} className="py-12 text-center text-slate-500">No audit events found</td>
+                                    <td colSpan={5} className="py-12 text-center text-muted-foreground">No audit events found</td>
                                 </tr>
                             ) : (
                                 events.map((event) => (
-                                    <tr key={event.id} className="border-b border-slate-800/40 hover:bg-slate-800/20 transition-colors">
-                                        <td className="px-5 py-3.5 whitespace-nowrap text-xs text-slate-600 font-mono">
+                                    <tr key={event.id} className="border-b border-border/40 hover:bg-muted/20 transition-colors">
+                                        <td className="px-5 py-3.5 whitespace-nowrap text-xs text-muted-foreground/60 font-mono">
                                             {new Date(event.createdAt).toLocaleString()}
                                         </td>
                                         <td className="px-5 py-3.5">
@@ -99,17 +99,17 @@ export default function SuperAdminAuditPage() {
                                                 {formatAction(event.action)}
                                             </span>
                                         </td>
-                                        <td className="px-5 py-3.5 text-xs text-slate-500">
+                                        <td className="px-5 py-3.5 text-xs text-muted-foreground">
                                             {event.resourceType ?? '—'}
                                         </td>
                                         <td className="px-5 py-3.5">
                                             {event.workspaceName ? (
-                                                <span className="rounded-md bg-slate-800/60 px-2 py-0.5 text-xs font-medium text-slate-300">
+                                                <span className="rounded-md bg-accent px-2 py-0.5 text-xs font-medium text-foreground">
                                                     {event.workspaceName}
                                                 </span>
                                             ) : '—'}
                                         </td>
-                                        <td className="px-5 py-3.5 text-xs text-slate-500 truncate max-w-[200px]">
+                                        <td className="px-5 py-3.5 text-xs text-muted-foreground truncate max-w-[200px]">
                                             {event.userEmail ?? '—'}
                                         </td>
                                     </tr>

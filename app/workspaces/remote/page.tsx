@@ -37,9 +37,9 @@ interface Pagination {
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; icon: typeof Wifi }> = {
     ACTIVE: { label: 'Active', color: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20', icon: Wifi },
-    DISCONNECTED: { label: 'Disconnected', color: 'bg-amber-500/10 text-amber-400 border-amber-500/20', icon: WifiOff },
-    TERMINATED: { label: 'Terminated', color: 'bg-slate-500/10 text-slate-400 border-slate-500/20', icon: XCircle },
-    ERROR: { label: 'Error', color: 'bg-red-500/10 text-red-400 border-red-500/20', icon: XCircle },
+    DISCONNECTED: { label: 'Disconnected', color: 'bg-amber-500/10 text-warning border-amber-500/20', icon: WifiOff },
+    TERMINATED: { label: 'Terminated', color: 'bg-muted/30 text-muted-foreground border-muted', icon: XCircle },
+    ERROR: { label: 'Error', color: 'bg-destructive/10 text-destructive border-destructive/20', icon: XCircle },
 };
 
 export default function RemoteSessionsPage() {
@@ -147,7 +147,7 @@ export default function RemoteSessionsPage() {
                     <button
                         onClick={fetchSessions}
                         disabled={isLoading}
-                        className="flex items-center gap-2 px-4 py-2 bg-surface-2 text-white rounded-lg hover:bg-surface-3 transition-colors disabled:opacity-50"
+                        className="flex items-center gap-2 px-4 py-2 bg-surface-2 text-foreground rounded-xl hover:bg-surface-3 transition-colors disabled:opacity-50"
                     >
                         <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
                         Refresh
@@ -164,13 +164,13 @@ export default function RemoteSessionsPage() {
                         placeholder="Search by asset name, user, or session ID..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full pl-9 pr-4 py-2 bg-surface-2 border border-border rounded-lg text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-nerve"
+                        className="w-full pl-9 pr-4 py-2 bg-surface-2 border border-border rounded-xl text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
                     />
                 </div>
                 <select
                     value={statusFilter}
                     onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
-                    className="w-full sm:w-52 px-3 py-2 bg-surface-2 border border-border rounded-lg text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-nerve appearance-none"
+                    className="w-full sm:w-52 px-3 py-2 bg-surface-2 border border-border rounded-xl text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary appearance-none"
                 >
                     <option value="">All Statuses</option>
                     <option value="ACTIVE">Active</option>
@@ -204,7 +204,7 @@ export default function RemoteSessionsPage() {
                             const config = STATUS_CONFIG[session.status] || STATUS_CONFIG.TERMINATED;
                             const StatusIcon = config.icon;
                             return (
-                                <div key={session.id} className="bg-surface-1 border border-border rounded-xl p-5 hover:border-nerve/30 transition-colors group">
+                                <div key={session.id} className="bg-surface-1 border border-border rounded-xl p-5 hover:border-primary/30 transition-colors group">
                                     <div className="flex items-start justify-between gap-4">
                                         <div className="flex items-start gap-4 flex-1 min-w-0">
                                             {/* Status Icon */}
@@ -215,7 +215,7 @@ export default function RemoteSessionsPage() {
                                                 {/* Asset & Session Info */}
                                                 <div className="flex items-center gap-3 mb-1">
                                                     <Link href={`/assets/${session.asset.id}`}
-                                                        className="text-base font-semibold text-foreground hover:text-nerve transition-colors truncate">
+                                                        className="text-base font-semibold text-foreground hover:text-primary transition-colors truncate">
                                                         {session.asset.name}
                                                     </Link>
                                                     <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold border ${config.color}`}>
@@ -248,14 +248,14 @@ export default function RemoteSessionsPage() {
                                             {session.status === 'ACTIVE' && (
                                                 <>
                                                     <Link href={`/remote/host/${session.id}`}
-                                                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border border-nerve/30 text-nerve rounded-lg hover:bg-nerve/10 transition-colors">
+                                                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border border-primary/30 text-primary rounded-xl hover:bg-primary/10 transition-colors">
                                                         <Play className="w-3.5 h-3.5" />
                                                         Connect
                                                     </Link>
                                                     <button
                                                         onClick={() => handleTerminate(session.id)}
                                                         disabled={terminatingId === session.id}
-                                                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border border-red-500/30 text-red-400 rounded-lg hover:bg-red-500/10 transition-colors disabled:opacity-50"
+                                                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border border-destructive/30 text-destructive rounded-xl hover:bg-destructive/10 transition-colors disabled:opacity-50"
                                                     >
                                                         <XCircle className="w-3.5 h-3.5" />
                                                         {terminatingId === session.id ? 'Ending...' : 'Terminate'}
@@ -275,9 +275,9 @@ export default function RemoteSessionsPage() {
             {pagination && pagination.totalPages > 1 && (
                 <div className="bg-surface-1 border border-border rounded-xl px-6 py-4 flex items-center justify-between">
                     <span className="text-sm text-muted-foreground">
-                        Showing <span className="font-medium text-white">{((pagination.page - 1) * pagination.limit) + 1}</span> to{' '}
-                        <span className="font-medium text-white">{Math.min(pagination.page * pagination.limit, pagination.total)}</span> of{' '}
-                        <span className="font-medium text-white">{pagination.total}</span> sessions
+                        Showing <span className="font-medium text-foreground">{((pagination.page - 1) * pagination.limit) + 1}</span> to{' '}
+                        <span className="font-medium text-foreground">{Math.min(pagination.page * pagination.limit, pagination.total)}</span> of{' '}
+                        <span className="font-medium text-foreground">{pagination.total}</span> sessions
                     </span>
                     <div className="flex gap-2">
                         <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={pagination.page === 1}

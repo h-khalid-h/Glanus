@@ -188,7 +188,7 @@ export default function CertificationCenterPage() {
                 <div className="max-w-4xl mx-auto">
                     <div className="text-center mb-12">
                         <h1 className="text-4xl font-bold text-foreground mb-4">Certification Center</h1>
-                        <p className="text-lg text-slate-400">
+                        <p className="text-lg text-muted-foreground">
                             Advance your certification level to unlock higher capacity and better matching
                         </p>
                     </div>
@@ -197,25 +197,25 @@ export default function CertificationCenterPage() {
                         {levels.map((level) => (
                             <div
                                 key={level.name}
-                                className="rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm overflow-hidden hover:shadow-xl transition"
+                                className="rounded-xl border border-border bg-card backdrop-blur-sm overflow-hidden hover:shadow-xl transition"
                             >
-                                <div className={`bg-gradient-to-r ${level.color} p-6 text-white`}>
+                                <div className={`bg-gradient-to-r ${level.color} p-6 text-foreground`}>
                                     <h2 className="text-3xl font-bold mb-2">{level.name}</h2>
                                     <p className="text-sm opacity-90">{level.description}</p>
                                 </div>
                                 <div className="p-6">
                                     <div className="mb-4">
-                                        <p className="text-sm text-slate-400 mb-1">Workspace Capacity</p>
-                                        <p className="text-2xl font-bold text-white">{level.capacity} workspaces</p>
+                                        <p className="text-sm text-muted-foreground mb-1">Workspace Capacity</p>
+                                        <p className="text-2xl font-bold text-foreground">{level.capacity} workspaces</p>
                                     </div>
-                                    <div className="mb-6 text-sm text-slate-400 space-y-1">
+                                    <div className="mb-6 text-sm text-muted-foreground space-y-1">
                                         <p>✓ 20 questions</p>
                                         <p>✓ 60 minutes</p>
                                         <p>✓ 80% to pass</p>
                                     </div>
                                     <button type="button"
                                         onClick={() => startExam(level.name)}
-                                        className="w-full bg-nerve text-white py-3 rounded-md font-semibold hover:brightness-110 transition"
+                                        className="w-full bg-primary text-foreground py-3 rounded-md font-semibold hover:brightness-110 transition"
                                     >
                                         Start {level.name} Exam
                                     </button>
@@ -237,21 +237,21 @@ export default function CertificationCenterPage() {
             <div className="py-8 px-4 sm:px-6 lg:px-8">
                 <div className="max-w-4xl mx-auto">
                     {/* Header */}
-                    <div className="rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm p-6 mb-6">
+                    <div className="rounded-xl border border-border bg-card backdrop-blur-sm p-6 mb-6">
                         <div className="flex justify-between items-center mb-4">
                             <div>
                                 <h1 className="text-2xl font-bold text-foreground">{exam.level} Certification Exam</h1>
-                                <p className="text-sm text-slate-400">
+                                <p className="text-sm text-muted-foreground">
                                     {answeredCount} / {questions.length} answered
                                 </p>
                             </div>
-                            <div className={`text-3xl font-bold ${timeRemaining < 300 ? 'text-health-critical' : 'text-white'}`}>
+                            <div className={`text-3xl font-bold ${timeRemaining < 300 ? 'text-destructive' : 'text-foreground'}`}>
                                 {formatTime(timeRemaining)}
                             </div>
                         </div>
-                        <div className="w-full bg-slate-700 rounded-full h-2">
+                        <div className="w-full bg-muted rounded-full h-2">
                             <div
-                                className="bg-nerve h-2 rounded-full transition-all"
+                                className="bg-primary h-2 rounded-full transition-all"
                                 style={{ width: `${progress}%` }}
                             />
                         </div>
@@ -260,12 +260,12 @@ export default function CertificationCenterPage() {
                     {/* Questions */}
                     <div className="space-y-6">
                         {questions.map((question) => (
-                            <div key={question.index} className="rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm p-6">
+                            <div key={question.index} className="rounded-xl border border-border bg-card backdrop-blur-sm p-6">
                                 <div className="flex items-start justify-between mb-4">
                                     <h3 className="text-lg font-semibold text-foreground">
                                         {question.index + 1}. {question.question}
                                     </h3>
-                                    <span className="text-xs bg-slate-800/50 px-2 py-1 rounded">
+                                    <span className="text-xs bg-muted/50 px-2 py-1 rounded">
                                         {question.category}
                                     </span>
                                 </div>
@@ -273,9 +273,9 @@ export default function CertificationCenterPage() {
                                     {question.options.map((option, optionIndex) => (
                                         <label
                                             key={optionIndex}
-                                            className={`flex items-center p-4 border-2 rounded-lg cursor-pointer transition ${answers[question.index.toString()] === optionIndex
-                                                ? 'border-nerve bg-nerve/5'
-                                                : 'border-slate-800 hover:border-slate-700'
+                                            className={`flex items-center p-4 border-2 rounded-xl cursor-pointer transition ${answers[question.index.toString()] === optionIndex
+                                                ? 'border-primary bg-primary/5'
+                                                : 'border-border hover:border-border'
                                                 }`}
                                         >
                                             <input
@@ -285,9 +285,9 @@ export default function CertificationCenterPage() {
                                                 onChange={() =>
                                                     setAnswers({ ...answers, [question.index.toString()]: optionIndex })
                                                 }
-                                                className="w-4 h-4 text-nerve mr-3"
+                                                className="w-4 h-4 text-primary mr-3"
                                             />
-                                            <span className="text-white">{option}</span>
+                                            <span className="text-foreground">{option}</span>
                                         </label>
                                     ))}
                                 </div>
@@ -296,16 +296,16 @@ export default function CertificationCenterPage() {
                     </div>
 
                     {/* Submit Button */}
-                    <div className="mt-8 rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm p-6">
+                    <div className="mt-8 rounded-xl border border-border bg-card backdrop-blur-sm p-6">
                         <button type="button"
                             onClick={handleSubmit}
                             disabled={answeredCount < questions.length || submitting}
-                            className="w-full bg-health-good text-white py-4 rounded-md font-semibold hover:bg-health-good/80 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="w-full bg-health-good text-foreground py-4 rounded-md font-semibold hover:bg-health-good/80 transition disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {submitting ? 'Submitting...' : `Submit Exam (${answeredCount}/${questions.length})`}
                         </button>
                         {answeredCount < questions.length && (
-                            <p className="mt-2 text-sm text-health-critical text-center">
+                            <p className="mt-2 text-sm text-destructive text-center">
                                 Please answer all questions before submitting
                             </p>
                         )}
@@ -322,7 +322,7 @@ export default function CertificationCenterPage() {
         return (
             <div className="py-12 px-4 sm:px-6 lg:px-8">
                 <div className="max-w-3xl mx-auto">
-                    <div className={`rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm p-8 text-center mb-8 ${passed ? 'border-t-8 border-health-good' : 'border-t-8 border-health-critical'
+                    <div className={`rounded-xl border border-border bg-card backdrop-blur-sm p-8 text-center mb-8 ${passed ? 'border-t-8 border-health-good' : 'border-t-8 border-destructive'
                         }`}>
                         <div className="mb-6">
                             {passed ? (
@@ -330,11 +330,11 @@ export default function CertificationCenterPage() {
                             ) : (
                                 <div className="text-6xl mb-4">😔</div>
                             )}
-                            <h1 className={`text-4xl font-bold mb-2 ${passed ? 'text-health-good' : 'text-health-critical'
+                            <h1 className={`text-4xl font-bold mb-2 ${passed ? 'text-health-good' : 'text-destructive'
                                 }`}>
                                 {passed ? 'Congratulations!' : 'Not Quite'}
                             </h1>
-                            <p className="text-xl text-slate-300">
+                            <p className="text-xl text-foreground">
                                 {passed
                                     ? `You passed the ${exam?.level} exam!`
                                     : `You scored ${result.results.score}% (need ${result.results.passingScore}%)`}
@@ -343,23 +343,23 @@ export default function CertificationCenterPage() {
 
                         <div className="grid grid-cols-3 gap-6 mb-8">
                             <div>
-                                <p className="text-3xl font-bold text-white">{result.results.score}%</p>
-                                <p className="text-sm text-slate-400">Your Score</p>
+                                <p className="text-3xl font-bold text-foreground">{result.results.score}%</p>
+                                <p className="text-sm text-muted-foreground">Your Score</p>
                             </div>
                             <div>
-                                <p className="text-3xl font-bold text-white">
+                                <p className="text-3xl font-bold text-foreground">
                                     {result.results.correctCount} / {result.results.totalQuestions}
                                 </p>
-                                <p className="text-sm text-slate-400">Correct Answers</p>
+                                <p className="text-sm text-muted-foreground">Correct Answers</p>
                             </div>
                             <div>
-                                <p className="text-3xl font-bold text-white">{result.results.passingScore}%</p>
-                                <p className="text-sm text-slate-400">Passing Score</p>
+                                <p className="text-3xl font-bold text-foreground">{result.results.passingScore}%</p>
+                                <p className="text-sm text-muted-foreground">Passing Score</p>
                             </div>
                         </div>
 
                         {passed && result.partner && (
-                            <div className="bg-health-good/10 border border-health-good/20 rounded-lg p-4 mb-6">
+                            <div className="bg-health-good/10 border border-health-good/20 rounded-xl p-4 mb-6">
                                 <p className="text-health-good font-semibold mb-2">Certification Upgraded!</p>
                                 <p className="text-health-good">
                                     You're now a <strong>{result.partner.certificationLevel}</strong> partner with
@@ -371,7 +371,7 @@ export default function CertificationCenterPage() {
                         <div className="flex space-x-4 justify-center">
                             <button type="button"
                                 onClick={() => router.push('/partners/dashboard')}
-                                className="px-6 py-3 bg-nerve text-white rounded-md font-semibold hover:brightness-110 transition"
+                                className="px-6 py-3 bg-primary text-foreground rounded-md font-semibold hover:brightness-110 transition"
                             >
                                 Go to Dashboard
                             </button>
@@ -384,7 +384,7 @@ export default function CertificationCenterPage() {
                                         setQuestions([]);
                                         setResult(null);
                                     }}
-                                    className="px-6 py-3 border border-slate-700 rounded-md font-semibold hover:bg-slate-900/30 transition"
+                                    className="px-6 py-3 border border-border rounded-md font-semibold hover:bg-muted/30 transition"
                                 >
                                     Try Again
                                 </button>
@@ -394,30 +394,30 @@ export default function CertificationCenterPage() {
 
                     {/* Detailed Results */}
                     {result.breakdown && (
-                        <div className="rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm p-6">
+                        <div className="rounded-xl border border-border bg-card backdrop-blur-sm p-6">
                             <h2 className="text-xl font-semibold mb-4">Detailed Results</h2>
                             <div className="space-y-4">
                                 {result.breakdown.map((item: BreakdownItem, index: number) => (
                                     <div
                                         key={index}
-                                        className={`border-l-4 p-4 ${item.isCorrect ? 'border-health-good bg-health-good/10' : 'border-health-critical bg-health-critical/10'
+                                        className={`border-l-4 p-4 ${item.isCorrect ? 'border-health-good bg-health-good/10' : 'border-destructive bg-destructive/10'
                                             }`}
                                     >
                                         <div className="flex items-start justify-between mb-2">
-                                            <p className="font-medium text-white">{item.question}</p>
-                                            <span className={`text-sm font-semibold ${item.isCorrect ? 'text-health-good' : 'text-health-critical'
+                                            <p className="font-medium text-foreground">{item.question}</p>
+                                            <span className={`text-sm font-semibold ${item.isCorrect ? 'text-health-good' : 'text-destructive'
                                                 }`}>
                                                 {item.isCorrect ? '✓' : '✗'}
                                             </span>
                                         </div>
                                         {!item.isCorrect && (
                                             <div className="text-sm space-y-1">
-                                                <p className="text-health-critical">Your answer: Option {item.userAnswer + 1}</p>
+                                                <p className="text-destructive">Your answer: Option {item.userAnswer + 1}</p>
                                                 <p className="text-health-good">Correct answer: Option {item.correctAnswer + 1}</p>
                                             </div>
                                         )}
                                         {item.explanation && (
-                                            <p className="mt-2 text-sm text-slate-400 italic">{item.explanation}</p>
+                                            <p className="mt-2 text-sm text-muted-foreground italic">{item.explanation}</p>
                                         )}
                                     </div>
                                 ))}

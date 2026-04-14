@@ -32,9 +32,9 @@ interface Invitation {
 
 const roleConfig: Record<string, { label: string; color: string; icon: typeof ShieldCheck }> = {
     OWNER: { label: 'Owner', color: 'bg-health-good/10 text-health-good border-health-good/20', icon: ShieldAlert },
-    ADMIN: { label: 'Admin', color: 'bg-nerve/10 text-nerve border-nerve/20', icon: ShieldCheck },
-    MEMBER: { label: 'Member', color: 'bg-blue-500/10 text-blue-400 border-blue-500/20', icon: Users },
-    VIEWER: { label: 'Viewer', color: 'bg-slate-800 text-slate-300 border-slate-700', icon: Eye },
+    ADMIN: { label: 'Admin', color: 'bg-primary/10 text-primary border-primary/20', icon: ShieldCheck },
+    MEMBER: { label: 'Member', color: 'bg-cortex/10 text-cortex border-cortex/20', icon: Users },
+    VIEWER: { label: 'Viewer', color: 'bg-muted text-foreground border-border', icon: Eye },
 };
 
 export default function WorkspaceMembersPage() {
@@ -167,7 +167,7 @@ export default function WorkspaceMembersPage() {
     if (isLoading) {
         return (
             <div className="max-w-5xl mx-auto space-y-6">
-                <div className="h-8 w-64 animate-pulse rounded-lg bg-surface-2" />
+                <div className="h-8 w-64 animate-pulse rounded-xl bg-surface-2" />
                 <div className="space-y-4">
                     {[...Array(3)].map((_, i) => (
                         <div key={i} className="h-16 animate-pulse rounded-xl bg-surface-2" />
@@ -182,7 +182,7 @@ export default function WorkspaceMembersPage() {
             <div className="text-center py-12">
                 <ShieldAlert className="w-12 h-12 text-destructive mx-auto mb-4" />
                 <h3 className="text-xl font-bold text-foreground mb-2">Access Denied</h3>
-                <p className="text-slate-400">{error}</p>
+                <p className="text-muted-foreground">{error}</p>
             </div>
         );
     }
@@ -200,19 +200,19 @@ export default function WorkspaceMembersPage() {
                     <div>
                         <h1 className="text-3xl font-bold text-foreground mb-2 flex items-center gap-3">
                             Team Members
-                            <span className="text-sm px-2.5 py-0.5 rounded-full bg-nerve/10 text-nerve font-medium">
+                            <span className="text-sm px-2.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
                                 {members.length}
                             </span>
                         </h1>
-                        <p className="text-slate-400">Manage who has access to this workspace and their roles</p>
+                        <p className="text-muted-foreground">Manage who has access to this workspace and their roles</p>
                     </div>
                     <div className="flex items-center gap-2">
                         <button type="button" onClick={() => { fetchMembers(); fetchInvitations(); }}
-                            className="flex items-center gap-1.5 px-3 py-2.5 border border-slate-700 text-slate-300 rounded-lg text-sm hover:bg-slate-800/50 transition">
+                            className="flex items-center gap-1.5 px-3 py-2.5 border border-border text-foreground rounded-xl text-sm hover:bg-muted/50 transition">
                             <RefreshCw size={14} />
                         </button>
                         <button type="button" onClick={() => setIsInviteModalOpen(true)}
-                            className="flex items-center gap-2 px-4 py-2.5 bg-nerve text-white rounded-lg text-sm font-medium hover:brightness-110 transition-all hover:shadow-lg hover:shadow-nerve/20">
+                            className="flex items-center gap-2 px-4 py-2.5 bg-primary text-foreground rounded-xl text-sm font-medium hover:brightness-110 transition-all hover:shadow-lg hover:shadow-primary/20">
                             <UserPlus className="w-4 h-4" />
                             Invite Member
                         </button>
@@ -222,24 +222,24 @@ export default function WorkspaceMembersPage() {
 
             {/* Pending Invitations */}
             {invitations.length > 0 && (
-                <div className="mb-6 bg-slate-900/50 border border-slate-800 rounded-xl overflow-hidden backdrop-blur-sm">
-                    <div className="px-6 py-3 border-b border-slate-800 flex items-center gap-2">
-                        <Clock size={14} className="text-amber-400" />
+                <div className="mb-6 bg-card border border-border rounded-xl overflow-hidden backdrop-blur-sm">
+                    <div className="px-6 py-3 border-b border-border flex items-center gap-2">
+                        <Clock size={14} className="text-warning" />
                         <span className="text-sm font-semibold text-foreground">Pending Invitations</span>
-                        <span className="text-xs px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400 font-medium">
+                        <span className="text-xs px-1.5 py-0.5 rounded bg-amber-500/10 text-warning font-medium">
                             {invitations.length}
                         </span>
                     </div>
-                    <div className="divide-y divide-slate-800/50">
+                    <div className="divide-y divide-border/50">
                         {invitations.map(inv => (
-                            <div key={inv.id} className="px-6 py-3 flex items-center justify-between hover:bg-slate-800/20 transition">
+                            <div key={inv.id} className="px-6 py-3 flex items-center justify-between hover:bg-muted/20 transition">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-400">
+                                    <div className="w-8 h-8 rounded-full bg-amber-500/10 flex items-center justify-center text-warning">
                                         <Mail size={14} />
                                     </div>
                                     <div>
                                         <p className="text-sm font-medium text-foreground">{inv.email}</p>
-                                        <p className="text-xs text-slate-500">
+                                        <p className="text-xs text-muted-foreground">
                                             Invited by {inv.inviter?.name || inv.inviter?.email || 'Unknown'}
                                             {' • '}Expires {new Date(inv.expiresAt).toLocaleDateString()}
                                         </p>
@@ -250,7 +250,7 @@ export default function WorkspaceMembersPage() {
                                         {inv.role}
                                     </span>
                                     <button onClick={() => handleRevokeInvitation(inv.id)}
-                                        className="text-xs text-slate-500 hover:text-red-400 px-2 py-1 transition">
+                                        className="text-xs text-muted-foreground hover:text-destructive px-2 py-1 transition">
                                         Revoke
                                     </button>
                                 </div>
@@ -261,29 +261,29 @@ export default function WorkspaceMembersPage() {
             )}
 
             {/* Member List */}
-            <div className="bg-slate-900/50 border border-slate-800 rounded-xl overflow-hidden overflow-x-auto backdrop-blur-sm">
+            <div className="bg-card border border-border rounded-xl overflow-hidden overflow-x-auto backdrop-blur-sm">
                 <table className="w-full min-w-[640px] text-left border-collapse">
                     <thead>
-                        <tr className="border-b border-slate-800 text-xs font-semibold text-slate-400 tracking-wider">
+                        <tr className="border-b border-border text-xs font-semibold text-muted-foreground tracking-wider">
                             <th className="px-6 py-4 pb-3 w-1/2">User</th>
                             <th className="px-6 py-4 pb-3">Role</th>
                             <th className="px-6 py-4 pb-3">Joined</th>
                             <th className="px-6 py-4 pb-3 text-right">Actions</th>
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-800/50">
+                    <tbody className="divide-y divide-border/50">
                         {sortedMembers.map((member) => (
-                            <tr key={member.id} className="hover:bg-slate-800/30 transition-colors group">
+                            <tr key={member.id} className="hover:bg-muted/30 transition-colors group">
                                 <td className="px-6 py-4">
                                     <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center font-medium text-slate-300 shrink-0">
+                                        <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center font-medium text-foreground shrink-0">
                                             {member.user.name?.[0]?.toUpperCase() || member.user.email[0].toUpperCase()}
                                         </div>
                                         <div>
                                             <p className="font-medium text-foreground text-sm">
                                                 {member.user.name || 'Unknown User'}
                                             </p>
-                                            <p className="text-xs text-slate-400">
+                                            <p className="text-xs text-muted-foreground">
                                                 {member.user.email}
                                             </p>
                                         </div>
@@ -294,44 +294,44 @@ export default function WorkspaceMembersPage() {
                                         {member.role}
                                     </span>
                                 </td>
-                                <td className="px-6 py-4 text-sm text-slate-400">
+                                <td className="px-6 py-4 text-sm text-muted-foreground">
                                     {new Date(member.joinedAt).toLocaleDateString()}
                                 </td>
                                 <td className="px-6 py-4 text-right">
                                     {member.role !== 'OWNER' && (
                                         <div className="relative inline-block">
                                             <button onClick={() => setOpenMenu(openMenu === member.id ? null : member.id)}
-                                                className="p-1.5 rounded-lg hover:bg-slate-800 text-slate-500 hover:text-foreground transition opacity-0 group-hover:opacity-100">
+                                                className="p-1.5 rounded-xl hover:bg-muted text-muted-foreground hover:text-foreground transition opacity-0 group-hover:opacity-100">
                                                 <MoreHorizontal size={16} />
                                             </button>
                                             {openMenu === member.id && (
-                                                <div className="absolute right-0 top-full mt-1 z-20 bg-slate-900 border border-slate-700 rounded-lg shadow-xl py-1 w-48">
-                                                    <p className="px-3 py-1.5 text-[10px] uppercase tracking-wider text-slate-500 font-semibold">Change Role</p>
+                                                <div className="absolute right-0 top-full mt-1 z-20 bg-surface-1 border border-border rounded-xl shadow-xl py-1 w-48">
+                                                    <p className="px-3 py-1.5 text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Change Role</p>
                                                     {(['ADMIN', 'MEMBER', 'VIEWER'] as const).filter(r => r !== member.role).map(role => (
                                                         <button key={role} onClick={() => handleRoleChange(member.id, role)}
-                                                            className="w-full text-left px-3 py-2 text-sm text-slate-300 hover:bg-slate-800 hover:text-foreground flex items-center gap-2 transition">
-                                                            <ChevronDown size={12} className="text-slate-600" />
+                                                            className="w-full text-left px-3 py-2 text-sm text-foreground hover:bg-muted hover:text-foreground flex items-center gap-2 transition">
+                                                            <ChevronDown size={12} className="text-muted-foreground/60" />
                                                             Set as {role.charAt(0) + role.slice(1).toLowerCase()}
                                                         </button>
                                                     ))}
-                                                    <div className="border-t border-slate-800 my-1" />
+                                                    <div className="border-t border-border my-1" />
                                                     {confirmRemove === member.id ? (
                                                         <div className="px-3 py-2">
-                                                            <p className="text-xs text-red-400 mb-2">Remove this member?</p>
+                                                            <p className="text-xs text-destructive mb-2">Remove this member?</p>
                                                             <div className="flex gap-2">
                                                                 <button onClick={() => handleRemoveMember(member.id)}
-                                                                    className="flex-1 text-xs bg-red-500/20 text-red-400 rounded px-2 py-1 hover:bg-red-500/30 transition">
+                                                                    className="flex-1 text-xs bg-destructive/20 text-destructive rounded px-2 py-1 hover:bg-destructive/30 transition">
                                                                     Confirm
                                                                 </button>
                                                                 <button onClick={() => setConfirmRemove(null)}
-                                                                    className="flex-1 text-xs bg-slate-800 text-slate-400 rounded px-2 py-1 hover:bg-slate-700 transition">
+                                                                    className="flex-1 text-xs bg-muted text-muted-foreground rounded px-2 py-1 hover:bg-muted transition">
                                                                     Cancel
                                                                 </button>
                                                             </div>
                                                         </div>
                                                     ) : (
                                                         <button onClick={() => setConfirmRemove(member.id)}
-                                                            className="w-full text-left px-3 py-2 text-sm text-red-400 hover:bg-red-500/10 flex items-center gap-2 transition">
+                                                            className="w-full text-left px-3 py-2 text-sm text-destructive hover:bg-destructive/10 flex items-center gap-2 transition">
                                                             <Trash2 size={12} />
                                                             Remove Member
                                                         </button>
@@ -350,29 +350,29 @@ export default function WorkspaceMembersPage() {
             {/* Invite Modal */}
             {isInviteModalOpen && (
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-slate-900 border border-slate-800 rounded-xl max-w-md w-full p-6 shadow-2xl">
+                    <div className="bg-surface-1 border border-border rounded-xl max-w-md w-full p-6 shadow-2xl">
                         <div className="flex items-center gap-3 mb-6">
-                            <div className="w-10 h-10 rounded-full bg-nerve/10 flex items-center justify-center text-nerve">
+                            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
                                 <Mail className="w-5 h-5" />
                             </div>
                             <div>
                                 <h2 className="text-lg font-bold text-foreground">Invite Teammate</h2>
-                                <p className="text-xs text-slate-400">They will receive an email link to join</p>
+                                <p className="text-xs text-muted-foreground">They will receive an email link to join</p>
                             </div>
                         </div>
 
                         <form onSubmit={handleInvite} className="space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-slate-300 mb-1.5">Email Address</label>
+                                <label className="block text-sm font-medium text-foreground mb-1.5">Email Address</label>
                                 <input type="email" required value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)}
                                     placeholder="colleague@company.com"
-                                    className="w-full bg-slate-800 border-slate-700 text-white rounded-lg px-4 py-2.5 outline-none focus:ring-2 focus:ring-nerve/50" />
+                                    className="w-full bg-muted border-border text-foreground rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-primary/50" />
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-slate-300 mb-1.5">Assign Role</label>
+                                <label className="block text-sm font-medium text-foreground mb-1.5">Assign Role</label>
                                 <select value={inviteRole} onChange={(e) => setInviteRole(e.target.value as 'ADMIN' | 'MEMBER' | 'VIEWER')}
-                                    className="w-full bg-slate-800 border-slate-700 text-white rounded-lg px-4 py-2.5 outline-none focus:ring-2 focus:ring-nerve/50 appearance-none">
+                                    className="w-full bg-muted border-border text-foreground rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-primary/50 appearance-none">
                                     <option value="VIEWER">Viewer (Read-only access)</option>
                                     <option value="MEMBER">Member (Can manage assets)</option>
                                     <option value="ADMIN">Admin (Full access except billing)</option>
@@ -381,11 +381,11 @@ export default function WorkspaceMembersPage() {
 
                             <div className="flex items-center justify-end gap-3 mt-8">
                                 <button type="button" onClick={() => setIsInviteModalOpen(false)}
-                                    className="px-4 py-2 text-sm font-medium text-slate-300 hover:text-white transition-colors">
+                                    className="px-4 py-2 text-sm font-medium text-foreground hover:text-foreground transition-colors">
                                     Cancel
                                 </button>
                                 <button type="submit" disabled={isSubmitting}
-                                    className="px-6 py-2 bg-nerve hover:brightness-110 text-white text-sm font-medium rounded-lg transition-all disabled:opacity-50">
+                                    className="px-6 py-2 bg-primary hover:brightness-110 text-foreground text-sm font-medium rounded-xl transition-all disabled:opacity-50">
                                     {isSubmitting ? 'Sending...' : 'Send Invite'}
                                 </button>
                             </div>

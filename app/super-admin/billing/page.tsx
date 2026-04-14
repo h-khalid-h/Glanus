@@ -119,25 +119,25 @@ const TABS: { id: Tab; label: string; icon: typeof DollarSign }[] = [
 const paymentStatusStyles: Record<string, string> = {
     SUCCEEDED: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
     FAILED: 'bg-rose-500/10 text-rose-400 border-rose-500/20',
-    PENDING: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
-    REFUNDED: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
+    PENDING: 'bg-amber-500/10 text-warning border-amber-500/20',
+    REFUNDED: 'bg-cortex/10 text-cortex border-cortex/20',
 };
 
 const eventTypeStyles: Record<string, string> = {
     payment_succeeded: 'bg-emerald-500/10 text-emerald-400',
     payment_failed: 'bg-rose-500/10 text-rose-400',
-    checkout_completed: 'bg-blue-500/10 text-blue-400',
+    checkout_completed: 'bg-cortex/10 text-cortex',
     plan_change: 'bg-violet-500/10 text-violet-400',
-    subscription_canceled: 'bg-amber-500/10 text-amber-400',
+    subscription_canceled: 'bg-amber-500/10 text-warning',
     manual_plan_override: 'bg-cyan-500/10 text-cyan-400',
     plan_config_updated: 'bg-indigo-500/10 text-indigo-400',
 };
 
 const planBadgeStyles: Record<string, string> = {
-    FREE: 'bg-slate-500/10 text-slate-400 border-slate-500/20',
-    PERSONAL: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
+    FREE: 'bg-muted/30 text-muted-foreground border-muted',
+    PERSONAL: 'bg-cortex/10 text-cortex border-cortex/20',
     TEAM: 'bg-violet-500/10 text-violet-400 border-violet-500/20',
-    ENTERPRISE: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+    ENTERPRISE: 'bg-amber-500/10 text-warning border-amber-500/20',
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -293,8 +293,8 @@ export default function BillingDashboardPage() {
             {/* Header */}
             <div className="flex items-start justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold tracking-tight text-slate-100">Billing & Revenue</h1>
-                    <p className="mt-1 text-sm text-slate-500">
+                    <h1 className="text-2xl font-bold tracking-tight text-foreground">Billing & Revenue</h1>
+                    <p className="mt-1 text-sm text-muted-foreground">
                         Manage plans, track payments, and monitor revenue
                     </p>
                 </div>
@@ -309,7 +309,7 @@ export default function BillingDashboardPage() {
                     <button
                         onClick={handleRefresh}
                         disabled={loading}
-                        className="inline-flex items-center gap-2 rounded-xl border border-slate-700/50 bg-slate-800/30 px-3 py-2 text-xs font-medium text-slate-400 transition-colors hover:bg-slate-800/60 hover:text-slate-300 disabled:opacity-50"
+                        className="inline-flex items-center gap-2 rounded-xl border border-border bg-muted/30 px-3 py-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-50"
                     >
                         <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
                         Refresh
@@ -326,16 +326,16 @@ export default function BillingDashboardPage() {
             )}
 
             {/* Tabs */}
-            <div className="flex gap-1 rounded-xl border border-slate-800/50 bg-slate-900/30 p-1">
+            <div className="flex gap-1 rounded-xl border border-border/50 bg-muted/30 p-1">
                 {TABS.map(({ id, label, icon: Icon }) => (
                     <button
                         key={id}
                         onClick={() => setActiveTab(id)}
                         className={[
-                            'flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all',
+                            'flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition-all',
                             activeTab === id
-                                ? 'bg-slate-800/80 text-slate-100 shadow-sm'
-                                : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800/30',
+                                ? 'bg-muted/80 text-foreground shadow-sm'
+                                : 'text-muted-foreground hover:text-foreground hover:bg-muted/30',
                         ].join(' ')}
                     >
                         <Icon className="h-4 w-4" />
@@ -384,8 +384,8 @@ export default function BillingDashboardPage() {
                     {/* Plan distribution */}
                     <div className="grid gap-4 lg:grid-cols-2">
                         {/* Plan Distribution */}
-                        <div className="rounded-2xl border border-slate-800/50 bg-[#0a1628]/60 p-6">
-                            <h3 className="mb-4 text-sm font-semibold text-slate-300">Plan Distribution</h3>
+                        <div className="rounded-2xl border border-border/50 bg-[#0a1628]/60 p-6">
+                            <h3 className="mb-4 text-sm font-semibold text-foreground">Plan Distribution</h3>
                             {metrics?.planDistribution && Object.keys(metrics.planDistribution).length > 0 ? (
                                 <div className="space-y-3">
                                     {Object.entries(metrics.planDistribution).map(([plan, count]) => {
@@ -397,9 +397,9 @@ export default function BillingDashboardPage() {
                                                     <span className={`inline-flex items-center gap-1.5 rounded-md border px-2 py-0.5 font-medium ${planBadgeStyles[plan] || planBadgeStyles.FREE}`}>
                                                         {plan}
                                                     </span>
-                                                    <span className="text-slate-400">{count} ({pct.toFixed(0)}%)</span>
+                                                    <span className="text-muted-foreground">{count} ({pct.toFixed(0)}%)</span>
                                                 </div>
-                                                <div className="h-2 overflow-hidden rounded-full bg-slate-800/60">
+                                                <div className="h-2 overflow-hidden rounded-full bg-accent">
                                                     <div
                                                         className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-violet-500 transition-all duration-500"
                                                         style={{ width: `${pct}%` }}
@@ -410,13 +410,13 @@ export default function BillingDashboardPage() {
                                     })}
                                 </div>
                             ) : (
-                                <p className="text-sm text-slate-600">No subscription data yet</p>
+                                <p className="text-sm text-muted-foreground/60">No subscription data yet</p>
                             )}
                         </div>
 
                         {/* Revenue Trend */}
-                        <div className="rounded-2xl border border-slate-800/50 bg-[#0a1628]/60 p-6">
-                            <h3 className="mb-4 text-sm font-semibold text-slate-300">Revenue Trend (12 months)</h3>
+                        <div className="rounded-2xl border border-border/50 bg-[#0a1628]/60 p-6">
+                            <h3 className="mb-4 text-sm font-semibold text-foreground">Revenue Trend (12 months)</h3>
                             {metrics?.revenueByMonth && metrics.revenueByMonth.length > 0 ? (
                                 <div className="space-y-2">
                                     {metrics.revenueByMonth.map(({ month, revenue, count }) => {
@@ -424,17 +424,17 @@ export default function BillingDashboardPage() {
                                         const pct = maxRev > 0 ? (revenue / maxRev * 100) : 0;
                                         return (
                                             <div key={month} className="flex items-center gap-3">
-                                                <span className="w-16 shrink-0 text-xs text-slate-500">{month}</span>
-                                                <div className="flex-1 h-3 overflow-hidden rounded-full bg-slate-800/60">
+                                                <span className="w-16 shrink-0 text-xs text-muted-foreground">{month}</span>
+                                                <div className="flex-1 h-3 overflow-hidden rounded-full bg-accent">
                                                     <div
                                                         className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-400 transition-all duration-500"
                                                         style={{ width: `${pct}%` }}
                                                     />
                                                 </div>
-                                                <span className="w-20 shrink-0 text-right text-xs text-slate-400">
+                                                <span className="w-20 shrink-0 text-right text-xs text-muted-foreground">
                                                     {formatCurrency(revenue)}
                                                 </span>
-                                                <span className="w-8 shrink-0 text-right text-[10px] text-slate-600">
+                                                <span className="w-8 shrink-0 text-right text-[10px] text-muted-foreground/60">
                                                     ×{count}
                                                 </span>
                                             </div>
@@ -442,7 +442,7 @@ export default function BillingDashboardPage() {
                                     })}
                                 </div>
                             ) : (
-                                <p className="text-sm text-slate-600">No revenue data yet</p>
+                                <p className="text-sm text-muted-foreground/60">No revenue data yet</p>
                             )}
                         </div>
                     </div>
@@ -455,11 +455,11 @@ export default function BillingDashboardPage() {
                     {/* Filters */}
                     <div className="flex items-center gap-3">
                         <div className="relative">
-                            <Filter className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-600" />
+                            <Filter className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground/60" />
                             <select
                                 value={paymentFilter}
                                 onChange={(e) => { setPaymentFilter(e.target.value); setPaymentPage(1); }}
-                                className="appearance-none rounded-xl border border-slate-800/50 bg-slate-900/50 pl-9 pr-8 py-2 text-xs text-slate-300 focus:border-indigo-500/50 focus:outline-none focus:ring-1 focus:ring-indigo-500/30"
+                                className="appearance-none rounded-xl border border-border/50 bg-card pl-9 pr-8 py-2 text-xs text-foreground focus:border-indigo-500/50 focus:outline-none focus:ring-1 focus:ring-indigo-500/30"
                             >
                                 <option value="">All statuses</option>
                                 <option value="SUCCEEDED">Succeeded</option>
@@ -468,35 +468,35 @@ export default function BillingDashboardPage() {
                                 <option value="REFUNDED">Refunded</option>
                             </select>
                         </div>
-                        <span className="text-xs text-slate-600">{paymentsTotal} total payments</span>
+                        <span className="text-xs text-muted-foreground/60">{paymentsTotal} total payments</span>
                     </div>
 
                     {/* Table */}
-                    <div className="overflow-hidden rounded-2xl border border-slate-800/50 bg-[#0a1628]/60">
+                    <div className="overflow-hidden rounded-2xl border border-border/50 bg-[#0a1628]/60">
                         <div className="overflow-x-auto">
                             <table className="w-full text-left text-xs">
                                 <thead>
-                                    <tr className="border-b border-slate-800/50">
-                                        <th className="px-4 py-3 font-medium text-slate-500">Date</th>
-                                        <th className="px-4 py-3 font-medium text-slate-500">Workspace</th>
-                                        <th className="px-4 py-3 font-medium text-slate-500">Plan</th>
-                                        <th className="px-4 py-3 font-medium text-slate-500">Amount</th>
-                                        <th className="px-4 py-3 font-medium text-slate-500">Status</th>
-                                        <th className="px-4 py-3 font-medium text-slate-500">Period</th>
-                                        <th className="px-4 py-3 font-medium text-slate-500">Invoice</th>
+                                    <tr className="border-b border-border/50">
+                                        <th className="px-4 py-3 font-medium text-muted-foreground">Date</th>
+                                        <th className="px-4 py-3 font-medium text-muted-foreground">Workspace</th>
+                                        <th className="px-4 py-3 font-medium text-muted-foreground">Plan</th>
+                                        <th className="px-4 py-3 font-medium text-muted-foreground">Amount</th>
+                                        <th className="px-4 py-3 font-medium text-muted-foreground">Status</th>
+                                        <th className="px-4 py-3 font-medium text-muted-foreground">Period</th>
+                                        <th className="px-4 py-3 font-medium text-muted-foreground">Invoice</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-slate-800/30">
+                                <tbody className="divide-y divide-border/40">
                                     {payments.length === 0 ? (
                                         <tr>
-                                            <td colSpan={7} className="px-4 py-8 text-center text-slate-600">
+                                            <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground/60">
                                                 No payments recorded yet
                                             </td>
                                         </tr>
                                     ) : payments.map((p) => (
-                                        <tr key={p.id} className="transition-colors hover:bg-slate-800/20">
-                                            <td className="px-4 py-3 text-slate-400">{formatDate(p.paidAt || p.createdAt)}</td>
-                                            <td className="px-4 py-3 font-medium text-slate-300">{p.workspaceName}</td>
+                                        <tr key={p.id} className="transition-colors hover:bg-muted/20">
+                                            <td className="px-4 py-3 text-muted-foreground">{formatDate(p.paidAt || p.createdAt)}</td>
+                                            <td className="px-4 py-3 font-medium text-foreground">{p.workspaceName}</td>
                                             <td className="px-4 py-3">
                                                 {p.plan && (
                                                     <span className={`inline-flex rounded-md border px-2 py-0.5 text-[10px] font-semibold ${planBadgeStyles[p.plan] || planBadgeStyles.FREE}`}>
@@ -504,7 +504,7 @@ export default function BillingDashboardPage() {
                                                     </span>
                                                 )}
                                             </td>
-                                            <td className="px-4 py-3 font-mono text-slate-300">{formatCurrency(p.amount, p.currency)}</td>
+                                            <td className="px-4 py-3 font-mono text-foreground">{formatCurrency(p.amount, p.currency)}</td>
                                             <td className="px-4 py-3">
                                                 <span className={`inline-flex rounded-md border px-2 py-0.5 text-[10px] font-semibold ${paymentStatusStyles[p.status] || ''}`}>
                                                     {p.status}
@@ -513,7 +513,7 @@ export default function BillingDashboardPage() {
                                                     <span className="ml-1 text-[10px] text-rose-400/70" title={p.failureReason}>⚠</span>
                                                 )}
                                             </td>
-                                            <td className="px-4 py-3 text-slate-500">
+                                            <td className="px-4 py-3 text-muted-foreground">
                                                 {p.periodStart && p.periodEnd
                                                     ? `${formatDate(p.periodStart)} — ${formatDate(p.periodEnd)}`
                                                     : '—'}
@@ -538,22 +538,22 @@ export default function BillingDashboardPage() {
 
                         {/* Pagination */}
                         {paymentPages > 1 && (
-                            <div className="flex items-center justify-between border-t border-slate-800/50 px-4 py-3">
-                                <span className="text-xs text-slate-600">
+                            <div className="flex items-center justify-between border-t border-border/50 px-4 py-3">
+                                <span className="text-xs text-muted-foreground/60">
                                     Page {paymentPage} of {paymentPages}
                                 </span>
                                 <div className="flex gap-1">
                                     <button
                                         onClick={() => setPaymentPage(p => Math.max(1, p - 1))}
                                         disabled={paymentPage <= 1}
-                                        className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-800/40 disabled:opacity-30"
+                                        className="rounded-xl p-1.5 text-muted-foreground hover:bg-muted/40 disabled:opacity-30"
                                     >
                                         <ChevronLeft className="h-4 w-4" />
                                     </button>
                                     <button
                                         onClick={() => setPaymentPage(p => Math.min(paymentPages, p + 1))}
                                         disabled={paymentPage >= paymentPages}
-                                        className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-800/40 disabled:opacity-30"
+                                        className="rounded-xl p-1.5 text-muted-foreground hover:bg-muted/40 disabled:opacity-30"
                                     >
                                         <ChevronRight className="h-4 w-4" />
                                     </button>
@@ -567,19 +567,19 @@ export default function BillingDashboardPage() {
             {/* ── EVENTS TAB ────────────────────────────────────────────────── */}
             {activeTab === 'events' && (
                 <div className="space-y-4">
-                    <div className="text-xs text-slate-600">{eventsTotal} total events</div>
+                    <div className="text-xs text-muted-foreground/60">{eventsTotal} total events</div>
 
                     <div className="space-y-2">
                         {events.length === 0 ? (
-                            <div className="rounded-2xl border border-slate-800/50 bg-[#0a1628]/60 px-6 py-8 text-center text-sm text-slate-600">
+                            <div className="rounded-2xl border border-border/50 bg-[#0a1628]/60 px-6 py-8 text-center text-sm text-muted-foreground/60">
                                 No billing events recorded yet
                             </div>
                         ) : events.map((e) => (
-                            <div key={e.id} className="rounded-xl border border-slate-800/50 bg-[#0a1628]/60 px-4 py-3 transition-colors hover:bg-slate-800/20">
+                            <div key={e.id} className="rounded-xl border border-border/50 bg-[#0a1628]/60 px-4 py-3 transition-colors hover:bg-muted/20">
                                 <div className="flex items-start justify-between gap-4">
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-2 mb-1">
-                                            <span className={`inline-flex rounded-md px-2 py-0.5 text-[10px] font-semibold ${eventTypeStyles[e.type] || 'bg-slate-500/10 text-slate-400'}`}>
+                                            <span className={`inline-flex rounded-md px-2 py-0.5 text-[10px] font-semibold ${eventTypeStyles[e.type] || 'bg-muted/30 text-muted-foreground'}`}>
                                                 {e.type.replace(/_/g, ' ')}
                                             </span>
                                             {e.actorType === 'admin' && (
@@ -593,16 +593,16 @@ export default function BillingDashboardPage() {
                                                 </span>
                                             )}
                                         </div>
-                                        <p className="text-xs text-slate-400 truncate">{e.description}</p>
+                                        <p className="text-xs text-muted-foreground truncate">{e.description}</p>
                                         {e.workspaceName && (
-                                            <p className="text-[10px] text-slate-600 mt-0.5">{e.workspaceName}</p>
+                                            <p className="text-[10px] text-muted-foreground/60 mt-0.5">{e.workspaceName}</p>
                                         )}
                                     </div>
                                     <div className="shrink-0 text-right">
                                         {e.amount != null && (
-                                            <p className="text-xs font-mono text-slate-300">{formatCurrency(e.amount)}</p>
+                                            <p className="text-xs font-mono text-foreground">{formatCurrency(e.amount)}</p>
                                         )}
-                                        <p className="text-[10px] text-slate-600">{formatDateTime(e.createdAt)}</p>
+                                        <p className="text-[10px] text-muted-foreground/60">{formatDateTime(e.createdAt)}</p>
                                     </div>
                                 </div>
                             </div>
@@ -612,19 +612,19 @@ export default function BillingDashboardPage() {
                     {/* Pagination */}
                     {eventPages > 1 && (
                         <div className="flex items-center justify-between">
-                            <span className="text-xs text-slate-600">Page {eventPage} of {eventPages}</span>
+                            <span className="text-xs text-muted-foreground/60">Page {eventPage} of {eventPages}</span>
                             <div className="flex gap-1">
                                 <button
                                     onClick={() => setEventPage(p => Math.max(1, p - 1))}
                                     disabled={eventPage <= 1}
-                                    className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-800/40 disabled:opacity-30"
+                                    className="rounded-xl p-1.5 text-muted-foreground hover:bg-muted/40 disabled:opacity-30"
                                 >
                                     <ChevronLeft className="h-4 w-4" />
                                 </button>
                                 <button
                                     onClick={() => setEventPage(p => Math.min(eventPages, p + 1))}
                                     disabled={eventPage >= eventPages}
-                                    className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-800/40 disabled:opacity-30"
+                                    className="rounded-xl p-1.5 text-muted-foreground hover:bg-muted/40 disabled:opacity-30"
                                 >
                                     <ChevronRight className="h-4 w-4" />
                                 </button>
@@ -637,7 +637,7 @@ export default function BillingDashboardPage() {
             {/* ── PLANS TAB ─────────────────────────────────────────────────── */}
             {activeTab === 'plans' && (
                 <div className="space-y-4">
-                    <p className="text-xs text-slate-500">
+                    <p className="text-xs text-muted-foreground">
                         Configure plan pricing, limits, and Stripe price IDs. Changes take effect for new subscriptions.
                     </p>
 
@@ -652,17 +652,17 @@ export default function BillingDashboardPage() {
                                     className={`rounded-2xl border bg-[#0a1628]/60 p-5 transition-all ${
                                         isEditing
                                             ? 'border-indigo-500/30 ring-1 ring-indigo-500/20'
-                                            : 'border-slate-800/50 hover:border-slate-700/50'
+                                            : 'border-border/50 hover:border-border'
                                     }`}
                                 >
                                     {/* Plan header */}
                                     <div className="flex items-center justify-between mb-4">
                                         <div className="flex items-center gap-2">
-                                            <span className={`inline-flex rounded-lg border px-3 py-1 text-sm font-bold ${planBadgeStyles[planKey] || planBadgeStyles.FREE}`}>
+                                            <span className={`inline-flex rounded-xl border px-3 py-1 text-sm font-bold ${planBadgeStyles[planKey] || planBadgeStyles.FREE}`}>
                                                 {planKey}
                                             </span>
                                             {config?.highlighted && (
-                                                <span className="text-[10px] text-amber-400">★ Featured</span>
+                                                <span className="text-[10px] text-warning">★ Featured</span>
                                             )}
                                         </div>
                                         {!isEditing ? (
@@ -679,14 +679,14 @@ export default function BillingDashboardPage() {
                                             <div className="flex gap-2">
                                                 <button
                                                     onClick={() => { setEditingPlan(null); setEditForm({}); }}
-                                                    className="text-xs text-slate-500 hover:text-slate-300"
+                                                    className="text-xs text-muted-foreground hover:text-foreground"
                                                 >
                                                     Cancel
                                                 </button>
                                                 <button
                                                     onClick={handleSavePlan}
                                                     disabled={saving}
-                                                    className="rounded-lg bg-indigo-500/20 px-3 py-1 text-xs font-medium text-indigo-300 hover:bg-indigo-500/30 disabled:opacity-50"
+                                                    className="rounded-xl bg-indigo-500/20 px-3 py-1 text-xs font-medium text-indigo-300 hover:bg-indigo-500/30 disabled:opacity-50"
                                                 >
                                                     {saving ? 'Saving…' : 'Save'}
                                                 </button>
@@ -699,112 +699,112 @@ export default function BillingDashboardPage() {
                                         <div className="space-y-3">
                                             <div className="grid grid-cols-2 gap-3">
                                                 <div>
-                                                    <label className="text-[10px] font-medium text-slate-600 uppercase tracking-wide">Name</label>
+                                                    <label className="text-[10px] font-medium text-muted-foreground/60 uppercase tracking-wide">Name</label>
                                                     <input
                                                         type="text"
                                                         value={editForm.name ?? config?.name ?? ''}
                                                         onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                                                        className="mt-1 w-full rounded-lg border border-slate-800/50 bg-slate-900/50 px-3 py-1.5 text-xs text-slate-200 focus:border-indigo-500/50 focus:outline-none"
+                                                        className="mt-1 w-full rounded-xl border border-border/50 bg-card px-3 py-1.5 text-xs text-foreground focus:border-indigo-500/50 focus:outline-none"
                                                     />
                                                 </div>
                                                 <div>
-                                                    <label className="text-[10px] font-medium text-slate-600 uppercase tracking-wide">Monthly Price (cents)</label>
+                                                    <label className="text-[10px] font-medium text-muted-foreground/60 uppercase tracking-wide">Monthly Price (cents)</label>
                                                     <input
                                                         type="number"
                                                         value={editForm.priceMonthly ?? config?.priceMonthly ?? 0}
                                                         onChange={(e) => setEditForm({ ...editForm, priceMonthly: parseInt(e.target.value) || 0 })}
-                                                        className="mt-1 w-full rounded-lg border border-slate-800/50 bg-slate-900/50 px-3 py-1.5 text-xs text-slate-200 focus:border-indigo-500/50 focus:outline-none"
+                                                        className="mt-1 w-full rounded-xl border border-border/50 bg-card px-3 py-1.5 text-xs text-foreground focus:border-indigo-500/50 focus:outline-none"
                                                     />
                                                 </div>
                                             </div>
                                             <div className="grid grid-cols-2 gap-3">
                                                 <div>
-                                                    <label className="text-[10px] font-medium text-slate-600 uppercase tracking-wide">Stripe Price ID (server)</label>
+                                                    <label className="text-[10px] font-medium text-muted-foreground/60 uppercase tracking-wide">Stripe Price ID (server)</label>
                                                     <input
                                                         type="text"
                                                         value={editForm.stripePriceId ?? config?.stripePriceId ?? ''}
                                                         onChange={(e) => setEditForm({ ...editForm, stripePriceId: e.target.value })}
-                                                        className="mt-1 w-full rounded-lg border border-slate-800/50 bg-slate-900/50 px-3 py-1.5 text-xs text-slate-200 focus:border-indigo-500/50 focus:outline-none"
+                                                        className="mt-1 w-full rounded-xl border border-border/50 bg-card px-3 py-1.5 text-xs text-foreground focus:border-indigo-500/50 focus:outline-none"
                                                         placeholder="price_..."
                                                     />
                                                 </div>
                                                 <div>
-                                                    <label className="text-[10px] font-medium text-slate-600 uppercase tracking-wide">Stripe Price ID (public)</label>
+                                                    <label className="text-[10px] font-medium text-muted-foreground/60 uppercase tracking-wide">Stripe Price ID (public)</label>
                                                     <input
                                                         type="text"
                                                         value={editForm.stripePriceIdPublic ?? config?.stripePriceIdPublic ?? ''}
                                                         onChange={(e) => setEditForm({ ...editForm, stripePriceIdPublic: e.target.value })}
-                                                        className="mt-1 w-full rounded-lg border border-slate-800/50 bg-slate-900/50 px-3 py-1.5 text-xs text-slate-200 focus:border-indigo-500/50 focus:outline-none"
+                                                        className="mt-1 w-full rounded-xl border border-border/50 bg-card px-3 py-1.5 text-xs text-foreground focus:border-indigo-500/50 focus:outline-none"
                                                         placeholder="price_... (used for checkout)"
                                                     />
                                                 </div>
                                             </div>
                                             <div className="grid grid-cols-2 gap-3">
                                                 <div>
-                                                    <label className="text-[10px] font-medium text-slate-600 uppercase tracking-wide">Yearly Price (cents)</label>
+                                                    <label className="text-[10px] font-medium text-muted-foreground/60 uppercase tracking-wide">Yearly Price (cents)</label>
                                                     <input
                                                         type="number"
                                                         value={editForm.priceYearly ?? config?.priceYearly ?? 0}
                                                         onChange={(e) => setEditForm({ ...editForm, priceYearly: parseInt(e.target.value) || 0 })}
-                                                        className="mt-1 w-full rounded-lg border border-slate-800/50 bg-slate-900/50 px-3 py-1.5 text-xs text-slate-200 focus:border-indigo-500/50 focus:outline-none"
+                                                        className="mt-1 w-full rounded-xl border border-border/50 bg-card px-3 py-1.5 text-xs text-foreground focus:border-indigo-500/50 focus:outline-none"
                                                     />
                                                 </div>
                                             </div>
                                             <div className="grid grid-cols-3 gap-3">
                                                 <div>
-                                                    <label className="text-[10px] font-medium text-slate-600 uppercase tracking-wide">Max Assets</label>
+                                                    <label className="text-[10px] font-medium text-muted-foreground/60 uppercase tracking-wide">Max Assets</label>
                                                     <input
                                                         type="number"
                                                         value={editForm.maxAssets ?? config?.maxAssets ?? 5}
                                                         onChange={(e) => setEditForm({ ...editForm, maxAssets: parseInt(e.target.value) || 0 })}
-                                                        className="mt-1 w-full rounded-lg border border-slate-800/50 bg-slate-900/50 px-3 py-1.5 text-xs text-slate-200 focus:border-indigo-500/50 focus:outline-none"
+                                                        className="mt-1 w-full rounded-xl border border-border/50 bg-card px-3 py-1.5 text-xs text-foreground focus:border-indigo-500/50 focus:outline-none"
                                                     />
                                                 </div>
                                                 <div>
-                                                    <label className="text-[10px] font-medium text-slate-600 uppercase tracking-wide">AI Credits/mo</label>
+                                                    <label className="text-[10px] font-medium text-muted-foreground/60 uppercase tracking-wide">AI Credits/mo</label>
                                                     <input
                                                         type="number"
                                                         value={editForm.maxAICreditsPerMonth ?? config?.maxAICreditsPerMonth ?? 100}
                                                         onChange={(e) => setEditForm({ ...editForm, maxAICreditsPerMonth: parseInt(e.target.value) || 0 })}
-                                                        className="mt-1 w-full rounded-lg border border-slate-800/50 bg-slate-900/50 px-3 py-1.5 text-xs text-slate-200 focus:border-indigo-500/50 focus:outline-none"
+                                                        className="mt-1 w-full rounded-xl border border-border/50 bg-card px-3 py-1.5 text-xs text-foreground focus:border-indigo-500/50 focus:outline-none"
                                                     />
                                                 </div>
                                                 <div>
-                                                    <label className="text-[10px] font-medium text-slate-600 uppercase tracking-wide">Storage (MB)</label>
+                                                    <label className="text-[10px] font-medium text-muted-foreground/60 uppercase tracking-wide">Storage (MB)</label>
                                                     <input
                                                         type="number"
                                                         value={editForm.maxStorageMB ?? config?.maxStorageMB ?? 1024}
                                                         onChange={(e) => setEditForm({ ...editForm, maxStorageMB: parseInt(e.target.value) || 0 })}
-                                                        className="mt-1 w-full rounded-lg border border-slate-800/50 bg-slate-900/50 px-3 py-1.5 text-xs text-slate-200 focus:border-indigo-500/50 focus:outline-none"
+                                                        className="mt-1 w-full rounded-xl border border-border/50 bg-card px-3 py-1.5 text-xs text-foreground focus:border-indigo-500/50 focus:outline-none"
                                                     />
                                                 </div>
                                             </div>
                                             <div className="grid grid-cols-2 gap-3">
                                                 <div>
-                                                    <label className="text-[10px] font-medium text-slate-600 uppercase tracking-wide">Max Members</label>
+                                                    <label className="text-[10px] font-medium text-muted-foreground/60 uppercase tracking-wide">Max Members</label>
                                                     <input
                                                         type="number"
                                                         value={editForm.maxMembers ?? config?.maxMembers ?? 1}
                                                         onChange={(e) => setEditForm({ ...editForm, maxMembers: parseInt(e.target.value) || 0 })}
-                                                        className="mt-1 w-full rounded-lg border border-slate-800/50 bg-slate-900/50 px-3 py-1.5 text-xs text-slate-200 focus:border-indigo-500/50 focus:outline-none"
+                                                        className="mt-1 w-full rounded-xl border border-border/50 bg-card px-3 py-1.5 text-xs text-foreground focus:border-indigo-500/50 focus:outline-none"
                                                     />
                                                 </div>
                                                 <div className="flex items-end gap-4">
-                                                    <label className="flex items-center gap-2 text-xs text-slate-400">
+                                                    <label className="flex items-center gap-2 text-xs text-muted-foreground">
                                                         <input
                                                             type="checkbox"
                                                             checked={editForm.highlighted ?? config?.highlighted ?? false}
                                                             onChange={(e) => setEditForm({ ...editForm, highlighted: e.target.checked })}
-                                                            className="rounded border-slate-700 bg-slate-900"
+                                                            className="rounded border-border bg-surface-1"
                                                         />
                                                         Featured
                                                     </label>
-                                                    <label className="flex items-center gap-2 text-xs text-slate-400">
+                                                    <label className="flex items-center gap-2 text-xs text-muted-foreground">
                                                         <input
                                                             type="checkbox"
                                                             checked={editForm.isActive ?? config?.isActive ?? true}
                                                             onChange={(e) => setEditForm({ ...editForm, isActive: e.target.checked })}
-                                                            className="rounded border-slate-700 bg-slate-900"
+                                                            className="rounded border-border bg-surface-1"
                                                         />
                                                         Active
                                                     </label>
@@ -815,40 +815,40 @@ export default function BillingDashboardPage() {
                                         /* ── Read-only display ── */
                                         <div className="space-y-3">
                                             <div className="flex items-baseline gap-1">
-                                                <span className="text-2xl font-bold text-slate-100">
+                                                <span className="text-2xl font-bold text-foreground">
                                                     {config ? formatCurrency(config.priceMonthly) : (planKey === 'FREE' ? '$0' : 'Not configured')}
                                                 </span>
                                                 {config && config.priceMonthly > 0 && (
-                                                    <span className="text-xs text-slate-500">/mo</span>
+                                                    <span className="text-xs text-muted-foreground">/mo</span>
                                                 )}
                                             </div>
                                             <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
                                                 <div className="flex justify-between">
-                                                    <span className="text-slate-600">Assets</span>
-                                                    <span className="text-slate-400">{config?.maxAssets ?? '—'}</span>
+                                                    <span className="text-muted-foreground/60">Assets</span>
+                                                    <span className="text-muted-foreground">{config?.maxAssets ?? '—'}</span>
                                                 </div>
                                                 <div className="flex justify-between">
-                                                    <span className="text-slate-600">Members</span>
-                                                    <span className="text-slate-400">{config?.maxMembers ?? '—'}</span>
+                                                    <span className="text-muted-foreground/60">Members</span>
+                                                    <span className="text-muted-foreground">{config?.maxMembers ?? '—'}</span>
                                                 </div>
                                                 <div className="flex justify-between">
-                                                    <span className="text-slate-600">AI Credits</span>
-                                                    <span className="text-slate-400">{config?.maxAICreditsPerMonth?.toLocaleString() ?? '—'}</span>
+                                                    <span className="text-muted-foreground/60">AI Credits</span>
+                                                    <span className="text-muted-foreground">{config?.maxAICreditsPerMonth?.toLocaleString() ?? '—'}</span>
                                                 </div>
                                                 <div className="flex justify-between">
-                                                    <span className="text-slate-600">Storage</span>
-                                                    <span className="text-slate-400">
+                                                    <span className="text-muted-foreground/60">Storage</span>
+                                                    <span className="text-muted-foreground">
                                                         {config?.maxStorageMB ? `${(config.maxStorageMB / 1024).toFixed(0)} GB` : '—'}
                                                     </span>
                                                 </div>
                                             </div>
                                             {config?.stripePriceId && (
-                                                <p className="font-mono text-[10px] text-slate-700 truncate" title={config.stripePriceId}>
+                                                <p className="font-mono text-[10px] text-muted-foreground/60 truncate" title={config.stripePriceId}>
                                                     Server: {config.stripePriceId}
                                                 </p>
                                             )}
                                             {config?.stripePriceIdPublic && (
-                                                <p className="font-mono text-[10px] text-slate-700 truncate" title={config.stripePriceIdPublic}>
+                                                <p className="font-mono text-[10px] text-muted-foreground/60 truncate" title={config.stripePriceIdPublic}>
                                                     Public: {config.stripePriceIdPublic}
                                                 </p>
                                             )}
@@ -858,7 +858,7 @@ export default function BillingDashboardPage() {
                                                 </p>
                                             )}
                                             {!config && (
-                                                <p className="text-xs text-slate-600 italic">Click Edit to configure this plan</p>
+                                                <p className="text-xs text-muted-foreground/60 italic">Click Edit to configure this plan</p>
                                             )}
                                         </div>
                                     )}
@@ -872,27 +872,27 @@ export default function BillingDashboardPage() {
             {/* ── OVERRIDE MODAL ────────────────────────────────────────────── */}
             {overrideModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-                    <div className="w-full max-w-md rounded-2xl border border-slate-800/50 bg-[#0b1424] p-6 shadow-2xl">
-                        <h2 className="text-lg font-bold text-slate-100 mb-1">Override Workspace Plan</h2>
-                        <p className="text-xs text-slate-500 mb-5">Manually change a workspace&apos;s subscription plan. This bypasses Stripe.</p>
+                    <div className="w-full max-w-md rounded-2xl border border-border/50 bg-[#0b1424] p-6 shadow-2xl">
+                        <h2 className="text-lg font-bold text-foreground mb-1">Override Workspace Plan</h2>
+                        <p className="text-xs text-muted-foreground mb-5">Manually change a workspace&apos;s subscription plan. This bypasses Stripe.</p>
 
                         <div className="space-y-4">
                             <div>
-                                <label className="text-[10px] font-medium text-slate-600 uppercase tracking-wide">Workspace ID</label>
+                                <label className="text-[10px] font-medium text-muted-foreground/60 uppercase tracking-wide">Workspace ID</label>
                                 <input
                                     type="text"
                                     value={overrideForm.workspaceId}
                                     onChange={(e) => setOverrideForm({ ...overrideForm, workspaceId: e.target.value })}
                                     placeholder="clxxxxxxxxxx..."
-                                    className="mt-1 w-full rounded-lg border border-slate-800/50 bg-slate-900/50 px-3 py-2 text-xs text-slate-200 focus:border-indigo-500/50 focus:outline-none"
+                                    className="mt-1 w-full rounded-xl border border-border/50 bg-card px-3 py-2 text-xs text-foreground focus:border-indigo-500/50 focus:outline-none"
                                 />
                             </div>
                             <div>
-                                <label className="text-[10px] font-medium text-slate-600 uppercase tracking-wide">New Plan</label>
+                                <label className="text-[10px] font-medium text-muted-foreground/60 uppercase tracking-wide">New Plan</label>
                                 <select
                                     value={overrideForm.plan}
                                     onChange={(e) => setOverrideForm({ ...overrideForm, plan: e.target.value })}
-                                    className="mt-1 w-full rounded-lg border border-slate-800/50 bg-slate-900/50 px-3 py-2 text-xs text-slate-200 focus:border-indigo-500/50 focus:outline-none"
+                                    className="mt-1 w-full rounded-xl border border-border/50 bg-card px-3 py-2 text-xs text-foreground focus:border-indigo-500/50 focus:outline-none"
                                 >
                                     <option value="FREE">FREE</option>
                                     <option value="PERSONAL">PERSONAL</option>
@@ -901,13 +901,13 @@ export default function BillingDashboardPage() {
                                 </select>
                             </div>
                             <div>
-                                <label className="text-[10px] font-medium text-slate-600 uppercase tracking-wide">Reason (optional)</label>
+                                <label className="text-[10px] font-medium text-muted-foreground/60 uppercase tracking-wide">Reason (optional)</label>
                                 <input
                                     type="text"
                                     value={overrideForm.reason}
                                     onChange={(e) => setOverrideForm({ ...overrideForm, reason: e.target.value })}
                                     placeholder="e.g., Partner trial extension"
-                                    className="mt-1 w-full rounded-lg border border-slate-800/50 bg-slate-900/50 px-3 py-2 text-xs text-slate-200 focus:border-indigo-500/50 focus:outline-none"
+                                    className="mt-1 w-full rounded-xl border border-border/50 bg-card px-3 py-2 text-xs text-foreground focus:border-indigo-500/50 focus:outline-none"
                                 />
                             </div>
                         </div>
@@ -915,7 +915,7 @@ export default function BillingDashboardPage() {
                         <div className="mt-6 flex justify-end gap-3">
                             <button
                                 onClick={() => setOverrideModal(false)}
-                                className="rounded-xl px-4 py-2 text-xs text-slate-500 hover:text-slate-300"
+                                className="rounded-xl px-4 py-2 text-xs text-muted-foreground hover:text-foreground"
                             >
                                 Cancel
                             </button>

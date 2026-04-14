@@ -140,7 +140,7 @@ export default function AuditLogsPage() {
                     <button
                         onClick={() => handleExport('csv')}
                         disabled={isExporting}
-                        className="flex items-center gap-2 px-4 py-2 border border-nerve/30 text-nerve rounded-lg hover:bg-nerve/10 transition-colors disabled:opacity-50 text-sm font-medium"
+                        className="flex items-center gap-2 px-4 py-2 border border-primary/30 text-primary rounded-xl hover:bg-primary/10 transition-colors disabled:opacity-50 text-sm font-medium"
                     >
                         <Download className={`w-4 h-4 ${isExporting ? 'animate-bounce' : ''}`} />
                         Export CSV
@@ -148,7 +148,7 @@ export default function AuditLogsPage() {
                     <button
                         onClick={fetchLogs}
                         disabled={isLoading}
-                        className="flex items-center gap-2 px-4 py-2 bg-surface-2 text-white rounded-lg hover:bg-surface-3 transition-colors disabled:opacity-50"
+                        className="flex items-center gap-2 px-4 py-2 bg-surface-2 text-foreground rounded-xl hover:bg-surface-3 transition-colors disabled:opacity-50"
                     >
                         <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
                         Refresh
@@ -168,7 +168,7 @@ export default function AuditLogsPage() {
                             setSearchAction(e.target.value);
                             setPage(1);
                         }}
-                        className="w-full pl-9 pr-4 py-2 bg-surface-2 border border-border rounded-lg text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-nerve"
+                        className="w-full pl-9 pr-4 py-2 bg-surface-2 border border-border rounded-xl text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
                     />
                 </div>
                 <div className="w-full sm:w-64 relative flex items-center">
@@ -179,7 +179,7 @@ export default function AuditLogsPage() {
                             setResourceType(e.target.value);
                             setPage(1);
                         }}
-                        className="w-full pl-9 pr-4 py-2 bg-surface-2 border border-border rounded-lg text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-nerve appearance-none"
+                        className="w-full pl-9 pr-4 py-2 bg-surface-2 border border-border rounded-xl text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary appearance-none"
                     >
                         <option value="">All Resource Types</option>
                         <option value="Workspace">Workspace</option>
@@ -195,18 +195,18 @@ export default function AuditLogsPage() {
                         <Calendar className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                         <input type="date" value={startDate}
                             onChange={(e) => { setStartDate(e.target.value); setPage(1); }}
-                            className="pl-9 pr-3 py-2 bg-surface-2 border border-border rounded-lg text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-nerve w-40" />
+                            className="pl-9 pr-3 py-2 bg-surface-2 border border-border rounded-xl text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary w-40" />
                     </div>
                     <span className="text-muted-foreground text-xs">to</span>
                     <div className="relative flex items-center">
                         <Calendar className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                         <input type="date" value={endDate}
                             onChange={(e) => { setEndDate(e.target.value); setPage(1); }}
-                            className="pl-9 pr-3 py-2 bg-surface-2 border border-border rounded-lg text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-nerve w-40" />
+                            className="pl-9 pr-3 py-2 bg-surface-2 border border-border rounded-xl text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary w-40" />
                     </div>
                     {(startDate || endDate) && (
                         <button onClick={() => { setStartDate(''); setEndDate(''); setPage(1); }}
-                            className="text-xs text-slate-400 hover:text-foreground underline">Clear dates</button>
+                            className="text-xs text-muted-foreground hover:text-foreground underline">Clear dates</button>
                     )}
                 </div>
             </div>
@@ -271,7 +271,7 @@ export default function AuditLogsPage() {
                                                 <td className="px-6 py-4 text-right">
                                                     <button
                                                         onClick={() => toggleRow(log.id)}
-                                                        className="inline-flex items-center justify-center w-8 h-8 rounded-lg hover:bg-surface-3 transition-colors text-muted-foreground"
+                                                        className="inline-flex items-center justify-center w-8 h-8 rounded-xl hover:bg-surface-3 transition-colors text-muted-foreground"
                                                     >
                                                         {expandedRows.has(log.id) ? (
                                                             <ChevronDown className="w-4 h-4" />
@@ -286,7 +286,7 @@ export default function AuditLogsPage() {
                                                     <td colSpan={5} className="px-6 py-4">
                                                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                                                             {log.details && Object.keys(log.details).length > 0 && (
-                                                                <div className="bg-surface-3/50 border border-border rounded-lg p-4">
+                                                                <div className="bg-surface-3/50 border border-border rounded-xl p-4">
                                                                     <div className="flex items-center gap-2 mb-2">
                                                                         <FileText className="w-4 h-4 text-muted-foreground" />
                                                                         <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Mutation Details</h4>
@@ -297,7 +297,7 @@ export default function AuditLogsPage() {
                                                                 </div>
                                                             )}
                                                             {log.metadata && Object.keys(log.metadata).length > 0 && (
-                                                                <div className="bg-surface-3/50 border border-border rounded-lg p-4">
+                                                                <div className="bg-surface-3/50 border border-border rounded-xl p-4">
                                                                     <div className="flex items-center gap-2 mb-2">
                                                                         <FileText className="w-4 h-4 text-muted-foreground" />
                                                                         <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">System Metadata</h4>
@@ -331,7 +331,7 @@ export default function AuditLogsPage() {
                     {pagination && pagination.totalPages > 1 && (
                         <div className="border-t border-border px-6 py-4 flex items-center justify-between bg-surface-2/50">
                             <span className="text-sm text-muted-foreground">
-                                Showing <span className="font-medium text-white">{((pagination.page - 1) * pagination.limit) + 1}</span> to <span className="font-medium text-white">{Math.min(pagination.page * pagination.limit, pagination.total)}</span> of <span className="font-medium text-white">{pagination.total}</span> entries
+                                Showing <span className="font-medium text-foreground">{((pagination.page - 1) * pagination.limit) + 1}</span> to <span className="font-medium text-foreground">{Math.min(pagination.page * pagination.limit, pagination.total)}</span> of <span className="font-medium text-foreground">{pagination.total}</span> entries
                             </span>
                             <div className="flex gap-2">
                                 <button

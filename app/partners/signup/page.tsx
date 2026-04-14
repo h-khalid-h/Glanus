@@ -117,12 +117,12 @@ export default function PartnerSignupPage() {
     const prevStep = () => setStep((s) => Math.max(s - 1, 1));
 
     return (
-        <div className="min-h-screen bg-slate-900/30 py-12 px-4 sm:px-6 lg:px-8">
+        <div className="min-h-screen bg-muted/30 py-12 px-4 sm:px-6 lg:px-8">
             <div className="max-w-3xl mx-auto">
                 {/* Header */}
                 <div className="text-center mb-8">
                     <h1 className="text-4xl font-bold text-foreground mb-2">Become a Glanus Partner</h1>
-                    <p className="text-lg text-slate-400">
+                    <p className="text-lg text-muted-foreground">
                         Join our certified partner network and earn 50% revenue share
                     </p>
                 </div>
@@ -134,22 +134,22 @@ export default function PartnerSignupPage() {
                             <div key={s} className="flex items-center">
                                 <div
                                     className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold ${s <= step
-                                        ? 'bg-nerve text-white'
-                                        : 'bg-slate-700 text-slate-500'
+                                        ? 'bg-primary text-foreground'
+                                        : 'bg-muted text-muted-foreground'
                                         }`}
                                 >
                                     {s}
                                 </div>
                                 {s < 4 && (
                                     <div
-                                        className={`h-1 w-24 mx-2 ${s < step ? 'bg-nerve' : 'bg-slate-700'
+                                        className={`h-1 w-24 mx-2 ${s < step ? 'bg-primary' : 'bg-muted'
                                             }`}
                                     />
                                 )}
                             </div>
                         ))}
                     </div>
-                    <div className="flex justify-between text-sm text-slate-400">
+                    <div className="flex justify-between text-sm text-muted-foreground">
                         <span>Company</span>
                         <span>Profile</span>
                         <span>Location</span>
@@ -158,7 +158,7 @@ export default function PartnerSignupPage() {
                 </div>
 
                 {/* Form */}
-                <div className="rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm p-8">
+                <div className="rounded-xl border border-border bg-card backdrop-blur-sm p-8">
                     <form onSubmit={handleSubmit}>
                         {/* Step 1: Company Info */}
                         {step === 1 && (
@@ -166,7 +166,7 @@ export default function PartnerSignupPage() {
                                 <h2 className="text-2xl font-semibold mb-4">Company Information</h2>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-300 mb-2">
+                                    <label className="block text-sm font-medium text-foreground mb-2">
                                         Company Name *
                                     </label>
                                     <input
@@ -174,39 +174,39 @@ export default function PartnerSignupPage() {
                                         required
                                         value={formData.companyName}
                                         onChange={(e) => updateField('companyName', e.target.value)}
-                                        className="w-full px-4 py-2 border border-slate-700 rounded-md focus:ring-2 focus:ring-nerve/50 focus:border-transparent"
+                                        className="w-full px-4 py-2 border border-border rounded-md focus:ring-2 focus:ring-primary/50 focus:border-transparent"
                                         placeholder="Acme IT Services"
                                     />
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-300 mb-2">
+                                    <label className="block text-sm font-medium text-foreground mb-2">
                                         Business Number (Tax ID / EIN)
                                     </label>
                                     <input
                                         type="text"
                                         value={formData.businessNumber}
                                         onChange={(e) => updateField('businessNumber', e.target.value)}
-                                        className="w-full px-4 py-2 border border-slate-700 rounded-md focus:ring-2 focus:ring-nerve/50 focus:border-transparent"
+                                        className="w-full px-4 py-2 border border-border rounded-md focus:ring-2 focus:ring-primary/50 focus:border-transparent"
                                         placeholder="12-3456789"
                                     />
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-300 mb-2">
+                                    <label className="block text-sm font-medium text-foreground mb-2">
                                         Website
                                     </label>
                                     <input
                                         type="url"
                                         value={formData.website}
                                         onChange={(e) => updateField('website', e.target.value)}
-                                        className="w-full px-4 py-2 border border-slate-700 rounded-md focus:ring-2 focus:ring-nerve/50 focus:border-transparent"
+                                        className="w-full px-4 py-2 border border-border rounded-md focus:ring-2 focus:ring-primary/50 focus:border-transparent"
                                         placeholder="https://acmeit.com"
                                     />
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-300 mb-2">
+                                    <label className="block text-sm font-medium text-foreground mb-2">
                                         Phone *
                                     </label>
                                     <input
@@ -214,7 +214,7 @@ export default function PartnerSignupPage() {
                                         required
                                         value={formData.phone}
                                         onChange={(e) => updateField('phone', e.target.value)}
-                                        className="w-full px-4 py-2 border border-slate-700 rounded-md focus:ring-2 focus:ring-nerve/50 focus:border-transparent"
+                                        className="w-full px-4 py-2 border border-border rounded-md focus:ring-2 focus:ring-primary/50 focus:border-transparent"
                                         placeholder="+1-555-0100"
                                     />
                                 </div>
@@ -227,17 +227,17 @@ export default function PartnerSignupPage() {
                                 <h2 className="text-2xl font-semibold mb-4">Company Profile</h2>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-300 mb-2">
+                                    <label className="block text-sm font-medium text-foreground mb-2">
                                         About Your Company
                                     </label>
                                     <textarea
                                         rows={6}
                                         value={formData.bio}
                                         onChange={(e) => updateField('bio', e.target.value)}
-                                        className="w-full px-4 py-2 border border-slate-700 rounded-md focus:ring-2 focus:ring-nerve/50 focus:border-transparent"
+                                        className="w-full px-4 py-2 border border-border rounded-md focus:ring-2 focus:ring-primary/50 focus:border-transparent"
                                         placeholder="Tell potential clients about your experience, expertise, and what makes your company unique..."
                                     />
-                                    <p className="mt-1 text-sm text-slate-500">
+                                    <p className="mt-1 text-sm text-muted-foreground">
                                         {formData.bio.length} / 1000 characters
                                     </p>
                                 </div>
@@ -250,59 +250,59 @@ export default function PartnerSignupPage() {
                                 <h2 className="text-2xl font-semibold mb-4">Location & Service Area</h2>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-300 mb-2">
+                                    <label className="block text-sm font-medium text-foreground mb-2">
                                         Address
                                     </label>
                                     <input
                                         type="text"
                                         value={formData.address}
                                         onChange={(e) => updateField('address', e.target.value)}
-                                        className="w-full px-4 py-2 border border-slate-700 rounded-md focus:ring-2 focus:ring-nerve/50 focus:border-transparent"
+                                        className="w-full px-4 py-2 border border-border rounded-md focus:ring-2 focus:ring-primary/50 focus:border-transparent"
                                         placeholder="123 Main St"
                                     />
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-sm font-medium text-slate-300 mb-2">
+                                        <label className="block text-sm font-medium text-foreground mb-2">
                                             City
                                         </label>
                                         <input
                                             type="text"
                                             value={formData.city}
                                             onChange={(e) => updateField('city', e.target.value)}
-                                            className="w-full px-4 py-2 border border-slate-700 rounded-md focus:ring-2 focus:ring-nerve/50 focus:border-transparent"
+                                            className="w-full px-4 py-2 border border-border rounded-md focus:ring-2 focus:ring-primary/50 focus:border-transparent"
                                             placeholder="San Francisco"
                                         />
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-medium text-slate-300 mb-2">
+                                        <label className="block text-sm font-medium text-foreground mb-2">
                                             State/Region
                                         </label>
                                         <input
                                             type="text"
                                             value={formData.region}
                                             onChange={(e) => updateField('region', e.target.value)}
-                                            className="w-full px-4 py-2 border border-slate-700 rounded-md focus:ring-2 focus:ring-nerve/50 focus:border-transparent"
+                                            className="w-full px-4 py-2 border border-border rounded-md focus:ring-2 focus:ring-primary/50 focus:border-transparent"
                                             placeholder="CA"
                                         />
                                     </div>
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-300 mb-2">
+                                    <label className="block text-sm font-medium text-foreground mb-2">
                                         Service Radius (miles)
                                     </label>
                                     <input
                                         type="number"
                                         value={formData.serviceRadius}
                                         onChange={(e) => updateField('serviceRadius', parseInt(e.target.value))}
-                                        className="w-full px-4 py-2 border border-slate-700 rounded-md focus:ring-2 focus:ring-nerve/50 focus:border-transparent"
+                                        className="w-full px-4 py-2 border border-border rounded-md focus:ring-2 focus:ring-primary/50 focus:border-transparent"
                                         min="0"
                                         max="500"
                                     />
-                                    <p className="mt-1 text-sm text-slate-500">
+                                    <p className="mt-1 text-sm text-muted-foreground">
                                         How far are you willing to travel for on-site support?
                                     </p>
                                 </div>
@@ -313,9 +313,9 @@ export default function PartnerSignupPage() {
                                             type="checkbox"
                                             checked={formData.remoteOnly}
                                             onChange={(e) => updateField('remoteOnly', e.target.checked)}
-                                            className="w-4 h-4 text-nerve border-slate-700 rounded focus:ring-nerve/50"
+                                            className="w-4 h-4 text-primary border-border rounded focus:ring-primary/50"
                                         />
-                                        <span className="text-sm font-medium text-slate-300">
+                                        <span className="text-sm font-medium text-foreground">
                                             Remote support only (no on-site visits)
                                         </span>
                                     </label>
@@ -329,7 +329,7 @@ export default function PartnerSignupPage() {
                                 <h2 className="text-2xl font-semibold mb-4">Expertise & Certifications</h2>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-300 mb-3">
+                                    <label className="block text-sm font-medium text-foreground mb-3">
                                         Industries You Serve
                                     </label>
                                     <div className="grid grid-cols-2 gap-3">
@@ -339,16 +339,16 @@ export default function PartnerSignupPage() {
                                                     type="checkbox"
                                                     checked={formData.industries.includes(industry)}
                                                     onChange={() => toggleArrayItem('industries', industry)}
-                                                    className="w-4 h-4 text-nerve border-slate-700 rounded focus:ring-nerve/50"
+                                                    className="w-4 h-4 text-primary border-border rounded focus:ring-primary/50"
                                                 />
-                                                <span className="text-sm text-slate-300">{industry}</span>
+                                                <span className="text-sm text-foreground">{industry}</span>
                                             </label>
                                         ))}
                                     </div>
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-300 mb-3">
+                                    <label className="block text-sm font-medium text-foreground mb-3">
                                         Your Certifications
                                     </label>
                                     <div className="grid grid-cols-2 gap-3">
@@ -358,9 +358,9 @@ export default function PartnerSignupPage() {
                                                     type="checkbox"
                                                     checked={formData.certifications.includes(cert)}
                                                     onChange={() => toggleArrayItem('certifications', cert)}
-                                                    className="w-4 h-4 text-nerve border-slate-700 rounded focus:ring-nerve/50"
+                                                    className="w-4 h-4 text-primary border-border rounded focus:ring-primary/50"
                                                 />
-                                                <span className="text-sm text-slate-300">{cert}</span>
+                                                <span className="text-sm text-foreground">{cert}</span>
                                             </label>
                                         ))}
                                     </div>
@@ -370,7 +370,7 @@ export default function PartnerSignupPage() {
 
                         {/* Error Message */}
                         {error && (
-                            <div className="mt-6 bg-health-critical/10 border border-health-critical/20 text-health-critical px-4 py-3 rounded-md">
+                            <div className="mt-6 bg-destructive/10 border border-destructive/20 text-destructive px-4 py-3 rounded-md">
                                 {error}
                             </div>
                         )}
@@ -381,7 +381,7 @@ export default function PartnerSignupPage() {
                                 <button type="button"
 
                                     onClick={prevStep}
-                                    className="px-6 py-2 border border-slate-700 rounded-md text-slate-300 hover:bg-slate-900/30 transition"
+                                    className="px-6 py-2 border border-border rounded-md text-foreground hover:bg-muted/30 transition"
                                 >
                                     Previous
                                 </button>
@@ -391,7 +391,7 @@ export default function PartnerSignupPage() {
                                 <button type="button"
 
                                     onClick={nextStep}
-                                    className="ml-auto px-6 py-2 bg-nerve text-white rounded-md hover:brightness-110 transition"
+                                    className="ml-auto px-6 py-2 bg-primary text-foreground rounded-md hover:brightness-110 transition"
                                 >
                                     Next
                                 </button>
@@ -399,7 +399,7 @@ export default function PartnerSignupPage() {
                                 <button
                                     type="submit"
                                     disabled={loading}
-                                    className="ml-auto px-6 py-2 bg-health-good text-white rounded-md hover:bg-health-good/80 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="ml-auto px-6 py-2 bg-health-good text-foreground rounded-md hover:bg-health-good/80 transition disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     {loading ? 'Submitting...' : 'Submit Application'}
                                 </button>
@@ -409,9 +409,9 @@ export default function PartnerSignupPage() {
                 </div>
 
                 {/* Info Box */}
-                <div className="mt-8 bg-nerve/5 border border-nerve/20 rounded-lg p-6">
-                    <h3 className="text-lg font-semibold text-nerve mb-2">What Happens Next?</h3>
-                    <ol className="list-decimal list-inside space-y-2 text-nerve">
+                <div className="mt-8 bg-primary/5 border border-primary/20 rounded-xl p-6">
+                    <h3 className="text-lg font-semibold text-primary mb-2">What Happens Next?</h3>
+                    <ol className="list-decimal list-inside space-y-2 text-primary">
                         <li>Your application will be reviewed by our team (1-2 business days)</li>
                         <li>Once verified, you'll receive an email to take your certification exam</li>
                         <li>Pass the exam to unlock your partner dashboard</li>

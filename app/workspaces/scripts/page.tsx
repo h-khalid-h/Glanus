@@ -227,21 +227,21 @@ export default function ScriptsLibraryPage() {
 
     const getStatusIcon = (status: string) => {
         switch (status) {
-            case 'SUCCESS': return <CheckCircle size={14} className="text-green-400" />;
-            case 'FAILED': return <XCircle size={14} className="text-red-400" />;
-            case 'RUNNING': return <Loader2 size={14} className="text-blue-400 animate-spin" />;
-            case 'PENDING': return <Clock size={14} className="text-amber-400" />;
-            default: return <Clock size={14} className="text-slate-400" />;
+            case 'SUCCESS': return <CheckCircle size={14} className="text-success" />;
+            case 'FAILED': return <XCircle size={14} className="text-destructive" />;
+            case 'RUNNING': return <Loader2 size={14} className="text-cortex animate-spin" />;
+            case 'PENDING': return <Clock size={14} className="text-warning" />;
+            default: return <Clock size={14} className="text-muted-foreground" />;
         }
     };
 
     const getStatusColor = (status: string) => {
         switch (status) {
-            case 'SUCCESS': return 'text-green-400';
-            case 'FAILED': return 'text-red-400';
-            case 'RUNNING': return 'text-blue-400';
-            case 'PENDING': return 'text-amber-400';
-            default: return 'text-slate-400';
+            case 'SUCCESS': return 'text-success';
+            case 'FAILED': return 'text-destructive';
+            case 'RUNNING': return 'text-cortex';
+            case 'PENDING': return 'text-warning';
+            default: return 'text-muted-foreground';
         }
     };
 
@@ -267,21 +267,21 @@ export default function ScriptsLibraryPage() {
                 <div className="flex items-center gap-3">
                     <button
                         onClick={() => { setShowHistory(!showHistory); setShowSchedules(false); if (!showHistory) fetchExecutionHistory(); }}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors ${showHistory ? 'bg-nerve/10 border-nerve text-nerve' : 'border-slate-800 text-slate-300 hover:bg-slate-800'}`}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-colors ${showHistory ? 'bg-primary/10 border-primary text-primary' : 'border-border text-foreground hover:bg-muted'}`}
                     >
                         <History size={18} />
                         <span>Execution Log</span>
                     </button>
                     <button
                         onClick={() => { setShowSchedules(!showSchedules); setShowHistory(false); }}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors ${showSchedules ? 'bg-nerve/10 border-nerve text-nerve' : 'border-slate-800 text-slate-300 hover:bg-slate-800'}`}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-colors ${showSchedules ? 'bg-primary/10 border-primary text-primary' : 'border-border text-foreground hover:bg-muted'}`}
                     >
                         <Calendar size={18} />
                         <span>Schedules</span>
                     </button>
                     <button
                         onClick={() => setIsCreating(true)}
-                        className="flex items-center gap-2 px-4 py-2 bg-nerve text-white rounded-lg hover:brightness-110 transition-colors shadow-lg shadow-nerve/20"
+                        className="flex items-center gap-2 px-4 py-2 bg-primary text-foreground rounded-xl hover:brightness-110 transition-colors shadow-lg shadow-primary/20"
                     >
                         <Plus size={18} />
                         <span>New Script</span>
@@ -296,20 +296,20 @@ export default function ScriptsLibraryPage() {
 
             {/* Execution History Panel */}
             {showHistory && (
-                <div className="mb-8 rounded-xl border border-slate-800 bg-slate-900/50 overflow-hidden">
-                    <div className="px-6 py-4 border-b border-slate-800 flex justify-between items-center">
+                <div className="mb-8 rounded-xl border border-border bg-card overflow-hidden">
+                    <div className="px-6 py-4 border-b border-border flex justify-between items-center">
                         <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
-                            <History size={18} className="text-nerve" />
+                            <History size={18} className="text-primary" />
                             Execution History
                         </h2>
-                        <span className="text-xs text-slate-500">{executions.length} records</span>
+                        <span className="text-xs text-muted-foreground">{executions.length} records</span>
                     </div>
                     {loadingHistory ? (
                         <div className="flex items-center justify-center py-12">
-                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-nerve" />
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
                         </div>
                     ) : executions.length === 0 ? (
-                        <div className="text-center py-12 text-slate-500">
+                        <div className="text-center py-12 text-muted-foreground">
                             <Terminal className="w-8 h-8 mx-auto mb-2 opacity-50" />
                             <p>No executions recorded yet. Deploy a script to see results here.</p>
                         </div>
@@ -317,7 +317,7 @@ export default function ScriptsLibraryPage() {
                         <div className="overflow-x-auto">
                             <table className="w-full">
                                 <thead>
-                                    <tr className="text-left text-xs text-slate-500 uppercase tracking-wider border-b border-slate-800">
+                                    <tr className="text-left text-xs text-muted-foreground uppercase tracking-wider border-b border-border">
                                         <th className="px-6 py-3">Status</th>
                                         <th className="px-6 py-3">Script</th>
                                         <th className="px-6 py-3">Agent</th>
@@ -327,9 +327,9 @@ export default function ScriptsLibraryPage() {
                                         <th className="px-6 py-3">Completed</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-slate-800">
+                                <tbody className="divide-y divide-border">
                                     {executions.map(exec => (
-                                        <tr key={exec.id} className="hover:bg-slate-800/30 transition">
+                                        <tr key={exec.id} className="hover:bg-muted/30 transition">
                                             <td className="px-6 py-3">
                                                 <div className="flex items-center gap-2">
                                                     {getStatusIcon(exec.status)}
@@ -337,13 +337,13 @@ export default function ScriptsLibraryPage() {
                                                 </div>
                                             </td>
                                             <td className="px-6 py-3 text-sm text-foreground">{exec.script?.name || exec.scriptName}</td>
-                                            <td className="px-6 py-3 text-sm text-slate-300">{exec.agent?.hostname || 'Unknown'}</td>
+                                            <td className="px-6 py-3 text-sm text-foreground">{exec.agent?.hostname || 'Unknown'}</td>
                                             <td className="px-6 py-3">
-                                                <span className="text-xs px-2 py-0.5 rounded bg-slate-800 text-slate-300 uppercase font-mono">{exec.language}</span>
+                                                <span className="text-xs px-2 py-0.5 rounded bg-muted text-foreground uppercase font-mono">{exec.language}</span>
                                             </td>
-                                            <td className="px-6 py-3 text-sm font-mono text-slate-400">{exec.exitCode !== null ? exec.exitCode : '—'}</td>
-                                            <td className="px-6 py-3 text-xs text-slate-500">{new Date(exec.createdAt).toLocaleString()}</td>
-                                            <td className="px-6 py-3 text-xs text-slate-500">{exec.completedAt ? new Date(exec.completedAt).toLocaleString() : '—'}</td>
+                                            <td className="px-6 py-3 text-sm font-mono text-muted-foreground">{exec.exitCode !== null ? exec.exitCode : '—'}</td>
+                                            <td className="px-6 py-3 text-xs text-muted-foreground">{new Date(exec.createdAt).toLocaleString()}</td>
+                                            <td className="px-6 py-3 text-xs text-muted-foreground">{exec.completedAt ? new Date(exec.completedAt).toLocaleString() : '—'}</td>
                                         </tr>
                                     ))}
                                 </tbody>
@@ -354,47 +354,47 @@ export default function ScriptsLibraryPage() {
             )}
 
             {scripts.length === 0 && !isCreating ? (
-                <div className="text-center py-16 px-4 rounded-xl border border-slate-800 bg-slate-900/30">
-                    <div className="mx-auto w-16 h-16 rounded-full bg-slate-800/50 flex items-center justify-center mb-4">
-                        <Terminal className="w-8 h-8 text-slate-400" />
+                <div className="text-center py-16 px-4 rounded-xl border border-border bg-muted/30">
+                    <div className="mx-auto w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center mb-4">
+                        <Terminal className="w-8 h-8 text-muted-foreground" />
                     </div>
                     <h3 className="text-xl font-medium text-foreground mb-2">No scripts found</h3>
-                    <p className="text-slate-500 max-w-sm mx-auto mb-6">
+                    <p className="text-muted-foreground max-w-sm mx-auto mb-6">
                         Your library is empty. Create Bash, PowerShell, or Python payloads to deploy across your managed assets.
                     </p>
-                    <button onClick={() => setIsCreating(true)} className="px-6 py-2 bg-nerve text-white rounded-md hover:brightness-110 transition font-medium">
+                    <button onClick={() => setIsCreating(true)} className="px-6 py-2 bg-primary text-foreground rounded-md hover:brightness-110 transition font-medium">
                         Create First Script
                     </button>
                 </div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {scripts.map(script => (
-                        <div key={script.id} className="rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm p-6 hover:border-slate-700 transition relative group">
+                        <div key={script.id} className="rounded-xl border border-border bg-card backdrop-blur-sm p-6 hover:border-border transition relative group">
                             <div className="flex justify-between items-start mb-4">
                                 <div>
                                     <h3 className="font-semibold text-lg text-foreground mb-1">{script.name}</h3>
-                                    <span className="text-xs px-2 py-1 rounded bg-slate-800 text-slate-300 uppercase tracking-wider font-mono">
+                                    <span className="text-xs px-2 py-1 rounded bg-muted text-foreground uppercase tracking-wider font-mono">
                                         {script.language}
                                     </span>
                                 </div>
                                 <button
                                     onClick={() => handleDeleteScript(script.id)}
-                                    className="p-1.5 text-slate-500 hover:text-red-400 hover:bg-red-400/10 rounded-md transition opacity-0 group-hover:opacity-100"
+                                    className="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-md transition opacity-0 group-hover:opacity-100"
                                     title="Delete Script"
                                 >
                                     <Trash2 size={16} />
                                 </button>
                             </div>
-                            <p className="text-sm text-slate-400 mb-6 line-clamp-2 h-10">
+                            <p className="text-sm text-muted-foreground mb-6 line-clamp-2 h-10">
                                 {script.description || 'No description provided.'}
                             </p>
                             <div className="flex items-center justify-between mt-auto">
-                                <span className="text-xs text-slate-500 flex items-center gap-1.5">
+                                <span className="text-xs text-muted-foreground flex items-center gap-1.5">
                                     <Zap size={14} /> {script._count.executions} Deployments
                                 </span>
                                 <button
                                     onClick={() => openDeployModal(script)}
-                                    className="flex items-center gap-1.5 text-sm text-nerve hover:text-nerve/80 font-medium transition"
+                                    className="flex items-center gap-1.5 text-sm text-primary hover:text-primary/80 font-medium transition"
                                 >
                                     <Rocket size={14} />
                                     Deploy Fleet
@@ -408,23 +408,23 @@ export default function ScriptsLibraryPage() {
             {/* Creation Modal Overlay */}
             {isCreating && (
                 <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-                    <div className="bg-slate-900 border border-slate-800 rounded-xl w-full max-w-3xl overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200" role="dialog" aria-modal="true" aria-labelledby="create-script-title">
-                        <div className="px-6 py-4 border-b border-slate-800 flex justify-between items-center bg-slate-900/50">
+                    <div className="bg-surface-1 border border-border rounded-xl w-full max-w-3xl overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200" role="dialog" aria-modal="true" aria-labelledby="create-script-title">
+                        <div className="px-6 py-4 border-b border-border flex justify-between items-center bg-card">
                             <h2 id="create-script-title" className="text-xl font-semibold flex items-center gap-2 text-foreground">
-                                <Terminal size={20} className="text-nerve" />
+                                <Terminal size={20} className="text-primary" />
                                 Compose Script Payload
                             </h2>
-                            <button onClick={() => setIsCreating(false)} className="text-slate-400 hover:text-white transition" aria-label="Close">✕</button>
+                            <button onClick={() => setIsCreating(false)} className="text-muted-foreground hover:text-foreground transition" aria-label="Close">✕</button>
                         </div>
                         <form onSubmit={handleCreateScript} className="p-6 space-y-5">
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-300 mb-1">Script Name</label>
-                                    <input required value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm focus:border-nerve focus:ring-1 focus:ring-nerve outline-none" placeholder="e.g., Restart Print Spooler" />
+                                    <label className="block text-sm font-medium text-foreground mb-1">Script Name</label>
+                                    <input required value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} className="w-full bg-background border border-border rounded-xl px-3 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none" placeholder="e.g., Restart Print Spooler" />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-300 mb-1">Environment Language</label>
-                                    <select value={formData.language} onChange={e => setFormData({ ...formData, language: e.target.value })} className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm focus:border-nerve focus:ring-1 focus:ring-nerve outline-none">
+                                    <label className="block text-sm font-medium text-foreground mb-1">Environment Language</label>
+                                    <select value={formData.language} onChange={e => setFormData({ ...formData, language: e.target.value })} className="w-full bg-background border border-border rounded-xl px-3 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none">
                                         <option value="powershell">PowerShell (.ps1)</option>
                                         <option value="bash">Bash Script (.sh)</option>
                                         <option value="python">Python 3 (.py)</option>
@@ -432,16 +432,16 @@ export default function ScriptsLibraryPage() {
                                 </div>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-slate-300 mb-1">Description</label>
-                                <input value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm focus:border-nerve focus:ring-1 focus:ring-nerve outline-none" placeholder="Target scenario or use-case..." />
+                                <label className="block text-sm font-medium text-foreground mb-1">Description</label>
+                                <input value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} className="w-full bg-background border border-border rounded-xl px-3 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none" placeholder="Target scenario or use-case..." />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-slate-300 mb-1">Raw Payload (Code)</label>
-                                <textarea required value={formData.content} onChange={e => setFormData({ ...formData, content: e.target.value })} rows={12} className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-3 text-sm font-mono text-slate-300 focus:border-nerve focus:ring-1 focus:ring-nerve outline-none" placeholder="Write your executable code here..." spellCheck={false} />
+                                <label className="block text-sm font-medium text-foreground mb-1">Raw Payload (Code)</label>
+                                <textarea required value={formData.content} onChange={e => setFormData({ ...formData, content: e.target.value })} rows={12} className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm font-mono text-foreground focus:border-primary focus:ring-1 focus:ring-primary outline-none" placeholder="Write your executable code here..." spellCheck={false} />
                             </div>
-                            <div className="flex justify-end gap-3 pt-4 border-t border-slate-800">
-                                <button type="button" onClick={() => setIsCreating(false)} className="px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-800 text-slate-300 transition">Cancel</button>
-                                <button type="submit" disabled={isSubmitting} className="px-5 py-2 rounded-lg bg-nerve text-white text-sm font-medium hover:brightness-110 disabled:opacity-50 flex items-center gap-2 transition">
+                            <div className="flex justify-end gap-3 pt-4 border-t border-border">
+                                <button type="button" onClick={() => setIsCreating(false)} className="px-4 py-2 rounded-xl text-sm font-medium hover:bg-muted text-foreground transition">Cancel</button>
+                                <button type="submit" disabled={isSubmitting} className="px-5 py-2 rounded-xl bg-primary text-foreground text-sm font-medium hover:brightness-110 disabled:opacity-50 flex items-center gap-2 transition">
                                     {isSubmitting ? 'Saving...' : 'Deploy to Library'}
                                 </button>
                             </div>
@@ -453,35 +453,35 @@ export default function ScriptsLibraryPage() {
             {/* Fleet Deploy Modal */}
             {deployTarget && (
                 <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-                    <div className="bg-slate-900 border border-slate-800 rounded-xl w-full max-w-2xl overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200" role="dialog" aria-modal="true" aria-labelledby="deploy-modal-title">
-                        <div className="px-6 py-4 border-b border-slate-800 flex justify-between items-center bg-slate-900/50">
+                    <div className="bg-surface-1 border border-border rounded-xl w-full max-w-2xl overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200" role="dialog" aria-modal="true" aria-labelledby="deploy-modal-title">
+                        <div className="px-6 py-4 border-b border-border flex justify-between items-center bg-card">
                             <h2 id="deploy-modal-title" className="text-xl font-semibold flex items-center gap-2 text-foreground">
-                                <Rocket size={20} className="text-nerve" />
+                                <Rocket size={20} className="text-primary" />
                                 Deploy: {deployTarget.name}
                             </h2>
-                            <button onClick={() => setDeployTarget(null)} className="text-slate-400 hover:text-white transition" aria-label="Close">
+                            <button onClick={() => setDeployTarget(null)} className="text-muted-foreground hover:text-foreground transition" aria-label="Close">
                                 <X size={20} />
                             </button>
                         </div>
 
                         <div className="p-6 space-y-4">
                             {/* Script Summary */}
-                            <div className="bg-slate-950 rounded-lg p-4 border border-slate-800">
+                            <div className="bg-background rounded-xl p-4 border border-border">
                                 <div className="flex items-center justify-between mb-2">
-                                    <span className="text-xs uppercase tracking-wider font-mono text-slate-500">Payload Preview</span>
-                                    <span className="text-xs px-2 py-0.5 rounded bg-slate-800 text-slate-300 uppercase font-mono">{deployTarget.language}</span>
+                                    <span className="text-xs uppercase tracking-wider font-mono text-muted-foreground">Payload Preview</span>
+                                    <span className="text-xs px-2 py-0.5 rounded bg-muted text-foreground uppercase font-mono">{deployTarget.language}</span>
                                 </div>
-                                <pre className="text-xs text-slate-400 font-mono max-h-24 overflow-y-auto whitespace-pre-wrap">{deployTarget.content.slice(0, 300)}{deployTarget.content.length > 300 ? '...' : ''}</pre>
+                                <pre className="text-xs text-muted-foreground font-mono max-h-24 overflow-y-auto whitespace-pre-wrap">{deployTarget.content.slice(0, 300)}{deployTarget.content.length > 300 ? '...' : ''}</pre>
                             </div>
 
                             {/* Agent Selection */}
                             <div>
                                 <div className="flex justify-between items-center mb-3">
-                                    <label className="text-sm font-medium text-slate-300">Select Target Agents ({selectedAgentIds.length}/{availableAgents.length})</label>
+                                    <label className="text-sm font-medium text-foreground">Select Target Agents ({selectedAgentIds.length}/{availableAgents.length})</label>
                                     <button
                                         type="button"
                                         onClick={selectAllAgents}
-                                        className="text-xs text-nerve hover:underline"
+                                        className="text-xs text-primary hover:underline"
                                     >
                                         {selectedAgentIds.length === availableAgents.length ? 'Deselect All' : 'Select All'}
                                     </button>
@@ -489,32 +489,32 @@ export default function ScriptsLibraryPage() {
 
                                 {loadingAgents ? (
                                     <div className="flex items-center justify-center py-8">
-                                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-nerve" />
+                                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
                                     </div>
                                 ) : availableAgents.length === 0 ? (
-                                    <div className="text-center py-8 text-slate-500 border border-dashed border-slate-700 rounded-lg">
+                                    <div className="text-center py-8 text-muted-foreground border border-dashed border-border rounded-xl">
                                         <p>No online agents available.</p>
                                         <p className="text-xs mt-1">Agents must be ONLINE to receive deployments.</p>
                                     </div>
                                 ) : (
-                                    <div className="max-h-48 overflow-y-auto space-y-1 border border-slate-800 rounded-lg divide-y divide-slate-800">
+                                    <div className="max-h-48 overflow-y-auto space-y-1 border border-border rounded-xl divide-y divide-border">
                                         {availableAgents.map(agent => (
                                             <label
                                                 key={agent.id}
-                                                className={`flex items-center gap-3 px-4 py-2.5 cursor-pointer hover:bg-slate-800/50 transition ${selectedAgentIds.includes(agent.id) ? 'bg-nerve/5' : ''}`}
+                                                className={`flex items-center gap-3 px-4 py-2.5 cursor-pointer hover:bg-muted/50 transition ${selectedAgentIds.includes(agent.id) ? 'bg-primary/5' : ''}`}
                                             >
                                                 <input
                                                     type="checkbox"
                                                     checked={selectedAgentIds.includes(agent.id)}
                                                     onChange={() => toggleAgentSelection(agent.id)}
-                                                    className="rounded border-slate-600 text-nerve focus:ring-nerve bg-slate-950"
+                                                    className="rounded border-border text-primary focus:ring-primary bg-background"
                                                 />
                                                 <div className="flex-1 min-w-0">
                                                     <div className="font-medium text-sm text-foreground truncate">{agent.hostname}</div>
-                                                    <div className="text-xs text-slate-500">{agent.platform}</div>
+                                                    <div className="text-xs text-muted-foreground">{agent.platform}</div>
                                                 </div>
-                                                <span className="flex items-center gap-1 text-xs text-green-400">
-                                                    <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
+                                                <span className="flex items-center gap-1 text-xs text-success">
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-success" />
                                                     Online
                                                 </span>
                                             </label>
@@ -524,12 +524,12 @@ export default function ScriptsLibraryPage() {
                             </div>
                         </div>
 
-                        <div className="px-6 py-4 border-t border-slate-800 flex justify-end gap-3">
-                            <button type="button" onClick={() => setDeployTarget(null)} className="px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-800 text-slate-300 transition">Cancel</button>
+                        <div className="px-6 py-4 border-t border-border flex justify-end gap-3">
+                            <button type="button" onClick={() => setDeployTarget(null)} className="px-4 py-2 rounded-xl text-sm font-medium hover:bg-muted text-foreground transition">Cancel</button>
                             <button
                                 onClick={handleDeploy}
                                 disabled={isDeploying || selectedAgentIds.length === 0}
-                                className="px-5 py-2 rounded-lg bg-nerve text-white text-sm font-medium hover:brightness-110 disabled:opacity-50 flex items-center gap-2 transition shadow-lg shadow-nerve/20"
+                                className="px-5 py-2 rounded-xl bg-primary text-foreground text-sm font-medium hover:brightness-110 disabled:opacity-50 flex items-center gap-2 transition shadow-lg shadow-primary/20"
                             >
                                 {isDeploying ? (
                                     <>

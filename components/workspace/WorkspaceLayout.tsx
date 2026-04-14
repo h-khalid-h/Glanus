@@ -270,14 +270,14 @@ export function WorkspaceLayout({ children }: { children: React.ReactNode }) {
         <div className="flex h-full flex-col overflow-hidden">
 
             {/* Brand header */}
-            <div className={`flex h-12 shrink-0 items-center border-b border-border ${collapsed ? 'justify-center px-0' : 'gap-2.5 px-4'}`}>
+            <div className={`flex h-14 shrink-0 items-center border-b border-border/60 ${collapsed ? 'justify-center px-0' : 'gap-2.5 px-4'}`}>
                 <Link href="/dashboard" className="flex items-center gap-2.5 min-w-0" aria-label="Glanus home">
-                    <svg width="20" height="20" viewBox="0 0 32 32" fill="none" aria-hidden="true" className="shrink-0">
+                    <svg width="22" height="22" viewBox="0 0 32 32" fill="none" aria-hidden="true" className="shrink-0">
                         <path d="M10 6C6.134 6 3 9.134 3 13s3.134 7 7 7"
-                            stroke="hsl(168,100%,45%)" strokeWidth="2.5" strokeLinecap="round" />
+                            stroke="hsl(166,84%,39%)" strokeWidth="2.5" strokeLinecap="round" />
                         <path d="M22 26c3.866 0 7-3.134 7-7s-3.134-7-7-7"
-                            stroke="hsl(168,100%,45%)" strokeWidth="2.5" strokeLinecap="round" />
-                        <circle cx="16" cy="16" r="2.5" fill="hsl(168,100%,45%)" opacity="0.5" />
+                            stroke="hsl(166,84%,39%)" strokeWidth="2.5" strokeLinecap="round" />
+                        <circle cx="16" cy="16" r="2.5" fill="hsl(166,84%,39%)" opacity="0.5" />
                     </svg>
                     {!collapsed && (
                         <span className="text-sm font-bold tracking-tight text-foreground truncate">Glanus</span>
@@ -287,18 +287,18 @@ export function WorkspaceLayout({ children }: { children: React.ReactNode }) {
 
             {/* Workspace switcher */}
             {!collapsed && (
-                <div className="shrink-0 border-b border-border px-3 py-2.5">
+                <div className="shrink-0 border-b border-border/40 px-3 py-3">
                     <WorkspaceSwitcher />
                 </div>
             )}
 
             {/* Search shortcut */}
-            <div className={`shrink-0 pt-2.5 pb-1 ${collapsed ? 'px-1.5 flex justify-center' : 'px-3'}`}>
+            <div className={`shrink-0 pt-3 pb-1.5 ${collapsed ? 'px-2 flex justify-center' : 'px-3'}`}>
                 {collapsed ? (
                     <button
                         type="button"
                         onClick={() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true }))}
-                        className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-muted/40 text-muted-foreground transition-colors hover:border-primary/30 hover:bg-muted/70 hover:text-foreground"
+                        className="flex h-8 w-8 items-center justify-center rounded-xl border border-border bg-muted/40 text-muted-foreground transition-all hover:border-primary/30 hover:bg-accent hover:text-foreground"
                         title="Search (⌘K)"
                         aria-label="Search"
                     >
@@ -308,30 +308,30 @@ export function WorkspaceLayout({ children }: { children: React.ReactNode }) {
                 <button
                     type="button"
                     onClick={() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true }))}
-                    className="flex w-full items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:border-primary/30 hover:bg-muted/70 hover:text-foreground"
+                    className="flex w-full items-center gap-2 rounded-xl border border-border bg-muted/30 px-3 py-2 text-sm text-muted-foreground transition-all hover:border-primary/25 hover:bg-accent/50 hover:text-foreground"
                 >
                     <Search className="h-3.5 w-3.5 shrink-0" />
                     <span className="flex-1 text-left">Search…</span>
-                    <kbd className="hidden rounded border border-border bg-surface-1 px-1.5 py-0.5 font-mono text-xs sm:inline-block">⌘K</kbd>
+                    <kbd className="hidden rounded-md border border-border bg-surface-1 px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground sm:inline-block">⌘K</kbd>
                 </button>
                 )}
             </div>
 
             {/* Navigation */}
-            <nav className="flex-1 overflow-y-auto py-2 px-2 custom-scrollbar" aria-label="Workspace navigation"
+            <nav className="flex-1 overflow-y-auto py-2 px-2 scrollbar-thin" aria-label="Workspace navigation"
                 style={{ paddingLeft: collapsed ? 0 : undefined, paddingRight: collapsed ? 0 : undefined }}
             >
                 {Object.entries(sections).map(([section, items]) => (
-                    <div key={section} className={`mb-3 ${collapsed ? '' : ''}`}>
+                    <div key={section} className={`mb-4 ${collapsed ? '' : ''}`}>
                         {!collapsed && (
-                            <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-widest text-slate-500">
+                            <p className="mb-1.5 px-3 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">
                                 {section}
                             </p>
                         )}
                         {collapsed && (
-                            <div className="mx-2 mb-1 h-px bg-slate-800/20" aria-hidden="true" />
+                            <div className="mx-3 mb-1.5 h-px bg-border/40" aria-hidden="true" />
                         )}
-                        <div className={`space-y-1 ${collapsed ? 'px-1' : ''}`}>
+                        <div className={`space-y-0.5 ${collapsed ? 'px-1.5' : ''}`}>
                             {items.map(item => {
                                 const active = isActive(item.href);
                                 return (
@@ -339,18 +339,18 @@ export function WorkspaceLayout({ children }: { children: React.ReactNode }) {
                                         key={item.href}
                                         href={item.href}
                                         className={[
-                                            'sidebar-nav-item flex items-center rounded-lg text-sm transition-all duration-150',
-                                            collapsed ? 'justify-center p-0 h-10 w-full' : 'gap-3 py-2.5 px-3',
+                                            'sidebar-nav-item flex items-center rounded-xl text-sm transition-all duration-150',
+                                            collapsed ? 'justify-center p-0 h-10 w-full' : 'gap-3 py-2 px-3',
                                             active
-                                                ? 'text-blue-200 bg-slate-900/80 font-semibold border-r-2 border-blue-400'
-                                                : 'text-slate-400 bg-transparent hover:bg-slate-900 hover:text-slate-200',
+                                                ? 'text-primary bg-primary/8 font-semibold'
+                                                : 'text-muted-foreground bg-transparent hover:bg-accent hover:text-foreground',
                                         ].join(' ')}
                                         title={collapsed ? item.label : undefined}
                                     >
-                                        <span className={collapsed ? '' : 'shrink-0 material-symbols-outlined text-xl opacity-80'}>
+                                        <span className={collapsed ? '' : 'shrink-0 opacity-80'}>
                                             {item.icon}
                                         </span>
-                                        {!collapsed && <span className="font-inter">{item.label}</span>}
+                                        {!collapsed && <span>{item.label}</span>}
                                     </Link>
                                 );
                             })}
@@ -361,18 +361,18 @@ export function WorkspaceLayout({ children }: { children: React.ReactNode }) {
 
             
             {/* User footer */}
-            <div className="shrink-0 border-t border-slate-800/20 bg-slate-950">
+            <div className="shrink-0 border-t border-border/40 bg-surface-0">
                 {/* Collapse button */}
                 <div className={`flex items-center px-4 py-3 ${collapsed ? 'justify-center' : 'justify-between'}`}>
                     {!collapsed && (
-                        <p className="text-xs text-slate-600 font-medium">
-                            Glanus v2.0
+                        <p className="text-xs text-muted-foreground/50 font-medium">
+                            Glanus v3.0
                         </p>
                     )}
                     <button
                         type="button"
                         onClick={toggleCollapsed}
-                        className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-900 hover:text-slate-300"
+                        className="flex h-7 w-7 items-center justify-center rounded-xl text-muted-foreground transition-all hover:bg-accent hover:text-foreground"
                         aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
                         title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
                     >
@@ -398,13 +398,13 @@ export function WorkspaceLayout({ children }: { children: React.ReactNode }) {
     } as React.CSSProperties;
 
     return (
-        <div style={dynamicStyles} className="flex min-h-screen bg-surface-container-lowest text-on-surface inter">
+        <div style={dynamicStyles} className="flex min-h-screen bg-background text-foreground">
 
             {/* Mobile hamburger */}
             <button
                 type="button"
                 onClick={() => setMobileOpen(true)}
-                className="fixed left-3 top-3 z-40 flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground shadow-sm transition-colors hover:bg-surface-2 hover:text-foreground lg:hidden"
+                className="fixed left-3 top-3 z-40 flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground shadow-md transition-all hover:bg-accent hover:text-foreground hover:shadow-lg lg:hidden"
                 aria-label="Open navigation"
             >
                 <Menu className="h-4.5 w-4.5" />
@@ -414,14 +414,14 @@ export function WorkspaceLayout({ children }: { children: React.ReactNode }) {
             {mobileOpen && (
                 <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="Navigation">
                     <div
-                        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+                        className="absolute inset-0 bg-background/60 backdrop-blur-sm"
                         onClick={() => setMobileOpen(false)}
                     />
-                    <aside className="relative z-10 h-full w-[220px] bg-surface-1 shadow-2xl animate-slide-up">
+                    <aside className="relative z-10 h-full w-[260px] bg-card border-r border-border shadow-2xl animate-slide-in">
                         <button
                             type="button"
                             onClick={() => setMobileOpen(false)}
-                            className="absolute right-2 top-2.5 flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-surface-2 hover:text-foreground"
+                            className="absolute right-3 top-3.5 flex h-7 w-7 items-center justify-center rounded-xl text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
                             aria-label="Close navigation"
                         >
                             <X className="h-4 w-4" />
@@ -434,7 +434,7 @@ export function WorkspaceLayout({ children }: { children: React.ReactNode }) {
             {/* Desktop sidebar — collapsible */}
             <aside
                 className={[
-                    'hidden border-r border-slate-800/20 bg-slate-950 lg:flex lg:flex-col sidebar-collapse-transition z-50 fixed inset-y-0 left-0',
+                    'hidden border-r border-border bg-card lg:flex lg:flex-col sidebar-collapse-transition z-50 fixed inset-y-0 left-0',
                     collapsed ? 'w-[72px]' : 'w-64',
                 ].join(' ')}
             >
@@ -448,15 +448,15 @@ export function WorkspaceLayout({ children }: { children: React.ReactNode }) {
             ].join(' ')}>
 
                 {/* Top header */}
-                <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center justify-between border-b border-transparent shadow-sm shadow-blue-900/10 bg-slate-950/60 px-6 backdrop-blur-xl">
+                <header className="sticky top-0 z-40 flex h-14 shrink-0 items-center justify-between border-b border-border/60 bg-background/80 px-6 backdrop-blur-xl">
                     {/* Breadcrumb */}
                     <nav className="flex items-center gap-1.5 min-w-0 text-sm" aria-label="Breadcrumb">
-                        <span className="text-muted-foreground/40 font-medium hidden sm:block shrink-0 text-xs">
+                        <span className="text-muted-foreground/50 font-medium hidden sm:block shrink-0 text-xs">
                             {workspace?.name}
                         </span>
                         {activeSection && (
                             <>
-                                <ChevronRight className="h-3 w-3 text-muted-foreground/25 hidden sm:block shrink-0" />
+                                <ChevronRight className="h-3 w-3 text-muted-foreground/30 hidden sm:block shrink-0" />
                                 <span className="text-muted-foreground/50 hidden sm:block shrink-0 text-xs">
                                     {activeSection}
                                 </span>
@@ -473,16 +473,16 @@ export function WorkspaceLayout({ children }: { children: React.ReactNode }) {
                     </nav>
 
                     {/* Right controls */}
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex items-center gap-2">
                         <button
                             type="button"
                             onClick={() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true }))}
-                            className="hidden sm:flex items-center gap-1.5 rounded-lg border border-border bg-muted/30 px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:border-primary/30 hover:bg-muted/60 hover:text-foreground"
+                            className="hidden sm:flex items-center gap-1.5 rounded-xl border border-border bg-muted/30 px-3 py-1.5 text-xs text-muted-foreground transition-all hover:border-primary/25 hover:bg-accent/50 hover:text-foreground"
                             aria-label="Search"
                         >
                             <Search className="h-3 w-3" />
                             <span>Search</span>
-                            <kbd className="rounded border border-border bg-surface-1 px-1 py-0.5 font-mono text-[10px]">⌘K</kbd>
+                            <kbd className="rounded-md border border-border bg-surface-1 px-1 py-0.5 font-mono text-[10px]">⌘K</kbd>
                         </button>
                         <NotificationPopover />
                         
@@ -492,7 +492,7 @@ export function WorkspaceLayout({ children }: { children: React.ReactNode }) {
                                 type="button"
                                 onClick={() => setUserMenuOpen(!userMenuOpen)}
                                 onBlur={() => setTimeout(() => setUserMenuOpen(false), 150)}
-                                className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/15 border border-primary/20 text-xs font-bold text-primary transition-colors hover:bg-primary/25 ml-1"
+                                className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 border border-primary/15 text-xs font-bold text-primary transition-all hover:bg-primary/20 hover:shadow-sm ml-1"
                                 aria-expanded={userMenuOpen}
                                 aria-label="User menu"
                             >
@@ -500,28 +500,29 @@ export function WorkspaceLayout({ children }: { children: React.ReactNode }) {
                             </button>
                             
                             {userMenuOpen && (
-                                <div className="absolute right-0 mt-2 w-56 origin-top-right rounded-xl border border-slate-800 bg-slate-950 shadow-lg shadow-black/40 ring-1 ring-black ring-opacity-5 animate-slide-up z-50">
-                                    <div className="px-4 py-3 border-b border-slate-800/80 text-left">
-                                        <p className="text-sm font-medium text-slate-200 truncate">
+                                <div className="absolute right-0 mt-2 w-56 origin-top-right rounded-2xl border border-border bg-card animate-slide-up z-50"
+                                     style={{ boxShadow: 'var(--shadow-xl)' }}>
+                                    <div className="px-4 py-3 border-b border-border text-left">
+                                        <p className="text-sm font-semibold text-foreground truncate">
                                             {session?.user?.name || 'Account'}
                                         </p>
-                                        <p className="text-xs text-slate-500 truncate mt-0.5">
+                                        <p className="text-xs text-muted-foreground truncate mt-0.5">
                                             {session?.user?.email || ''}
                                         </p>
                                     </div>
-                                    <div className="p-1">
-                                        <Link href="/account" className="flex items-center gap-2.5 px-3 py-2 text-sm text-slate-300 rounded-lg hover:bg-slate-900 hover:text-slate-100 transition-colors">
-                                            <Settings className="h-4 w-4 text-slate-500" />
+                                    <div className="p-1.5">
+                                        <Link href="/account" className="flex items-center gap-2.5 px-3 py-2 text-sm text-foreground rounded-xl hover:bg-accent transition-colors">
+                                            <Settings className="h-4 w-4 text-muted-foreground" />
                                             Account Settings
                                         </Link>
                                     </div>
-                                    <div className="p-1 border-t border-slate-800/80">
+                                    <div className="p-1.5 border-t border-border">
                                         <button
                                             type="button"
                                             onClick={() => signOut({ callbackUrl: '/login' })}
-                                            className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-red-400 rounded-lg hover:bg-red-950/30 hover:text-red-300 transition-colors shadow-black"
+                                            className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-destructive rounded-xl hover:bg-destructive/8 transition-colors"
                                         >
-                                            <LogOut className="h-4 w-4 text-red-500/70" />
+                                            <LogOut className="h-4 w-4 text-destructive/70" />
                                             Sign out
                                         </button>
                                     </div>
@@ -533,7 +534,7 @@ export function WorkspaceLayout({ children }: { children: React.ReactNode }) {
 
                 {/* Page content */}
                 <main className="flex-1 overflow-y-auto scrollbar-thin">
-                    <div key={workspace?.id || 'loading-workspace'} className="px-5 py-5 lg:px-6 lg:py-6 animate-fade-in">
+                    <div key={workspace?.id || 'loading-workspace'} className="px-6 py-6 lg:px-8 lg:py-8 animate-fade-in">
                         {children}
                     </div>
                     <CommandPalette />

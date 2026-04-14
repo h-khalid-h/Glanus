@@ -77,20 +77,20 @@ export default function InviteForm({ workspaceId }: { workspaceId: string }) {
     if (!canInvite) return null;
 
     return (
-        <div className="bg-slate-900/50 backdrop-blur-sm rounded-xl shadow-sm border border-slate-800 p-6 mb-8">
-            <h3 className="text-lg font-medium text-white mb-4">Invite New Member</h3>
+        <div className="bg-card backdrop-blur-sm rounded-xl shadow-sm border border-border p-6 mb-8">
+            <h3 className="text-lg font-medium text-foreground mb-4">Invite New Member</h3>
 
             <form onSubmit={handleInvite} className="flex flex-col sm:flex-row gap-4 items-start">
                 <div className="flex-1 w-full relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <Mail className="h-5 w-5 text-slate-400" />
+                        <Mail className="h-5 w-5 text-muted-foreground" />
                     </div>
                     <input
                         type="email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="colleague@company.com"
-                        className="pl-10 block w-full rounded-lg border border-slate-700 bg-slate-900/50 backdrop-blur-sm shadow-sm focus:border-nerve/50 focus:ring-nerve/50 sm:text-sm py-2.5 text-white transition-colors"
+                        className="pl-10 block w-full rounded-xl border border-border bg-card backdrop-blur-sm shadow-sm focus:border-primary/50 focus:ring-primary/50 sm:text-sm py-2.5 text-foreground transition-colors"
                         required
                         disabled={isLoading}
                     />
@@ -99,19 +99,19 @@ export default function InviteForm({ workspaceId }: { workspaceId: string }) {
                 <div className="w-full sm:w-48 relative" ref={roleRef}>
                     <button type="button"
                         onClick={() => setIsRoleOpen(!isRoleOpen)}
-                        className="relative w-full cursor-default rounded-lg bg-slate-900/50 backdrop-blur-sm py-2.5 pl-3 pr-10 text-left text-white border border-slate-700 focus:outline-none focus-visible:border-nerve focus-visible:ring-2 focus-visible:ring-white/75 sm:text-sm shadow-sm"
+                        className="relative w-full cursor-default rounded-xl bg-card backdrop-blur-sm py-2.5 pl-3 pr-10 text-left text-foreground border border-border focus:outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-white/75 sm:text-sm shadow-sm"
                         aria-expanded={isRoleOpen}
                         aria-haspopup="listbox"
                     >
                         <span className="block truncate">{role.name}</span>
                         <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-                            <ChevronsUpDown className="h-5 w-5 text-slate-500" aria-hidden="true" />
+                            <ChevronsUpDown className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
                         </span>
                     </button>
 
                     {isRoleOpen && (
                         <ul
-                            className="absolute mt-1 max-h-60 w-full overflow-auto rounded-md bg-slate-900/50 backdrop-blur-sm py-1 text-base shadow-lg ring-1 ring-black/5 focus:outline-none sm:text-sm z-20 border border-slate-700 animate-in fade-in duration-100"
+                            className="absolute mt-1 max-h-60 w-full overflow-auto rounded-md bg-card backdrop-blur-sm py-1 text-base shadow-lg ring-1 ring-black/5 focus:outline-none sm:text-sm z-20 border border-border animate-in fade-in duration-100"
                             role="listbox"
                         >
                             {ROLES.map((r) => (
@@ -120,8 +120,8 @@ export default function InviteForm({ workspaceId }: { workspaceId: string }) {
                                     onClick={() => { setRole(r); setIsRoleOpen(false); }}
                                     className={clsx(
                                         'relative cursor-pointer select-none py-2 pl-10 pr-4 transition-colors',
-                                        'hover:bg-nerve/10 hover:text-nerve',
-                                        role.id === r.id ? 'text-nerve' : 'text-white'
+                                        'hover:bg-primary/10 hover:text-primary',
+                                        role.id === r.id ? 'text-primary' : 'text-foreground'
                                     )}
                                     role="option"
                                     aria-selected={role.id === r.id}
@@ -130,7 +130,7 @@ export default function InviteForm({ workspaceId }: { workspaceId: string }) {
                                         {r.name}
                                     </span>
                                     {role.id === r.id && (
-                                        <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-nerve">
+                                        <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-primary">
                                             <Check className="h-5 w-5" aria-hidden="true" />
                                         </span>
                                     )}
@@ -148,10 +148,10 @@ export default function InviteForm({ workspaceId }: { workspaceId: string }) {
 
             {message && (
                 <div className={clsx(
-                    "mt-4 p-3 rounded-lg text-sm flex items-center gap-2 border",
+                    "mt-4 p-3 rounded-xl text-sm flex items-center gap-2 border",
                     message.type === 'success'
                         ? 'bg-health-good/10 text-health-good border-health-good/20'
-                        : 'bg-health-critical/10 text-health-critical border-health-critical/20'
+                        : 'bg-destructive/10 text-destructive border-destructive/20'
                 )}>
                     {message.text}
                 </div>

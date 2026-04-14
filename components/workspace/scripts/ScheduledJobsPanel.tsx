@@ -167,17 +167,17 @@ export function ScheduledJobsPanel({ workspaceId, availableScripts }: { workspac
     };
 
     return (
-        <div className="mb-8 rounded-xl border border-slate-800 bg-slate-900/50 overflow-hidden shrink-0">
-            <div className="px-6 py-4 border-b border-slate-800 flex justify-between items-center">
+        <div className="mb-8 rounded-xl border border-border bg-card overflow-hidden shrink-0">
+            <div className="px-6 py-4 border-b border-border flex justify-between items-center">
                 <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
-                    <Calendar size={18} className="text-nerve" />
+                    <Calendar size={18} className="text-primary" />
                     Scheduled Jobs
                 </h2>
                 <div className="flex items-center gap-4">
-                    <span className="text-xs text-slate-500">{schedules.length} active configurations</span>
+                    <span className="text-xs text-muted-foreground">{schedules.length} active configurations</span>
                     <button
                         onClick={handleCreateOpen}
-                        className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-medium rounded-lg transition"
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-muted hover:bg-muted text-foreground text-sm font-medium rounded-xl transition"
                     >
                         <Plus size={14} /> New Schedule
                     </button>
@@ -186,10 +186,10 @@ export function ScheduledJobsPanel({ workspaceId, availableScripts }: { workspac
 
             {loading ? (
                 <div className="flex items-center justify-center py-12">
-                    <Loader2 className="animate-spin text-nerve w-8 h-8" />
+                    <Loader2 className="animate-spin text-primary w-8 h-8" />
                 </div>
             ) : schedules.length === 0 ? (
-                <div className="text-center py-12 text-slate-500 border-b border-slate-800">
+                <div className="text-center py-12 text-muted-foreground border-b border-border">
                     <Clock className="w-8 h-8 mx-auto mb-2 opacity-50 block text-center" />
                     <p>No automated jobs configured.</p>
                 </div>
@@ -197,7 +197,7 @@ export function ScheduledJobsPanel({ workspaceId, availableScripts }: { workspac
                 <div className="overflow-x-auto">
                     <table className="w-full">
                         <thead>
-                            <tr className="text-left text-xs text-slate-500 uppercase tracking-wider border-b border-slate-800 bg-slate-900/50">
+                            <tr className="text-left text-xs text-muted-foreground uppercase tracking-wider border-b border-border bg-card">
                                 <th className="px-6 py-3">Job Name</th>
                                 <th className="px-6 py-3">Target Payload</th>
                                 <th className="px-6 py-3">Frequency</th>
@@ -206,48 +206,48 @@ export function ScheduledJobsPanel({ workspaceId, availableScripts }: { workspac
                                 <th className="px-6 py-3 text-right">Actions</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-800">
+                        <tbody className="divide-y divide-border">
                             {schedules.map(schedule => (
-                                <tr key={schedule.id} className={`hover:bg-slate-800/30 transition ${!schedule.enabled ? 'opacity-50' : ''}`}>
+                                <tr key={schedule.id} className={`hover:bg-muted/30 transition ${!schedule.enabled ? 'opacity-50' : ''}`}>
                                     <td className="px-6 py-4">
                                         <div className="font-medium text-foreground text-sm">{schedule.name}</div>
-                                        {schedule.description && <div className="text-xs text-slate-500 mt-0.5">{schedule.description}</div>}
+                                        {schedule.description && <div className="text-xs text-muted-foreground mt-0.5">{schedule.description}</div>}
                                     </td>
                                     <td className="px-6 py-4">
-                                        <div className="text-sm text-slate-300 flex items-center gap-2">
-                                            <PlayCircle size={14} className="text-nerve" />
+                                        <div className="text-sm text-foreground flex items-center gap-2">
+                                            <PlayCircle size={14} className="text-primary" />
                                             {schedule.script.name}
                                         </div>
-                                        <div className="text-xs text-slate-500 mt-0.5">{schedule.targetIds.length} Targeted Agents</div>
+                                        <div className="text-xs text-muted-foreground mt-0.5">{schedule.targetIds.length} Targeted Agents</div>
                                     </td>
                                     <td className="px-6 py-4">
-                                        <span className="text-xs px-2 py-1 rounded bg-slate-800 text-slate-300 font-mono">
+                                        <span className="text-xs px-2 py-1 rounded bg-muted text-foreground font-mono">
                                             {getFrequencyLabel(schedule.cronExpression)}
                                         </span>
                                     </td>
                                     <td className="px-6 py-4">
-                                        <div className="text-sm font-mono text-slate-300">
+                                        <div className="text-sm font-mono text-foreground">
                                             {schedule.nextRunAt ? new Date(schedule.nextRunAt).toLocaleString() : '—'}
                                         </div>
-                                        <div className="text-xs text-slate-500 mt-0.5">
+                                        <div className="text-xs text-muted-foreground mt-0.5">
                                             Last: {schedule.lastRunAt ? new Date(schedule.lastRunAt).toLocaleString() : 'Never'}
                                         </div>
                                     </td>
-                                    <td className="px-6 py-4 text-center text-sm text-slate-400 font-mono">
+                                    <td className="px-6 py-4 text-center text-sm text-muted-foreground font-mono">
                                         {schedule.runCount}
                                     </td>
                                     <td className="px-6 py-4 text-right">
                                         <div className="flex items-center justify-end gap-2">
                                             <button
                                                 onClick={() => handleToggle(schedule.id, schedule.enabled)}
-                                                className={`p-1.5 rounded transition ${schedule.enabled ? 'text-green-500 hover:bg-green-500/10' : 'text-slate-500 hover:text-white hover:bg-slate-700'}`}
+                                                className={`p-1.5 rounded transition ${schedule.enabled ? 'text-success hover:bg-success/10' : 'text-muted-foreground hover:text-foreground hover:bg-muted'}`}
                                                 aria-label={schedule.enabled ? 'Pause Job' : 'Resume Job'}
                                             >
                                                 <Power size={16} />
                                             </button>
                                             <button
                                                 onClick={() => setConfirmState({ open: true, scheduleId: schedule.id })}
-                                                className="p-1.5 rounded text-slate-500 hover:text-red-400 hover:bg-red-400/10 transition"
+                                                className="p-1.5 rounded text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition"
                                                 aria-label="Delete Job"
                                             >
                                                 <Trash2 size={16} />
@@ -277,31 +277,31 @@ export function ScheduledJobsPanel({ workspaceId, availableScripts }: { workspac
             {/* Creation Modal */}
             {isCreating && (
                 <div className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-                    <div className="bg-slate-900 border border-slate-800 rounded-xl w-full max-w-2xl overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200" role="dialog" aria-modal="true" aria-labelledby="schedule-modal-title">
-                        <div className="px-6 py-4 border-b border-slate-800 flex justify-between items-center bg-slate-900/50">
+                    <div className="bg-surface-1 border border-border rounded-xl w-full max-w-2xl overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200" role="dialog" aria-modal="true" aria-labelledby="schedule-modal-title">
+                        <div className="px-6 py-4 border-b border-border flex justify-between items-center bg-card">
                             <h2 id="schedule-modal-title" className="text-xl font-semibold flex items-center gap-2 text-foreground">
-                                <Clock size={20} className="text-nerve" />
+                                <Clock size={20} className="text-primary" />
                                 Schedule Automation Job
                             </h2>
-                            <button onClick={() => setIsCreating(false)} aria-label="Close" className="text-slate-400 hover:text-white transition"><X size={20} /></button>
+                            <button onClick={() => setIsCreating(false)} aria-label="Close" className="text-muted-foreground hover:text-foreground transition"><X size={20} /></button>
                         </div>
 
                         <form onSubmit={handleCreateSubmit} className="p-6 space-y-5">
                             <div>
-                                <label className="block text-sm font-medium text-slate-300 mb-1">Schedule Name</label>
-                                <input required value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm focus:border-nerve focus:ring-1 focus:ring-nerve outline-none" placeholder="e.g., Nightly Disk Cleanup" />
+                                <label className="block text-sm font-medium text-foreground mb-1">Schedule Name</label>
+                                <input required value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} className="w-full bg-background border border-border rounded-xl px-3 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none" placeholder="e.g., Nightly Disk Cleanup" />
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-300 mb-1">Target Payload (Script)</label>
-                                    <select value={formData.scriptId} onChange={e => setFormData({ ...formData, scriptId: e.target.value })} className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm focus:border-nerve outline-none">
+                                    <label className="block text-sm font-medium text-foreground mb-1">Target Payload (Script)</label>
+                                    <select value={formData.scriptId} onChange={e => setFormData({ ...formData, scriptId: e.target.value })} className="w-full bg-background border border-border rounded-xl px-3 py-2 text-sm focus:border-primary outline-none">
                                         {availableScripts.map(s => <option key={s.id} value={s.id}>{s.name} ({s.language})</option>)}
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-300 mb-1">Automated Frequency</label>
-                                    <select value={formData.cronExpression} onChange={e => setFormData({ ...formData, cronExpression: e.target.value })} className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm focus:border-nerve outline-none">
+                                    <label className="block text-sm font-medium text-foreground mb-1">Automated Frequency</label>
+                                    <select value={formData.cronExpression} onChange={e => setFormData({ ...formData, cronExpression: e.target.value })} className="w-full bg-background border border-border rounded-xl px-3 py-2 text-sm focus:border-primary outline-none">
                                         <option value="0 * * * *">Hourly (Minute 0)</option>
                                         <option value="0 0 * * *">Daily (Midnight)</option>
                                         <option value="0 0 * * 0">Weekly (Sunday)</option>
@@ -312,34 +312,34 @@ export function ScheduledJobsPanel({ workspaceId, availableScripts }: { workspac
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-slate-300 mb-1 flex justify-between items-center">
+                                <label className="block text-sm font-medium text-foreground mb-1 flex justify-between items-center">
                                     <span>Target Agents ({formData.targetIds.length} selected)</span>
                                 </label>
 
                                 {loadingAgents ? (
-                                    <div className="flex justify-center py-4"><Loader2 className="animate-spin text-nerve" /></div>
+                                    <div className="flex justify-center py-4"><Loader2 className="animate-spin text-primary" /></div>
                                 ) : (
-                                    <div className="max-h-40 overflow-y-auto space-y-1 border border-slate-800 rounded-lg p-1 bg-slate-950">
+                                    <div className="max-h-40 overflow-y-auto space-y-1 border border-border rounded-xl p-1 bg-background">
                                         {agents.map(agent => (
-                                            <label key={agent.id} className={`flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-slate-800/50 rounded transition ${formData.targetIds.includes(agent.id) ? 'bg-nerve/10' : ''}`}>
+                                            <label key={agent.id} className={`flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-muted/50 rounded transition ${formData.targetIds.includes(agent.id) ? 'bg-primary/10' : ''}`}>
                                                 <input
                                                     type="checkbox"
                                                     checked={formData.targetIds.includes(agent.id)}
                                                     onChange={() => toggleTarget(agent.id)}
-                                                    className="rounded border-slate-600 text-nerve focus:ring-nerve bg-slate-950"
+                                                    className="rounded border-border text-primary focus:ring-primary bg-background"
                                                 />
                                                 <div className="flex-1 text-sm font-medium text-foreground">{agent.hostname}</div>
-                                                <div className="text-xs text-slate-500">{agent.platform}</div>
+                                                <div className="text-xs text-muted-foreground">{agent.platform}</div>
                                             </label>
                                         ))}
-                                        {agents.length === 0 && <div className="p-3 text-center text-sm text-slate-500">No agents registered in workspace.</div>}
+                                        {agents.length === 0 && <div className="p-3 text-center text-sm text-muted-foreground">No agents registered in workspace.</div>}
                                     </div>
                                 )}
                             </div>
 
-                            <div className="flex justify-end gap-3 pt-4 border-t border-slate-800">
-                                <button type="button" onClick={() => setIsCreating(false)} className="px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-800 text-slate-300">Cancel</button>
-                                <button type="submit" disabled={isSubmitting || formData.targetIds.length === 0} className="px-5 py-2 rounded-lg bg-nerve text-white text-sm font-medium hover:brightness-110 disabled:opacity-50 flex items-center gap-2 shadow-lg shadow-nerve/20">
+                            <div className="flex justify-end gap-3 pt-4 border-t border-border">
+                                <button type="button" onClick={() => setIsCreating(false)} className="px-4 py-2 rounded-xl text-sm font-medium hover:bg-muted text-foreground">Cancel</button>
+                                <button type="submit" disabled={isSubmitting || formData.targetIds.length === 0} className="px-5 py-2 rounded-xl bg-primary text-foreground text-sm font-medium hover:brightness-110 disabled:opacity-50 flex items-center gap-2 shadow-lg shadow-primary/20">
                                     {isSubmitting ? 'Saving...' : 'Activate Cron Job'}
                                 </button>
                             </div>

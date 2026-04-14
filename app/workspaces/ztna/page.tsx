@@ -135,10 +135,10 @@ function ZtnaDashboardContent() {
     // ZTNA Configuration strictly limited to ADMIN or OWNER
     if (!hasAdminAccess) {
         return (
-            <div className="flex flex-col items-center justify-center p-12 text-center rounded-xl border border-red-500/20 bg-red-500/5">
-                <Ban className="h-12 w-12 text-red-500 mb-4" />
-                <h2 className="text-xl font-semibold text-white mb-2">Access Denied</h2>
-                <p className="text-slate-400">Only Workspace Administrators can modify Zero-Trust Network boundaries.</p>
+            <div className="flex flex-col items-center justify-center p-12 text-center rounded-xl border border-destructive/20 bg-destructive/5">
+                <Ban className="h-12 w-12 text-destructive mb-4" />
+                <h2 className="text-xl font-semibold text-foreground mb-2">Access Denied</h2>
+                <p className="text-muted-foreground">Only Workspace Administrators can modify Zero-Trust Network boundaries.</p>
             </div>
         );
     }
@@ -150,29 +150,29 @@ function ZtnaDashboardContent() {
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
                     <h1 className="text-2xl font-bold text-foreground">Zero-Trust Network Access</h1>
-                    <p className="text-sm text-slate-400 mt-1">Restrict application and telemetry ingress points to authorized origin IPs exclusively.</p>
+                    <p className="text-sm text-muted-foreground mt-1">Restrict application and telemetry ingress points to authorized origin IPs exclusively.</p>
                 </div>
             </div>
 
             {!activePolicy ? (
                 <EmptyState
-                    icon={<Network className="w-16 h-16 text-slate-600 animate-pulse" />}
+                    icon={<Network className="w-16 h-16 text-muted-foreground/60 animate-pulse" />}
                     title="No Network IP Perimeters Asserted"
                     description="This workspace is currently exposed to any incoming connections worldwide. Secure it immediately by dictating a strict IP whitelist."
                     action={{ label: 'Configure Boundary', onClick: openCreateModal }}
                 />
             ) : (
                 <div className="grid grid-cols-1 gap-6">
-                    <div className="rounded-xl border border-slate-800 bg-slate-900 overflow-hidden shadow-lg">
-                        <div className={`p-4 flex items-center gap-3 border-b ${activePolicy.isEnabled ? 'border-indigo-500/30 bg-indigo-500/5' : 'border-slate-800 bg-slate-800/20'}`}>
-                            <div className={`p-2 rounded-lg ${activePolicy.isEnabled ? 'bg-indigo-500/20 text-indigo-400' : 'bg-slate-700 text-slate-400'}`}>
+                    <div className="rounded-xl border border-border bg-surface-1 overflow-hidden shadow-lg">
+                        <div className={`p-4 flex items-center gap-3 border-b ${activePolicy.isEnabled ? 'border-indigo-500/30 bg-indigo-500/5' : 'border-border bg-muted/20'}`}>
+                            <div className={`p-2 rounded-xl ${activePolicy.isEnabled ? 'bg-indigo-500/20 text-indigo-400' : 'bg-muted text-muted-foreground'}`}>
                                 {activePolicy.isEnabled ? <ShieldCheck size={24} /> : <ShieldAlert size={24} />}
                             </div>
                             <div className="flex-1">
-                                <h3 className="font-semibold text-lg text-white">
+                                <h3 className="font-semibold text-lg text-foreground">
                                     {activePolicy.isEnabled ? 'Strict Enforcement Active' : 'ZTNA Enforcement Paused'}
                                 </h3>
-                                <p className="text-sm text-slate-400">
+                                <p className="text-sm text-muted-foreground">
                                     {activePolicy.isEnabled ? 'Connections outside the whitelist will drop with a 403 Forbidden.' : 'Traffic is currently bypassing the IP evaluation lock.'}
                                 </p>
                             </div>
@@ -182,29 +182,29 @@ function ZtnaDashboardContent() {
                         </div>
 
                         <div className="p-6">
-                            <h4 className="text-sm font-semibold text-slate-300 uppercase tracking-wider mb-4 border-b border-slate-800 pb-2 flex items-center gap-2">
+                            <h4 className="text-sm font-semibold text-foreground uppercase tracking-wider mb-4 border-b border-border pb-2 flex items-center gap-2">
                                 <Activity size={16} /> Origin Allowlist
                             </h4>
 
                             <div className="flex flex-wrap gap-2 mb-6">
                                 {activePolicy.ipWhitelist.split(',').map((ip, i) => (
-                                    <span key={i} className="px-3 py-1 bg-slate-950 border border-slate-700 rounded-full text-sm font-mono text-emerald-400 flex items-center gap-1">
+                                    <span key={i} className="px-3 py-1 bg-background border border-border rounded-full text-sm font-mono text-emerald-400 flex items-center gap-1">
                                         {ip.trim()}
                                     </span>
                                 ))}
                             </div>
 
-                            <div className="flex items-center gap-2 p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg text-amber-200 text-sm">
+                            <div className="flex items-center gap-2 p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl text-amber-200 text-sm">
                                 <Info size={16} className="shrink-0" />
                                 <p>Ensure your current egress IP is within this list. If you disable your connection without a fallback, you will permanently lose access to the Workspace dashboard until an administrator restores it via database overrides.</p>
                             </div>
                         </div>
 
-                        <div className="bg-slate-950/50 p-4 border-t border-slate-800 flex justify-between items-center text-sm text-slate-500">
+                        <div className="bg-background/50 p-4 border-t border-border flex justify-between items-center text-sm text-muted-foreground">
                             <span>Last audited: {new Date(activePolicy.updatedAt).toLocaleDateString()}</span>
                             <button
                                 onClick={() => setConfirmState({ open: true, policyId: activePolicy.id })}
-                                className="flex items-center gap-1 hover:text-red-400 transition"
+                                className="flex items-center gap-1 hover:text-destructive transition"
                             >
                                 <X size={14} /> Abolish Boundary
                             </button>
@@ -229,47 +229,47 @@ function ZtnaDashboardContent() {
             {/* ZTNA Configuration Modal */}
             {isModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-                    <div className="bg-slate-900 border border-slate-800 rounded-xl shadow-2xl w-full max-w-lg flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
-                        <div className="p-5 flex justify-between items-start border-b border-slate-800">
+                    <div className="bg-surface-1 border border-border rounded-xl shadow-2xl w-full max-w-lg flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+                        <div className="p-5 flex justify-between items-start border-b border-border">
                             <div className="flex items-center gap-3">
                                 <Key className="text-indigo-400" />
                                 <div>
-                                    <h2 className="text-lg font-semibold text-white">ZTNA Network Boundary</h2>
-                                    <p className="text-xs text-slate-400 mt-1">Implement strict packet admission protocols.</p>
+                                    <h2 className="text-lg font-semibold text-foreground">ZTNA Network Boundary</h2>
+                                    <p className="text-xs text-muted-foreground mt-1">Implement strict packet admission protocols.</p>
                                 </div>
                             </div>
-                            <button onClick={() => setIsModalOpen(false)} className="text-slate-500 hover:text-white transition p-1">
+                            <button onClick={() => setIsModalOpen(false)} className="text-muted-foreground hover:text-foreground transition p-1">
                                 <X size={20} />
                             </button>
                         </div>
 
                         <div className="p-6 space-y-6">
-                            <label className="flex items-center gap-3 p-4 bg-slate-950 rounded-lg border border-slate-800 cursor-pointer hover:border-indigo-500/50 transition">
+                            <label className="flex items-center gap-3 p-4 bg-background rounded-xl border border-border cursor-pointer hover:border-indigo-500/50 transition">
                                 <input
                                     type="checkbox"
                                     checked={formData.isEnabled}
                                     onChange={(e) => setFormData(prev => ({ ...prev, isEnabled: e.target.checked }))}
-                                    className="w-5 h-5 rounded border-slate-600 text-indigo-500 focus:ring-indigo-500 focus:ring-offset-slate-950 bg-slate-800"
+                                    className="w-5 h-5 rounded border-border text-indigo-500 focus:ring-indigo-500 focus:ring-offset-background bg-muted"
                                 />
                                 <div>
-                                    <div className="font-medium text-slate-200">Assert Enforcements Locally</div>
-                                    <div className="text-xs text-slate-500">Enable this logic against incoming Dashboard and Agent APIs.</div>
+                                    <div className="font-medium text-foreground">Assert Enforcements Locally</div>
+                                    <div className="text-xs text-muted-foreground">Enable this logic against incoming Dashboard and Agent APIs.</div>
                                 </div>
                             </label>
 
                             <div className="space-y-2">
-                                <label className="text-sm font-medium text-slate-300">Authorized IPs / Subnets</label>
+                                <label className="text-sm font-medium text-foreground">Authorized IPs / Subnets</label>
                                 <textarea
-                                    className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-sm font-mono text-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition min-h-[100px]"
+                                    className="w-full bg-background border border-border rounded-xl p-3 text-sm font-mono text-foreground focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition min-h-[100px]"
                                     placeholder="e.g. 192.168.1.1, 10.0.0.1, 8.8.8.8"
                                     value={formData.ipWhitelist}
                                     onChange={(e) => setFormData(prev => ({ ...prev, ipWhitelist: e.target.value }))}
                                 />
-                                <p className="text-xs text-slate-400">Comma-separate multiple IP addresses.</p>
+                                <p className="text-xs text-muted-foreground">Comma-separate multiple IP addresses.</p>
                             </div>
                         </div>
 
-                        <div className="p-5 border-t border-slate-800 bg-slate-950/50 flex justify-end gap-3">
+                        <div className="p-5 border-t border-border bg-background/50 flex justify-end gap-3">
                             <Button variant="secondary" onClick={() => setIsModalOpen(false)}>Cancel</Button>
                             <Button onClick={handleSave} disabled={isSubmitting || !formData.ipWhitelist.trim()}>
                                 {isSubmitting ? 'Syncing...' : 'Deploy Policy'}

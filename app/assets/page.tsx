@@ -361,7 +361,7 @@ export default function AssetsPage() {
             <div className="flex items-start justify-between mb-8">
                 <div>
                     <h1 className="text-2xl font-semibold tracking-tight text-on-surface">Asset Inventory</h1>
-                    <p className="text-sm text-slate-400 mt-1">
+                    <p className="text-sm text-muted-foreground mt-1">
                         {loading
                             ? 'Loading…'
                             : `${pagination.total.toLocaleString()} asset${pagination.total !== 1 ? 's' : ''}${hasActiveFilters ? ' matched' : ' total'}`}
@@ -375,14 +375,14 @@ export default function AssetsPage() {
                         onChange={handleImportCSV}
                         className="hidden"
                     />
-                    <Link href="/assets/categories" className="inline-flex items-center gap-1.5 bg-surface-container-high hover:bg-surface-container-highest text-on-surface transition-colors font-medium rounded-full px-5 py-2 text-sm border border-slate-700/50">
+                    <Link href="/assets/categories" className="inline-flex items-center gap-1.5 bg-surface-container-high hover:bg-surface-container-highest text-on-surface transition-colors font-medium rounded-full px-5 py-2 text-sm border border-border">
                         <ExternalLink className="h-3.5 w-3.5" /> Manage Categories
                     </Link>
                     <button
                         type="button"
                         onClick={() => fileInputRef.current?.click()}
                         disabled={importing}
-                        className="inline-flex items-center gap-1.5 bg-surface-container-highest border border-slate-700 hover:bg-slate-700/80 text-on-surface transition-colors font-medium rounded-full px-5 py-2 text-sm disabled:opacity-50"
+                        className="inline-flex items-center gap-1.5 bg-surface-container-highest border border-border hover:bg-muted/80 text-on-surface transition-colors font-medium rounded-full px-5 py-2 text-sm disabled:opacity-50"
                     >
                         {importing
                             ? <><div className="animate-spin rounded-full h-3.5 w-3.5 border-2 border-primary border-t-transparent" /> Importing…</>
@@ -396,20 +396,20 @@ export default function AssetsPage() {
             </div>
 
             {/* ── Filter toolbar ── */}
-            <div className="flex flex-wrap gap-3 mb-8 p-3 bg-surface-container rounded-xl shadow-sm border border-slate-800/20">
+            <div className="flex flex-wrap gap-3 mb-8 p-3 bg-surface-container rounded-xl shadow-sm border border-border/40">
                 {/* Search */}
                 <div className="relative flex-1 min-w-[200px]">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                     <input
                         type="text"
                         placeholder="Search name, model, serial…"
                         value={search}
                         onChange={(e) => handleSearch(e.target.value)}
-                        className="w-full bg-surface-container-low border-none rounded-lg focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-surface-container transition-all py-2 pl-9 pr-3 text-on-surface text-sm outline-none placeholder:text-slate-500"
+                        className="w-full bg-surface-container-low border-none rounded-lg focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-surface-container transition-all py-2 pl-9 pr-3 text-on-surface text-sm outline-none placeholder:text-muted-foreground"
                     />
                 </div>
 
-                <div className="w-px h-6 bg-slate-800/40 hidden sm:block self-center mx-1" aria-hidden="true" />
+                <div className="w-px h-6 bg-muted/40 hidden sm:block self-center mx-1" aria-hidden="true" />
 
                 {/* Type */}
                 <select

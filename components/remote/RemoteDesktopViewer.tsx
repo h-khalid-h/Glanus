@@ -193,7 +193,7 @@ export function RemoteDesktopViewer({
 
     return (
         <div
-            className="relative w-full h-full bg-slate-950 rounded-lg overflow-hidden focus:outline-none"
+            className="relative w-full h-full bg-background rounded-lg overflow-hidden focus:outline-none"
             tabIndex={0}
             onKeyDown={(e) => handleKeyEvent(e, 'keydown')}
             onKeyUp={(e) => handleKeyEvent(e, 'keyup')}
@@ -223,7 +223,7 @@ export function RemoteDesktopViewer({
 
             {/* Connection Status Overlay */}
             {!connected && (
-                <div className="absolute inset-0 flex items-center justify-center bg-slate-950/90">
+                <div className="absolute inset-0 flex items-center justify-center bg-background/90">
                     <div className="text-center">
                         {error ? (
                             <>
@@ -242,12 +242,12 @@ export function RemoteDesktopViewer({
                                         />
                                     </svg>
                                 </div>
-                                <p className="text-white text-lg font-medium">{error}</p>
+                                <p className="text-foreground text-lg font-medium">{error}</p>
                             </>
                         ) : (
                             <>
                                 <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-nerve mx-auto mb-4" />
-                                <p className="text-white text-lg font-medium">
+                                <p className="text-foreground text-lg font-medium">
                                     {isHost ? 'Starting screen share...' : 'Connecting to remote desktop...'}
                                 </p>
                             </>
@@ -258,21 +258,21 @@ export function RemoteDesktopViewer({
 
             {/* Metrics Overlay */}
             {connected && metrics && (
-                <div className="absolute top-4 right-4 bg-black/70 text-white px-4 py-2 rounded-lg text-sm space-y-1">
+                <div className="absolute top-4 right-4 bg-black/70 text-foreground px-4 py-2 rounded-lg text-sm space-y-1">
                     <div className="flex items-center gap-2">
-                        <span className="text-slate-500">Latency:</span>
+                        <span className="text-muted-foreground">Latency:</span>
                         <span className={metrics.latency > 200 ? 'text-health-warn' : 'text-health-good'}>
                             {metrics.latency}ms
                         </span>
                     </div>
                     <div className="flex items-center gap-2">
-                        <span className="text-slate-500">FPS:</span>
+                        <span className="text-muted-foreground">FPS:</span>
                         <span className={metrics.fps < 20 ? 'text-health-warn' : 'text-health-good'}>
                             {metrics.fps}
                         </span>
                     </div>
                     <div className="flex items-center gap-2">
-                        <span className="text-slate-500">Quality:</span>
+                        <span className="text-muted-foreground">Quality:</span>
                         <div
                             className={`w-2 h-2 rounded-full ${metrics.latency < 100 && metrics.fps > 25
                                 ? 'bg-health-good'
@@ -287,9 +287,9 @@ export function RemoteDesktopViewer({
 
             {/* Connection Indicator */}
             <div className="absolute top-4 left-4">
-                <div className="flex items-center gap-2 bg-black/70 text-white px-3 py-2 rounded-lg text-sm">
+                <div className="flex items-center gap-2 bg-black/70 text-foreground px-3 py-2 rounded-lg text-sm">
                     <div
-                        className={`w-2 h-2 rounded-full ${connected ? 'bg-health-good animate-pulse' : 'bg-slate-500'
+                        className={`w-2 h-2 rounded-full ${connected ? 'bg-health-good animate-pulse' : 'bg-muted'
                             }`}
                     />
                     <span>{connected ? 'Connected' : 'Disconnected'}</span>

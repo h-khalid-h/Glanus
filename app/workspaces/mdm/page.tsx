@@ -117,7 +117,7 @@ export default function MDMDashboardPage() {
     if (loading) {
         return (
             <div className="flex-1 flex items-center justify-center min-h-[400px]">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-nerve" />
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
             </div>
         );
     }
@@ -127,7 +127,7 @@ export default function MDMDashboardPage() {
             <div className="flex justify-between items-start">
                 <div>
                     <h1 className="text-2xl font-bold text-foreground flex items-center gap-3">
-                        <Smartphone className="text-nerve h-6 w-6" />
+                        <Smartphone className="text-primary h-6 w-6" />
                         Mobile Device Management
                     </h1>
                     <p className="text-muted-foreground mt-1 max-w-2xl">
@@ -142,17 +142,17 @@ export default function MDMDashboardPage() {
             </div>
 
             {/* Tab Navigation */}
-            <div className="border-b border-slate-800">
+            <div className="border-b border-border">
                 <nav className="-mb-px flex space-x-8">
                     <button
                         onClick={() => { setActiveTab('profiles'); setIsCreatingProfile(false); }}
-                        className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === 'profiles' ? 'border-nerve text-nerve' : 'border-transparent text-slate-400 hover:text-slate-300'}`}
+                        className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === 'profiles' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
                     >
                         Configuration Profiles ({profiles.length})
                     </button>
                     <button
                         onClick={() => { setActiveTab('assignments'); setIsCreatingProfile(false); }}
-                        className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === 'assignments' ? 'border-nerve text-nerve' : 'border-transparent text-slate-400 hover:text-slate-300'}`}
+                        className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === 'assignments' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
                     >
                         Deployment Assignments ({assignments.length})
                     </button>
@@ -163,7 +163,7 @@ export default function MDMDashboardPage() {
             {activeTab === 'profiles' && (
                 <div className="space-y-4">
                     {isCreatingProfile ? (
-                        <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
+                        <div className="bg-surface-1 border border-border rounded-xl p-6">
                             <h2 className="text-lg font-bold text-foreground mb-6">Create MDM Profile</h2>
                             <MdmProfileForm
                                 workspaceId={workspaceId}
@@ -174,41 +174,41 @@ export default function MDMDashboardPage() {
                     ) : (
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                             {profiles.length === 0 ? (
-                                <div className="col-span-full bg-slate-900 border border-slate-800 rounded-xl p-12 text-center">
-                                    <Shield className="w-12 h-12 text-slate-600 mx-auto mb-4" />
+                                <div className="col-span-full bg-surface-1 border border-border rounded-xl p-12 text-center">
+                                    <Shield className="w-12 h-12 text-muted-foreground/60 mx-auto mb-4" />
                                     <h3 className="text-lg font-medium text-foreground mb-2">No Profiles Configured</h3>
-                                    <p className="text-slate-400 mb-6">Build declarative configuration states for Windows, macOS, or Linux devices.</p>
+                                    <p className="text-muted-foreground mb-6">Build declarative configuration states for Windows, macOS, or Linux devices.</p>
                                     <button onClick={() => setIsCreatingProfile(true)} className="btn-primary">Create First Profile</button>
                                 </div>
                             ) : (
                                 profiles.map(profile => (
-                                    <div key={profile.id} className="bg-slate-900 border border-slate-800 rounded-xl p-5 hover:border-slate-700 transition-colors">
+                                    <div key={profile.id} className="bg-surface-1 border border-border rounded-xl p-5 hover:border-border transition-colors">
                                         <div className="flex justify-between items-start mb-4">
                                             <div>
                                                 <h3 className="text-foreground font-medium flex items-center gap-2">
                                                     {profile.name}
-                                                    <span className="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded">{profile.platform}</span>
+                                                    <span className="text-[10px] bg-muted text-foreground px-2 py-0.5 rounded">{profile.platform}</span>
                                                 </h3>
-                                                <p className="text-sm text-slate-500 mt-1">{profile.description}</p>
+                                                <p className="text-sm text-muted-foreground mt-1">{profile.description}</p>
                                             </div>
-                                            <button onClick={() => setConfirmState({ open: true, profileId: profile.id })} className="text-slate-500 hover:text-red-400">
+                                            <button onClick={() => setConfirmState({ open: true, profileId: profile.id })} className="text-muted-foreground hover:text-destructive">
                                                 <XCircle className="w-5 h-5" />
                                             </button>
                                         </div>
 
                                         <div className="grid grid-cols-2 gap-3 mb-4">
-                                            <div className="bg-slate-950 p-3 rounded-lg border border-slate-800/50">
-                                                <p className="text-xs font-semibold text-slate-500 uppercase">Type</p>
-                                                <p className="text-sm text-slate-300 mt-1">{profile.profileType}</p>
+                                            <div className="bg-background p-3 rounded-xl border border-border/50">
+                                                <p className="text-xs font-semibold text-muted-foreground uppercase">Type</p>
+                                                <p className="text-sm text-foreground mt-1">{profile.profileType}</p>
                                             </div>
-                                            <div className="bg-slate-950 p-3 rounded-lg border border-slate-800/50">
-                                                <p className="text-xs font-semibold text-slate-500 uppercase">Active Links</p>
-                                                <p className="text-sm text-slate-300 mt-1">{profile._count?.assignments || 0} Assets</p>
+                                            <div className="bg-background p-3 rounded-xl border border-border/50">
+                                                <p className="text-xs font-semibold text-muted-foreground uppercase">Active Links</p>
+                                                <p className="text-sm text-foreground mt-1">{profile._count?.assignments || 0} Assets</p>
                                             </div>
                                         </div>
 
-                                        <div className="flex justify-end border-t border-slate-800 pt-3">
-                                            <button onClick={() => setAssignModal({ open: true, profile, assetId: '' })} className="text-nerve hover:text-white text-sm font-medium transition-colors">
+                                        <div className="flex justify-end border-t border-border pt-3">
+                                            <button onClick={() => setAssignModal({ open: true, profile, assetId: '' })} className="text-primary hover:text-foreground text-sm font-medium transition-colors">
                                                 Deploy to Asset &rarr;
                                             </button>
                                         </div>
@@ -221,17 +221,17 @@ export default function MDMDashboardPage() {
             )}
 
             {activeTab === 'assignments' && (
-                <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+                <div className="bg-surface-1 border border-border rounded-xl overflow-hidden">
                     {assignments.length === 0 ? (
                         <div className="p-12 text-center">
-                            <ArrowRightLeft className="w-12 h-12 text-slate-600 mx-auto mb-4" />
+                            <ArrowRightLeft className="w-12 h-12 text-muted-foreground/60 mx-auto mb-4" />
                             <h3 className="text-lg font-medium text-foreground mb-2">No Active Deployments</h3>
-                            <p className="text-slate-400">Profiles assigned to your physical assets will appear here outlining their enforcement status.</p>
+                            <p className="text-muted-foreground">Profiles assigned to your physical assets will appear here outlining their enforcement status.</p>
                         </div>
                     ) : (
                         <div className="overflow-x-auto">
                             <table className="w-full text-left text-sm whitespace-nowrap">
-                                <thead className="bg-slate-950 text-slate-400 uppercase text-xs">
+                                <thead className="bg-background text-muted-foreground uppercase text-xs">
                                     <tr>
                                         <th className="px-6 py-4 font-medium">Profile Name</th>
                                         <th className="px-6 py-4 font-medium">Target Asset</th>
@@ -239,29 +239,29 @@ export default function MDMDashboardPage() {
                                         <th className="px-6 py-4 font-medium">Assigned</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-slate-800 text-slate-300">
+                                <tbody className="divide-y divide-border text-foreground">
                                     {assignments.map(assign => (
-                                        <tr key={assign.id} className="hover:bg-slate-800/50">
+                                        <tr key={assign.id} className="hover:bg-muted/50">
                                             <td className="px-6 py-4">
                                                 <div className="font-medium text-foreground">{assign.profile?.name}</div>
-                                                <div className="text-xs text-slate-500 mt-0.5">{assign.profile?.platform}</div>
+                                                <div className="text-xs text-muted-foreground mt-0.5">{assign.profile?.platform}</div>
                                             </td>
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center gap-2">
-                                                    <Server className="w-4 h-4 text-slate-500" />
+                                                    <Server className="w-4 h-4 text-muted-foreground" />
                                                     {assign.asset?.name || 'Unknown Device'}
-                                                    {assign.asset?.serialNumber && <span className="text-slate-500">#{assign.asset.serialNumber}</span>}
+                                                    {assign.asset?.serialNumber && <span className="text-muted-foreground">#{assign.asset.serialNumber}</span>}
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4">
-                                                <span className={`px-2.5 py-1 text-xs font-medium rounded-full border ${assign.status === 'APPLIED' ? 'bg-green-500/10 text-green-400 border-green-500/20' :
-                                                    assign.status === 'FAILED' ? 'bg-red-500/10 text-red-400 border-red-500/20' :
-                                                        'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                                                <span className={`px-2.5 py-1 text-xs font-medium rounded-full border ${assign.status === 'APPLIED' ? 'bg-success/10 text-success border-success/20' :
+                                                    assign.status === 'FAILED' ? 'bg-destructive/10 text-destructive border-destructive/20' :
+                                                        'bg-amber-500/10 text-warning border-amber-500/20'
                                                     }`}>
                                                     {assign.status}
                                                 </span>
                                             </td>
-                                            <td className="px-6 py-4 text-slate-500">
+                                            <td className="px-6 py-4 text-muted-foreground">
                                                 {new Date(assign.createdAt).toLocaleDateString()}
                                             </td>
                                         </tr>
@@ -288,14 +288,14 @@ export default function MDMDashboardPage() {
             {assignModal.open && assignModal.profile && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
                     <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setAssignModal({ open: false, profile: null, assetId: '' })} />
-                    <div className="relative z-10 w-full max-w-md rounded-xl border border-slate-700 bg-slate-900 p-6 shadow-2xl" role="dialog" aria-modal="true" aria-labelledby="assign-modal-title">
+                    <div className="relative z-10 w-full max-w-md rounded-xl border border-border bg-surface-1 p-6 shadow-2xl" role="dialog" aria-modal="true" aria-labelledby="assign-modal-title">
                         <div className="flex items-center justify-between mb-4">
-                            <h3 id="assign-modal-title" className="text-base font-semibold text-white">Deploy Profile</h3>
-                            <button onClick={() => setAssignModal({ open: false, profile: null, assetId: '' })} className="text-slate-400 hover:text-white transition" aria-label="Close">
+                            <h3 id="assign-modal-title" className="text-base font-semibold text-foreground">Deploy Profile</h3>
+                            <button onClick={() => setAssignModal({ open: false, profile: null, assetId: '' })} className="text-muted-foreground hover:text-foreground transition" aria-label="Close">
                                 <X size={18} />
                             </button>
                         </div>
-                        <p className="text-sm text-slate-400 mb-4">
+                        <p className="text-sm text-muted-foreground mb-4">
                             Enter the Asset ID to deploy &ldquo;{assignModal.profile.name}&rdquo; to:
                         </p>
                         <input
@@ -304,14 +304,14 @@ export default function MDMDashboardPage() {
                             value={assignModal.assetId}
                             onChange={(e) => setAssignModal(prev => ({ ...prev, assetId: e.target.value }))}
                             onKeyDown={(e) => { if (e.key === 'Enter' && assignModal.assetId.trim()) handleAssignProfile(); }}
-                            className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-nerve mb-4"
+                            className="w-full bg-background border border-border rounded-xl px-4 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary mb-4"
                             placeholder="e.g. asset_01abc..."
                         />
                         <div className="flex justify-end gap-3">
-                            <button type="button" onClick={() => setAssignModal({ open: false, profile: null, assetId: '' })} className="rounded-lg border border-slate-700 bg-slate-800 px-4 py-2 text-sm font-medium text-slate-300 hover:bg-slate-700 transition-colors">
+                            <button type="button" onClick={() => setAssignModal({ open: false, profile: null, assetId: '' })} className="rounded-xl border border-border bg-muted px-4 py-2 text-sm font-medium text-foreground hover:bg-muted transition-colors">
                                 Cancel
                             </button>
-                            <button type="button" onClick={handleAssignProfile} disabled={!assignModal.assetId.trim()} className="rounded-lg bg-nerve px-4 py-2 text-sm font-semibold text-white hover:bg-nerve/90 transition-colors disabled:opacity-50">
+                            <button type="button" onClick={handleAssignProfile} disabled={!assignModal.assetId.trim()} className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-foreground hover:bg-primary/90 transition-colors disabled:opacity-50">
                                 Deploy
                             </button>
                         </div>

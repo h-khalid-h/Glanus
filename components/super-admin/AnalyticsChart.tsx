@@ -34,8 +34,8 @@ const COLORS = [
 const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?: Array<{ value: number }>; label?: string }) => {
     if (!active || !payload?.length) return null;
     return (
-        <div className="rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 shadow-xl text-sm">
-            <p className="text-slate-300 font-medium truncate max-w-[180px]">{label}</p>
+        <div className="rounded-xl border border-border bg-surface-1 px-3 py-2 shadow-xl text-sm">
+            <p className="text-foreground font-medium truncate max-w-[180px]">{label}</p>
             <p className="text-violet-400 font-bold">{payload[0].value.toLocaleString()}</p>
         </div>
     );
@@ -59,13 +59,13 @@ export function TopWorkspacesChart({
 
     if (loading) {
         return (
-            <div className="h-64 rounded-2xl bg-slate-800/30 animate-pulse" />
+            <div className="h-64 rounded-2xl bg-muted/30 animate-pulse" />
         );
     }
 
     return (
-        <div className="rounded-2xl border border-slate-800/60 bg-slate-900/50 backdrop-blur-sm p-5">
-            <h3 className="text-sm font-semibold text-slate-300 mb-4">Top 10 by {label}</h3>
+        <div className="rounded-2xl border border-border/60 bg-card backdrop-blur-sm p-5">
+            <h3 className="text-sm font-semibold text-foreground mb-4">Top 10 by {label}</h3>
             <ResponsiveContainer width="100%" height={220}>
                 <BarChart data={chartData} layout="vertical" margin={{ left: 8, right: 8, top: 0, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" horizontal={false} />
@@ -125,13 +125,13 @@ export function DailyActivityChart({ data, days, loading = false }: DailyActivit
     }, [data, days]);
 
     if (loading) {
-        return <div className="h-64 rounded-2xl bg-slate-800/30 animate-pulse" />;
+        return <div className="h-64 rounded-2xl bg-muted/30 animate-pulse" />;
     }
 
     return (
-        <div className="rounded-2xl border border-slate-800/60 bg-slate-900/50 backdrop-blur-sm p-5">
-            <h3 className="text-sm font-semibold text-slate-300 mb-1">Platform Activity</h3>
-            <p className="text-xs text-slate-600 mb-4">Total audit events across all workspaces · last {days} days</p>
+        <div className="rounded-2xl border border-border/60 bg-card backdrop-blur-sm p-5">
+            <h3 className="text-sm font-semibold text-foreground mb-1">Platform Activity</h3>
+            <p className="text-xs text-muted-foreground/60 mb-4">Total audit events across all workspaces · last {days} days</p>
             <ResponsiveContainer width="100%" height={200}>
                 <BarChart data={aggregated} margin={{ left: 0, right: 0, top: 0, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />

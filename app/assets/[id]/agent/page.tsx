@@ -56,7 +56,7 @@ const statusBadge: Record<string, string> = {
 
 const agentStatusBadge: Record<string, string> = {
     ONLINE: 'bg-health-good/10 text-health-good border-health-good/20',
-    OFFLINE: 'bg-slate-700/50 text-slate-400 border-slate-600/30',
+    OFFLINE: 'bg-muted/50 text-muted-foreground border-border/40',
     ERROR: 'bg-health-critical/10 text-health-critical border-health-critical/20',
 };
 
@@ -170,13 +170,13 @@ export default function AssetAgentPage() {
                         </svg>
                     </div>
                     <h2 className="text-xl font-semibold text-foreground mb-2">No Agent Installed</h2>
-                    <p className="text-sm text-slate-400 mb-6">
+                    <p className="text-sm text-muted-foreground mb-6">
                         Install the Glanus agent on this asset to enable remote monitoring and management
                     </p>
                     <Link
                         href="/download-agent"
-                        className="inline-flex items-center gap-2 rounded-xl bg-nerve px-6 py-2.5 text-sm font-medium text-white
-                                   transition-all hover:brightness-110 hover:shadow-lg hover:shadow-nerve/20"
+                        className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-2.5 text-sm font-medium text-foreground
+                                   transition-all hover:brightness-110 hover:shadow-lg hover:shadow-primary/20"
                     >
                         Download Agent
                     </Link>
@@ -196,9 +196,9 @@ export default function AssetAgentPage() {
         const c = colorClasses[color] || colorClasses.nerve;
         return (
             <div>
-                <p className="text-xs text-slate-500 mb-1">{label}</p>
+                <p className="text-xs text-muted-foreground mb-1">{label}</p>
                 <p className={`text-3xl font-bold ${c.text}`}>{v.toFixed(1)}%</p>
-                <div className="mt-2 w-full h-1.5 rounded-full bg-slate-800">
+                <div className="mt-2 w-full h-1.5 rounded-full bg-muted">
                     <div className={`${c.bar} h-1.5 rounded-full transition-all duration-500`} style={{ width: `${v}%` }} />
                 </div>
             </div>
@@ -212,7 +212,7 @@ export default function AssetAgentPage() {
             <div className="mb-8 flex justify-between items-center animate-fade-in">
                 <div>
                     <h1 className="text-2xl font-bold text-foreground mb-1">Agent Monitoring</h1>
-                    <p className="text-sm text-slate-400">{agent.hostname} • {agent.platform}</p>
+                    <p className="text-sm text-muted-foreground">{agent.hostname} • {agent.platform}</p>
                 </div>
                 <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium ${agentStatusBadge[agent.status] || agentStatusBadge.OFFLINE}`}>
                     {agent.status === 'ONLINE' && <span className="h-1.5 w-1.5 rounded-full bg-health-good animate-pulse" />}
@@ -225,7 +225,7 @@ export default function AssetAgentPage() {
                 <div className="lg:col-span-2 space-y-6">
                     {/* Real-Time Metrics */}
                     {agent.status === 'ONLINE' && (
-                        <div className="rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm p-6">
+                        <div className="rounded-xl border border-border bg-card backdrop-blur-sm p-6">
                             <h2 className="text-sm font-semibold text-foreground mb-5">Real-Time Metrics</h2>
                             <div className="grid grid-cols-3 gap-6">
                                 <MetricGauge label="CPU Usage" value={agent.cpuUsage} color="nerve" />
@@ -234,15 +234,15 @@ export default function AssetAgentPage() {
                             </div>
 
                             {agent.networkUp !== null && (
-                                <div className="mt-6 pt-5 border-t border-slate-800">
-                                    <p className="text-xs text-slate-500 mb-3">Network Activity</p>
+                                <div className="mt-6 pt-5 border-t border-border">
+                                    <p className="text-xs text-muted-foreground mb-3">Network Activity</p>
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
-                                            <p className="text-xs text-slate-500">Upload</p>
+                                            <p className="text-xs text-muted-foreground">Upload</p>
                                             <p className="text-xl font-bold text-health-good">{agent.networkUp.toFixed(1)} KB/s</p>
                                         </div>
                                         <div>
-                                            <p className="text-xs text-slate-500">Download</p>
+                                            <p className="text-xs text-muted-foreground">Download</p>
                                             <p className="text-xl font-bold text-nerve">{agent.networkDown?.toFixed(1)} KB/s</p>
                                         </div>
                                     </div>
@@ -253,7 +253,7 @@ export default function AssetAgentPage() {
 
                     {/* Historical Charts */}
                     {agent.status === 'ONLINE' && (
-                        <div className="rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm p-6">
+                        <div className="rounded-xl border border-border bg-card backdrop-blur-sm p-6">
                             <div className="flex justify-between items-center mb-5">
                                 <h2 className="text-sm font-semibold text-foreground">Historical Metrics</h2>
                                 <div className="flex gap-1">
@@ -263,7 +263,7 @@ export default function AssetAgentPage() {
                                             onClick={() => setTimeRange(range)}
                                             className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${timeRange === range
                                                 ? 'bg-nerve/10 text-nerve'
-                                                : 'text-slate-500 hover:bg-slate-800 hover:text-slate-300'
+                                                : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                                                 }`}
                                         >
                                             {range}
@@ -274,40 +274,40 @@ export default function AssetAgentPage() {
 
                             {loadingMetrics ? (
                                 <div className="flex items-center justify-center py-12">
-                                    <div className="h-6 w-6 animate-spin rounded-full border-2 border-slate-700 border-t-nerve" />
+                                    <div className="h-6 w-6 animate-spin rounded-full border-2 border-border border-t-nerve" />
                                 </div>
                             ) : metrics.length > 0 ? (
                                 <MetricsChart data={metrics} timeRange={timeRange} />
                             ) : (
-                                <p className="text-center text-sm text-slate-500 py-12">No historical data available</p>
+                                <p className="text-center text-sm text-muted-foreground py-12">No historical data available</p>
                             )}
                         </div>
                     )}
 
                     {/* Script Executor */}
-                    <div className="rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm p-6">
+                    <div className="rounded-xl border border-border bg-card backdrop-blur-sm p-6">
                         <h2 className="text-sm font-semibold text-foreground mb-5">Execute Remote Script</h2>
                         <form onSubmit={executeScript} className="space-y-4">
                             <div>
-                                <label className="block text-xs font-medium text-slate-400 mb-1.5">Script Name</label>
+                                <label className="block text-xs font-medium text-muted-foreground mb-1.5">Script Name</label>
                                 <input
                                     type="text"
                                     value={scriptName}
                                     onChange={(e) => setScriptName(e.target.value)}
-                                    className="w-full rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-2 text-sm text-foreground
-                                                       placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-nerve/50 focus:border-nerve/50"
+                                    className="w-full rounded-lg border border-border bg-muted/50 px-3 py-2 text-sm text-foreground
+                                                       placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50 focus:border-primary/50"
                                     placeholder="e.g., Check Disk Space"
                                     required
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-xs font-medium text-slate-400 mb-1.5">Language</label>
+                                <label className="block text-xs font-medium text-muted-foreground mb-1.5">Language</label>
                                 <select
                                     value={language}
                                     onChange={(e) => setLanguage(e.target.value as 'powershell' | 'bash' | 'python')}
-                                    className="w-full rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-2 text-sm text-foreground
-                                                       focus:outline-none focus:ring-1 focus:ring-nerve/50 focus:border-nerve/50"
+                                    className="w-full rounded-lg border border-border bg-muted/50 px-3 py-2 text-sm text-foreground
+                                                       focus:outline-none focus:ring-1 focus:ring-primary/50 focus:border-primary/50"
                                 >
                                     <option value="powershell">PowerShell (Windows)</option>
                                     <option value="bash">Bash (macOS/Linux)</option>
@@ -316,13 +316,13 @@ export default function AssetAgentPage() {
                             </div>
 
                             <div>
-                                <label className="block text-xs font-medium text-slate-400 mb-1.5">Script</label>
+                                <label className="block text-xs font-medium text-muted-foreground mb-1.5">Script</label>
                                 <textarea
                                     rows={6}
                                     value={scriptBody}
                                     onChange={(e) => setScriptBody(e.target.value)}
-                                    className="w-full rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-2 text-sm text-foreground font-mono
-                                                       placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-nerve/50 focus:border-nerve/50"
+                                    className="w-full rounded-lg border border-border bg-muted/50 px-3 py-2 text-sm text-foreground font-mono
+                                                       placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50 focus:border-primary/50"
                                     placeholder={
                                         language === 'powershell' ? 'Get-PSDrive -PSProvider FileSystem' :
                                             language === 'bash' ? 'df -h' :
@@ -335,8 +335,8 @@ export default function AssetAgentPage() {
                             <button
                                 type="submit"
                                 disabled={executing || agent.status !== 'ONLINE'}
-                                className="w-full rounded-xl bg-nerve py-2.5 text-sm font-medium text-white
-                                                   transition-all hover:brightness-110 hover:shadow-lg hover:shadow-nerve/20
+                                className="w-full rounded-xl bg-primary py-2.5 text-sm font-medium text-foreground
+                                                   transition-all hover:brightness-110 hover:shadow-lg hover:shadow-primary/20
                                                    disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:brightness-100 disabled:hover:shadow-none"
                             >
                                 {executing ? 'Queueing…' : 'Execute Script'}
@@ -354,7 +354,7 @@ export default function AssetAgentPage() {
                 {/* Sidebar */}
                 <div className="space-y-6">
                     {/* Agent Info */}
-                    <div className="rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm p-5">
+                    <div className="rounded-xl border border-border bg-card backdrop-blur-sm p-5">
                         <h3 className="text-sm font-semibold text-foreground mb-4">Agent Info</h3>
                         <div className="space-y-3 text-sm">
                             <InfoRow label="Version" value={agent.agentVersion} />
@@ -365,21 +365,21 @@ export default function AssetAgentPage() {
                     </div>
 
                     {/* Recent Executions */}
-                    <div className="rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm p-5">
+                    <div className="rounded-xl border border-border bg-card backdrop-blur-sm p-5">
                         <h3 className="text-sm font-semibold text-foreground mb-4">Recent Executions</h3>
                         {executions.length === 0 ? (
-                            <p className="text-xs text-slate-500">No executions yet</p>
+                            <p className="text-xs text-muted-foreground">No executions yet</p>
                         ) : (
                             <div className="space-y-3">
                                 {executions.slice(0, 5).map((exec) => (
                                     <div key={exec.id} className="text-sm">
                                         <div className="flex justify-between items-start mb-0.5">
-                                            <p className="font-medium text-slate-200 text-xs">{exec.scriptName}</p>
-                                            <span className={`rounded-full border px-2 py-0.5 text-[10px] font-medium ${statusBadge[exec.status] || 'bg-slate-700/50 text-slate-400 border-slate-600/30'}`}>
+                                            <p className="font-medium text-foreground text-xs">{exec.scriptName}</p>
+                                            <span className={`rounded-full border px-2 py-0.5 text-[10px] font-medium ${statusBadge[exec.status] || 'bg-muted/50 text-muted-foreground border-border/40'}`}>
                                                 {exec.status}
                                             </span>
                                         </div>
-                                        <p className="text-[10px] text-slate-500">
+                                        <p className="text-[10px] text-muted-foreground">
                                             {formatDateTime(exec.createdAt)}
                                             {exec.exitCode !== null && ` • exit ${exec.exitCode}`}
                                         </p>
@@ -393,27 +393,27 @@ export default function AssetAgentPage() {
 
             {/* Execution History */}
             {executions.length > 0 && (
-                <div className="mt-6 rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm overflow-hidden">
-                    <div className="border-b border-slate-800 px-5 py-4">
+                <div className="mt-6 rounded-xl border border-border bg-card backdrop-blur-sm overflow-hidden">
+                    <div className="border-b border-border px-5 py-4">
                         <h2 className="text-sm font-semibold text-foreground">Execution History</h2>
                     </div>
-                    <div className="divide-y divide-slate-800/50">
+                    <div className="divide-y divide-border/50">
                         {executions.map((exec) => (
-                            <div key={exec.id} className="p-5 hover:bg-slate-800/30 transition-colors">
+                            <div key={exec.id} className="p-5 hover:bg-muted/30 transition-colors">
                                 <div className="flex justify-between items-start mb-2">
                                     <div>
-                                        <h3 className="text-sm font-medium text-slate-200">{exec.scriptName}</h3>
-                                        <p className="text-xs text-slate-500">
+                                        <h3 className="text-sm font-medium text-foreground">{exec.scriptName}</h3>
+                                        <p className="text-xs text-muted-foreground">
                                             {exec.language} • {formatDateTime(exec.createdAt)}
                                         </p>
                                     </div>
-                                    <span className={`rounded-full border px-2.5 py-0.5 text-[10px] font-medium ${statusBadge[exec.status] || 'bg-slate-700/50 text-slate-400 border-slate-600/30'}`}>
+                                    <span className={`rounded-full border px-2.5 py-0.5 text-[10px] font-medium ${statusBadge[exec.status] || 'bg-muted/50 text-muted-foreground border-border/40'}`}>
                                         {exec.status}
                                     </span>
                                 </div>
 
                                 {exec.output && (
-                                    <div className="mt-3 p-3 rounded-lg bg-slate-950 border border-slate-800 font-mono text-xs text-health-good overflow-x-auto">
+                                    <div className="mt-3 p-3 rounded-lg bg-background border border-border font-mono text-xs text-health-good overflow-x-auto">
                                         <pre>{exec.output}</pre>
                                     </div>
                                 )}
@@ -435,8 +435,8 @@ export default function AssetAgentPage() {
 function InfoRow({ label, value }: { label: string; value: string }) {
     return (
         <div>
-            <p className="text-xs text-slate-500">{label}</p>
-            <p className="text-sm font-medium text-slate-200">{value}</p>
+            <p className="text-xs text-muted-foreground">{label}</p>
+            <p className="text-sm font-medium text-foreground">{value}</p>
         </div>
     );
 }

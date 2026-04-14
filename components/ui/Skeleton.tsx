@@ -13,11 +13,7 @@ import React from 'react';
 function SkeletonBase({ className = '' }: { className?: string }) {
     return (
         <div
-            className={`animate-pulse rounded-lg bg-gradient-to-r from-slate-800 via-slate-700 to-slate-800 ${className}`}
-            style={{
-                backgroundSize: '200% 100%',
-                animation: 'shimmer 1.5s infinite ease-in-out',
-            }}
+            className={`animate-pulse rounded-lg bg-muted ${className}`}
         />
     );
 }
@@ -33,7 +29,7 @@ export function SkeletonText({
     widths?: string[];
 }) {
     return (
-        <div className={`space-y-2 ${className}`}>
+        <div className={`space-y-2.5 ${className}`}>
             {Array.from({ length: lines }).map((_, i) => (
                 <SkeletonBase
                     key={i}
@@ -47,7 +43,7 @@ export function SkeletonText({
 // Card skeleton (for dashboard cards)
 export function SkeletonCard({ className = '' }: { className?: string }) {
     return (
-        <div className={`rounded-xl border border-slate-800 p-6 ${className}`}>
+        <div className={`rounded-2xl border border-border bg-card p-6 ${className}`}>
             <div className="flex items-center justify-between mb-4">
                 <SkeletonBase className="h-4 w-24" />
                 <SkeletonBase className="h-8 w-8 rounded-full" />
@@ -61,9 +57,9 @@ export function SkeletonCard({ className = '' }: { className?: string }) {
 // Table row skeleton
 export function SkeletonTableRow({ columns = 4 }: { columns?: number }) {
     return (
-        <tr className="border-b border-slate-800">
+        <tr className="border-b border-border">
             {Array.from({ length: columns }).map((_, i) => (
-                <td key={i} className="px-4 py-3">
+                <td key={i} className="px-4 py-3.5">
                     <SkeletonBase className={`h-4 ${i === 0 ? 'w-32' : 'w-20'}`} />
                 </td>
             ))}
@@ -82,10 +78,10 @@ export function SkeletonTable({
     className?: string;
 }) {
     return (
-        <div className={`overflow-hidden rounded-xl border border-slate-800 ${className}`}>
+        <div className={`overflow-hidden rounded-2xl border border-border ${className}`}>
             <table className="w-full">
                 <thead>
-                    <tr className="border-b border-slate-800 bg-slate-900">
+                    <tr className="border-b border-border bg-surface-1">
                         {Array.from({ length: columns }).map((_, i) => (
                             <th key={i} className="px-4 py-3 text-left">
                                 <SkeletonBase className="h-3 w-16" />
@@ -117,9 +113,9 @@ export function SkeletonAvatar({ size = 'md' }: { size?: 'sm' | 'md' | 'lg' }) {
 // Metric card skeleton (for analytics)
 export function SkeletonMetricCard() {
     return (
-        <div className="rounded-xl border border-slate-800 p-6">
+        <div className="rounded-2xl border border-border bg-card p-6">
             <div className="flex items-center gap-3 mb-4">
-                <SkeletonBase className="h-10 w-10 rounded-lg" />
+                <SkeletonBase className="h-10 w-10 rounded-xl" />
                 <div className="flex-1">
                     <SkeletonBase className="h-3 w-24 mb-2" />
                     <SkeletonBase className="h-6 w-16" />
@@ -173,17 +169,17 @@ export function EmptyState({
     action?: React.ReactNode;
 }) {
     return (
-        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-700 p-12 text-center">
+        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border p-12 text-center">
             {icon && (
-                <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-slate-800 text-slate-500">
+                <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted text-muted-foreground">
                     {icon}
                 </div>
             )}
-            <h3 className="text-lg font-semibold text-white">
+            <h3 className="text-lg font-semibold text-foreground">
                 {title}
             </h3>
             {description && (
-                <p className="mt-2 max-w-md text-sm text-slate-400">
+                <p className="mt-2 max-w-md text-sm text-muted-foreground">
                     {description}
                 </p>
             )}

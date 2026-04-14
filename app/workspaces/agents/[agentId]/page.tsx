@@ -63,7 +63,7 @@ interface Execution {
 }
 
 function MiniSparkline({ data, color }: { data: number[]; color: string }) {
-    if (data.length < 2) return <span className="text-xs text-slate-500">No data</span>;
+    if (data.length < 2) return <span className="text-xs text-muted-foreground">No data</span>;
 
     const max = Math.max(...data, 1);
     const width = 160;
@@ -124,28 +124,28 @@ export default function AgentDetailPage() {
 
     const getStatusIcon = (status: string) => {
         switch (status) {
-            case 'SUCCESS': return <CheckCircle size={14} className="text-green-400" />;
-            case 'FAILED': return <XCircle size={14} className="text-red-400" />;
-            case 'RUNNING': return <Loader2 size={14} className="text-blue-400 animate-spin" />;
-            case 'PENDING': return <Clock size={14} className="text-amber-400" />;
-            default: return <Clock size={14} className="text-slate-400" />;
+            case 'SUCCESS': return <CheckCircle size={14} className="text-success" />;
+            case 'FAILED': return <XCircle size={14} className="text-destructive" />;
+            case 'RUNNING': return <Loader2 size={14} className="text-cortex animate-spin" />;
+            case 'PENDING': return <Clock size={14} className="text-warning" />;
+            default: return <Clock size={14} className="text-muted-foreground" />;
         }
     };
 
     const getStatusColor = (status: string) => {
         switch (status) {
-            case 'SUCCESS': return 'text-green-400';
-            case 'FAILED': return 'text-red-400';
-            case 'RUNNING': return 'text-blue-400';
-            case 'PENDING': return 'text-amber-400';
-            default: return 'text-slate-400';
+            case 'SUCCESS': return 'text-success';
+            case 'FAILED': return 'text-destructive';
+            case 'RUNNING': return 'text-cortex';
+            case 'PENDING': return 'text-warning';
+            default: return 'text-muted-foreground';
         }
     };
 
     const getMetricBarColor = (value: number) => {
-        if (value >= 90) return 'bg-red-500';
+        if (value >= 90) return 'bg-destructive';
         if (value >= 70) return 'bg-amber-500';
-        return 'bg-green-500';
+        return 'bg-success';
     };
 
     if (loading) return <PageSpinner />;
@@ -162,20 +162,20 @@ export default function AgentDetailPage() {
                 <div className="flex items-center gap-4">
                     <Link
                         href={`/workspaces/agents`}
-                        className="p-2 rounded-lg hover:bg-slate-800 transition text-slate-400"
+                        className="p-2 rounded-xl hover:bg-muted transition text-muted-foreground"
                     >
                         <ArrowLeft size={20} />
                     </Link>
                     <div>
                         <div className="flex items-center gap-3">
                             <h1 className="text-2xl font-bold text-foreground">{agent.hostname}</h1>
-                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${agent.status === 'ONLINE' ? 'bg-green-500/10 text-green-400' :
-                                agent.status === 'ERROR' ? 'bg-red-500/10 text-red-400' :
-                                    'bg-slate-500/10 text-slate-400'
+                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${agent.status === 'ONLINE' ? 'bg-success/10 text-success' :
+                                agent.status === 'ERROR' ? 'bg-destructive/10 text-destructive' :
+                                    'bg-muted/30 text-muted-foreground'
                                 }`}>
-                                <span className={`w-1.5 h-1.5 rounded-full ${agent.status === 'ONLINE' ? 'bg-green-400' :
-                                    agent.status === 'ERROR' ? 'bg-red-400' :
-                                        'bg-slate-400'
+                                <span className={`w-1.5 h-1.5 rounded-full ${agent.status === 'ONLINE' ? 'bg-success' :
+                                    agent.status === 'ERROR' ? 'bg-destructive' :
+                                        'bg-muted-foreground'
                                     }`} />
                                 {agent.status}
                             </span>
@@ -185,10 +185,10 @@ export default function AgentDetailPage() {
                         </p>
                     </div>
                 </div>
-                <div className="text-right text-sm text-slate-500">
+                <div className="text-right text-sm text-muted-foreground">
                     <div>Last seen: {new Date(agent.lastSeen).toLocaleString()}</div>
                     {agent.isOutdated && (
-                        <div className="text-amber-400 text-xs mt-1">⚠ Agent version outdated</div>
+                        <div className="text-warning text-xs mt-1">⚠ Agent version outdated</div>
                     )}
                 </div>
             </div>
@@ -200,23 +200,23 @@ export default function AgentDetailPage() {
                     { label: 'RAM Usage', value: agent.ramUsage, icon: MemoryStick, data: ramData, color: '#8b5cf6' },
                     { label: 'Disk Usage', value: agent.diskUsage, icon: HardDrive, data: diskData, color: '#f59e0b' },
                 ].map(metric => (
-                    <div key={metric.label} className="rounded-xl border border-slate-800 bg-slate-900/50 p-5">
+                    <div key={metric.label} className="rounded-xl border border-border bg-card p-5">
                         <div className="flex items-center justify-between mb-3">
-                            <div className="flex items-center gap-2 text-sm font-medium text-slate-300">
+                            <div className="flex items-center gap-2 text-sm font-medium text-foreground">
                                 <metric.icon size={16} />
                                 {metric.label}
                             </div>
-                            <span className={`text-2xl font-bold ${metric.value !== null && metric.value >= 90 ? 'text-red-400' : metric.value !== null && metric.value >= 70 ? 'text-amber-400' : 'text-foreground'}`}>
+                            <span className={`text-2xl font-bold ${metric.value !== null && metric.value >= 90 ? 'text-destructive' : metric.value !== null && metric.value >= 70 ? 'text-warning' : 'text-foreground'}`}>
                                 {metric.value !== null ? `${metric.value.toFixed(1)}%` : '—'}
                             </span>
                         </div>
                         <div className="mb-3">
-                            <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
-                                <div className={`h-full rounded-full transition-all duration-500 ${metric.value !== null ? getMetricBarColor(metric.value) : 'bg-slate-700'}`} style={{ width: `${metric.value ?? 0}%` }} />
+                            <div className="h-2 bg-muted rounded-full overflow-hidden">
+                                <div className={`h-full rounded-full transition-all duration-500 ${metric.value !== null ? getMetricBarColor(metric.value) : 'bg-muted'}`} style={{ width: `${metric.value ?? 0}%` }} />
                             </div>
                         </div>
                         <div className="flex items-center justify-between">
-                            <span className="text-xs text-slate-500">24h Trend</span>
+                            <span className="text-xs text-muted-foreground">24h Trend</span>
                             <MiniSparkline data={metric.data} color={metric.color} />
                         </div>
                     </div>
@@ -225,26 +225,26 @@ export default function AgentDetailPage() {
 
             {/* Asset Info */}
             {agent.asset && (
-                <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-5">
-                    <h3 className="text-sm font-medium text-slate-300 mb-3 flex items-center gap-2">
+                <div className="rounded-xl border border-border bg-card p-5">
+                    <h3 className="text-sm font-medium text-foreground mb-3 flex items-center gap-2">
                         <Server size={16} />
                         Linked Asset
                     </h3>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                         <div>
-                            <div className="text-slate-500 mb-1">Name</div>
+                            <div className="text-muted-foreground mb-1">Name</div>
                             <div className="text-foreground font-medium">{agent.asset.name}</div>
                         </div>
                         <div>
-                            <div className="text-slate-500 mb-1">Type</div>
+                            <div className="text-muted-foreground mb-1">Type</div>
                             <div className="text-foreground">{agent.asset.assetType}</div>
                         </div>
                         <div>
-                            <div className="text-slate-500 mb-1">Serial</div>
+                            <div className="text-muted-foreground mb-1">Serial</div>
                             <div className="text-foreground font-mono text-xs">{agent.asset.serialNumber || '—'}</div>
                         </div>
                         <div>
-                            <div className="text-slate-500 mb-1">Location</div>
+                            <div className="text-muted-foreground mb-1">Location</div>
                             <div className="text-foreground">{agent.asset.location || '—'}</div>
                         </div>
                     </div>
@@ -254,51 +254,51 @@ export default function AgentDetailPage() {
             {/* Offline Notice */}
             {agent.status === 'OFFLINE' && (
                 <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-5 flex items-center gap-4">
-                    <WifiOff className="text-amber-400 flex-shrink-0" size={24} />
+                    <WifiOff className="text-warning flex-shrink-0" size={24} />
                     <div>
-                        <h4 className="font-medium text-amber-400">Agent Offline</h4>
-                        <p className="text-sm text-slate-400 mt-0.5">This agent has not sent a heartbeat recently. Remote operations are unavailable until it reconnects.</p>
+                        <h4 className="font-medium text-warning">Agent Offline</h4>
+                        <p className="text-sm text-muted-foreground mt-0.5">This agent has not sent a heartbeat recently. Remote operations are unavailable until it reconnects.</p>
                     </div>
                 </div>
             )}
 
             {/* Installed Software */}
-            <div className="rounded-xl border border-slate-800 bg-slate-900/50 overflow-hidden">
-                <div className="px-6 py-4 border-b border-slate-800 flex justify-between items-center">
+            <div className="rounded-xl border border-border bg-card overflow-hidden">
+                <div className="px-6 py-4 border-b border-border flex justify-between items-center">
                     <h3 className="text-sm font-medium text-foreground flex items-center gap-2">
                         <Box size={16} className="text-health-good" />
                         Installed Software
                     </h3>
-                    <span className="text-xs text-slate-500">{agent.installedSoftware?.length || 0} applications</span>
+                    <span className="text-xs text-muted-foreground">{agent.installedSoftware?.length || 0} applications</span>
                 </div>
 
                 {!agent.installedSoftware || agent.installedSoftware.length === 0 ? (
-                    <div className="text-center py-8 text-slate-500">
+                    <div className="text-center py-8 text-muted-foreground">
                         <Box className="w-8 h-8 mx-auto mb-2 opacity-50" />
                         <p>No software inventory reported by agent.</p>
                     </div>
                 ) : (
                     <div className="overflow-x-auto max-h-[400px]">
                         <table className="w-full relative">
-                            <thead className="sticky top-0 bg-slate-900/90 backdrop-blur-sm z-10">
-                                <tr className="text-left text-xs text-slate-500 uppercase tracking-wider border-b border-slate-800">
+                            <thead className="sticky top-0 bg-surface-1/90 backdrop-blur-sm z-10">
+                                <tr className="text-left text-xs text-muted-foreground uppercase tracking-wider border-b border-border">
                                     <th className="px-6 py-3">Application</th>
                                     <th className="px-6 py-3">Publisher</th>
                                     <th className="px-6 py-3">Version</th>
                                     <th className="px-6 py-3 text-right">Size</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-800">
+                            <tbody className="divide-y divide-border">
                                 {agent.installedSoftware.map(sw => (
-                                    <tr key={sw.id} className="hover:bg-slate-800/30 transition">
-                                        <td className="px-6 py-3 text-sm font-medium text-slate-200">{sw.name}</td>
-                                        <td className="px-6 py-3 text-sm text-slate-400">{sw.publisher || '—'}</td>
+                                    <tr key={sw.id} className="hover:bg-muted/30 transition">
+                                        <td className="px-6 py-3 text-sm font-medium text-foreground">{sw.name}</td>
+                                        <td className="px-6 py-3 text-sm text-muted-foreground">{sw.publisher || '—'}</td>
                                         <td className="px-6 py-3">
-                                            <span className="text-xs px-2 py-0.5 rounded bg-slate-950 border border-slate-800 text-slate-300 font-mono inline-block max-w-[120px] truncate">
+                                            <span className="text-xs px-2 py-0.5 rounded bg-background border border-border text-foreground font-mono inline-block max-w-[120px] truncate">
                                                 {sw.version || '—'}
                                             </span>
                                         </td>
-                                        <td className="px-6 py-3 text-right text-xs text-slate-400">
+                                        <td className="px-6 py-3 text-right text-xs text-muted-foreground">
                                             {sw.sizeMB ? `${Math.round(sw.sizeMB)} MB` : '—'}
                                         </td>
                                     </tr>
@@ -310,17 +310,17 @@ export default function AgentDetailPage() {
             </div>
 
             {/* Script Execution History */}
-            <div className="rounded-xl border border-slate-800 bg-slate-900/50 overflow-hidden">
-                <div className="px-6 py-4 border-b border-slate-800 flex justify-between items-center">
+            <div className="rounded-xl border border-border bg-card overflow-hidden">
+                <div className="px-6 py-4 border-b border-border flex justify-between items-center">
                     <h3 className="text-sm font-medium text-foreground flex items-center gap-2">
-                        <Terminal size={16} className="text-nerve" />
+                        <Terminal size={16} className="text-primary" />
                         Script Execution History
                     </h3>
-                    <span className="text-xs text-slate-500">{executions.length} records</span>
+                    <span className="text-xs text-muted-foreground">{executions.length} records</span>
                 </div>
 
                 {executions.length === 0 ? (
-                    <div className="text-center py-12 text-slate-500">
+                    <div className="text-center py-12 text-muted-foreground">
                         <Terminal className="w-8 h-8 mx-auto mb-2 opacity-50" />
                         <p>No scripts have been executed on this agent.</p>
                     </div>
@@ -328,7 +328,7 @@ export default function AgentDetailPage() {
                     <div className="overflow-x-auto">
                         <table className="w-full">
                             <thead>
-                                <tr className="text-left text-xs text-slate-500 uppercase tracking-wider border-b border-slate-800">
+                                <tr className="text-left text-xs text-muted-foreground uppercase tracking-wider border-b border-border">
                                     <th className="px-6 py-3">Status</th>
                                     <th className="px-6 py-3">Script</th>
                                     <th className="px-6 py-3">Language</th>
@@ -337,9 +337,9 @@ export default function AgentDetailPage() {
                                     <th className="px-6 py-3">Completed</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-800">
+                            <tbody className="divide-y divide-border">
                                 {executions.map(exec => (
-                                    <tr key={exec.id} className="hover:bg-slate-800/30 transition">
+                                    <tr key={exec.id} className="hover:bg-muted/30 transition">
                                         <td className="px-6 py-3">
                                             <div className="flex items-center gap-2">
                                                 {getStatusIcon(exec.status)}
@@ -348,11 +348,11 @@ export default function AgentDetailPage() {
                                         </td>
                                         <td className="px-6 py-3 text-sm text-foreground">{exec.script?.name || exec.scriptName}</td>
                                         <td className="px-6 py-3">
-                                            <span className="text-xs px-2 py-0.5 rounded bg-slate-800 text-slate-300 uppercase font-mono">{exec.language}</span>
+                                            <span className="text-xs px-2 py-0.5 rounded bg-muted text-foreground uppercase font-mono">{exec.language}</span>
                                         </td>
-                                        <td className="px-6 py-3 text-sm font-mono text-slate-400">{exec.exitCode !== null ? exec.exitCode : '—'}</td>
-                                        <td className="px-6 py-3 text-xs text-slate-500">{new Date(exec.createdAt).toLocaleString()}</td>
-                                        <td className="px-6 py-3 text-xs text-slate-500">{exec.completedAt ? new Date(exec.completedAt).toLocaleString() : '—'}</td>
+                                        <td className="px-6 py-3 text-sm font-mono text-muted-foreground">{exec.exitCode !== null ? exec.exitCode : '—'}</td>
+                                        <td className="px-6 py-3 text-xs text-muted-foreground">{new Date(exec.createdAt).toLocaleString()}</td>
+                                        <td className="px-6 py-3 text-xs text-muted-foreground">{exec.completedAt ? new Date(exec.completedAt).toLocaleString() : '—'}</td>
                                     </tr>
                                 ))}
                             </tbody>

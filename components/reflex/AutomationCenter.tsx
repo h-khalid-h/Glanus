@@ -192,7 +192,7 @@ function RuleCard({
                     }`}
             >
                 <span
-                    className={`h-4 w-4 rounded-full bg-slate-900/50 backdrop-blur-sm transition-transform ${rule.enabled ? 'translate-x-4' : 'translate-x-0'
+                    className={`h-4 w-4 rounded-full bg-card backdrop-blur-sm transition-transform ${rule.enabled ? 'translate-x-4' : 'translate-x-0'
                         }`}
                 />
             </button>

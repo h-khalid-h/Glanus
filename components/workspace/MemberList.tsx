@@ -112,7 +112,7 @@ export default function MemberList({ workspaceId }: { workspaceId: string }) {
     const canManage = currentRole === 'OWNER' || currentRole === 'ADMIN';
 
     if (isLoading) {
-        return <div className="text-center py-8 text-slate-500">Loading members...</div>;
+        return <div className="text-center py-8 text-muted-foreground">Loading members...</div>;
     }
 
     return (
@@ -126,27 +126,27 @@ export default function MemberList({ workspaceId }: { workspaceId: string }) {
                 onConfirm={handleRemoveMember}
                 onCancel={() => setConfirmState({ open: false, memberId: null })}
             />
-            <div className="bg-slate-900/50 backdrop-blur-sm rounded-xl shadow-sm border border-slate-800 overflow-hidden">
-                <div className="px-6 py-4 border-b border-slate-800 flex justify-between items-center">
-                    <h3 className="text-lg font-medium text-white">Team Members</h3>
-                    <span className="text-sm text-slate-500">{members.length} members</span>
+            <div className="bg-card backdrop-blur-sm rounded-xl shadow-sm border border-border overflow-hidden">
+                <div className="px-6 py-4 border-b border-border flex justify-between items-center">
+                    <h3 className="text-lg font-medium text-foreground">Team Members</h3>
+                    <span className="text-sm text-muted-foreground">{members.length} members</span>
                 </div>
 
-                <div className="divide-y divide-slate-800">
+                <div className="divide-y divide-border">
                     {members.map((member) => (
-                        <div key={member.id} className="px-6 py-4 flex items-center justify-between hover:bg-slate-800/50 transition-colors">
+                        <div key={member.id} className="px-6 py-4 flex items-center justify-between hover:bg-muted/50 transition-colors">
                             <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-full bg-nerve/15 flex items-center justify-center text-nerve font-medium text-sm">
+                                <div className="w-10 h-10 rounded-full bg-primary/15 flex items-center justify-center text-primary font-medium text-sm">
                                     {member.user.name ? member.user.name.charAt(0).toUpperCase() : member.user.email.charAt(0).toUpperCase()}
                                 </div>
                                 <div>
-                                    <div className="text-sm font-medium text-white">
+                                    <div className="text-sm font-medium text-foreground">
                                         {member.user.name || 'Unnamed User'}
                                         {currentWorkspace?.id === workspaceId && member.role === 'OWNER' && (
-                                            <span className="ml-2 text-xs font-normal text-slate-400">(Owner)</span>
+                                            <span className="ml-2 text-xs font-normal text-muted-foreground">(Owner)</span>
                                         )}
                                     </div>
-                                    <div className="text-xs text-slate-500">{member.user.email}</div>
+                                    <div className="text-xs text-muted-foreground">{member.user.email}</div>
                                 </div>
                             </div>
 
@@ -159,7 +159,7 @@ export default function MemberList({ workspaceId }: { workspaceId: string }) {
                                     <div className="relative" ref={openMenuId === member.id ? menuRef : undefined}>
                                         <button type="button"
                                             onClick={() => setOpenMenuId(openMenuId === member.id ? null : member.id)}
-                                            className="p-1 rounded-md hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-colors"
+                                            className="p-1 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
                                             aria-label="Member actions"
                                             aria-expanded={openMenuId === member.id}
                                             aria-haspopup="true"
@@ -169,13 +169,13 @@ export default function MemberList({ workspaceId }: { workspaceId: string }) {
 
                                         {openMenuId === member.id && (
                                             <div
-                                                className="absolute right-0 mt-2 w-48 origin-top-right divide-y divide-slate-700 rounded-md bg-slate-900/50 backdrop-blur-sm shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-10 animate-in fade-in zoom-in-95 duration-100"
+                                                className="absolute right-0 mt-2 w-48 origin-top-right divide-y divide-border rounded-md bg-card backdrop-blur-sm shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-10 animate-in fade-in zoom-in-95 duration-100"
                                                 role="menu"
                                             >
                                                 <div className="px-1 py-1">
                                                     <button type="button"
                                                         onClick={() => handleUpdateRole(member.id, 'ADMIN')}
-                                                        className="group flex w-full items-center rounded-md px-2 py-2 text-sm text-slate-300 hover:bg-nerve/10 hover:text-nerve transition-colors"
+                                                        className="group flex w-full items-center rounded-md px-2 py-2 text-sm text-foreground hover:bg-primary/10 hover:text-primary transition-colors"
                                                         role="menuitem"
                                                     >
                                                         <ShieldAlert className="mr-2 h-4 w-4" />
@@ -183,7 +183,7 @@ export default function MemberList({ workspaceId }: { workspaceId: string }) {
                                                     </button>
                                                     <button type="button"
                                                         onClick={() => handleUpdateRole(member.id, 'MEMBER')}
-                                                        className="group flex w-full items-center rounded-md px-2 py-2 text-sm text-slate-300 hover:bg-nerve/10 hover:text-nerve transition-colors"
+                                                        className="group flex w-full items-center rounded-md px-2 py-2 text-sm text-foreground hover:bg-primary/10 hover:text-primary transition-colors"
                                                         role="menuitem"
                                                     >
                                                         <User className="mr-2 h-4 w-4" />
@@ -193,7 +193,7 @@ export default function MemberList({ workspaceId }: { workspaceId: string }) {
                                                 <div className="px-1 py-1">
                                                     <button type="button"
                                                         onClick={() => requestRemove(member.id)}
-                                                        className="group flex w-full items-center rounded-md px-2 py-2 text-sm text-health-critical hover:bg-health-critical/10 transition-colors"
+                                                        className="group flex w-full items-center rounded-md px-2 py-2 text-sm text-destructive hover:bg-destructive/10 transition-colors"
                                                         role="menuitem"
                                                     >
                                                         <UserMinus className="mr-2 h-4 w-4" />
@@ -209,12 +209,12 @@ export default function MemberList({ workspaceId }: { workspaceId: string }) {
                     ))}
 
                     {members.length === 0 && (
-                        <div className="text-center py-12 px-4 rounded-xl border-2 border-dashed border-slate-800 bg-slate-900/10 m-6">
-                            <div className="mx-auto w-12 h-12 rounded-full bg-slate-800/50 flex items-center justify-center mb-4">
-                                <Users className="w-6 h-6 text-slate-400" />
+                        <div className="text-center py-12 px-4 rounded-xl border-2 border-dashed border-border bg-surface-1/10 m-6">
+                            <div className="mx-auto w-12 h-12 rounded-full bg-muted/50 flex items-center justify-center mb-4">
+                                <Users className="w-6 h-6 text-muted-foreground" />
                             </div>
-                            <h3 className="text-lg font-medium text-white mb-2">No team members</h3>
-                            <p className="text-sm text-slate-500 max-w-sm mx-auto">
+                            <h3 className="text-lg font-medium text-foreground mb-2">No team members</h3>
+                            <p className="text-sm text-muted-foreground max-w-sm mx-auto">
                                 You haven't added anyone to this workspace yet. Invite people to collaborate.
                             </p>
                         </div>

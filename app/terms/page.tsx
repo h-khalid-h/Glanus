@@ -7,7 +7,7 @@ export const metadata = {
 
 export default function TermsPage() {
     return (
-        <div className="min-h-screen bg-gradient-midnight relative overflow-hidden">
+        <div className="min-h-screen bg-background relative overflow-hidden">
             <div className="absolute inset-0 bg-grid opacity-15" />
 
             <div className="relative z-10 max-w-3xl mx-auto px-6 py-16">
@@ -16,9 +16,9 @@ export default function TermsPage() {
                 </Link>
 
                 <h1 className="text-3xl font-bold text-foreground mb-2">Terms of Service</h1>
-                <p className="text-slate-400 text-sm mb-10">Last updated: February 2026</p>
+                <p className="text-muted-foreground text-sm mb-10">Last updated: February 2026</p>
 
-                <div className="space-y-8 text-slate-300 leading-relaxed">
+                <div className="space-y-8 text-foreground leading-relaxed">
                     <section>
                         <h2 className="text-lg font-semibold text-foreground mb-3">1. Acceptance of Terms</h2>
                         <p>
@@ -38,7 +38,7 @@ export default function TermsPage() {
 
                     <section>
                         <h2 className="text-lg font-semibold text-foreground mb-3">3. User Accounts</h2>
-                        <ul className="list-disc list-inside space-y-2 text-slate-400">
+                        <ul className="list-disc list-inside space-y-2 text-muted-foreground">
                             <li>You must provide accurate and complete registration information.</li>
                             <li>You are responsible for maintaining the confidentiality of your account credentials.</li>
                             <li>You must notify us immediately of any unauthorized use of your account.</li>
@@ -58,7 +58,7 @@ export default function TermsPage() {
                     <section>
                         <h2 className="text-lg font-semibold text-foreground mb-3">5. Acceptable Use</h2>
                         <p className="mb-2">You agree not to:</p>
-                        <ul className="list-disc list-inside space-y-2 text-slate-400">
+                        <ul className="list-disc list-inside space-y-2 text-muted-foreground">
                             <li>Use the Service for any unlawful purpose or in violation of any applicable laws.</li>
                             <li>Attempt to gain unauthorized access to any systems or networks connected to the Service.</li>
                             <li>Interfere with or disrupt the integrity or performance of the Service.</li>
@@ -132,8 +132,8 @@ export default function TermsPage() {
                         </p>
                     </section>
 
-                    <div className="border-t border-slate-800 pt-8 mt-12">
-                        <p className="text-sm text-slate-500">
+                    <div className="border-t border-border pt-8 mt-12">
+                        <p className="text-sm text-muted-foreground">
                             See also: <Link href="/privacy" className="text-nerve hover:text-nerve/80 transition-colors">Privacy Policy</Link>
                         </p>
                     </div>

@@ -19,7 +19,7 @@ export function PartnerLayoutShell({ children }: { children: React.ReactNode }) 
     }
 
     return (
-        <div className="min-h-screen bg-gradient-midnight p-6 lg:p-8">
+        <div className="min-h-screen bg-background p-6 lg:p-8">
             <PartnerNav />
             {children}
         </div>

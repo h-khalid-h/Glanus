@@ -74,7 +74,7 @@ export function TopologyMap({
     const getNodeColor = (node: GraphNode) => {
         if (node.health >= 80) return 'hsl(var(--health-good))';
         if (node.health >= 50) return 'hsl(var(--oracle))';
-        if (node.health >= 20) return 'hsl(var(--health-critical))';
+        if (node.health >= 20) return 'hsl(var(--destructive))';
         return 'hsl(var(--muted-foreground))';
     };
 
@@ -92,7 +92,7 @@ export function TopologyMap({
             {/* Header */}
             <div className="flex items-center justify-between border-b border-border px-4 py-3">
                 <div className="flex items-center gap-2">
-                    <svg className="h-4 w-4 text-nerve" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <svg className="h-4 w-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
                     </svg>
                     <h3 className="text-sm font-semibold">Infrastructure Topology</h3>
@@ -109,7 +109,7 @@ export function TopologyMap({
                         Warning
                     </span>
                     <span className="flex items-center gap-1">
-                        <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ background: 'hsl(var(--health-critical))' }} />
+                        <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ background: 'hsl(var(--destructive))' }} />
                         Critical
                     </span>
                 </div>
@@ -199,7 +199,7 @@ export function TopologyMap({
                                         cy={node.y}
                                         r={r + 6}
                                         fill="none"
-                                        stroke={focused ? 'hsl(var(--nerve))' : 'hsl(var(--health-critical))'}
+                                        stroke={focused ? 'hsl(var(--nerve))' : 'hsl(var(--destructive))'}
                                         strokeWidth={2}
                                         strokeDasharray="3 3"
                                         opacity={0.6}

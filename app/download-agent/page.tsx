@@ -108,7 +108,7 @@ export default function DownloadAgentPage() {
                         <Card
                             key={platform.id}
                             className={`cursor-pointer transition-all hover:scale-105 ${selectedPlatform === platform.id
-                                ? 'ring-2 ring-nerve bg-nerve/5'
+                                ? 'ring-2 ring-primary bg-nerve/5'
                                 : ''
                                 }`}
                             onClick={() => setSelectedPlatform(platform.id)}

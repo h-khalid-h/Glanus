@@ -150,7 +150,7 @@ export default function WorkspacePartnerPage() {
                 <div className="mb-8">
                     <button type="button"
                         onClick={() => router.back()}
-                        className="text-nerve hover:underline mb-4"
+                        className="text-primary hover:underline mb-4"
                     >
                         ← Back to Workspace
                     </button>
@@ -159,18 +159,18 @@ export default function WorkspacePartnerPage() {
 
                 {!assignment ? (
                     /* No Partner Assigned */
-                    <div className="rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm p-8 text-center">
+                    <div className="rounded-xl border border-border bg-card backdrop-blur-sm p-8 text-center">
                         <div className="mb-6">
                             <div className="text-6xl mb-4">🤝</div>
                             <h2 className="text-2xl font-semibold text-foreground mb-2">No Partner Assigned</h2>
-                            <p className="text-slate-400">
+                            <p className="text-muted-foreground">
                                 Get matched with a certified partner to help manage this workspace
                             </p>
                         </div>
 
-                        <div className="mb-8 bg-nerve/5 border border-nerve/20 rounded-lg p-6">
-                            <h3 className="font-semibold text-nerve mb-3">What partners provide:</h3>
-                            <ul className="text-left space-y-2 text-nerve">
+                        <div className="mb-8 bg-primary/5 border border-primary/20 rounded-xl p-6">
+                            <h3 className="font-semibold text-primary mb-3">What partners provide:</h3>
+                            <ul className="text-left space-y-2 text-primary">
                                 <li>✓ Proactive workspace monitoring and management</li>
                                 <li>✓ 24/7 support and issue resolution</li>
                                 <li>✓ Regular maintenance and optimization</li>
@@ -182,7 +182,7 @@ export default function WorkspacePartnerPage() {
                         <button type="button"
                             onClick={assignPartner}
                             disabled={loading}
-                            className="px-8 py-3 bg-nerve text-white rounded-md font-semibold hover:brightness-110 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="px-8 py-3 bg-primary text-foreground rounded-md font-semibold hover:brightness-110 transition disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {loading ? 'Finding best match...' : 'Assign Partner Now'}
                         </button>
@@ -191,14 +191,14 @@ export default function WorkspacePartnerPage() {
                     /* Partner Assigned */
                     <div className="space-y-6">
                         {/* Partner Card */}
-                        <div className="rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm p-6">
+                        <div className="rounded-xl border border-border bg-card backdrop-blur-sm p-6">
                             <div className="flex items-start justify-between mb-6">
                                 <div className="flex items-start space-x-4">
                                     {assignment.partner.logo && (
                                         <img
                                             src={assignment.partner.logo}
                                             alt={assignment.partner.companyName}
-                                            className="w-16 h-16 rounded-lg object-cover"
+                                            className="w-16 h-16 rounded-xl object-cover"
                                         />
                                     )}
                                     <div>
@@ -208,7 +208,7 @@ export default function WorkspacePartnerPage() {
                                                 {assignment.partner.certificationLevel}
                                             </span>
                                             {assignment.partner.averageRating && (
-                                                <span className="text-sm text-slate-400">
+                                                <span className="text-sm text-muted-foreground">
                                                     ⭐ {Number(assignment.partner.averageRating).toFixed(1)} ({assignment.partner.totalReviews} reviews)
                                                 </span>
                                             )}
@@ -217,7 +217,7 @@ export default function WorkspacePartnerPage() {
                                 </div>
                                 <span className={`px-3 py-1 rounded-full text-sm font-semibold ${assignment.status === 'ACCEPTED' || assignment.status === 'ACTIVE' ? 'bg-health-good/15 text-health-good' :
                                     assignment.status === 'PENDING' ? 'bg-health-warn/15 text-health-warn' :
-                                        'bg-slate-800/50 text-slate-200'
+                                        'bg-muted/50 text-foreground'
                                     }`}>
                                     {assignment.status}
                                 </span>
@@ -225,20 +225,20 @@ export default function WorkspacePartnerPage() {
 
                             {/* Stats */}
                             <div className="grid grid-cols-3 gap-4 mb-6">
-                                <div className="bg-slate-900/30 rounded-lg p-4">
-                                    <p className="text-sm text-slate-400 mb-1">Assigned</p>
+                                <div className="bg-muted/30 rounded-xl p-4">
+                                    <p className="text-sm text-muted-foreground mb-1">Assigned</p>
                                     <p className="text-lg font-semibold text-foreground">
                                         {formatDate(assignment.assignedAt)}
                                     </p>
                                 </div>
-                                <div className="bg-slate-900/30 rounded-lg p-4">
-                                    <p className="text-sm text-slate-400 mb-1">Revenue Split</p>
+                                <div className="bg-muted/30 rounded-xl p-4">
+                                    <p className="text-sm text-muted-foreground mb-1">Revenue Split</p>
                                     <p className="text-lg font-semibold text-foreground">
                                         {Number(assignment.revenueSplit) * 100}%
                                     </p>
                                 </div>
-                                <div className="bg-slate-900/30 rounded-lg p-4">
-                                    <p className="text-sm text-slate-400 mb-1">Total Earnings</p>
+                                <div className="bg-muted/30 rounded-xl p-4">
+                                    <p className="text-sm text-muted-foreground mb-1">Total Earnings</p>
                                     <p className="text-lg font-semibold text-health-good">
                                         ${Number(assignment.totalEarnings).toFixed(2)}
                                     </p>
@@ -251,14 +251,14 @@ export default function WorkspacePartnerPage() {
                                     href={`/partners/${assignment.partner.id}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="px-4 py-2 border border-slate-700 rounded-md hover:bg-slate-900/30 transition"
+                                    className="px-4 py-2 border border-border rounded-md hover:bg-muted/30 transition"
                                 >
                                     View Profile
                                 </a>
                                 {assignment.status === 'COMPLETED' && !assignment.rating && (
                                     <button type="button"
                                         onClick={() => setShowReviewForm(!showReviewForm)}
-                                        className="px-4 py-2 bg-nerve text-white rounded-md hover:brightness-110 transition"
+                                        className="px-4 py-2 bg-primary text-foreground rounded-md hover:brightness-110 transition"
                                     >
                                         Write Review
                                     </button>
@@ -266,7 +266,7 @@ export default function WorkspacePartnerPage() {
                                 {assignment.status !== 'COMPLETED' && (
                                     <button type="button"
                                         onClick={() => setShowRemoveConfirm(true)}
-                                        className="px-4 py-2 bg-destructive text-white rounded-md hover:bg-destructive/80 transition"
+                                        className="px-4 py-2 bg-destructive text-foreground rounded-md hover:bg-destructive/80 transition"
                                     >
                                         Remove Partner
                                     </button>
@@ -276,11 +276,11 @@ export default function WorkspacePartnerPage() {
 
                         {/* Review Form */}
                         {showReviewForm && (
-                            <div className="rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm p-6">
+                            <div className="rounded-xl border border-border bg-card backdrop-blur-sm p-6">
                                 <h3 className="text-xl font-semibold mb-4">Write a Review</h3>
                                 <form onSubmit={submitReview}>
                                     <div className="mb-4">
-                                        <label className="block text-sm font-medium text-slate-300 mb-2">
+                                        <label className="block text-sm font-medium text-foreground mb-2">
                                             Rating
                                         </label>
                                         <div className="flex space-x-2">
@@ -296,32 +296,32 @@ export default function WorkspacePartnerPage() {
                                         </div>
                                     </div>
                                     <div className="mb-6">
-                                        <label className="block text-sm font-medium text-slate-300 mb-2">
+                                        <label className="block text-sm font-medium text-foreground mb-2">
                                             Review (minimum 20 characters)
                                         </label>
                                         <textarea
                                             rows={4}
                                             value={review}
                                             onChange={(e) => setReview(e.target.value)}
-                                            className="w-full px-4 py-2 border border-slate-700 rounded-md focus:ring-2 focus:ring-nerve/50 focus:border-transparent"
+                                            className="w-full px-4 py-2 border border-border rounded-md focus:ring-2 focus:ring-primary/50 focus:border-transparent"
                                             placeholder="Share your experience working with this partner..."
                                             required
                                             minLength={20}
                                             maxLength={1000}
                                         />
-                                        <p className="mt-1 text-sm text-slate-500">{review.length} / 1000 characters</p>
+                                        <p className="mt-1 text-sm text-muted-foreground">{review.length} / 1000 characters</p>
                                     </div>
                                     <div className="flex space-x-3">
                                         <button
                                             type="submit"
                                             disabled={review.length < 20 || submitting}
-                                            className="px-6 py-2 bg-health-good text-white rounded-md hover:bg-health-good/80 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                            className="px-6 py-2 bg-health-good text-foreground rounded-md hover:bg-health-good/80 transition disabled:opacity-50 disabled:cursor-not-allowed"
                                         >
                                             {submitting ? 'Submitting...' : 'Submit Review'}
                                         </button>
                                         <button type="button"
                                             onClick={() => setShowReviewForm(false)}
-                                            className="px-6 py-2 border border-slate-700 rounded-md hover:bg-slate-900/30 transition"
+                                            className="px-6 py-2 border border-border rounded-md hover:bg-muted/30 transition"
                                         >
                                             Cancel
                                         </button>
@@ -332,17 +332,17 @@ export default function WorkspacePartnerPage() {
 
                         {/* Existing Review */}
                         {assignment.rating && assignment.review && (
-                            <div className="rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm p-6">
+                            <div className="rounded-xl border border-border bg-card backdrop-blur-sm p-6">
                                 <h3 className="text-xl font-semibold mb-4">Your Review</h3>
                                 <div className="flex mb-2">
                                     {Array.from({ length: 5 }).map((_, i) => (
-                                        <span key={i} className={`text-2xl ${i < assignment.rating! ? 'text-health-warn' : 'text-slate-600'}`}>
+                                        <span key={i} className={`text-2xl ${i < assignment.rating! ? 'text-health-warn' : 'text-muted-foreground/60'}`}>
                                             ⭐
                                         </span>
                                     ))}
                                 </div>
-                                <p className="text-slate-300">{assignment.review}</p>
-                                <p className="text-sm text-slate-500 mt-2">
+                                <p className="text-foreground">{assignment.review}</p>
+                                <p className="text-sm text-muted-foreground mt-2">
                                     Submitted on {assignment.completedAt && formatDate(assignment.completedAt)}
                                 </p>
                             </div>

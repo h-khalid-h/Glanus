@@ -107,51 +107,51 @@ export default function DownloadAgentPage() {
 
                 {/* Main View */}
                 {!downloadInfo ? (
-                    <div className="rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm p-8 mb-8">
+                    <div className="rounded-xl border border-border bg-card backdrop-blur-sm p-8 mb-8">
                         <h2 className="text-2xl font-semibold mb-6">Select Your Platform</h2>
 
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                             <button type="button"
                                 onClick={() => setPlatform('windows')}
-                                className={`p-6 border-2 rounded-lg transition ${platform === 'windows'
-                                    ? 'border-nerve bg-nerve/5'
-                                    : 'border-slate-800 hover:border-slate-700'
+                                className={`p-6 border-2 rounded-xl transition ${platform === 'windows'
+                                    ? 'border-primary bg-primary/5'
+                                    : 'border-border hover:border-border'
                                     }`}
                             >
                                 <div className="text-4xl mb-2">🪟</div>
                                 <h3 className="font-semibold text-lg mb-1">Windows</h3>
-                                <p className="text-sm text-slate-400">PowerShell</p>
+                                <p className="text-sm text-muted-foreground">PowerShell</p>
                             </button>
 
                             <button type="button"
                                 onClick={() => setPlatform('macos')}
-                                className={`p-6 border-2 rounded-lg transition ${platform === 'macos'
-                                    ? 'border-nerve bg-nerve/5'
-                                    : 'border-slate-800 hover:border-slate-700'
+                                className={`p-6 border-2 rounded-xl transition ${platform === 'macos'
+                                    ? 'border-primary bg-primary/5'
+                                    : 'border-border hover:border-border'
                                     }`}
                             >
                                 <div className="text-4xl mb-2">🍎</div>
                                 <h3 className="font-semibold text-lg mb-1">macOS</h3>
-                                <p className="text-sm text-slate-400">Terminal (zsh/bash)</p>
+                                <p className="text-sm text-muted-foreground">Terminal (zsh/bash)</p>
                             </button>
 
                             <button type="button"
                                 onClick={() => setPlatform('linux')}
-                                className={`p-6 border-2 rounded-lg transition ${platform === 'linux'
-                                    ? 'border-nerve bg-nerve/5'
-                                    : 'border-slate-800 hover:border-slate-700'
+                                className={`p-6 border-2 rounded-xl transition ${platform === 'linux'
+                                    ? 'border-primary bg-primary/5'
+                                    : 'border-border hover:border-border'
                                     }`}
                             >
                                 <div className="text-4xl mb-2">🐧</div>
                                 <h3 className="font-semibold text-lg mb-1">Linux</h3>
-                                <p className="text-sm text-slate-400">Terminal (bash/sh)</p>
+                                <p className="text-sm text-muted-foreground">Terminal (bash/sh)</p>
                             </button>
                         </div>
 
                         <button type="button"
                             onClick={generateDownloadLink}
                             disabled={generating}
-                            className="w-full py-4 bg-nerve text-white rounded-lg font-semibold text-lg hover:brightness-110 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
+                            className="w-full py-4 bg-primary text-foreground rounded-xl font-semibold text-lg hover:brightness-110 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
                         >
                             {generating && (
                                 <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -163,12 +163,12 @@ export default function DownloadAgentPage() {
                         </button>
                     </div>
                 ) : (
-                    <div className="rounded-xl border border-nerve/30 bg-nerve/5 backdrop-blur-sm p-8 mb-8 animate-in fade-in zoom-in duration-300">
+                    <div className="rounded-xl border border-primary/30 bg-primary/5 backdrop-blur-sm p-8 mb-8 animate-in fade-in zoom-in duration-300">
                         <h2 className="text-2xl font-semibold text-foreground mb-2">Deployment Script Generated</h2>
                         <p className="text-muted-foreground mb-6">Paste this command into your target machine's {platform === 'windows' ? 'Administrator PowerShell' : 'Terminal'}. It will silently download the agent and authenticate it to this Workspace.</p>
 
                         <div className="relative group">
-                            <pre className="bg-slate-950 text-slate-300 p-4 rounded-xl font-mono text-sm overflow-x-auto whitespace-pre-wrap break-all border border-slate-800">
+                            <pre className="bg-background text-foreground p-4 rounded-xl font-mono text-sm overflow-x-auto whitespace-pre-wrap break-all border border-border">
                                 {platform === 'windows' && `powershell -ExecutionPolicy Bypass -Command "irm '${window.location.origin}${downloadInfo.installScriptUrl}' | iex"`}
                                 {platform === 'macos' && `curl -sSL '${window.location.origin}${downloadInfo.installScriptUrl}' | sudo bash`}
                                 {platform === 'linux' && `curl -sSL '${window.location.origin}${downloadInfo.installScriptUrl}' | sudo bash`}
@@ -176,14 +176,14 @@ export default function DownloadAgentPage() {
                             <button
                                 type="button"
                                 onClick={handleCopy}
-                                className="absolute top-3 right-3 p-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg transition-colors flex items-center gap-2"
+                                className="absolute top-3 right-3 p-2 bg-muted hover:bg-muted text-foreground rounded-xl transition-colors flex items-center gap-2"
                             >
                                 {copied ? <CheckCircle2 className="w-4 h-4 text-health-good" /> : <Copy className="w-4 h-4" />}
                                 <span className="text-xs font-semibold">{copied ? 'Copied!' : 'Copy'}</span>
                             </button>
                         </div>
 
-                        <div className="mt-6 flex flex-col md:flex-row items-center justify-between gap-4 py-4 px-6 bg-surface-1 rounded-lg border border-border">
+                        <div className="mt-6 flex flex-col md:flex-row items-center justify-between gap-4 py-4 px-6 bg-surface-1 rounded-xl border border-border">
                             <div className="text-sm">
                                 <p className="text-muted-foreground">
                                     <span className="text-foreground font-medium">Auth Token:</span>{' '}
@@ -193,7 +193,7 @@ export default function DownloadAgentPage() {
                                     <button
                                         type="button"
                                         onClick={() => setCopied(prev => !prev)}
-                                        className="ml-2 text-nerve hover:underline text-xs"
+                                        className="ml-2 text-primary hover:underline text-xs"
                                     >
                                         {copied ? 'Hide' : 'Reveal'}
                                     </button>
@@ -203,7 +203,7 @@ export default function DownloadAgentPage() {
                             <button
                                 type="button"
                                 onClick={triggerManualDownload}
-                                className="px-4 py-2 text-sm font-semibold bg-surface-2 hover:bg-surface-3 text-foreground rounded-lg whitespace-nowrap"
+                                className="px-4 py-2 text-sm font-semibold bg-surface-2 hover:bg-surface-3 text-foreground rounded-xl whitespace-nowrap"
                             >
                                 Download Binary Manually
                             </button>
@@ -212,7 +212,7 @@ export default function DownloadAgentPage() {
                         <button
                             type="button"
                             onClick={() => setDownloadInfo(null)}
-                            className="w-full text-center text-sm text-nerve hover:underline mt-6"
+                            className="w-full text-center text-sm text-primary hover:underline mt-6"
                         >
                             ← Back to Platform Selection
                         </button>
@@ -221,12 +221,12 @@ export default function DownloadAgentPage() {
 
 
                 {/* What the Agent Does */}
-                <div className="rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm p-8 mb-8">
+                <div className="rounded-xl border border-border bg-card backdrop-blur-sm p-8 mb-8">
                     <h2 className="text-2xl font-semibold mb-6">What the Agent Does</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <h3 className="font-semibold text-lg mb-2">✅ Monitoring</h3>
-                            <ul className="text-sm text-slate-400 space-y-1">
+                            <ul className="text-sm text-muted-foreground space-y-1">
                                 <li>• Real-time CPU, RAM, and Disk usage</li>
                                 <li>• Network activity tracking</li>
                                 <li>• Running process monitoring</li>
@@ -236,7 +236,7 @@ export default function DownloadAgentPage() {
 
                         <div>
                             <h3 className="font-semibold text-lg mb-2">🔧 Management</h3>
-                            <ul className="text-sm text-slate-400 space-y-1">
+                            <ul className="text-sm text-muted-foreground space-y-1">
                                 <li>• Remote script execution</li>
                                 <li>• Automated maintenance tasks</li>
                                 <li>• Software inventory</li>
@@ -246,7 +246,7 @@ export default function DownloadAgentPage() {
 
                         <div>
                             <h3 className="font-semibold text-lg mb-2">🔒 Security</h3>
-                            <ul className="text-sm text-slate-400 space-y-1">
+                            <ul className="text-sm text-muted-foreground space-y-1">
                                 <li>• Encrypted communication</li>
                                 <li>• Secure authentication tokens</li>
                                 <li>• Sandboxed script execution</li>
@@ -256,7 +256,7 @@ export default function DownloadAgentPage() {
 
                         <div>
                             <h3 className="font-semibold text-lg mb-2">⚡ Performance</h3>
-                            <ul className="text-sm text-slate-400 space-y-1">
+                            <ul className="text-sm text-muted-foreground space-y-1">
                                 <li>• &lt;2% CPU usage (idle)</li>
                                 <li>• &lt;50MB RAM footprint</li>
                                 <li>• Offline queueing for reliability</li>
@@ -270,7 +270,7 @@ export default function DownloadAgentPage() {
                 <div className="mt-8 text-center">
                     <Link
                         href={`/workspaces/agents`}
-                        className="text-nerve hover:underline"
+                        className="text-primary hover:underline"
                     >
                         View Connected Agents →
                     </Link>

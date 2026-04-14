@@ -119,15 +119,15 @@ export default function PartnerEarningsPage() {
                 {/* Header */}
                 <div className="mb-8">
                     <h1 className="text-3xl font-bold text-foreground mb-2">Earnings & Payouts</h1>
-                    <p className="text-slate-400">Track your revenue, top-performing workspaces, and payout history</p>
+                    <p className="text-muted-foreground">Track your revenue, top-performing workspaces, and payout history</p>
                 </div>
 
                 {/* Stripe Connect Banner */}
                 {!stripeConnected && (
-                    <div className="mb-8 bg-health-warn/10 border border-health-warn/20 rounded-lg p-6">
+                    <div className="mb-8 bg-health-warn/10 border border-health-warn/20 rounded-xl p-6">
                         <div className="flex items-start">
                             <div className="flex-shrink-0">
-                                <svg className="h-6 w-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <svg className="h-6 w-6 text-warning" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                                 </svg>
                             </div>
@@ -138,7 +138,7 @@ export default function PartnerEarningsPage() {
                                 </p>
                                 <button type="button"
                                     onClick={connectStripe}
-                                    className="px-6 py-2 bg-yellow-600 text-white rounded-md font-semibold hover:bg-yellow-700 transition"
+                                    className="px-6 py-2 bg-warning text-foreground rounded-md font-semibold hover:bg-warning/80 transition"
                                 >
                                     Connect Stripe Account
                                 </button>
@@ -150,24 +150,24 @@ export default function PartnerEarningsPage() {
                 {/* Stats Cards */}
                 {summary && (
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                        <div className="rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm p-6">
-                            <p className="text-sm text-slate-400 mb-1">Total Earnings</p>
-                            <p className="text-3xl font-bold text-white">${Number(summary.totalEarnings).toFixed(2)}</p>
+                        <div className="rounded-xl border border-border bg-card backdrop-blur-sm p-6">
+                            <p className="text-sm text-muted-foreground mb-1">Total Earnings</p>
+                            <p className="text-3xl font-bold text-foreground">${Number(summary.totalEarnings).toFixed(2)}</p>
                         </div>
 
-                        <div className="rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm p-6">
-                            <p className="text-sm text-slate-400 mb-1">This Month (Est.)</p>
+                        <div className="rounded-xl border border-border bg-card backdrop-blur-sm p-6">
+                            <p className="text-sm text-muted-foreground mb-1">This Month (Est.)</p>
                             <p className="text-3xl font-bold text-health-good">${summary.currentMonthEstimate.toFixed(2)}</p>
                         </div>
 
-                        <div className="rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm p-6">
-                            <p className="text-sm text-slate-400 mb-1">Active Workspaces</p>
-                            <p className="text-3xl font-bold text-white">{summary.activeWorkspaces}</p>
+                        <div className="rounded-xl border border-border bg-card backdrop-blur-sm p-6">
+                            <p className="text-sm text-muted-foreground mb-1">Active Workspaces</p>
+                            <p className="text-3xl font-bold text-foreground">{summary.activeWorkspaces}</p>
                         </div>
 
-                        <div className="rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm p-6">
-                            <p className="text-sm text-slate-400 mb-1">Capacity Used</p>
-                            <p className="text-3xl font-bold text-white">
+                        <div className="rounded-xl border border-border bg-card backdrop-blur-sm p-6">
+                            <p className="text-sm text-muted-foreground mb-1">Capacity Used</p>
+                            <p className="text-3xl font-bold text-foreground">
                                 {summary.maxWorkspaces - summary.availableSlots} / {summary.maxWorkspaces}
                             </p>
                         </div>
@@ -176,33 +176,33 @@ export default function PartnerEarningsPage() {
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     {/* Top Earning Workspaces */}
-                    <div className="rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm p-6">
+                    <div className="rounded-xl border border-border bg-card backdrop-blur-sm p-6">
                         <h2 className="text-xl font-semibold mb-4">Top Earning Workspaces</h2>
                         {topWorkspaces.length === 0 ? (
-                            <p className="text-slate-400">No workspace assignments yet</p>
+                            <p className="text-muted-foreground">No workspace assignments yet</p>
                         ) : (
                             <div className="space-y-4">
                                 {topWorkspaces.map((item, index) => (
                                     <div key={item.workspace.id} className="flex items-center justify-between">
                                         <div className="flex items-center space-x-3">
-                                            <div className="w-8 h-8 rounded-full bg-nerve/10 text-nerve font-semibold flex items-center justify-center text-sm">
+                                            <div className="w-8 h-8 rounded-full bg-primary/10 text-primary font-semibold flex items-center justify-center text-sm">
                                                 #{index + 1}
                                             </div>
                                             <div>
                                                 <Link
                                                     href={`/workspaces/${item.workspace.id}`}
-                                                    className="font-medium text-white hover:text-nerve"
+                                                    className="font-medium text-foreground hover:text-primary"
                                                 >
                                                     {item.workspace.name}
                                                 </Link>
-                                                <p className="text-xs text-slate-400">
+                                                <p className="text-xs text-muted-foreground">
                                                     Since {formatDate(item.assignedAt)}
                                                 </p>
                                             </div>
                                         </div>
                                         <div className="text-right">
                                             <p className="font-semibold text-health-good">${Number(item.totalEarnings).toFixed(2)}</p>
-                                            <p className="text-xs text-slate-400">{item.status}</p>
+                                            <p className="text-xs text-muted-foreground">{item.status}</p>
                                         </div>
                                     </div>
                                 ))}
@@ -212,24 +212,24 @@ export default function PartnerEarningsPage() {
 
                     {/* Payout Summary */}
                     {payoutStats && (
-                        <div className="rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm p-6">
+                        <div className="rounded-xl border border-border bg-card backdrop-blur-sm p-6">
                             <h2 className="text-xl font-semibold mb-4">Payout Summary</h2>
                             <div className="space-y-4">
-                                <div className="flex justify-between items-center pb-3 border-b border-slate-800">
-                                    <span className="text-slate-400">Total Paid Out</span>
+                                <div className="flex justify-between items-center pb-3 border-b border-border">
+                                    <span className="text-muted-foreground">Total Paid Out</span>
                                     <span className="text-xl font-bold text-health-good">${payoutStats.totalPaid.toFixed(2)}</span>
                                 </div>
-                                <div className="flex justify-between items-center pb-3 border-b border-slate-800">
-                                    <span className="text-slate-400">Pending Payouts</span>
-                                    <span className="text-xl font-bold text-yellow-600">${payoutStats.pending.toFixed(2)}</span>
+                                <div className="flex justify-between items-center pb-3 border-b border-border">
+                                    <span className="text-muted-foreground">Pending Payouts</span>
+                                    <span className="text-xl font-bold text-warning">${payoutStats.pending.toFixed(2)}</span>
                                 </div>
-                                <div className="flex justify-between items-center pb-3 border-b border-slate-800">
-                                    <span className="text-slate-400">Failed Payouts</span>
-                                    <span className="text-xl font-bold text-health-critical">{payoutStats.failed}</span>
+                                <div className="flex justify-between items-center pb-3 border-b border-border">
+                                    <span className="text-muted-foreground">Failed Payouts</span>
+                                    <span className="text-xl font-bold text-destructive">{payoutStats.failed}</span>
                                 </div>
                                 <div className="flex justify-between items-center">
-                                    <span className="text-slate-400">Total Payouts</span>
-                                    <span className="text-xl font-bold text-white">{payoutStats.total}</span>
+                                    <span className="text-muted-foreground">Total Payouts</span>
+                                    <span className="text-xl font-bold text-foreground">{payoutStats.total}</span>
                                 </div>
                             </div>
                         </div>
@@ -237,54 +237,54 @@ export default function PartnerEarningsPage() {
                 </div>
 
                 {/* Payout History */}
-                <div className="mt-8 rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm">
-                    <div className="p-6 border-b border-slate-800">
+                <div className="mt-8 rounded-xl border border-border bg-card backdrop-blur-sm">
+                    <div className="p-6 border-b border-border">
                         <h2 className="text-xl font-semibold">Payout History</h2>
                     </div>
                     <div className="overflow-x-auto">
                         {payouts.length === 0 ? (
-                            <div className="p-6 text-center text-slate-400">
+                            <div className="p-6 text-center text-muted-foreground">
                                 No payouts yet. Payouts are processed monthly after your first month of earnings.
                             </div>
                         ) : (
                             <table className="w-full">
-                                <thead className="bg-slate-900/30">
+                                <thead className="bg-muted/30">
                                     <tr>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Period</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Amount</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Status</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Workspaces</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Date</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Period</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Amount</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Status</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Workspaces</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Date</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-slate-800">
+                                <tbody className="divide-y divide-border">
                                     {payouts.map((payout) => (
-                                        <tr key={payout.id} className="hover:bg-slate-900/30">
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
+                                        <tr key={payout.id} className="hover:bg-muted/30">
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
                                                 {formatDate(payout.periodStart)} -{' '}
                                                 {formatDate(payout.periodEnd)}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
-                                                <span className="text-lg font-semibold text-white">
+                                                <span className="text-lg font-semibold text-foreground">
                                                     ${Number(payout.amount).toFixed(2)} {payout.currency}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <span className={`px-2 py-1 rounded-full text-xs font-semibold ${payout.status === 'PAID' ? 'bg-health-good/15 text-health-good' :
                                                     payout.status === 'PENDING' ? 'bg-health-warn/15 text-health-warn' :
-                                                        payout.status === 'PROCESSING' ? 'bg-nerve/10 text-nerve' :
-                                                            'bg-health-critical/15 text-health-critical'
+                                                        payout.status === 'PROCESSING' ? 'bg-primary/10 text-primary' :
+                                                            'bg-destructive/15 text-destructive'
                                                     }`}>
                                                     {payout.status}
                                                 </span>
                                                 {payout.failureReason && (
-                                                    <p className="text-xs text-health-critical mt-1">{payout.failureReason}</p>
+                                                    <p className="text-xs text-destructive mt-1">{payout.failureReason}</p>
                                                 )}
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-400">
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                                                 {payout.workspaceCount}
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-400">
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                                                 {payout.paidAt
                                                     ? formatDate(payout.paidAt)
                                                     : formatDate(payout.createdAt)}
@@ -298,9 +298,9 @@ export default function PartnerEarningsPage() {
                 </div>
 
                 {/* Info Box */}
-                <div className="mt-8 bg-nerve/5 border border-nerve/20 rounded-lg p-6">
-                    <h3 className="text-lg font-semibold text-nerve mb-2">How Payouts Work</h3>
-                    <ul className="list-disc list-inside space-y-1 text-nerve">
+                <div className="mt-8 bg-primary/5 border border-primary/20 rounded-xl p-6">
+                    <h3 className="text-lg font-semibold text-primary mb-2">How Payouts Work</h3>
+                    <ul className="list-disc list-inside space-y-1 text-primary">
                         <li>Payouts are processed monthly on the 1st of each month</li>
                         <li>You earn 50% revenue share from each workspace subscription</li>
                         <li>Funds are transferred to your Stripe Connect account within 2-3 business days</li>

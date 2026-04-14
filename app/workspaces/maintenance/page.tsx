@@ -34,7 +34,7 @@ type StatusFilter = 'all' | 'scheduled' | 'in_progress' | 'completed' | 'cancell
 
 const statusConfig: Record<string, { color: string; bg: string; icon: typeof Clock }> = {
     scheduled: { color: 'text-primary', bg: 'bg-primary/15', icon: Calendar },
-    in_progress: { color: 'text-nerve', bg: 'bg-nerve/15', icon: Loader2 },
+    in_progress: { color: 'text-primary', bg: 'bg-primary/15', icon: Loader2 },
     completed: { color: 'text-health-good', bg: 'bg-health-good/15', icon: CheckCircle },
     cancelled: { color: 'text-muted-foreground', bg: 'bg-muted', icon: XCircle },
 };
@@ -70,7 +70,7 @@ const priorityColors: Record<string, { cls: string, icon: any }> = {
     low: { cls: 'text-muted-foreground bg-muted', icon: null },
     medium: { cls: 'text-primary bg-primary/10', icon: null },
     high: { cls: 'text-health-warn bg-health-warn/10', icon: AlertTriangle },
-    critical: { cls: 'text-health-critical bg-health-critical/10', icon: AlertCircle },
+    critical: { cls: 'text-destructive bg-destructive/10', icon: AlertCircle },
 };
 
 export default function MaintenancePage() {
@@ -192,7 +192,7 @@ export default function MaintenancePage() {
             <div className="flex items-start justify-between mb-8">
                 <div>
                     <h1 className="text-2xl font-semibold tracking-tight text-on-surface">Maintenance</h1>
-                    <p className="text-sm text-slate-400 mt-1">
+                    <p className="text-sm text-muted-foreground mt-1">
                         {loading ? 'Loading...' : `${windows.length} window${windows.length !== 1 ? 's' : ''} scheduled`}
                     </p>
                 </div>
@@ -208,18 +208,18 @@ export default function MaintenancePage() {
             </div>
 
             {/* ── Filter toolbar ── */}
-            <div className="flex flex-wrap gap-3 mb-8 p-3 bg-surface-container rounded-xl shadow-sm border border-slate-800/20">
-                 <div className="flex items-center text-sm font-medium text-slate-400 pl-2 pr-1">
+            <div className="flex flex-wrap gap-3 mb-8 p-3 bg-surface-container rounded-xl shadow-sm border border-border/40">
+                 <div className="flex items-center text-sm font-medium text-muted-foreground pl-2 pr-1">
                     <Filter className="h-4 w-4 mr-2" />
                     Filters
                 </div>
                 
-                <div className="w-px h-6 bg-slate-800/40 hidden sm:block self-center mx-1" aria-hidden="true" />
+                <div className="w-px h-6 bg-muted/40 hidden sm:block self-center mx-1" aria-hidden="true" />
                 
                 <select 
                     value={statusFilter} 
                     onChange={e => setStatusFilter(e.target.value as StatusFilter)} 
-                    className="bg-surface-container-low border-none rounded-lg focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-surface-container transition-all py-2 pl-3 pr-8 text-on-surface text-sm outline-none appearance-none"
+                    className="bg-surface-container-low border-none rounded-xl focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-surface-container transition-all py-2 pl-3 pr-8 text-on-surface text-sm outline-none appearance-none"
                 >
                     <option value="all">All Statuses</option>
                     <option value="scheduled">Scheduled</option>
@@ -242,34 +242,34 @@ export default function MaintenancePage() {
 
             {/* Create Form */}
             {showCreate && (
-                <form onSubmit={handleCreate} className="bg-surface-container rounded-xl shadow-sm border border-slate-800/20 p-6 mb-8 mt-2 animate-slide-up">
+                <form onSubmit={handleCreate} className="bg-surface-container rounded-xl shadow-sm border border-border/40 p-6 mb-8 mt-2 animate-slide-up">
                     <h3 className="text-lg font-semibold text-foreground flex items-center gap-2 mb-6 text-on-surface">
                         <Calendar size={18} className="text-primary" />
                         New Maintenance Window
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div>
-                            <label className="block text-sm text-slate-400 mb-1.5 font-medium">Title *</label>
-                            <input type="text" value={title} onChange={e => setTitle(e.target.value)} required className="w-full bg-surface-container-low border border-slate-700/50 rounded-lg focus:border-primary focus:ring-1 focus:ring-primary transition-all py-2 px-3 text-on-surface text-sm outline-none placeholder:text-slate-500" placeholder="e.g. Quarterly Server Inspection" />
+                            <label className="block text-sm text-muted-foreground mb-1.5 font-medium">Title *</label>
+                            <input type="text" value={title} onChange={e => setTitle(e.target.value)} required className="w-full bg-surface-container-low border border-border rounded-xl focus:border-primary focus:ring-1 focus:ring-primary transition-all py-2 px-3 text-on-surface text-sm outline-none placeholder:text-muted-foreground" placeholder="e.g. Quarterly Server Inspection" />
                         </div>
                         <div>
-                            <label className="block text-sm text-slate-400 mb-1.5 font-medium">Asset *</label>
-                            <select value={assetId} onChange={e => setAssetId(e.target.value)} required className="w-full bg-surface-container-low border border-slate-700/50 rounded-lg focus:border-primary focus:ring-1 focus:ring-primary transition-all py-2 px-3 text-on-surface text-sm outline-none">
+                            <label className="block text-sm text-muted-foreground mb-1.5 font-medium">Asset *</label>
+                            <select value={assetId} onChange={e => setAssetId(e.target.value)} required className="w-full bg-surface-container-low border border-border rounded-xl focus:border-primary focus:ring-1 focus:ring-primary transition-all py-2 px-3 text-on-surface text-sm outline-none">
                                 <option value="">Select asset…</option>
                                 {assets.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
                             </select>
                         </div>
                         <div>
-                            <label className="block text-sm text-slate-400 mb-1.5 font-medium">Type</label>
-                            <select value={type} onChange={e => setType(e.target.value)} className="w-full bg-surface-container-low border border-slate-700/50 rounded-lg focus:border-primary focus:ring-1 focus:ring-primary transition-all py-2 px-3 text-on-surface text-sm outline-none">
+                            <label className="block text-sm text-muted-foreground mb-1.5 font-medium">Type</label>
+                            <select value={type} onChange={e => setType(e.target.value)} className="w-full bg-surface-container-low border border-border rounded-xl focus:border-primary focus:ring-1 focus:ring-primary transition-all py-2 px-3 text-on-surface text-sm outline-none">
                                 <option value="preventive">Preventive</option>
                                 <option value="corrective">Corrective</option>
                                 <option value="inspection">Inspection</option>
                             </select>
                         </div>
                         <div>
-                            <label className="block text-sm text-slate-400 mb-1.5 font-medium">Priority</label>
-                            <select value={priority} onChange={e => setPriority(e.target.value)} className="w-full bg-surface-container-low border border-slate-700/50 rounded-lg focus:border-primary focus:ring-1 focus:ring-primary transition-all py-2 px-3 text-on-surface text-sm outline-none">
+                            <label className="block text-sm text-muted-foreground mb-1.5 font-medium">Priority</label>
+                            <select value={priority} onChange={e => setPriority(e.target.value)} className="w-full bg-surface-container-low border border-border rounded-xl focus:border-primary focus:ring-1 focus:ring-primary transition-all py-2 px-3 text-on-surface text-sm outline-none">
                                 <option value="low">Low</option>
                                 <option value="medium">Medium</option>
                                 <option value="high">High</option>
@@ -277,21 +277,21 @@ export default function MaintenancePage() {
                             </select>
                         </div>
                         <div>
-                            <label className="block text-sm text-slate-400 mb-1.5 font-medium">Scheduled Start *</label>
-                            <input type="datetime-local" value={startDate} onChange={e => setStartDate(e.target.value)} required className="w-full bg-surface-container-low border border-slate-700/50 rounded-lg focus:border-primary focus:ring-1 focus:ring-primary transition-all py-2 px-3 text-on-surface text-sm outline-none" />
+                            <label className="block text-sm text-muted-foreground mb-1.5 font-medium">Scheduled Start *</label>
+                            <input type="datetime-local" value={startDate} onChange={e => setStartDate(e.target.value)} required className="w-full bg-surface-container-low border border-border rounded-xl focus:border-primary focus:ring-1 focus:ring-primary transition-all py-2 px-3 text-on-surface text-sm outline-none" />
                         </div>
                         <div>
-                            <label className="block text-sm text-slate-400 mb-1.5 font-medium">Scheduled End *</label>
-                            <input type="datetime-local" value={endDate} onChange={e => setEndDate(e.target.value)} required className="w-full bg-surface-container-low border border-slate-700/50 rounded-lg focus:border-primary focus:ring-1 focus:ring-primary transition-all py-2 px-3 text-on-surface text-sm outline-none" />
+                            <label className="block text-sm text-muted-foreground mb-1.5 font-medium">Scheduled End *</label>
+                            <input type="datetime-local" value={endDate} onChange={e => setEndDate(e.target.value)} required className="w-full bg-surface-container-low border border-border rounded-xl focus:border-primary focus:ring-1 focus:ring-primary transition-all py-2 px-3 text-on-surface text-sm outline-none" />
                         </div>
                         <div className="md:col-span-2">
-                            <label className="block text-sm text-slate-400 mb-1.5 font-medium">Description</label>
-                            <textarea value={description} onChange={e => setDescription(e.target.value)} rows={3} className="w-full bg-surface-container-low border border-slate-700/50 rounded-lg focus:border-primary focus:ring-1 focus:ring-primary transition-all py-2 px-3 text-on-surface text-sm outline-none resize-y placeholder:text-slate-500" placeholder="Optional notes regarding the maintenance window..." />
+                            <label className="block text-sm text-muted-foreground mb-1.5 font-medium">Description</label>
+                            <textarea value={description} onChange={e => setDescription(e.target.value)} rows={3} className="w-full bg-surface-container-low border border-border rounded-xl focus:border-primary focus:ring-1 focus:ring-primary transition-all py-2 px-3 text-on-surface text-sm outline-none resize-y placeholder:text-muted-foreground" placeholder="Optional notes regarding the maintenance window..." />
                         </div>
                     </div>
-                    <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-slate-700/50">
+                    <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-border">
                         <button type="button" onClick={() => setShowCreate(false)} className="btn-secondary px-5 py-2">Cancel</button>
-                        <button type="submit" disabled={creating} className="primary-gradient-btn text-on-primary font-bold rounded-lg px-6 py-2 inline-flex items-center gap-2">
+                        <button type="submit" disabled={creating} className="primary-gradient-btn text-on-primary font-bold rounded-xl px-6 py-2 inline-flex items-center gap-2">
                             {creating && <Loader2 size={16} className="animate-spin" />}
                             {creating ? 'Scheduling...' : 'Schedule Maintenance'}
                         </button>
@@ -331,7 +331,7 @@ export default function MaintenancePage() {
                         return (
                             <div 
                                 key={w.id} 
-                                className="asset-card animate-fade-in flex flex-col relative bg-surface-container rounded-xl shadow-sm border border-slate-800/20 overflow-hidden hover:border-primary/30 transition-colors"
+                                className="asset-card animate-fade-in flex flex-col relative bg-surface-container rounded-xl shadow-sm border border-border/40 overflow-hidden hover:border-primary/30 transition-colors"
                                 style={{ animationDelay: `${i * 25}ms`, animationFillMode: 'both' }}
                             >
                                 {/* Status accent strip */}
@@ -347,14 +347,14 @@ export default function MaintenancePage() {
                                             {getStatusLabel(w.status)}
                                         </div>
                                         
-                                        <span className={`badge text-[10px] font-medium px-2 py-0.5 rounded-md ${typeColors[w.type] || 'bg-slate-800 text-slate-300'} capitalize`}>
+                                        <span className={`badge text-[10px] font-medium px-2 py-0.5 rounded-md ${typeColors[w.type] || 'bg-muted text-foreground'} capitalize`}>
                                             {w.type}
                                         </span>
                                     </div>
                                     
                                     <div className="mb-3">
                                         <h3 className="text-base font-semibold text-on-surface line-clamp-1 mb-1">{w.title}</h3>
-                                        <div className="flex items-center text-sm text-slate-400 gap-2">
+                                        <div className="flex items-center text-sm text-muted-foreground gap-2">
                                             <Wrench size={14} className="text-primary/70" />
                                             <Link href={`/assets/${w.asset.id}`} className="hover:text-primary transition-colors flex-1 truncate">
                                                 {w.asset.name}
@@ -364,23 +364,23 @@ export default function MaintenancePage() {
 
                                     <div className="grid grid-cols-2 gap-2 mt-auto pb-4 border-b border-border/50">
                                         <div className="flex flex-col">
-                                            <span className="text-[10px] uppercase tracking-wider text-slate-500 font-medium mb-1">Schedule</span>
-                                            <span className="text-xs text-slate-300">{formatDate(w.scheduledStart)}</span>
-                                            <span className="text-xs text-slate-500 mt-0.5">until {formatDate(w.scheduledEnd)}</span>
+                                            <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium mb-1">Schedule</span>
+                                            <span className="text-xs text-foreground">{formatDate(w.scheduledStart)}</span>
+                                            <span className="text-xs text-muted-foreground mt-0.5">until {formatDate(w.scheduledEnd)}</span>
                                         </div>
                                         <div className="flex flex-col">
-                                            <span className="text-[10px] uppercase tracking-wider text-slate-500 font-medium mb-1">Priority</span>
+                                            <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium mb-1">Priority</span>
                                             <div className="flex items-center gap-1.5">
                                                 <span className={`inline-flex items-center justify-center w-5 h-5 rounded-md ${pConfig.cls}`}>
                                                     {PriorityIcon ? <PriorityIcon size={10} /> : <div className="w-1.5 h-1.5 rounded-full bg-current" />}
                                                 </span>
-                                                <span className="text-xs font-medium capitalize text-slate-300">{w.priority}</span>
+                                                <span className="text-xs font-medium capitalize text-foreground">{w.priority}</span>
                                             </div>
                                         </div>
                                     </div>
                                     
                                     <div className="pt-3 flex items-center justify-between">
-                                        <div className="text-xs text-slate-500 min-w-0 pr-4">
+                                        <div className="text-xs text-muted-foreground min-w-0 pr-4">
                                             {w.description ? (
                                                 <p className="truncate" title={w.description}>{w.description}</p>
                                             ) : (
@@ -391,7 +391,7 @@ export default function MaintenancePage() {
                                         <div className="flex items-center gap-1.5 shrink-0">
                                             {w.status === 'scheduled' && (
                                                 <>
-                                                    <button onClick={() => handleStatusChange(w.id, 'cancelled')} disabled={changingStatus === w.id} className="btn-ghost h-7 px-2.5 text-xs text-muted-foreground hover:text-health-critical hover:bg-health-critical/10 disabled:opacity-50 transition-colors" title="Cancel">Cancel</button>
+                                                    <button onClick={() => handleStatusChange(w.id, 'cancelled')} disabled={changingStatus === w.id} className="btn-ghost h-7 px-2.5 text-xs text-muted-foreground hover:text-destructive hover:bg-destructive/10 disabled:opacity-50 transition-colors" title="Cancel">Cancel</button>
                                                     <button onClick={() => handleStatusChange(w.id, 'in_progress')} disabled={changingStatus === w.id} className="btn-secondary h-7 px-3 text-xs bg-surface-container-high hover:bg-primary hover:text-on-primary border-none disabled:opacity-50 transition-all font-medium" title="Start">{changingStatus === w.id ? 'Starting...' : 'Start Job'}</button>
                                                 </>
                                             )}

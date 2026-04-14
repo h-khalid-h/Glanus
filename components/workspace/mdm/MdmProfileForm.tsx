@@ -104,7 +104,7 @@ export function MdmProfileForm({ workspaceId, onSuccess, onCancel }: Props) {
                             type="text"
                             required
                             disabled={loading}
-                            className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white placeholder:text-slate-500 focus:outline-none focus:border-nerve disabled:opacity-50"
+                            className="w-full bg-background border border-border rounded-xl px-4 py-2 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary disabled:opacity-50"
                             placeholder="e.g. Enforce Device Encryption"
                             value={formData.name}
                             onChange={(e) => setFormData(p => ({ ...p, name: e.target.value }))}
@@ -115,7 +115,7 @@ export function MdmProfileForm({ workspaceId, onSuccess, onCancel }: Props) {
                         <label className="block text-sm font-medium text-muted-foreground mb-1">Description (Optional)</label>
                         <textarea
                             disabled={loading}
-                            className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white placeholder:text-slate-500 focus:outline-none focus:border-nerve h-20 disabled:opacity-50"
+                            className="w-full bg-background border border-border rounded-xl px-4 py-2 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary h-20 disabled:opacity-50"
                             placeholder="Provide details about what this profile enforces."
                             value={formData.description}
                             onChange={(e) => setFormData(p => ({ ...p, description: e.target.value }))}
@@ -127,7 +127,7 @@ export function MdmProfileForm({ workspaceId, onSuccess, onCancel }: Props) {
                             <label className="block text-sm font-medium text-muted-foreground mb-1">Platform</label>
                             <select
                                 disabled={loading}
-                                className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-nerve [&>option]:bg-slate-900 disabled:opacity-50"
+                                className="w-full bg-background border border-border rounded-xl px-4 py-2 text-foreground focus:outline-none focus:border-primary [&>option]:bg-surface-1 disabled:opacity-50"
                                 value={formData.platform}
                                 onChange={(e) => setFormData(p => ({ ...p, platform: e.target.value }))}
                             >
@@ -141,7 +141,7 @@ export function MdmProfileForm({ workspaceId, onSuccess, onCancel }: Props) {
                             <label className="block text-sm font-medium text-muted-foreground mb-1">Profile Type</label>
                             <select
                                 disabled={loading}
-                                className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-nerve [&>option]:bg-slate-900 disabled:opacity-50"
+                                className="w-full bg-background border border-border rounded-xl px-4 py-2 text-foreground focus:outline-none focus:border-primary [&>option]:bg-surface-1 disabled:opacity-50"
                                 value={formData.profileType}
                                 onChange={(e) => setFormData(p => ({ ...p, profileType: e.target.value }))}
                             >
@@ -157,38 +157,38 @@ export function MdmProfileForm({ workspaceId, onSuccess, onCancel }: Props) {
 
                 {isVisualBuilder && formData.platform === 'WINDOWS' && (
                     <div className="space-y-3 pt-2">
-                        <h3 className="text-sm font-medium text-slate-300 border-b border-slate-800 pb-2">Windows Security Policies</h3>
+                        <h3 className="text-sm font-medium text-foreground border-b border-border pb-2">Windows Security Policies</h3>
 
-                        <div className="flex items-center justify-between bg-slate-950 border border-slate-800/60 rounded-lg p-4">
+                        <div className="flex items-center justify-between bg-background border border-border/60 rounded-xl p-4">
                             <div>
-                                <p className="font-medium text-slate-200">Enforce BitLocker Encryption</p>
-                                <p className="text-xs text-slate-500 mt-0.5">Requires OS and data drives to be encrypted via BitLocker.</p>
+                                <p className="font-medium text-foreground">Enforce BitLocker Encryption</p>
+                                <p className="text-xs text-muted-foreground mt-0.5">Requires OS and data drives to be encrypted via BitLocker.</p>
                             </div>
                             <label className="relative inline-flex items-center cursor-pointer">
                                 <input type="checkbox" className="sr-only peer" checked={nativeSettings.requireBitLocker} onChange={(e) => setNativeSettings({ ...nativeSettings, requireBitLocker: e.target.checked })} />
-                                <div className="w-11 h-6 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-600 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-nerve"></div>
+                                <div className="w-11 h-6 bg-muted peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
                             </label>
                         </div>
 
-                        <div className="flex items-center justify-between bg-slate-950 border border-slate-800/60 rounded-lg p-4">
+                        <div className="flex items-center justify-between bg-background border border-border/60 rounded-xl p-4">
                             <div>
-                                <p className="font-medium text-slate-200">Enable Windows Defender Firewall</p>
-                                <p className="text-xs text-slate-500 mt-0.5">Forces the host firewall to remain active across all network profiles.</p>
+                                <p className="font-medium text-foreground">Enable Windows Defender Firewall</p>
+                                <p className="text-xs text-muted-foreground mt-0.5">Forces the host firewall to remain active across all network profiles.</p>
                             </div>
                             <label className="relative inline-flex items-center cursor-pointer">
                                 <input type="checkbox" className="sr-only peer" checked={nativeSettings.enableFirewall} onChange={(e) => setNativeSettings({ ...nativeSettings, enableFirewall: e.target.checked })} />
-                                <div className="w-11 h-6 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-600 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-nerve"></div>
+                                <div className="w-11 h-6 bg-muted peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
                             </label>
                         </div>
 
-                        <div className="flex items-center justify-between bg-slate-950 border border-slate-800/60 rounded-lg p-4">
+                        <div className="flex items-center justify-between bg-background border border-border/60 rounded-xl p-4">
                             <div>
-                                <p className="font-medium text-slate-200">Disable USB Mass Storage</p>
-                                <p className="text-xs text-slate-500 mt-0.5">Blocks reads and writes to external removable drives.</p>
+                                <p className="font-medium text-foreground">Disable USB Mass Storage</p>
+                                <p className="text-xs text-muted-foreground mt-0.5">Blocks reads and writes to external removable drives.</p>
                             </div>
                             <label className="relative inline-flex items-center cursor-pointer">
                                 <input type="checkbox" className="sr-only peer" checked={nativeSettings.disableUsbStorage} onChange={(e) => setNativeSettings({ ...nativeSettings, disableUsbStorage: e.target.checked })} />
-                                <div className="w-11 h-6 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-600 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-nerve"></div>
+                                <div className="w-11 h-6 bg-muted peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
                             </label>
                         </div>
                     </div>
@@ -196,46 +196,46 @@ export function MdmProfileForm({ workspaceId, onSuccess, onCancel }: Props) {
 
                 {isVisualBuilder && formData.platform === 'MACOS' && (
                     <div className="space-y-3 pt-2">
-                        <h3 className="text-sm font-medium text-slate-300 border-b border-slate-800 pb-2">macOS Security Policies</h3>
+                        <h3 className="text-sm font-medium text-foreground border-b border-border pb-2">macOS Security Policies</h3>
 
-                        <div className="flex items-center justify-between bg-slate-950 border border-slate-800/60 rounded-lg p-4">
+                        <div className="flex items-center justify-between bg-background border border-border/60 rounded-xl p-4">
                             <div>
-                                <p className="font-medium text-slate-200">Enforce FileVault</p>
-                                <p className="text-xs text-slate-500 mt-0.5">Requires the startup disk to be secured with XTS-AES-128 encryption.</p>
+                                <p className="font-medium text-foreground">Enforce FileVault</p>
+                                <p className="text-xs text-muted-foreground mt-0.5">Requires the startup disk to be secured with XTS-AES-128 encryption.</p>
                             </div>
                             <label className="relative inline-flex items-center cursor-pointer">
                                 <input type="checkbox" className="sr-only peer" checked={nativeSettings.requireFileVault} onChange={(e) => setNativeSettings({ ...nativeSettings, requireFileVault: e.target.checked })} />
-                                <div className="w-11 h-6 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-600 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-nerve"></div>
+                                <div className="w-11 h-6 bg-muted peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
                             </label>
                         </div>
 
-                        <div className="flex items-center justify-between bg-slate-950 border border-slate-800/60 rounded-lg p-4">
+                        <div className="flex items-center justify-between bg-background border border-border/60 rounded-xl p-4">
                             <div>
-                                <p className="font-medium text-slate-200">Require Gatekeeper</p>
-                                <p className="text-xs text-slate-500 mt-0.5">Prevents users from bypassing Gatekeeper for unnotarized apps.</p>
+                                <p className="font-medium text-foreground">Require Gatekeeper</p>
+                                <p className="text-xs text-muted-foreground mt-0.5">Prevents users from bypassing Gatekeeper for unnotarized apps.</p>
                             </div>
                             <label className="relative inline-flex items-center cursor-pointer">
                                 <input type="checkbox" className="sr-only peer" checked={nativeSettings.requireGatekeeper} onChange={(e) => setNativeSettings({ ...nativeSettings, requireGatekeeper: e.target.checked })} />
-                                <div className="w-11 h-6 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-600 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-nerve"></div>
+                                <div className="w-11 h-6 bg-muted peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
                             </label>
                         </div>
 
-                        <div className="flex items-center justify-between bg-slate-950 border border-slate-800/60 rounded-lg p-4">
+                        <div className="flex items-center justify-between bg-background border border-border/60 rounded-xl p-4">
                             <div>
-                                <p className="font-medium text-slate-200">Disable AirDrop</p>
-                                <p className="text-xs text-slate-500 mt-0.5">Blocks inbound and outbound file transfers via AirDrop.</p>
+                                <p className="font-medium text-foreground">Disable AirDrop</p>
+                                <p className="text-xs text-muted-foreground mt-0.5">Blocks inbound and outbound file transfers via AirDrop.</p>
                             </div>
                             <label className="relative inline-flex items-center cursor-pointer">
                                 <input type="checkbox" className="sr-only peer" checked={nativeSettings.disableAirDrop} onChange={(e) => setNativeSettings({ ...nativeSettings, disableAirDrop: e.target.checked })} />
-                                <div className="w-11 h-6 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-600 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-nerve"></div>
+                                <div className="w-11 h-6 bg-muted peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
                             </label>
                         </div>
                     </div>
                 )}
 
                 {isVisualBuilder && formData.platform === 'LINUX' && (
-                    <div className="bg-slate-950/50 border border-slate-800/60 rounded-lg p-8 text-center">
-                        <p className="text-slate-400">Native UI builder for Linux is coming soon. Please use APPLICATION deployment for custom Linux configurations.</p>
+                    <div className="bg-background/50 border border-border/60 rounded-xl p-8 text-center">
+                        <p className="text-muted-foreground">Native UI builder for Linux is coming soon. Please use APPLICATION deployment for custom Linux configurations.</p>
                     </div>
                 )}
 
@@ -245,7 +245,7 @@ export function MdmProfileForm({ workspaceId, onSuccess, onCancel }: Props) {
                         <textarea
                             required
                             disabled={loading}
-                            className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-muted-foreground font-mono text-xs focus:outline-none focus:border-nerve h-48 disabled:opacity-50"
+                            className="w-full bg-background border border-border rounded-xl px-4 py-2 text-muted-foreground font-mono text-xs focus:outline-none focus:border-primary h-48 disabled:opacity-50"
                             value={formData.configPayload}
                             onChange={(e) => setFormData(p => ({ ...p, configPayload: e.target.value }))}
                             spellCheck={false}
@@ -254,14 +254,14 @@ export function MdmProfileForm({ workspaceId, onSuccess, onCancel }: Props) {
                 )}
             </div>
 
-            <div className="flex justify-end gap-3 pt-6 border-t border-slate-800">
-                <button type="button" onClick={onCancel} className="px-4 py-2 text-slate-400 hover:text-white transition-colors">
+            <div className="flex justify-end gap-3 pt-6 border-t border-border">
+                <button type="button" onClick={onCancel} className="px-4 py-2 text-muted-foreground hover:text-foreground transition-colors">
                     Cancel
                 </button>
                 <button
                     type="submit"
                     disabled={loading}
-                    className="bg-nerve text-black px-6 py-2 rounded-lg font-medium hover:bg-nerve/90 transition-colors disabled:opacity-50"
+                    className="bg-primary text-black px-6 py-2 rounded-xl font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
                 >
                     {loading ? 'Saving...' : 'Create Profile'}
                 </button>

@@ -38,16 +38,16 @@ function getDeviceIcon(type: string) {
         case 'ROUTER':
             return <Network className="h-5 w-5 text-indigo-400" />;
         case 'SWITCH':
-            return <Server className="h-5 w-5 text-blue-400" />;
+            return <Server className="h-5 w-5 text-cortex" />;
         case 'PRINTER':
             return <Printer className="h-5 w-5 text-purple-400" />;
         case 'MOBILE_DEVICE':
             return <Signal className="h-5 w-5 text-emerald-400" />;
         case 'DESKTOP':
         case 'LAPTOP':
-            return <Computer className="h-5 w-5 text-slate-400" />;
+            return <Computer className="h-5 w-5 text-muted-foreground" />;
         default:
-            return <Settings className="h-5 w-5 text-slate-500" />;
+            return <Settings className="h-5 w-5 text-muted-foreground" />;
     }
 }
 
@@ -108,7 +108,7 @@ function NetworkDashboardContent() {
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
                 <div>
                     <h1 className="text-2xl font-semibold tracking-tight text-on-surface">Network Discovery</h1>
-                    <p className="text-sm text-slate-400 mt-1">Automatically map unmanaged hardware natively across installed agent subnets.</p>
+                    <p className="text-sm text-muted-foreground mt-1">Automatically map unmanaged hardware natively across installed agent subnets.</p>
                 </div>
                 <div className="flex gap-2">
                     <button className="btn-secondary h-9 text-sm px-4" onClick={fetchNetworkData}>
@@ -143,7 +143,7 @@ function NetworkDashboardContent() {
                                             className="p-4 hover:bg-surface-container-highest transition-colors flex items-center gap-4 cursor-pointer group"
                                             style={{ animationDelay: `${i * 15}ms`, animationFillMode: 'both' }}
                                         >
-                                            <div className="h-10 w-10 rounded-lg bg-surface-container-low border border-border/50 flex items-center justify-center shrink-0 group-hover:border-primary/50 transition-colors shadow-sm">
+                                            <div className="h-10 w-10 rounded-xl bg-surface-container-low border border-border/50 flex items-center justify-center shrink-0 group-hover:border-primary/50 transition-colors shadow-sm">
                                                 {getDeviceIcon(device.deviceType)}
                                             </div>
                                             <div className="flex-1 min-w-0">
@@ -156,8 +156,8 @@ function NetworkDashboardContent() {
                                                     </span>
                                                 </div>
                                                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1 pl-1 text-xs text-muted-foreground font-mono">
-                                                    <span>IP: <span className="text-slate-400">{device.ipAddress}</span></span>
-                                                    {device.macAddress && <span>MAC: <span className="text-slate-400">{device.macAddress}</span></span>}
+                                                    <span>IP: <span className="text-muted-foreground">{device.ipAddress}</span></span>
+                                                    {device.macAddress && <span>MAC: <span className="text-muted-foreground">{device.macAddress}</span></span>}
                                                 </div>
                                             </div>
                                             <div className="text-right hidden sm:block shrink-0">
@@ -193,7 +193,7 @@ function NetworkDashboardContent() {
                                         </div>
                                     </div>
                                 )) : (
-                                    <div className="text-sm text-muted-foreground text-center py-4 bg-surface-container-low border border-border/50 border-dashed rounded-lg">No recent scans.</div>
+                                    <div className="text-sm text-muted-foreground text-center py-4 bg-surface-container-low border border-border/50 border-dashed rounded-xl">No recent scans.</div>
                                 )}
                             </div>
                         </div>

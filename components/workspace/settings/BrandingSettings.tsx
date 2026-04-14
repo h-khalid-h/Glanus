@@ -50,16 +50,16 @@ export default function BrandingSettings({ workspace }: { workspace: Workspace }
         <div className="space-y-6">
             <div>
                 <h2 className="text-lg font-medium text-foreground">Branding</h2>
-                <p className="text-sm text-slate-500">
+                <p className="text-sm text-muted-foreground">
                     Customize the look and feel of your workspace.
                 </p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-8 max-w-xl">
                 {message && (
-                    <div className={`p-4 rounded-lg text-sm ${message.type === 'success'
+                    <div className={`p-4 rounded-xl text-sm ${message.type === 'success'
                         ? 'bg-health-good/10 text-health-good/20 border border-health-good/20'
-                        : 'bg-health-critical/10 text-health-critical border border-health-critical/20'
+                        : 'bg-destructive/10 text-destructive border border-destructive/20'
                         }`}>
                         {message.text}
                     </div>
@@ -67,10 +67,10 @@ export default function BrandingSettings({ workspace }: { workspace: Workspace }
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <div>
-                        <label className="block text-sm font-medium text-slate-300 mb-2">Primary Color</label>
+                        <label className="block text-sm font-medium text-foreground mb-2">Primary Color</label>
                         <div className="flex items-center gap-3">
                             <div
-                                className="w-10 h-10 rounded-lg shadow-sm border border-slate-700"
+                                className="w-10 h-10 rounded-xl shadow-sm border border-border"
                                 style={{ backgroundColor: formData.primaryColor }}
                             />
                             <input
@@ -80,14 +80,14 @@ export default function BrandingSettings({ workspace }: { workspace: Workspace }
                                 className="flex-1 h-10 cursor-pointer bg-transparent"
                             />
                         </div>
-                        <p className="mt-1.5 text-xs text-slate-500">Used for buttons, links, and active states.</p>
+                        <p className="mt-1.5 text-xs text-muted-foreground">Used for buttons, links, and active states.</p>
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-slate-300 mb-2">Accent Color</label>
+                        <label className="block text-sm font-medium text-foreground mb-2">Accent Color</label>
                         <div className="flex items-center gap-3">
                             <div
-                                className="w-10 h-10 rounded-lg shadow-sm border border-slate-700"
+                                className="w-10 h-10 rounded-xl shadow-sm border border-border"
                                 style={{ backgroundColor: formData.accentColor }}
                             />
                             <input
@@ -97,21 +97,21 @@ export default function BrandingSettings({ workspace }: { workspace: Workspace }
                                 className="flex-1 h-10 cursor-pointer bg-transparent"
                             />
                         </div>
-                        <p className="mt-1.5 text-xs text-slate-500">Used for highlights and secondary elements.</p>
+                        <p className="mt-1.5 text-xs text-muted-foreground">Used for highlights and secondary elements.</p>
                     </div>
                 </div>
 
-                <div className="bg-slate-900 p-6 rounded-xl border border-slate-700">
-                    <h3 className="text-sm font-medium text-slate-400 uppercase tracking-wider mb-4">Preview</h3>
+                <div className="bg-surface-1 p-6 rounded-xl border border-border">
+                    <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-4">Preview</h3>
                     <div className="flex flex-wrap gap-4 items-center">
                         <button type="button"
-                            className="px-4 py-2 rounded-lg text-white font-medium shadow-sm transition-opacity hover:opacity-90"
+                            className="px-4 py-2 rounded-xl text-foreground font-medium shadow-sm transition-opacity hover:opacity-90"
                             style={{ backgroundColor: formData.primaryColor }}
                         >
                             Primary Button
                         </button>
                         <button type="button"
-                            className="px-4 py-2 rounded-lg font-medium border bg-slate-900/50 backdrop-blur-sm transition-opacity hover:opacity-90"
+                            className="px-4 py-2 rounded-xl font-medium border bg-card backdrop-blur-sm transition-opacity hover:opacity-90"
                             style={{ color: formData.primaryColor, borderColor: formData.primaryColor }}
                         >
                             Secondary Button
