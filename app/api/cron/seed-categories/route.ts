@@ -23,16 +23,18 @@ export const POST = withCronHandler(async (request: NextRequest) => {
         return apiSuccess({ message: 'No workspaceId provided; nothing seeded', results: [] });
     }
 
-    const results = [];
-    for (const cat of DEFAULT_CATEGORIES) {
-        const existing = await prisma.assetCategory.findFirst({ where: { slug: cat.slug, workspaceId } });
-        if (!existing) {
-            const created = await prisma.assetCategory.create({ data: { ...cat, workspaceId } });
-            results.push({ action: 'created', name: created.name, id: created.id });
-        } else {
-            results.push({ action: 'exists', name: existing.name, id: existing.id });
+    const results = await prisma.$transaction(async (tx) => {
+        const out = [];
+        for (const cat of DEFAULT_CATEGORIES) {
+            const record = await tx.assetCategory.upsert({
+                where: { workspaceId_slug: { workspaceId, slug: cat.slug } },
+                update: {},
+                create: { ...cat, workspaceId },
+            });
+            out.push({ action: 'created', name: record.name, id: record.id });
         }
-    }
+        return out;
+    });
 
     return apiSuccess({ message: `Seeded ${results.filter(r => r.action === 'created').length} categories`, results });
 });
