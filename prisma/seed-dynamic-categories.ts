@@ -10,7 +10,8 @@ async function main() {
         workspace = await prisma.workspace.create({
             data: {
                 name: 'Default System Workspace',
-                domain: 'default'
+                slug: 'default',
+                ownerId: (await prisma.user.findFirst({ select: { id: true } }))!.id,
             }
         });
     }

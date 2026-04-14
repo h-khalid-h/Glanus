@@ -16,13 +16,18 @@ const DEFAULT_CATEGORIES: Array<{ name: string; slug: string; icon: string; desc
 ];
 
 // POST /api/cron/seed-categories
-export const POST = withCronHandler(async (_request: NextRequest) => {
+export const POST = withCronHandler(async (request: NextRequest) => {
+    const body = await request.json().catch(() => ({}));
+    const workspaceId: string | undefined = body?.workspaceId;
+    if (!workspaceId) {
+        return apiSuccess({ message: 'No workspaceId provided; nothing seeded', results: [] });
+    }
 
     const results = [];
     for (const cat of DEFAULT_CATEGORIES) {
-        const existing = await prisma.assetCategory.findFirst({ where: { slug: cat.slug } });
+        const existing = await prisma.assetCategory.findFirst({ where: { slug: cat.slug, workspaceId } });
         if (!existing) {
-            const created = await prisma.assetCategory.create({ data: cat });
+            const created = await prisma.assetCategory.create({ data: { ...cat, workspaceId } });
             results.push({ action: 'created', name: created.name, id: created.id });
         } else {
             results.push({ action: 'exists', name: existing.name, id: existing.id });

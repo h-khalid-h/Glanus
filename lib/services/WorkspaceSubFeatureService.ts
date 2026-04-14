@@ -105,11 +105,11 @@ export class WorkspaceSubFeatureService {
                 return_url: `${baseUrl}/workspaces/${workspaceId}/manage/settings`,
             });
             return { url: portalSession.url };
-        } catch (error: any) {
-            if (error.message?.includes('Invalid API Key') || String(process.env.STRIPE_SECRET_KEY).includes('sk_test_...')) {
+        } catch (error: unknown) {
+            if (error instanceof Error && (error.message?.includes('Invalid API Key') || String(process.env.STRIPE_SECRET_KEY).includes('sk_test_...'))) {
                 throw new ApiError(400, 'Customer Portal is not configured: Please provide a valid Stripe Secret Key in your environment variables.');
             }
-            throw new ApiError(500, error.message || 'Failed to create customer portal session');
+            throw new ApiError(500, error instanceof Error ? error.message : 'Failed to create customer portal session');
         }
     }
 }

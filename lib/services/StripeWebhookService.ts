@@ -88,7 +88,7 @@ export class StripeWebhookService {
                     plan = await getPlanFromPriceIdAsync(priceId);
                 }
             } catch (err) {
-                logWarn('[STRIPE] Could not retrieve subscription to resolve plan, defaulting to FREE', err);
+                logWarn('[STRIPE] Could not retrieve subscription to resolve plan, defaulting to FREE', err instanceof Error ? { message: err.message } : undefined);
             }
         }
 
@@ -171,12 +171,10 @@ export class StripeWebhookService {
                     maxAssets: limits.maxAssets,
                     maxAICreditsPerMonth: limits.maxAICreditsPerMonth,
                     maxStorageMB: limits.maxStorageMB,
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    currentPeriodStart: (subscription as any).current_period_start
-                        ? new Date(((subscription as any).current_period_start as number) * 1000)
+                    currentPeriodStart: (subscription as Stripe.Subscription & { current_period_start?: number }).current_period_start
+                        ? new Date(((subscription as Stripe.Subscription & { current_period_start: number }).current_period_start) * 1000)
                         : undefined,
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    currentPeriodEnd: new Date(((subscription as any).current_period_end as number) * 1000),
+                    currentPeriodEnd: new Date(((subscription as Stripe.Subscription & { current_period_end: number }).current_period_end) * 1000),
                 },
             });
 
@@ -200,8 +198,8 @@ export class StripeWebhookService {
         if (!workspaceId) return;
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const periodEnd = (subscription as any).current_period_end
-            ? new Date(((subscription as any).current_period_end as number) * 1000)
+        const periodEnd = (subscription as Stripe.Subscription & { current_period_end?: number }).current_period_end
+            ? new Date(((subscription as Stripe.Subscription & { current_period_end: number }).current_period_end) * 1000)
             : new Date();
 
         await prisma.$transaction(async (tx) => {

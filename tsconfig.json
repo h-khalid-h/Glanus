@@ -36,6 +36,9 @@
     ],
     "exclude": [
         "node_modules",
-        "glanus-agent"
+        "glanus-agent",
+        "scripts",
+        "prisma/seed*.ts",
+        "prisma/seed-dynamic-categories.ts"
     ]
 }

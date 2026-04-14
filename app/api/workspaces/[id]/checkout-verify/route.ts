@@ -146,7 +146,7 @@ async function syncSubscriptionFromStripe(
                     data: {
                         workspaceId,
                         stripeInvoiceId: invoice.id,
-                        stripePaymentIntentId: typeof invoice.payment_intent === 'string' ? invoice.payment_intent : undefined,
+                        stripePaymentIntentId: typeof (invoice as unknown as Record<string, unknown>).payment_intent === 'string' ? (invoice as unknown as Record<string, unknown>).payment_intent as string : undefined,
                         stripeCustomerId: typeof stripeSub.customer === 'string' ? stripeSub.customer : undefined,
                         amount: invoice.amount_paid ?? 0,
                         currency: invoice.currency ?? 'usd',
