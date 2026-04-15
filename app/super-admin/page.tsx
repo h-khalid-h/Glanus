@@ -35,7 +35,7 @@ export default function SuperAdminOverviewPage() {
     const [data, setData] = useState<DashboardData | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
+    const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
 
     const fetchData = async () => {
         setLoading(true);
@@ -71,10 +71,9 @@ export default function SuperAdminOverviewPage() {
                 <div>
                     <h1 className="text-2xl font-bold tracking-tight text-foreground">Platform Overview</h1>
                     <p className="mt-1 text-sm text-muted-foreground">
-                        Real-time metrics across all tenants ·{' '}
-                        <span className="text-muted-foreground/60">
-                            Updated {lastRefresh.toLocaleTimeString()}
-                        </span>
+                        Real-time metrics across all tenants{lastRefresh && (
+                            <> · <span className="text-muted-foreground/60">Updated {lastRefresh.toLocaleTimeString()}</span></>
+                        )}
                     </p>
                 </div>
                 <button
