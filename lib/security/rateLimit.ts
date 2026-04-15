@@ -35,6 +35,8 @@ async function getRedisClient(): Promise<RedisClientType | null> {
                 logError('Redis client error, falling back to in-memory rate limiting', err);
             }
             redisReady = false;
+            // Reset so next request re-evaluates and uses in-memory fallback
+            initPromise = null;
         });
 
         redisClient.on('ready', () => {
@@ -187,9 +189,26 @@ export async function checkRateLimit(
             resetAt: new Date(Date.now() + result.msBeforeNext),
         };
     } catch (rejRes: unknown) {
-        const msBeforeNext = rejRes !== null && typeof rejRes === 'object' && 'msBeforeNext' in rejRes
-            ? (rejRes as { msBeforeNext: number }).msBeforeNext
-            : 60000;
+        // A genuine rate-limit rejection from rate-limiter-flexible is a RateLimiterRes object
+        // with msBeforeNext and remainingPoints. A Redis connection error is a plain Error.
+        // Fail open on store errors so Redis downtime doesn't block all users with 429.
+        const isRateLimitRejection =
+            rejRes !== null &&
+            typeof rejRes === 'object' &&
+            'msBeforeNext' in rejRes &&
+            'remainingPoints' in rejRes;
+
+        if (!isRateLimitRejection) {
+            // Redis or store error — allow the request
+            logWarn(`Rate limiter store error for type=${type}, failing open`);
+            return {
+                allowed: true,
+                remaining: 1,
+                resetAt: new Date(Date.now() + 60000),
+            };
+        }
+
+        const msBeforeNext = (rejRes as { msBeforeNext: number }).msBeforeNext;
         return {
             allowed: false,
             remaining: 0,
