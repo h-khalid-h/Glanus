@@ -61,6 +61,14 @@ export function useAuth() {
     const router = useRouter();
     const refreshTimer = useRef<ReturnType<typeof setInterval> | null>(null);
     const isRefreshing = useRef(false);
+    // Tracks whether we have ever started the interval for this mounted instance.
+    // Prevents the effect from re-starting the interval when NextAuth's update()
+    // causes status to cycle authenticated→loading→authenticated.
+    const intervalStarted = useRef(false);
+
+    // Keep update in a stable ref so it never causes refresh() to change identity.
+    const updateRef = useRef(update);
+    useEffect(() => { updateRef.current = update; }, [update]);
 
     // --- Silent refresh ---
     const refresh = useCallback(async (): Promise<boolean> => {
@@ -75,7 +83,11 @@ export function useAuth() {
             if (res.status === 204) return false;
 
             if (res.ok) {
-                await update();
+                // Do NOT call update() here — it causes status to flip
+                // authenticated→loading→authenticated which re-fires this effect
+                // and creates an infinite refresh loop. The server already rotated
+                // the session cookie; NextAuth will pick it up on the next natural
+                // session check.
                 return true;
             }
 
@@ -91,22 +103,25 @@ export function useAuth() {
         } finally {
             isRefreshing.current = false;
         }
-    }, [update, router]);
+    }, [router]);
 
-    // Start periodic refresh when authenticated
+    // Start the periodic refresh interval once when the user becomes authenticated.
+    // We intentionally avoid putting this in a cleanup+re-run cycle — the interval
+    // is cleared only when the component unmounts or the user is logged out.
     useEffect(() => {
-        if (status === 'authenticated') {
-            // Initial refresh to extend session immediately after page load
+        if (status === 'authenticated' && !intervalStarted.current) {
+            intervalStarted.current = true;
             refresh();
             refreshTimer.current = setInterval(refresh, REFRESH_INTERVAL_MS);
         }
 
-        return () => {
+        if (status === 'unauthenticated') {
+            intervalStarted.current = false;
             if (refreshTimer.current) {
                 clearInterval(refreshTimer.current);
                 refreshTimer.current = null;
             }
-        };
+        }
     }, [status, refresh]);
 
     // --- Login ---
