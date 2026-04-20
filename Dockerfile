@@ -49,6 +49,7 @@ COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 # Copy entrypoint script
 COPY docker-entrypoint.sh ./docker-entrypoint.sh
 RUN chmod +x ./docker-entrypoint.sh
+RUN ./docker-entrypoint.sh
 
 # Create directory for logs with proper permissions
 RUN mkdir -p /app/logs && chown -R nextjs:nodejs /app/logs
