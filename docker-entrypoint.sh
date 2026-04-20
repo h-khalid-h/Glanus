@@ -34,7 +34,18 @@ while [ $attempt -le $MAX_RETRIES ]; do
 done
 
 echo "[Entrypoint] Running database seed (platform roles + super-admin)..."
-tsx prisma/seed.ts || echo "[Entrypoint] WARNING: Seed script failed (non-fatal)."
+if ! command -v tsx >/dev/null 2>&1; then
+    echo "[Entrypoint] ERROR: 'tsx' is not available in PATH; cannot run prisma/seed.ts"
+    exit 1
+fi
+
+# Seed is required for bootstrapping platform roles/admin user in production.
+if tsx prisma/seed.ts; then
+    echo "[Entrypoint] Seed completed successfully."
+else
+    echo "[Entrypoint] ERROR: Seed failed. Aborting startup."
+    exit 1
+fi
 
 echo "[Entrypoint] Starting Glanus server on port ${PORT:-8055}..."
 
