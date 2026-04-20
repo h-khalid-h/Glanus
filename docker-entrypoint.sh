@@ -11,22 +11,26 @@ RETRY_DELAY=3
 echo "[Entrypoint] Applying database migrations..."
 attempt=1
 while [ $attempt -le $MAX_RETRIES ]; do
-    if prisma migrate deploy 2>/dev/null; then
+    # Run migrate deploy with full output so errors are visible in deploy logs.
+    # We intentionally do NOT fall back to `prisma db push` here: db push ignores
+    # the migration history and can drop/alter columns to match the schema,
+    # which is unsafe in production (e.g. adding unique constraints without the
+    # accompanying backfill step baked into the migration SQL).
+    if prisma migrate deploy; then
         echo "[Entrypoint] Migrations applied successfully."
         break
-    elif prisma db push --skip-generate 2>/dev/null; then
-        echo "[Entrypoint] Schema pushed successfully (fallback)."
-        break
-    else
-        if [ $attempt -eq $MAX_RETRIES ]; then
-            echo "[Entrypoint] ERROR: Failed to apply migrations after $MAX_RETRIES attempts."
-            exit 1
-        fi
-        echo "[Entrypoint] Migration attempt $attempt/$MAX_RETRIES failed. Retrying in ${RETRY_DELAY}s..."
-        sleep $RETRY_DELAY
-        RETRY_DELAY=$((RETRY_DELAY * 2))
-        attempt=$((attempt + 1))
     fi
+
+    if [ $attempt -eq $MAX_RETRIES ]; then
+        echo "[Entrypoint] ERROR: Failed to apply migrations after $MAX_RETRIES attempts."
+        echo "[Entrypoint] Inspect the output above for the Prisma error and resolve it"
+        echo "[Entrypoint] manually (e.g. via 'prisma migrate status' against the target DB)."
+        exit 1
+    fi
+    echo "[Entrypoint] Migration attempt $attempt/$MAX_RETRIES failed. Retrying in ${RETRY_DELAY}s..."
+    sleep $RETRY_DELAY
+    RETRY_DELAY=$((RETRY_DELAY * 2))
+    attempt=$((attempt + 1))
 done
 
 echo "[Entrypoint] Running database seed (platform roles + super-admin)..."
