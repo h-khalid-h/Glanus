@@ -34,8 +34,8 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-# Install prisma CLI globally for runtime migrations
-RUN npm install -g prisma@6.19.2
+# Install prisma CLI + tsx globally for runtime migrations & seed
+RUN npm install -g prisma@6.19.2 tsx@4.19.2
 
 # Copy built application
 COPY --from=builder /app/public ./public
@@ -45,11 +45,12 @@ COPY --from=builder /app/.next/static ./.next/static
 # Copy Prisma schema + migrations + generated client
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder /app/node_modules/@prisma/client ./node_modules/@prisma/client
+COPY --from=builder /app/node_modules/bcryptjs ./node_modules/bcryptjs
 
 # Copy entrypoint script
 COPY docker-entrypoint.sh ./docker-entrypoint.sh
 RUN chmod +x ./docker-entrypoint.sh
-RUN ./docker-entrypoint.sh
 
 # Create directory for logs with proper permissions
 RUN mkdir -p /app/logs && chown -R nextjs:nodejs /app/logs

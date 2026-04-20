@@ -34,7 +34,7 @@ while [ $attempt -le $MAX_RETRIES ]; do
 done
 
 echo "[Entrypoint] Running database seed (platform roles + super-admin)..."
-npx tsx prisma/seed.ts || echo "[Entrypoint] WARNING: Seed script failed (non-fatal)."
+tsx prisma/seed.ts || echo "[Entrypoint] WARNING: Seed script failed (non-fatal)."
 
 echo "[Entrypoint] Starting Glanus server on port ${PORT:-8055}..."
 
