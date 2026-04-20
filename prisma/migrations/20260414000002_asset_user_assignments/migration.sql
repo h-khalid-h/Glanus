@@ -4,7 +4,7 @@
 -- a composite index that makes the "one active assignment per asset"
 -- query a single index seek.
 
-CREATE TABLE "asset_user_assignments" (
+CREATE TABLE IF NOT EXISTS "asset_user_assignments" (
     "id"           TEXT         NOT NULL,
     "workspaceId"  TEXT         NOT NULL,
     "assetId"      TEXT         NOT NULL,
@@ -21,20 +21,22 @@ CREATE TABLE "asset_user_assignments" (
 
 -- Indexes ---------------------------------------------------------------
 -- Individual columns
-CREATE INDEX "asset_user_assignments_workspaceId_idx"
+CREATE INDEX IF NOT EXISTS "asset_user_assignments_workspaceId_idx"
     ON "asset_user_assignments"("workspaceId");
 
-CREATE INDEX "asset_user_assignments_assetId_idx"
+CREATE INDEX IF NOT EXISTS "asset_user_assignments_assetId_idx"
     ON "asset_user_assignments"("assetId");
 
-CREATE INDEX "asset_user_assignments_userId_idx"
+CREATE INDEX IF NOT EXISTS "asset_user_assignments_userId_idx"
     ON "asset_user_assignments"("userId");
 
 -- Composite: drives the one-active-assignment lookup and overlap checks
-CREATE INDEX "asset_user_assignments_workspaceId_assetId_endDate_idx"
+CREATE INDEX IF NOT EXISTS "asset_user_assignments_workspaceId_assetId_endDate_idx"
     ON "asset_user_assignments"("workspaceId", "assetId", "endDate");
 
 -- Foreign Keys ----------------------------------------------------------
+ALTER TABLE "asset_user_assignments"
+    DROP CONSTRAINT IF EXISTS "asset_user_assignments_workspaceId_fkey";
 ALTER TABLE "asset_user_assignments"
     ADD CONSTRAINT "asset_user_assignments_workspaceId_fkey"
     FOREIGN KEY ("workspaceId")
@@ -42,17 +44,23 @@ ALTER TABLE "asset_user_assignments"
     ON DELETE CASCADE ON UPDATE CASCADE;
 
 ALTER TABLE "asset_user_assignments"
+    DROP CONSTRAINT IF EXISTS "asset_user_assignments_assetId_fkey";
+ALTER TABLE "asset_user_assignments"
     ADD CONSTRAINT "asset_user_assignments_assetId_fkey"
     FOREIGN KEY ("assetId")
     REFERENCES "Asset"("id")
     ON DELETE CASCADE ON UPDATE CASCADE;
 
 ALTER TABLE "asset_user_assignments"
+    DROP CONSTRAINT IF EXISTS "asset_user_assignments_userId_fkey";
+ALTER TABLE "asset_user_assignments"
     ADD CONSTRAINT "asset_user_assignments_userId_fkey"
     FOREIGN KEY ("userId")
     REFERENCES "User"("id")
     ON DELETE CASCADE ON UPDATE CASCADE;
 
+ALTER TABLE "asset_user_assignments"
+    DROP CONSTRAINT IF EXISTS "asset_user_assignments_assignedById_fkey";
 ALTER TABLE "asset_user_assignments"
     ADD CONSTRAINT "asset_user_assignments_assignedById_fkey"
     FOREIGN KEY ("assignedById")

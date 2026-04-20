@@ -25,6 +25,7 @@ CREATE TABLE IF NOT EXISTS "AuthSession" (
 CREATE INDEX IF NOT EXISTS "AuthSession_userId_idx" ON "AuthSession"("userId");
 CREATE INDEX IF NOT EXISTS "AuthSession_expiresAt_idx" ON "AuthSession"("expiresAt");
 
+ALTER TABLE "AuthSession" DROP CONSTRAINT IF EXISTS "AuthSession_userId_fkey";
 ALTER TABLE "AuthSession" ADD CONSTRAINT "AuthSession_userId_fkey"
     FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
@@ -49,9 +50,11 @@ CREATE INDEX IF NOT EXISTS "RefreshToken_userId_idx" ON "RefreshToken"("userId")
 CREATE INDEX IF NOT EXISTS "RefreshToken_family_idx" ON "RefreshToken"("family");
 CREATE INDEX IF NOT EXISTS "RefreshToken_expiresAt_idx" ON "RefreshToken"("expiresAt");
 
+ALTER TABLE "RefreshToken" DROP CONSTRAINT IF EXISTS "RefreshToken_userId_fkey";
 ALTER TABLE "RefreshToken" ADD CONSTRAINT "RefreshToken_userId_fkey"
     FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
+ALTER TABLE "RefreshToken" DROP CONSTRAINT IF EXISTS "RefreshToken_sessionId_fkey";
 ALTER TABLE "RefreshToken" ADD CONSTRAINT "RefreshToken_sessionId_fkey"
     FOREIGN KEY ("sessionId") REFERENCES "AuthSession"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
@@ -71,5 +74,6 @@ CREATE UNIQUE INDEX IF NOT EXISTS "EmailVerification_tokenHash_key" ON "EmailVer
 CREATE INDEX IF NOT EXISTS "EmailVerification_userId_idx" ON "EmailVerification"("userId");
 CREATE INDEX IF NOT EXISTS "EmailVerification_expiresAt_idx" ON "EmailVerification"("expiresAt");
 
+ALTER TABLE "EmailVerification" DROP CONSTRAINT IF EXISTS "EmailVerification_userId_fkey";
 ALTER TABLE "EmailVerification" ADD CONSTRAINT "EmailVerification_userId_fkey"
     FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;

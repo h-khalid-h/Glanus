@@ -21,12 +21,16 @@ DECLARE
     ];
 BEGIN
     FOREACH t_name IN ARRAY tables_array LOOP
-        -- 1. Turn on the engine for the table
+        -- 1. Turn on the engine for the table (ENABLE RLS is idempotent)
         EXECUTE format('ALTER TABLE "%s" ENABLE ROW LEVEL SECURITY;', t_name);
-        
-        -- 2. Add the safe pass-through policy
+
+        -- 2. Drop any pre-existing permissive policy, then add the safe pass-through
         EXECUTE format(
-            'CREATE POLICY "rls_permissive_migration" ON "%s" AS PERMISSIVE FOR ALL USING (true) WITH CHECK (true);', 
+            'DROP POLICY IF EXISTS "rls_permissive_migration" ON "%s";',
+            t_name
+        );
+        EXECUTE format(
+            'CREATE POLICY "rls_permissive_migration" ON "%s" AS PERMISSIVE FOR ALL USING (true) WITH CHECK (true);',
             t_name
         );
     END LOOP;
