@@ -16,6 +16,29 @@ ALTER TABLE "WorkspaceInvitation"
   ADD COLUMN IF NOT EXISTS "tokenHash" TEXT,
   ADD COLUMN IF NOT EXISTS "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP;
 
+-- Backfill legacy invitations before enforcing uniqueness.
+-- Existing plaintext tokens are already unique from the initial schema,
+-- so sha256(token) is also unique for all non-null legacy rows.
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+UPDATE "WorkspaceInvitation"
+SET "tokenHash" = ENCODE(DIGEST("token", 'sha256'), 'hex')
+WHERE "tokenHash" IS NULL
+  AND "token" IS NOT NULL;
+
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM "WorkspaceInvitation"
+    WHERE "tokenHash" IS NOT NULL
+    GROUP BY "tokenHash"
+    HAVING COUNT(*) > 1
+  ) THEN
+    RAISE EXCEPTION 'Duplicate WorkspaceInvitation.tokenHash values exist; resolve duplicates before applying migration 20260415000001.';
+  END IF;
+END $$;
+
 CREATE UNIQUE INDEX IF NOT EXISTS "WorkspaceInvitation_tokenHash_key"
   ON "WorkspaceInvitation"("tokenHash");
 
