@@ -138,6 +138,7 @@ export class ScriptService {
     static async getScriptExecutions(
         workspaceId: string,
         options: {
+            page?: number;
             limit?: number;
             status?: string | null;
             scriptId?: string | null;
@@ -145,6 +146,7 @@ export class ScriptService {
         } = {}
     ) {
         const limit = Math.min(200, Math.max(1, options.limit || 50));
+        const page = Math.max(1, options.page || 1);
         const { status, scriptId, agentId } = options;
 
         const where: Record<string, unknown> = { workspaceId };
@@ -173,6 +175,7 @@ export class ScriptService {
                     }
                 },
                 orderBy: { createdAt: 'desc' },
+                skip: (page - 1) * limit,
                 take: limit,
             }),
             prisma.scriptExecution.count({ where }),
@@ -180,8 +183,7 @@ export class ScriptService {
 
         return {
             executions,
-            total,
-            limit,
+            pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
         };
     }
 

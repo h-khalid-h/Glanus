@@ -56,6 +56,8 @@ export function ScheduledJobsPanel({ workspaceId, availableScripts }: { workspac
 
     useEffect(() => {
         fetchSchedules();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [workspaceId]);
 
     const fetchSchedules = async () => {

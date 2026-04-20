@@ -187,7 +187,7 @@ export class AssetCategoryAdminService {
         if (!category) throw new ApiError(404, 'Category not found');
         const existing = await prisma.assetFieldDefinition.findUnique({ where: { categoryId_slug: { categoryId, slug: data.slug } } });
         if (existing) throw new ApiError(409, 'Field with this slug already exists in category');
-        const { workspaceId, ...fieldData } = data;
+        const { workspaceId: _workspaceId, ...fieldData } = data;
         return prisma.assetFieldDefinition.create({ data: { ...fieldData, categoryId, sortOrder: fieldData.sortOrder ?? 0 } });
     }
 

@@ -36,7 +36,7 @@ const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?:
     return (
         <div className="rounded-xl border border-border bg-surface-1 px-3 py-2 shadow-xl text-sm">
             <p className="text-foreground font-medium truncate max-w-[180px]">{label}</p>
-            <p className="text-violet-400 font-bold">{payload[0].value.toLocaleString()}</p>
+            <p className="text-cortex font-bold">{payload[0].value.toLocaleString()}</p>
         </div>
     );
 };
@@ -45,7 +45,7 @@ export function TopWorkspacesChart({
     data,
     metric,
     label,
-    color = '#6366f1',
+    color: _color = '#6366f1',
     loading = false,
 }: TopWorkspacesChartProps) {
     const chartData = useMemo(() =>

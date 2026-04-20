@@ -11,7 +11,7 @@ interface Workspace {
     logo?: string;
     primaryColor: string;
     accentColor: string;
-    userRole: 'OWNER' | 'ADMIN' | 'MEMBER' | 'VIEWER';
+    userRole: 'OWNER' | 'ADMIN' | 'STAFF' | 'MEMBER' | 'VIEWER';
     subscription: {
         plan: string;
         status: string;
@@ -66,19 +66,57 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
             const fetchedWorkspaces = result.data?.workspaces || [];
             setWorkspaces(fetchedWorkspaces);
 
-            // Auto-select workspace from localStorage or first workspace
-            const storedWorkspaceId = localStorage.getItem('currentWorkspaceId');
-            if (storedWorkspaceId) {
-                const stored = fetchedWorkspaces.find((w: Workspace) => w.id === storedWorkspaceId);
-                if (stored) {
-                    setWorkspace(stored);
+            // During impersonation, prefer the workspace from the impersonation cookie
+            // over localStorage (which may still hold the admin's previous workspace).
+            let preferredWorkspaceId: string | null = null;
+            try {
+                const impCookie = document.cookie
+                    .split('; ')
+                    .find((c) => c.startsWith('glanus-impersonation='));
+                if (impCookie) {
+                    const meta = JSON.parse(decodeURIComponent(impCookie.split('=').slice(1).join('=')));
+                    if (meta?.workspaceId) {
+                        preferredWorkspaceId = meta.workspaceId;
+                    }
+                }
+            } catch {
+                // Ignore parse errors — fall through to normal selection
+            }
+
+            const targetId = preferredWorkspaceId || localStorage.getItem('currentWorkspaceId');
+
+            // Auto-select workspace from impersonation cookie, localStorage, or first workspace
+            let selectedId: string | null = null;
+            if (targetId) {
+                const target = fetchedWorkspaces.find((w: Workspace) => w.id === targetId);
+                if (target) {
+                    setWorkspace(target);
+                    localStorage.setItem('currentWorkspaceId', target.id);
+                    selectedId = target.id;
                 } else if (fetchedWorkspaces.length > 0) {
                     setWorkspace(fetchedWorkspaces[0]);
                     localStorage.setItem('currentWorkspaceId', fetchedWorkspaces[0].id);
+                    selectedId = fetchedWorkspaces[0].id;
                 }
             } else if (fetchedWorkspaces.length > 0) {
                 setWorkspace(fetchedWorkspaces[0]);
                 localStorage.setItem('currentWorkspaceId', fetchedWorkspaces[0].id);
+                selectedId = fetchedWorkspaces[0].id;
+            }
+
+            // Embed workspace claim (wid + wRole) into the JWT so that
+            // middleware RBAC guards can check the role without a DB lookup.
+            if (selectedId) {
+                try {
+                    await fetch('/api/auth/switch-workspace', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ workspaceId: selectedId }),
+                        credentials: 'include',
+                    });
+                } catch {
+                    // Non-fatal — falls back to DB lookup on API routes
+                }
             }
         } catch (err: unknown) {
             setError(err instanceof Error ? err.message : 'Failed to load workspaces');
@@ -152,12 +190,13 @@ export function useWorkspacePermission(requiredRole: 'OWNER' | 'ADMIN' | 'MEMBER
 
     if (!workspace) return false;
 
-    const roleHierarchy = {
-        OWNER: 4,
-        ADMIN: 3,
+    const roleHierarchy: Record<string, number> = {
+        OWNER: 5,
+        ADMIN: 4,
+        STAFF: 3,
         MEMBER: 2,
         VIEWER: 1,
     };
 
-    return roleHierarchy[workspace.userRole] >= roleHierarchy[requiredRole];
+    return (roleHierarchy[workspace.userRole] ?? 0) >= (roleHierarchy[requiredRole] ?? 0);
 }

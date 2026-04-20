@@ -5,8 +5,11 @@ import { withRateLimit } from '@/lib/security/rateLimit';
 import { z } from 'zod';
 import { WorkspaceMemberService } from '@/lib/services/WorkspaceMemberService';
 
-const updateRoleSchema = z.object({
-    role: z.enum(['ADMIN', 'MEMBER', 'VIEWER']),
+const updateMemberSchema = z.object({
+    role: z.enum(['ADMIN', 'STAFF', 'MEMBER', 'VIEWER']).optional(),
+    name: z.string().min(1).max(100).optional(),
+    email: z.string().email().optional(),
+    isActive: z.boolean().optional(),
 });
 
 // PATCH /api/workspaces/[id]/members/[memberId]
@@ -22,10 +25,10 @@ export const PATCH = withErrorHandler(async (
     const { workspace } = await requireWorkspaceRole(workspaceId, user.id, 'ADMIN');
 
     const body = await request.json();
-    const validation = updateRoleSchema.parse(body);
+    const validation = updateMemberSchema.parse(body);
 
-    const member = await WorkspaceMemberService.updateMemberRole(
-        workspaceId, memberId, user.id, validation.role, workspace.name,
+    const member = await WorkspaceMemberService.updateMember(
+        workspaceId, memberId, user.id, validation, workspace.name,
     );
     return apiSuccess({ member });
 });

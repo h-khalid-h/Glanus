@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useWorkspaceId } from '@/lib/workspace/context';
 import { csrfFetch } from '@/lib/api/csrfFetch';
 import { useToast } from '@/lib/toast';
@@ -11,7 +11,8 @@ import {
 } from 'lucide-react';
 import type { AutomationRule, ActionQueueItem } from '@/lib/reflex/automation';
 import { ReflexRuleForm } from '@/components/workspace/reflex/ReflexRuleForm';
-import { ConfirmDialog } from '@/components/ui';
+import { ConfirmDialog, Pagination } from '@/components/ui';
+import type { PaginationMeta } from '@/components/ui/Pagination';
 
 export default function ReflexDashboardPage() {
     const workspaceId = useWorkspaceId();
@@ -21,6 +22,7 @@ export default function ReflexDashboardPage() {
     const [rules, setRules] = useState<AutomationRule[]>([]);
     const [queue, setQueue] = useState<ActionQueueItem[]>([]);
     const [loading, setLoading] = useState(true);
+    const [queuePagination, setQueuePagination] = useState<PaginationMeta>({ page: 1, limit: 20, total: 0, totalPages: 0 });
     const [isCreatingRule, setIsCreatingRule] = useState(false);
     const [confirmState, setConfirmState] = useState<{ open: boolean; ruleId: string | null }>({ open: false, ruleId: null });
 
@@ -28,6 +30,8 @@ export default function ReflexDashboardPage() {
         if (workspaceId) {
             fetchData();
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [workspaceId]);
 
     const fetchData = async () => {
@@ -35,7 +39,7 @@ export default function ReflexDashboardPage() {
         try {
             const [rulesRes, queueRes] = await Promise.all([
                 csrfFetch(`/api/workspaces/${workspaceId}/reflex/rules`),
-                csrfFetch(`/api/workspaces/${workspaceId}/reflex/queue`)
+                csrfFetch(`/api/workspaces/${workspaceId}/reflex/queue?page=1&limit=20`)
             ]);
 
             if (rulesRes.ok) {
@@ -44,7 +48,9 @@ export default function ReflexDashboardPage() {
             }
             if (queueRes.ok) {
                 const queueData = await queueRes.json();
-                setQueue(queueData.data || queueData);
+                const d = queueData.data || queueData;
+                setQueue(d.queue || d);
+                if (d.pagination) setQueuePagination(d.pagination);
             }
         } catch (_err: unknown) {
             showError('Failed to load Reflex engine data');
@@ -52,6 +58,20 @@ export default function ReflexDashboardPage() {
             setLoading(false);
         }
     };
+
+    const fetchQueue = useCallback(async (page = 1) => {
+        try {
+            const res = await csrfFetch(`/api/workspaces/${workspaceId}/reflex/queue?page=${page}&limit=20`);
+            if (res.ok) {
+                const data = await res.json();
+                const d = data.data || data;
+                setQueue(d.queue || d);
+                if (d.pagination) setQueuePagination(d.pagination);
+            }
+        } catch (_err: unknown) {
+            showError('Failed to load action queue');
+        }
+    }, [workspaceId, showError]);
 
     const handleDeleteRule = async (ruleId: string) => {
         try {
@@ -264,6 +284,7 @@ export default function ReflexDashboardPage() {
                             </div>
                         ))
                     )}
+                    <Pagination pagination={queuePagination} onPageChange={fetchQueue} noun="actions" />
                 </div>
             )}
 

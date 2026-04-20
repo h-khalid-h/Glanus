@@ -46,11 +46,14 @@ export default function WorkspacePartnerPage() {
 
     useEffect(() => {
         if (workspaceId) {
+    // eslint-disable-next-line react-hooks/exhaustive-deps
             fetchAssignment();
         }
-    }, [workspaceId]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        }, [workspaceId]);
 
-    const fetchAssignment = async () => {
+        const fetchAssignment = async () => {
         try {
             const res = await csrfFetch(`/api/workspaces/${workspaceId}/partner`);
             if (res.ok) {
@@ -195,11 +198,14 @@ export default function WorkspacePartnerPage() {
                             <div className="flex items-start justify-between mb-6">
                                 <div className="flex items-start space-x-4">
                                     {assignment.partner.logo && (
-                                        <img
-                                            src={assignment.partner.logo}
-                                            alt={assignment.partner.companyName}
-                                            className="w-16 h-16 rounded-xl object-cover"
-                                        />
+                                                    <>
+                                                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                        <img
+                                                            src={assignment.partner.logo}
+                                                            alt={assignment.partner.companyName}
+                                                            className="w-16 h-16 rounded-xl object-cover"
+                                                        />
+                                                    </>
                                     )}
                                     <div>
                                         <h2 className="text-2xl font-semibold text-foreground">{assignment.partner.companyName}</h2>

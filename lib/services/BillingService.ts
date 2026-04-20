@@ -12,8 +12,8 @@
 import { prisma } from '@/lib/db';
 import { dashboardCache } from '@/lib/cache';
 import { PLAN_LIMITS } from '@/lib/services/WorkspaceService';
-import { logInfo, logWarn } from '@/lib/logger';
-import type { SubscriptionPlan, SubscriptionStatus } from '@prisma/client';
+import { logInfo } from '@/lib/logger';
+import type { SubscriptionPlan } from '@prisma/client';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types

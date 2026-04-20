@@ -1,11 +1,13 @@
 'use client';
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useWorkspaceId } from '@/lib/workspace/context';
 import { csrfFetch } from '@/lib/api/csrfFetch';
 import { useToast } from '@/lib/toast';
 import { PageSpinner } from '@/components/ui/Spinner';
 import { ErrorState, EmptyState } from '@/components/ui/EmptyState';
 import { WorkspaceLayout } from '@/components/workspace/WorkspaceLayout';
+import { Pagination } from '@/components/ui/Pagination';
+import type { PaginationMeta } from '@/components/ui/Pagination';
 import { Search, ArrowUpDown, Box, Server } from 'lucide-react';
 
 interface SoftwareItem {
@@ -23,26 +25,40 @@ function SoftwareInventoryContent() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [query, setQuery] = useState('');
+    const [debouncedQuery, setDebouncedQuery] = useState('');
     const [sortField, setSortField] = useState<keyof SoftwareItem>('installCount');
     const [sortDesc, setSortDesc] = useState(true);
+    const [pagination, setPagination] = useState<PaginationMeta>({ page: 1, limit: 20, total: 0, totalPages: 0 });
+
+    // Debounce search
+    useEffect(() => {
+        const timer = setTimeout(() => setDebouncedQuery(query), 300);
+        return () => clearTimeout(timer);
+    }, [query]);
 
     useEffect(() => {
-        if (workspaceId) fetchInventory();
-    }, [workspaceId]);
+        if (workspaceId) fetchInventory(1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [workspaceId, debouncedQuery]);
 
-    const fetchInventory = async () => {
+    const fetchInventory = useCallback(async (page = 1) => {
         try {
-            const res = await csrfFetch(`/api/workspaces/${workspaceId}/software`);
+            setLoading(true);
+            const params = new URLSearchParams({ page: String(page), limit: '20' });
+            if (debouncedQuery) params.set('search', debouncedQuery);
+            const res = await csrfFetch(`/api/workspaces/${workspaceId}/software?${params}`);
             if (!res.ok) throw new Error('Failed to load software inventory');
             const data = await res.json();
             setSoftware(data.data?.software || []);
+            if (data.data?.pagination) setPagination(data.data.pagination);
         } catch (err: unknown) {
             setError(err instanceof Error ? err.message : 'An unexpected error occurred');
             showError('Load Error', 'Could not fetch workspace software inventory.');
         } finally {
             setLoading(false);
         }
-    };
+    }, [workspaceId, debouncedQuery, showError]);
 
     const handleSort = (field: keyof SoftwareItem) => {
         if (sortField === field) {
@@ -56,27 +72,21 @@ function SoftwareInventoryContent() {
     if (loading) return <PageSpinner />;
     if (error) return <ErrorState title="Failed to Load Inventory" description={error} onRetry={() => { setError(null); setLoading(true); fetchInventory(); }} />;
 
-    const sortedFilteredSoftware = software
-        .filter(sw =>
-            sw.name.toLowerCase().includes(query.toLowerCase()) ||
-            (sw.publisher && sw.publisher.toLowerCase().includes(query.toLowerCase())) ||
-            (sw.version && sw.version.toLowerCase().includes(query.toLowerCase()))
-        )
-        .sort((a, b) => {
-            let valA = a[sortField];
-            let valB = b[sortField];
+    const sortedSoftware = [...software].sort((a, b) => {
+        let valA = a[sortField];
+        let valB = b[sortField];
 
-            if (valA === null) valA = '';
-            if (valB === null) valB = '';
+        if (valA === null) valA = '';
+        if (valB === null) valB = '';
 
-            if (typeof valA === 'string' && typeof valB === 'string') {
-                return sortDesc ? valB.localeCompare(valA) : valA.localeCompare(valB);
-            }
-            if (typeof valA === 'number' && typeof valB === 'number') {
-                return sortDesc ? valB - valA : valA - valB;
-            }
-            return 0;
-        });
+        if (typeof valA === 'string' && typeof valB === 'string') {
+            return sortDesc ? valB.localeCompare(valA) : valA.localeCompare(valB);
+        }
+        if (typeof valA === 'number' && typeof valB === 'number') {
+            return sortDesc ? valB - valA : valA - valB;
+        }
+        return 0;
+    });
 
     return (
         <div className="space-y-6">
@@ -101,7 +111,7 @@ function SoftwareInventoryContent() {
                         />
                     </div>
                     <div className="text-sm text-muted-foreground shrink-0">
-                        {sortedFilteredSoftware.length} Unique Titles Found
+                        {pagination.total.toLocaleString()} Unique Titles Found
                     </div>
                 </div>
 
@@ -139,14 +149,14 @@ function SoftwareInventoryContent() {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-border/50">
-                                {sortedFilteredSoftware.length === 0 ? (
+                                {sortedSoftware.length === 0 ? (
                                     <tr>
                                         <td colSpan={4} className="p-8 text-center text-muted-foreground">
                                             No software matched your search query.
                                         </td>
                                     </tr>
                                 ) : (
-                                    sortedFilteredSoftware.map((sw, idx) => (
+                                    sortedSoftware.map((sw, idx) => (
                                         <tr key={idx} className="hover:bg-muted/30 transition group">
                                             <td className="p-4">
                                                 <div className="flex items-center gap-3">
@@ -177,6 +187,11 @@ function SoftwareInventoryContent() {
                         </table>
                     </div>
                 )}
+
+                {/* Pagination */}
+                <div className="px-4 pb-4">
+                    <Pagination pagination={pagination} onPageChange={fetchInventory} noun="titles" />
+                </div>
             </div>
         </div>
     );

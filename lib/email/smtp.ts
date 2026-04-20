@@ -1,5 +1,5 @@
 import { createTransport } from 'nodemailer';
-import { logError, logInfo } from '@/lib/logger';
+import { logInfo } from '@/lib/logger';
 
 type EmailData = {
     to: string;

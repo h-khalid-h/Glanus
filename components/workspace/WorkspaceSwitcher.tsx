@@ -57,11 +57,14 @@ export function WorkspaceSwitcher() {
                     style={{ backgroundColor: workspace.primaryColor }}
                 >
                     {workspace.logo ? (
-                        <img
-                            src={workspace.logo}
-                            alt={workspace.name}
-                            className="w-full h-full object-cover rounded"
-                        />
+                        <>
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                                src={workspace.logo}
+                                alt={workspace.name}
+                                className="w-full h-full object-cover rounded"
+                            />
+                        </>
                     ) : (
                         workspace.name.charAt(0).toUpperCase()
                     )}
@@ -103,11 +106,14 @@ export function WorkspaceSwitcher() {
                                     style={{ backgroundColor: ws.primaryColor }}
                                 >
                                     {ws.logo ? (
-                                        <img
-                                            src={ws.logo}
-                                            alt={ws.name}
-                                            className="w-full h-full object-cover rounded"
-                                        />
+                                        <>
+                                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                                            <img
+                                                src={ws.logo}
+                                                alt={ws.name}
+                                                className="w-full h-full object-cover rounded"
+                                            />
+                                        </>
                                     ) : (
                                         ws.name.charAt(0).toUpperCase()
                                     )}

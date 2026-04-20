@@ -9,10 +9,10 @@ interface ActivityFeedProps {
 
 function actionColor(action: string): string {
     const lower = action.toLowerCase();
-    if (lower.includes('delete') || lower.includes('remove')) return 'text-rose-400';
+    if (lower.includes('delete') || lower.includes('remove')) return 'text-destructive';
     if (lower.includes('create') || lower.includes('invite') || lower.includes('add')) return 'text-emerald-400';
     if (lower.includes('update') || lower.includes('edit') || lower.includes('change')) return 'text-cortex';
-    if (lower.includes('login') || lower.includes('auth')) return 'text-violet-400';
+    if (lower.includes('login') || lower.includes('auth')) return 'text-cortex';
     return 'text-muted-foreground';
 }
 

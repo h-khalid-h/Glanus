@@ -6,6 +6,8 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import WorkspaceSwitcher from '@/components/WorkspaceSwitcher';
 import { useWorkspace } from '@/lib/workspace/context';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { useTheme } from '@/hooks/use-theme';
 
 const ICON_PATHS = {
     dashboard: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6',
@@ -25,10 +27,11 @@ function buildNavItems() {
 
 export function DashboardNav() {
     const { data: session } = useSession();
-    const { workspace } = useWorkspace();
+    const { workspace: _workspace } = useWorkspace();
     const pathname = usePathname();
     const [mobileOpen, setMobileOpen] = useState(false);
     const NAV_ITEMS = buildNavItems();
+    const { branding } = useTheme();
 
     const isActive = (href: string) => {
         if (href === '/dashboard') return pathname === '/dashboard';
@@ -40,14 +43,19 @@ export function DashboardNav() {
             <div className="flex items-center gap-5">
                 <WorkspaceSwitcher />
                 <Link href="/dashboard" className="flex items-center gap-2">
-                    <svg width="24" height="24" viewBox="0 0 32 32" fill="none">
-                        <path d="M10 6C6.134 6 3 9.134 3 13s3.134 7 7 7"
-                            stroke="hsl(166, 84%, 39%)" strokeWidth="2.5" strokeLinecap="round" />
-                        <path d="M22 26c3.866 0 7-3.134 7-7s-3.134-7-7-7"
-                            stroke="hsl(166, 84%, 39%)" strokeWidth="2.5" strokeLinecap="round" />
-                        <circle cx="16" cy="16" r="2" fill="hsl(166, 84%, 39%)" opacity="0.6" />
-                    </svg>
-                    <span className="text-lg font-semibold text-foreground">Glanus</span>
+                    {branding.logo ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={branding.logo} alt={branding.appName} className="h-6 w-6 object-contain" />
+                    ) : (
+                        <svg width="24" height="24" viewBox="0 0 32 32" fill="none">
+                            <path d="M10 6C6.134 6 3 9.134 3 13s3.134 7 7 7"
+                                stroke="hsl(166, 84%, 39%)" strokeWidth="2.5" strokeLinecap="round" />
+                            <path d="M22 26c3.866 0 7-3.134 7-7s-3.134-7-7-7"
+                                stroke="hsl(166, 84%, 39%)" strokeWidth="2.5" strokeLinecap="round" />
+                            <circle cx="16" cy="16" r="2" fill="hsl(166, 84%, 39%)" opacity="0.6" />
+                        </svg>
+                    )}
+                    <span className="text-lg font-semibold text-foreground">{branding.appName}</span>
                 </Link>
                 <div className="hidden gap-1 md:flex">
                     {NAV_ITEMS.map(({ href, label, icon }) => (
@@ -84,6 +92,7 @@ export function DashboardNav() {
             </div>
 
             <div className="flex items-center gap-3">
+                <ThemeToggle />
                 {session?.user && (
                     <div className="flex items-center gap-3">
                         <div className="hidden text-right sm:block">

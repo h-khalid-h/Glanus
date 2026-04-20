@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useForm, useWatch } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { ArrowLeft, Box, LayoutGrid, Settings, Info } from 'lucide-react';
@@ -42,7 +42,6 @@ export default function NewCategoryPage() {
 
     const {
         register,
-        control,
         handleSubmit,
         formState: { errors, isDirty },
     } = useForm<CategoryFormData>({

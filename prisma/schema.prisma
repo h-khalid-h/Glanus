@@ -87,6 +87,7 @@ enum WorkspaceRole {
   ADMIN
   MEMBER
   VIEWER
+  STAFF
 }
 
 enum InvitationStatus {
@@ -255,6 +256,12 @@ model Workspace {
   billingEvents      BillingEvent[] @relation("WorkspaceBillingEvents")
   assetUserAssignments AssetAssignment[]
 
+  // Dynamic RBAC: workspace-scoped custom roles
+  customRoles WorkspaceCustomRole[]
+
+  // Super-admin impersonation logs
+  impersonationLogs ImpersonationLog[]
+
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
   deletedAt       DateTime?
@@ -290,6 +297,7 @@ model WorkspaceInvitation {
   email       String
   role        WorkspaceRole    @default(MEMBER)
   token       String           @unique
+  tokenHash   String?          @unique
   status      InvitationStatus @default(PENDING)
   invitedBy   String
   inviter     User             @relation("SentInvitations", fields: [invitedBy], references: [id], onDelete: Cascade)
@@ -297,10 +305,12 @@ model WorkspaceInvitation {
   expiresAt  DateTime
   acceptedAt DateTime?
   createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
 
   @@index([workspaceId])
   @@index([email])
   @@index([token])
+  @@index([tokenHash])
 }
 
 model Subscription {
@@ -373,8 +383,17 @@ model User {
   password  String
   role      UserRole @default(USER)
   isStaff   Boolean  @default(false) // Staff users can only access the super-admin dashboard
+  isActive  Boolean  @default(true)  // Admins can deactivate members to revoke access
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  // Forced password reset
+  mustChangePassword Boolean   @default(false)
+  passwordChangedAt  DateTime?
+
+  // Dynamic platform role (nullable — users without it fall back to enum `role`)
+  platformRoleId String?
+  platformRole   PlatformRole? @relation(fields: [platformRoleId], references: [id])
 
   // Email verification
   emailVerified   Boolean   @default(false)
@@ -419,7 +438,15 @@ model User {
   createdApiKeys            ApiKey[]            @relation("ApiKeyCreator")
   createdMaintenanceWindows MaintenanceWindow[] @relation("MaintenanceWindowCreator")
 
+  // Dynamic RBAC: workspace-scoped custom role memberships
+  customRoleMemberships WorkspaceCustomRoleMember[]
+
+  // Super-admin impersonation logs
+  impersonationsAsAdmin  ImpersonationLog[] @relation("ImpersonationLog_adminIdToUser")
+  impersonationsAsTarget ImpersonationLog[] @relation("ImpersonationLog_targetUserIdToUser")
+
   @@index([email])
+  @@index([isStaff])
 }
 
 model Asset {
@@ -735,6 +762,7 @@ model AuditLog {
   metadata     Json?
   details      Json       @default("{}")
   ipAddress    String?
+  userAgent    String?
   createdAt    DateTime   @default(now())
 
   @@index([workspaceId, createdAt])
@@ -2038,4 +2066,152 @@ model EmailVerification {
 
   @@index([userId])
   @@index([expiresAt])
+}
+
+// ============================================================
+// Dynamic RBAC (Phase: platform + workspace custom roles)
+// Tables are snake_case in Postgres; Prisma models use PascalCase via @@map.
+// ============================================================
+
+enum PermissionScope {
+  PLATFORM
+  WORKSPACE
+}
+
+/// Granular permission primitives. `key` is `resource:action:scope`.
+model Permission {
+  id          String          @id @default(cuid())
+  resource    String
+  action      String
+  scope       PermissionScope
+  key         String          @unique
+  description String?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  rolePermissions          RolePermission[]
+  workspaceRolePermissions WorkspaceRolePermission[]
+
+  @@unique([resource, action, scope])
+  @@index([scope])
+  @@map("permissions")
+}
+
+/// Platform-level roles assignable to User.platformRoleId.
+model PlatformRole {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  label       String
+  description String?
+  isStaff     Boolean  @default(false)
+  color       String   @default("#6366f1")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  users       User[]
+  permissions RolePermission[]
+
+  @@map("platform_roles")
+}
+
+/// Join table: PlatformRole ↔ Permission.
+model RolePermission {
+  id             String   @id @default(cuid())
+  platformRoleId String
+  permissionId   String
+  createdAt      DateTime @default(now())
+
+  platformRole PlatformRole @relation(fields: [platformRoleId], references: [id], onDelete: Cascade)
+  permission   Permission   @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([platformRoleId, permissionId])
+  @@index([permissionId])
+  @@index([platformRoleId])
+  @@map("role_permissions")
+}
+
+/// Page-level permission catalog (which permission keys a page requires).
+model PagePermission {
+  id          String   @id @default(cuid())
+  page        String   @unique
+  permissions String[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("page_permissions")
+}
+
+/// Workspace-scoped custom roles.
+model WorkspaceCustomRole {
+  id          String         @id @default(cuid())
+  workspaceId String
+  name        String
+  label       String
+  description String?
+  color       String         @default("#6366f1")
+  baseRole    WorkspaceRole?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  workspace   Workspace                     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  members     WorkspaceCustomRoleMember[]
+  permissions WorkspaceRolePermission[]
+
+  @@unique([workspaceId, name])
+  @@index([workspaceId])
+  @@map("workspace_custom_roles")
+}
+
+/// Join table: WorkspaceCustomRole ↔ User.
+model WorkspaceCustomRoleMember {
+  id         String   @id @default(cuid())
+  roleId     String
+  userId     String
+  assignedAt DateTime @default(now())
+
+  role WorkspaceCustomRole @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  user User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, userId])
+  @@index([roleId])
+  @@index([userId])
+  @@map("workspace_custom_role_members")
+}
+
+/// Join table: WorkspaceCustomRole ↔ Permission.
+model WorkspaceRolePermission {
+  id                    String   @id @default(cuid())
+  workspaceCustomRoleId String
+  permissionId          String
+  createdAt             DateTime @default(now())
+
+  customRole WorkspaceCustomRole @relation(fields: [workspaceCustomRoleId], references: [id], onDelete: Cascade)
+  permission Permission          @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceCustomRoleId, permissionId])
+  @@index([permissionId])
+  @@index([workspaceCustomRoleId])
+  @@map("workspace_role_permissions")
+}
+
+/// Super-admin impersonation audit trail.
+model ImpersonationLog {
+  id           String    @id @default(cuid())
+  adminId      String
+  targetUserId String
+  workspaceId  String
+  startedAt    DateTime  @default(now())
+  endedAt      DateTime?
+  ipAddress    String?
+  userAgent    String?
+  reason       String?
+
+  admin      User      @relation("ImpersonationLog_adminIdToUser", fields: [adminId], references: [id], onDelete: Cascade)
+  targetUser User      @relation("ImpersonationLog_targetUserIdToUser", fields: [targetUserId], references: [id], onDelete: Cascade)
+  workspace  Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([adminId])
+  @@index([startedAt])
+  @@index([targetUserId])
+  @@index([workspaceId])
 }

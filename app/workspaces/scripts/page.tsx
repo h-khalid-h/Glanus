@@ -6,7 +6,8 @@ import { csrfFetch } from '@/lib/api/csrfFetch';
 import { useEffect, useState } from 'react';
 import { useWorkspaceId } from '@/lib/workspace/context';
 import { Terminal, Plus, Trash2, Zap, Rocket, X, CheckCircle, XCircle, Clock, Loader2, History, Calendar } from 'lucide-react';
-import { ConfirmDialog } from '@/components/ui';
+import { ConfirmDialog, Pagination } from '@/components/ui';
+import type { PaginationMeta } from '@/components/ui/Pagination';
 import { PageSpinner } from '@/components/ui/Spinner';
 import { ScheduledJobsPanel } from '@/components/workspace/scripts/ScheduledJobsPanel';
 
@@ -66,6 +67,7 @@ export default function ScriptsLibraryPage() {
     const [showSchedules, setShowSchedules] = useState(false);
     const [executions, setExecutions] = useState<Execution[]>([]);
     const [loadingHistory, setLoadingHistory] = useState(false);
+    const [execPagination, _setExecPagination] = useState<PaginationMeta>({ page: 1, limit: 20, total: 0, totalPages: 0 });
 
     // Confirm dialog state
     const [confirmState, setConfirmState] = useState<{ open: boolean; title: string; message: string; onConfirm: () => void }>({
@@ -84,6 +86,8 @@ export default function ScriptsLibraryPage() {
         if (workspaceId) {
             fetchScripts();
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [workspaceId]);
 
     const fetchScripts = async () => {
@@ -302,7 +306,7 @@ export default function ScriptsLibraryPage() {
                             <History size={18} className="text-primary" />
                             Execution History
                         </h2>
-                        <span className="text-xs text-muted-foreground">{executions.length} records</span>
+                        <span className="text-xs text-muted-foreground">{execPagination.total} records</span>
                     </div>
                     {loadingHistory ? (
                         <div className="flex items-center justify-center py-12">
@@ -350,6 +354,9 @@ export default function ScriptsLibraryPage() {
                             </table>
                         </div>
                     )}
+                    <div className="px-6 pb-4">
+                        <Pagination pagination={execPagination} onPageChange={fetchExecutionHistory} noun="executions" />
+                    </div>
                 </div>
             )}
 

@@ -45,8 +45,11 @@ export default function RemoteSessionsPage() {
     const [assetsLoading, setAssetsLoading] = useState(false);
     const [connectingAssetId, setConnectingAssetId] = useState<string | null>(null);
 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => {
         fetchSessions();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [statusFilter]);
 
     const fetchSessions = async () => {

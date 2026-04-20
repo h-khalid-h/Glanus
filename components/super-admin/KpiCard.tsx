@@ -26,10 +26,10 @@ const accentMap = {
         border: 'hover:border-cortex/20',
     },
     violet: {
-        icon: 'bg-violet-500/10 text-violet-400',
-        glow: 'hover:shadow-violet-500/10',
-        badge: 'text-violet-400 bg-violet-500/10',
-        border: 'hover:border-violet-500/20',
+        icon: 'bg-cortex/10 text-cortex',
+        glow: 'hover:shadow-cortex/10',
+        badge: 'text-cortex bg-cortex/10',
+        border: 'hover:border-cortex/20',
     },
     amber: {
         icon: 'bg-amber-500/10 text-warning',
@@ -38,16 +38,16 @@ const accentMap = {
         border: 'hover:border-amber-500/20',
     },
     rose: {
-        icon: 'bg-rose-500/10 text-rose-400',
-        glow: 'hover:shadow-rose-500/10',
-        badge: 'text-rose-400 bg-rose-500/10',
-        border: 'hover:border-rose-500/20',
+        icon: 'bg-destructive/10 text-destructive',
+        glow: 'hover:shadow-destructive/10',
+        badge: 'text-destructive bg-destructive/10',
+        border: 'hover:border-destructive/20',
     },
     cyan: {
-        icon: 'bg-cyan-500/10 text-cyan-400',
-        glow: 'hover:shadow-cyan-500/10',
-        badge: 'text-cyan-400 bg-cyan-500/10',
-        border: 'hover:border-cyan-500/20',
+        icon: 'bg-cortex/10 text-cortex',
+        glow: 'hover:shadow-cortex/10',
+        badge: 'text-cortex bg-cortex/10',
+        border: 'hover:border-cortex/20',
     },
 };
 

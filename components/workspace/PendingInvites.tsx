@@ -43,6 +43,8 @@ export default function PendingInvites({ workspaceId }: { workspaceId: string })
         } finally {
             setIsLoading(false);
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [workspaceId]);
 
     useEffect(() => {

@@ -4,6 +4,8 @@
  * Enforces security policies on all requests:
  * - Applies security headers
  * - Validates CSRF tokens on mutations
+ * - Auth guard: redirects unauthenticated users to /login
+ * - RBAC route guards: enforces minimum workspace role on protected routes
  * - Logs security events
  */
 
@@ -68,6 +70,46 @@ const STATIC_FILES = [
     '/manifest.webmanifest',
     '/favicon.ico',
 ];
+
+// ---------------------------------------------------------------------------
+// RBAC Route Guards
+// ---------------------------------------------------------------------------
+
+/**
+ * Numeric hierarchy for workspace roles — mirrors withAuth.ts ROLE_HIERARCHY.
+ * Defined inline here because middleware runs in the Edge Runtime and cannot
+ * import from lib/api/withAuth (which has Node.js dependencies).
+ */
+const MIDDLEWARE_ROLE_LEVELS: Record<string, number> = {
+    OWNER: 5,
+    ADMIN: 4,
+    STAFF: 3,
+    MEMBER: 2,
+    VIEWER: 1,
+};
+
+/**
+ * Routes that require the user to have at least the specified workspace role
+ * in their active workspace (read from the JWT wRole claim).
+ *
+ * Add entries here for any protected page routes.
+ * The check is prefix-based — /workspaces/manage/members matches
+ * any path that starts with that string.
+ */
+const WORKSPACE_ROUTE_GUARDS: Array<{ prefix: string; minRole: string }> = [
+    { prefix: '/workspaces/manage/members',     minRole: 'ADMIN' },
+    { prefix: '/workspaces/manage/settings',    minRole: 'ADMIN' },
+    { prefix: '/workspaces/manage/billing',     minRole: 'OWNER' },
+    { prefix: '/workspaces/manage/integrations',minRole: 'ADMIN' },
+];
+
+/**
+ * Returns the redirect target when the user's workspace role is insufficient.
+ * Always redirects to /dashboard for page routes (no 403 page shown to end users).
+ */
+function getWorkspaceRoleRedirect(request: NextRequest): URL {
+    return new URL('/dashboard', request.url);
+}
 
 /**
  * Timing-safe string comparison (edge-runtime compatible)
@@ -152,17 +194,44 @@ export async function middleware(request: NextRequest) {
             return NextResponse.redirect(loginUrl);
         }
 
+        // 1a. Forced password reset — block everything except the reset flow
+        const mustChangePassword = token.mustChangePassword === true;
+        const isForceResetPage = pathname === '/force-reset-password';
+        const isForceResetApi = pathname === '/api/auth/force-reset-password';
+        const isAuthApi = pathname.startsWith('/api/auth/');
+        const isCsrfApi = pathname === '/api/csrf';
+
+        if (mustChangePassword && !isForceResetPage && !isForceResetApi && !isAuthApi && !isCsrfApi) {
+            if (pathname.startsWith('/api/')) {
+                return NextResponse.json(
+                    { error: 'Password reset required', code: 'FORCE_PASSWORD_RESET' },
+                    { status: 403, headers: { 'X-Request-Id': requestId } }
+                );
+            }
+            return NextResponse.redirect(new URL('/force-reset-password', request.url));
+        }
+
         // 1b. Staff-only route enforcement
         const isStaff = token.isStaff === true;
         const isStaffRoute = pathname.startsWith('/super-admin') || pathname.startsWith('/api/admin');
         const isAccountRoute = pathname.startsWith('/account') || pathname.startsWith('/api/account');
         const isApiAuth = pathname.startsWith('/api/auth');
 
-        if (isStaff && !isStaffRoute && !isAccountRoute && !isApiAuth && !pathname.startsWith('/api/plans') && !pathname.startsWith('/api/csrf')) {
-            // Staff users can only access super-admin, account, and auth routes
+        // During impersonation, the token has isStaff=false but the user needs
+        // access to /api/admin/stop-impersonation to end the session.
+        const isImpersonating = !!request.cookies.get('glanus-impersonation')?.value;
+        const isStopImpersonation = pathname === '/api/admin/stop-impersonation';
+
+        // Staff users must use "Act As" to access workspace/product routes.
+        // Direct access is blocked while token.isStaff === true.
+        const isAllowedApiRoute = pathname.startsWith('/api/plans') || pathname.startsWith('/api/csrf');
+
+        if (isStaff && !isStaffRoute && !isAccountRoute && !isApiAuth && !isAllowedApiRoute) {
+            // Staff users trying to access workspace/product routes directly
+            // are redirected to super-admin and must enter via Act As.
             if (pathname.startsWith('/api/')) {
                 return NextResponse.json(
-                    { error: 'Staff users can only access admin routes' },
+                    { error: 'Staff users must use Act As for workspace access' },
                     { status: 403, headers: { 'X-Request-Id': requestId } }
                 );
             }
@@ -170,14 +239,43 @@ export async function middleware(request: NextRequest) {
         }
 
         if (!isStaff && isStaffRoute) {
-            // Non-staff users cannot access super-admin routes
-            if (pathname.startsWith('/api/admin')) {
-                return NextResponse.json(
-                    { error: 'Admin access required' },
-                    { status: 403, headers: { 'X-Request-Id': requestId } }
-                );
+            // Allow stop-impersonation endpoint during active impersonation
+            if (isImpersonating && isStopImpersonation) {
+                // Fall through — the endpoint handles its own auth via the impersonation cookie
+            } else {
+                // Non-staff users cannot access super-admin routes
+                if (pathname.startsWith('/api/admin')) {
+                    return NextResponse.json(
+                        { error: 'Admin access required' },
+                        { status: 403, headers: { 'X-Request-Id': requestId } }
+                    );
+                }
+                return NextResponse.redirect(new URL('/dashboard', request.url));
             }
-            return NextResponse.redirect(new URL('/dashboard', request.url));
+        }
+
+        // 1c. RBAC: workspace-level route guards
+        // Only page routes are guarded here; API routes rely on requireWorkspaceRole().
+        if (!isStaff && !pathname.startsWith('/api/')) {
+            const guard = WORKSPACE_ROUTE_GUARDS.find((g) =>
+                pathname.startsWith(g.prefix)
+            );
+
+            if (guard) {
+                // wRole is embedded in the JWT by /api/auth/switch-workspace.
+                // If absent the user hasn't selected a workspace yet — deny.
+                const wRole = typeof token.wRole === 'string' ? token.wRole : '';
+                const userLevel = MIDDLEWARE_ROLE_LEVELS[wRole] ?? 0;
+                const requiredLevel = MIDDLEWARE_ROLE_LEVELS[guard.minRole] ?? 99;
+
+                if (userLevel < requiredLevel) {
+                    logWarn(
+                        `[RBAC] Role insufficient for ${pathname}: need ${guard.minRole}, ` +
+                        `got ${wRole || 'none'} [ReqID: ${requestId}]`
+                    );
+                    return NextResponse.redirect(getWorkspaceRoleRedirect(request));
+                }
+            }
         }
     }
 

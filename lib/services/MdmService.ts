@@ -118,22 +118,34 @@ export class MdmService {
     /**
      * Fetch MDM Profile Assignments, optionally filtered by profile.
      */
-    static async getAssignments(workspaceId: string, profileId?: string | null) {
-        return prisma.mdmAssignment.findMany({
-            where: {
-                profile: { workspaceId },
-                ...(profileId ? { profileId } : {})
-            },
-            include: {
-                asset: {
-                    select: { id: true, name: true, serialNumber: true }
+    static async getAssignments(workspaceId: string, profileId?: string | null, page = 1, limit = 20) {
+        const where = {
+            profile: { workspaceId },
+            ...(profileId ? { profileId } : {}),
+        };
+
+        const [assignments, total] = await Promise.all([
+            prisma.mdmAssignment.findMany({
+                where,
+                include: {
+                    asset: {
+                        select: { id: true, name: true, serialNumber: true }
+                    },
+                    profile: {
+                        select: { id: true, name: true, platform: true }
+                    }
                 },
-                profile: {
-                    select: { id: true, name: true, platform: true }
-                }
-            },
-            orderBy: { createdAt: 'desc' }
-        });
+                orderBy: { createdAt: 'desc' },
+                skip: (page - 1) * limit,
+                take: limit,
+            }),
+            prisma.mdmAssignment.count({ where }),
+        ]);
+
+        return {
+            assignments,
+            pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
+        };
     }
 
     /**

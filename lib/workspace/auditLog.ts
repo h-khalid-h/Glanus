@@ -12,9 +12,20 @@ export type AuditAction =
     | 'workspace.created'
     | 'workspace.updated'
     | 'workspace.deleted'
+    // ── Invitation lifecycle ──
+    | 'invitation.sent'
+    | 'invitation.resent'
+    | 'invitation.cancelled'
+    | 'invitation.accepted'
+    // ── Member lifecycle ──
     | 'member.invited'
+    | 'member.added'
     | 'member.removed'
+    | 'member.updated'
     | 'member.role_changed'
+    | 'member.password_reset'
+    // ── User lifecycle ──
+    | 'user.created'
     | 'asset.created'
     | 'asset.updated'
     | 'asset.deleted'
@@ -40,6 +51,7 @@ interface AuditLogEntry {
     resourceId?: string;
     details?: Record<string, unknown>;
     ipAddress?: string;
+    userAgent?: string;
 }
 
 /**
@@ -57,6 +69,7 @@ export async function auditLog(entry: AuditLogEntry): Promise<void> {
                 resourceId: entry.resourceId || null,
                 details: entry.details || {},
                 ipAddress: entry.ipAddress || null,
+                userAgent: entry.userAgent || null,
                 createdAt: new Date(),
             },
         });

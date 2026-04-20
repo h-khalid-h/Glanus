@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import type { Metadata } from 'next';
 import {
     Building2, Users, Activity, Package, Ticket,
     Cpu, Radio, AlertTriangle, RefreshCw,
@@ -22,7 +21,7 @@ interface DashboardData {
 const severityStyles: Record<string, string> = {
     info: 'border-cortex/20 bg-cortex/5 text-cortex',
     warning: 'border-amber-500/20 bg-amber-500/5 text-warning',
-    critical: 'border-rose-500/20 bg-rose-500/5 text-rose-400',
+    critical: 'border-destructive/20 bg-destructive/5 text-destructive',
 };
 
 const severityIcon: Record<string, string> = {
@@ -89,7 +88,7 @@ export default function SuperAdminOverviewPage() {
 
             {/* Error */}
             {error && (
-                <div className="rounded-xl border border-rose-500/20 bg-rose-500/5 px-4 py-3 text-sm text-rose-400">
+                <div className="rounded-xl border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive">
                     {error}
                 </div>
             )}
@@ -199,7 +198,7 @@ export default function SuperAdminOverviewPage() {
                             href="https://docs.glanus.io/monitoring"
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="mt-2 inline-block text-xs text-indigo-400 hover:text-indigo-300 transition-colors"
+                            className="mt-2 inline-block text-xs text-primary hover:text-primary transition-colors"
                         >
                             Configure monitoring →
                         </a>

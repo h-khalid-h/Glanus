@@ -5,6 +5,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { SuperAdminSidebar } from '@/components/super-admin/SuperAdminSidebar';
+import { SuperAdminTopbar } from '@/components/super-admin/SuperAdminTopbar';
 
 export const metadata: Metadata = {
     title: {
@@ -36,9 +37,10 @@ export default async function SuperAdminLayout({ children }: { children: ReactNo
     }
 
     return (
-        <div className="flex min-h-screen bg-[#060b14] text-foreground antialiased">
+        <div className="flex min-h-screen bg-background text-foreground antialiased">
             <SuperAdminSidebar />
             <div className="flex flex-1 flex-col lg:pl-64">
+                <SuperAdminTopbar />
                 <main className="flex-1 overflow-y-auto">
                     <div className="px-6 py-6 lg:px-8 lg:py-8">
                         {children}

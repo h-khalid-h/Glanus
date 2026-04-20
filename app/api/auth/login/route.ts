@@ -22,7 +22,7 @@ import {
     getRefreshCookieOptions,
     getAccessCookieOptions,
 } from '@/lib/auth/jwt-helpers';
-import { withRateLimit, checkRateLimit } from '@/lib/security/rateLimit';
+import { withRateLimit } from '@/lib/security/rateLimit';
 import { logInfo, logWarn } from '@/lib/logger';
 import {
     logFailedLogin,
@@ -210,6 +210,7 @@ async function handleLogin(request: NextRequest): Promise<Response> {
         role: user.role,
         isStaff: user.isStaff,
         sid: refreshResult?.sessionId,
+        mustChangePassword: user.mustChangePassword ?? false,
     });
 
     // Audit log (non-fatal)
@@ -237,6 +238,7 @@ async function handleLogin(request: NextRequest): Promise<Response> {
     // Build response
     const response = NextResponse.json({
         ok: true,
+        forcePasswordReset: user.mustChangePassword ?? false,
         user: {
             id: user.id,
             email: user.email,

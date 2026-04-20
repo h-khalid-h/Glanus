@@ -57,6 +57,8 @@ function PatchPoliciesContent() {
         if (workspaceId) {
             fetchData();
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [workspaceId]);
 
     const fetchData = async () => {

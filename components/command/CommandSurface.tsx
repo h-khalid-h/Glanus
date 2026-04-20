@@ -303,6 +303,8 @@ export function CommandSurface() {
             }
         }
         return handlers;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [searchResults, workspaceId, router]);
 
     const handleInputKeyDown = useCallback((e: React.KeyboardEvent) => {

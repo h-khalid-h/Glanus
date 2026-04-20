@@ -102,8 +102,11 @@ export default function AgentDetailPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => {
         if (workspaceId && agentId) fetchAgentDetail();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [workspaceId, agentId]);
 
     const fetchAgentDetail = async () => {

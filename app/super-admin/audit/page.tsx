@@ -2,13 +2,15 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import type { RecentAuditEvent } from '@/lib/services/SuperAdminService';
+import { Pagination } from '@/components/ui/Pagination';
+import type { PaginationMeta } from '@/components/ui/Pagination';
 
 function actionColor(action: string): string {
     const lower = action.toLowerCase();
-    if (lower.includes('delete') || lower.includes('remove')) return 'bg-rose-500/10 text-rose-400';
+    if (lower.includes('delete') || lower.includes('remove')) return 'bg-destructive/10 text-destructive';
     if (lower.includes('create') || lower.includes('add') || lower.includes('invite')) return 'bg-emerald-500/10 text-emerald-400';
     if (lower.includes('update') || lower.includes('edit')) return 'bg-cortex/10 text-cortex';
-    if (lower.includes('login') || lower.includes('auth')) return 'bg-violet-500/10 text-violet-400';
+    if (lower.includes('login') || lower.includes('auth')) return 'bg-cortex/10 text-cortex';
     return 'bg-muted text-muted-foreground';
 }
 
@@ -20,15 +22,17 @@ export default function SuperAdminAuditPage() {
     const [events, setEvents] = useState<RecentAuditEvent[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [pagination, setPagination] = useState<PaginationMeta>({ page: 1, limit: 20, total: 0, totalPages: 0 });
 
-    const fetchData = useCallback(async () => {
+    const fetchData = useCallback(async (page = 1) => {
         setLoading(true);
         setError(null);
         try {
-            const res = await fetch('/api/admin/dashboard', { cache: 'no-store' });
+            const res = await fetch(`/api/admin/audit?page=${page}&limit=20`, { cache: 'no-store' });
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const json = await res.json();
-            setEvents(json.data.recentActivity ?? []);
+            setEvents(json.data?.events ?? []);
+            if (json.data?.pagination) setPagination(json.data.pagination);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to load audit log');
         } finally {
@@ -47,7 +51,7 @@ export default function SuperAdminAuditPage() {
                 </div>
                 <button
                     type="button"
-                    onClick={fetchData}
+                    onClick={() => { void fetchData(pagination.page); }}
                     disabled={loading}
                     className="rounded-xl border border-border bg-card px-3 py-2 text-xs text-muted-foreground transition-colors hover:border-border hover:text-foreground disabled:opacity-50"
                 >
@@ -56,7 +60,7 @@ export default function SuperAdminAuditPage() {
             </div>
 
             {error && (
-                <div className="rounded-xl border border-rose-500/20 bg-rose-500/5 px-4 py-3 text-sm text-rose-400">
+                <div className="rounded-xl border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive">
                     {error}
                 </div>
             )}
@@ -119,6 +123,8 @@ export default function SuperAdminAuditPage() {
                     </table>
                 </div>
             </div>
+
+            <Pagination pagination={pagination} onPageChange={fetchData} noun="events" />
         </div>
     );
 }

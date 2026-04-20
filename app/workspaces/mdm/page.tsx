@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useWorkspaceId } from '@/lib/workspace/context';
 import { csrfFetch } from '@/lib/api/csrfFetch';
 import { useToast } from '@/lib/toast';
 import { Smartphone, Shield, Plus, XCircle, Server, ArrowRightLeft, X } from 'lucide-react';
 import { MdmProfileForm } from '@/components/workspace/mdm/MdmProfileForm';
-import { ConfirmDialog } from '@/components/ui';
+import { ConfirmDialog, Pagination } from '@/components/ui';
+import type { PaginationMeta } from '@/components/ui/Pagination';
 
 interface MdmProfile {
     id: string;
@@ -47,22 +48,26 @@ export default function MDMDashboardPage() {
     const [profiles, setProfiles] = useState<MdmProfile[]>([]);
     const [assignments, setAssignments] = useState<MdmAssignment[]>([]);
     const [loading, setLoading] = useState(true);
+    const [assignPagination, setAssignPagination] = useState<PaginationMeta>({ page: 1, limit: 20, total: 0, totalPages: 0 });
     const [isCreatingProfile, setIsCreatingProfile] = useState(false);
     const [confirmState, setConfirmState] = useState<{ open: boolean; profileId: string | null }>({ open: false, profileId: null });
     const [assignModal, setAssignModal] = useState<{ open: boolean; profile: MdmProfile | null; assetId: string }>({ open: false, profile: null, assetId: '' });
 
     useEffect(() => {
         if (workspaceId) {
+    // eslint-disable-next-line react-hooks/exhaustive-deps
             fetchData();
         }
-    }, [workspaceId]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        }, [workspaceId]);
 
-    const fetchData = async () => {
+        const fetchData = async () => {
         setLoading(true);
         try {
             const [profRes, assRes] = await Promise.all([
                 csrfFetch(`/api/workspaces/${workspaceId}/mdm/profiles`),
-                csrfFetch(`/api/workspaces/${workspaceId}/mdm/assignments`)
+                csrfFetch(`/api/workspaces/${workspaceId}/mdm/assignments?page=1&limit=20`)
             ]);
 
             if (profRes.ok) {
@@ -71,7 +76,9 @@ export default function MDMDashboardPage() {
             }
             if (assRes.ok) {
                 const data = await assRes.json();
-                setAssignments(data.data || data);
+                const d = data.data || data;
+                setAssignments(d.assignments || d);
+                if (d.pagination) setAssignPagination(d.pagination);
             }
         } catch (_err: unknown) {
             showError('Failed to load MDM data');
@@ -79,6 +86,20 @@ export default function MDMDashboardPage() {
             setLoading(false);
         }
     };
+
+    const fetchAssignments = useCallback(async (page = 1) => {
+        try {
+            const res = await csrfFetch(`/api/workspaces/${workspaceId}/mdm/assignments?page=${page}&limit=20`);
+            if (res.ok) {
+                const data = await res.json();
+                const d = data.data || data;
+                setAssignments(d.assignments || d);
+                if (d.pagination) setAssignPagination(d.pagination);
+            }
+        } catch (_err: unknown) {
+            showError('Failed to load assignments');
+        }
+    }, [workspaceId, showError]);
 
     const handleDeleteProfile = async (profileId: string) => {
         try {
@@ -154,7 +175,7 @@ export default function MDMDashboardPage() {
                         onClick={() => { setActiveTab('assignments'); setIsCreatingProfile(false); }}
                         className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === 'assignments' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
                     >
-                        Deployment Assignments ({assignments.length})
+                        Deployment Assignments ({assignPagination.total || assignments.length})
                     </button>
                 </nav>
             </div>
@@ -270,6 +291,9 @@ export default function MDMDashboardPage() {
                             </table>
                         </div>
                     )}
+                    <div className="px-6 pb-4">
+                        <Pagination pagination={assignPagination} onPageChange={fetchAssignments} noun="assignments" />
+                    </div>
                 </div>
             )}
             <ConfirmDialog

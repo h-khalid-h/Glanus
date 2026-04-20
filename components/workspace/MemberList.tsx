@@ -1,9 +1,9 @@
 'use client';
 import { csrfFetch } from '@/lib/api/csrfFetch';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useWorkspaceStore } from '@/lib/stores/workspaceStore';
-import { UserMinus, ShieldAlert, User, MoreVertical, Users } from 'lucide-react';
+import { UserMinus, ShieldAlert, User, Users } from 'lucide-react';
 import { Badge, ConfirmDialog } from '@/components/ui';
 import { useToast } from '@/lib/toast';
 
@@ -21,34 +21,12 @@ export default function MemberList({ workspaceId }: { workspaceId: string }) {
     const [members, setMembers] = useState<Member[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [_actionLoading, setActionLoading] = useState<string | null>(null);
-    const [openMenuId, setOpenMenuId] = useState<string | null>(null);
     const { currentWorkspace } = useWorkspaceStore();
     const { error: showError } = useToast();
-    const menuRef = useRef<HTMLDivElement>(null);
     const [confirmState, setConfirmState] = useState<{ open: boolean; memberId: string | null }>({
         open: false,
         memberId: null,
     });
-
-    // Close menu on outside click
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-                setOpenMenuId(null);
-            }
-        };
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, []);
-
-    // Close on Escape
-    useEffect(() => {
-        const handleKeyDown = (event: KeyboardEvent) => {
-            if (event.key === 'Escape') setOpenMenuId(null);
-        };
-        document.addEventListener('keydown', handleKeyDown);
-        return () => document.removeEventListener('keydown', handleKeyDown);
-    }, []);
 
     const fetchMembers = useCallback(async () => {
         try {
@@ -62,6 +40,8 @@ export default function MemberList({ workspaceId }: { workspaceId: string }) {
         } finally {
             setIsLoading(false);
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [workspaceId]);
 
     useEffect(() => {
@@ -69,7 +49,6 @@ export default function MemberList({ workspaceId }: { workspaceId: string }) {
     }, [fetchMembers]);
 
     const handleUpdateRole = async (memberId: string, newRole: string) => {
-        setOpenMenuId(null);
         setActionLoading(memberId);
         try {
             await csrfFetch(`/api/workspaces/${workspaceId}/members/${memberId}`, {
@@ -86,7 +65,6 @@ export default function MemberList({ workspaceId }: { workspaceId: string }) {
     };
 
     const requestRemove = (memberId: string) => {
-        setOpenMenuId(null);
         setConfirmState({ open: true, memberId });
     };
 
@@ -156,52 +134,31 @@ export default function MemberList({ workspaceId }: { workspaceId: string }) {
                                 </Badge>
 
                                 {canManage && member.role !== 'OWNER' && (
-                                    <div className="relative" ref={openMenuId === member.id ? menuRef : undefined}>
-                                        <button type="button"
-                                            onClick={() => setOpenMenuId(openMenuId === member.id ? null : member.id)}
-                                            className="p-1 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-                                            aria-label="Member actions"
-                                            aria-expanded={openMenuId === member.id}
-                                            aria-haspopup="true"
+                                    <div className="flex items-center gap-1.5">
+                                        <button
+                                            type="button"
+                                            onClick={() => handleUpdateRole(member.id, 'ADMIN')}
+                                            className="inline-flex items-center gap-1 rounded-md border border-primary/30 bg-primary/10 px-2 py-1 text-xs font-medium text-primary hover:bg-primary/15 transition-colors"
                                         >
-                                            <MoreVertical className="w-4 h-4" />
+                                            <ShieldAlert className="h-3.5 w-3.5" />
+                                            Admin
                                         </button>
-
-                                        {openMenuId === member.id && (
-                                            <div
-                                                className="absolute right-0 mt-2 w-48 origin-top-right divide-y divide-border rounded-md bg-card backdrop-blur-sm shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-10 animate-in fade-in zoom-in-95 duration-100"
-                                                role="menu"
-                                            >
-                                                <div className="px-1 py-1">
-                                                    <button type="button"
-                                                        onClick={() => handleUpdateRole(member.id, 'ADMIN')}
-                                                        className="group flex w-full items-center rounded-md px-2 py-2 text-sm text-foreground hover:bg-primary/10 hover:text-primary transition-colors"
-                                                        role="menuitem"
-                                                    >
-                                                        <ShieldAlert className="mr-2 h-4 w-4" />
-                                                        Make Admin
-                                                    </button>
-                                                    <button type="button"
-                                                        onClick={() => handleUpdateRole(member.id, 'MEMBER')}
-                                                        className="group flex w-full items-center rounded-md px-2 py-2 text-sm text-foreground hover:bg-primary/10 hover:text-primary transition-colors"
-                                                        role="menuitem"
-                                                    >
-                                                        <User className="mr-2 h-4 w-4" />
-                                                        Make Member
-                                                    </button>
-                                                </div>
-                                                <div className="px-1 py-1">
-                                                    <button type="button"
-                                                        onClick={() => requestRemove(member.id)}
-                                                        className="group flex w-full items-center rounded-md px-2 py-2 text-sm text-destructive hover:bg-destructive/10 transition-colors"
-                                                        role="menuitem"
-                                                    >
-                                                        <UserMinus className="mr-2 h-4 w-4" />
-                                                        Remove Member
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        )}
+                                        <button
+                                            type="button"
+                                            onClick={() => handleUpdateRole(member.id, 'MEMBER')}
+                                            className="inline-flex items-center gap-1 rounded-md border border-border bg-muted/40 px-2 py-1 text-xs font-medium text-foreground hover:bg-muted transition-colors"
+                                        >
+                                            <User className="h-3.5 w-3.5" />
+                                            Member
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => requestRemove(member.id)}
+                                            className="inline-flex items-center gap-1 rounded-md border border-destructive/30 bg-destructive/10 px-2 py-1 text-xs font-medium text-destructive hover:bg-destructive/15 transition-colors"
+                                        >
+                                            <UserMinus className="h-3.5 w-3.5" />
+                                            Remove
+                                        </button>
                                     </div>
                                 )}
                             </div>

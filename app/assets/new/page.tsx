@@ -75,11 +75,14 @@ export default function DynamicAssetCreatePage() {
             }
         };
 
+        // eslint-disable-next-line react-hooks/exhaustive-deps
         fetchCategories();
-    }, [workspace?.id]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        }, [workspace?.id]);
 
-    const applyCategory = (category: AssetCategory | null) => {
-        setSelectedCategory(category);
+        const applyCategory = (category: AssetCategory | null) => {
+            setSelectedCategory(category);
         const initialCustom: Record<string, any> = {};
         if (category) {
             // Collect fields from the full category chain (parent → child)

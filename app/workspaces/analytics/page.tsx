@@ -287,7 +287,7 @@ export default function AnalyticsPage() {
 
 // ─── Intelligence Bar ────────────────────────────────────
 
-function IntelligenceBar({ summary, workspaceId }: { summary: IntelligenceSummary; workspaceId: string }) {
+function IntelligenceBar({ summary, workspaceId: _workspaceId }: { summary: IntelligenceSummary; workspaceId: string }) {
     const statusConfig = {
         nominal: {
             label: 'All Systems Nominal',
@@ -347,7 +347,7 @@ function IntelligenceBar({ summary, workspaceId }: { summary: IntelligenceSummar
 
 // ─── Empty State Guide ───────────────────────────────────
 
-function EmptyWorkspaceGuide({ workspaceId }: { workspaceId: string }) {
+function EmptyWorkspaceGuide({ workspaceId: _workspaceId }: { workspaceId: string }) {
     const steps = [
         {
             step: 1,

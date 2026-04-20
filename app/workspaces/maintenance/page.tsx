@@ -6,9 +6,11 @@ import { csrfFetch } from '@/lib/api/csrfFetch';
 import { useToast } from '@/lib/toast';
 import { PageSpinner } from '@/components/ui/Spinner';
 import { ErrorState } from '@/components/ui/EmptyState';
+import { Pagination } from '@/components/ui/Pagination';
+import type { PaginationMeta } from '@/components/ui/Pagination';
 import {
     Wrench, Plus, Calendar, Clock, CheckCircle,
-    XCircle, ChevronDown, Filter, Loader2, X, AlertTriangle, AlertCircle
+    XCircle, Filter, Loader2, X, AlertTriangle, AlertCircle
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -81,6 +83,7 @@ export default function MaintenancePage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+    const [pagination, setPagination] = useState<PaginationMeta>({ page: 1, limit: 20, total: 0, totalPages: 0 });
     const [showCreate, setShowCreate] = useState(false);
     const [creating, setCreating] = useState(false);
 
@@ -96,16 +99,18 @@ export default function MaintenancePage() {
     // Simple asset list for the dropdown
     const [assets, setAssets] = useState<Array<{ id: string; name: string }>>([]);
 
-    const fetchWindows = useCallback(async () => {
+    const fetchWindows = useCallback(async (page = 1) => {
         if (!workspaceId) return;
         setLoading(true);
         try {
-            const qs = new URLSearchParams({ limit: '100' });
+            const qs = new URLSearchParams({ limit: '20', page: String(page) });
             if (statusFilter !== 'all') qs.set('status', statusFilter);
             const res = await csrfFetch(`/api/workspaces/${workspaceId}/maintenance?${qs}`);
             if (!res.ok) throw new Error('Failed to load maintenance windows');
             const data = await res.json();
-            setWindows(data.data?.windows || []);
+            const d = data.data || {};
+            setWindows(d.windows || []);
+            if (d.pagination) setPagination(d.pagination);
         } catch (err: unknown) {
             setError(err instanceof Error ? err.message : 'Failed to load');
         } finally {
@@ -321,6 +326,7 @@ export default function MaintenancePage() {
                     )}
                 </div>
             ) : (
+                <>
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                     {windows.map((w, i) => {
                         const sc = statusConfig[w.status] || statusConfig.scheduled;
@@ -405,6 +411,9 @@ export default function MaintenancePage() {
                         );
                     })}
                 </div>
+
+                <Pagination pagination={pagination} onPageChange={fetchWindows} noun="windows" className="mt-6" />
+                </>
             )}
         </>
     );

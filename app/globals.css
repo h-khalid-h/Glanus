@@ -164,6 +164,17 @@
     text-rendering: optimizeLegibility;
   }
 
+  /* Theme transition — smooth color switching */
+  html.theme-transition,
+  html.theme-transition *,
+  html.theme-transition *::before,
+  html.theme-transition *::after {
+    transition: background-color 300ms ease-in-out,
+                color 300ms ease-in-out,
+                border-color 300ms ease-in-out,
+                box-shadow 300ms ease-in-out !important;
+  }
+
   /* Smooth scrolling — respect user preferences */
   html {
     scroll-behavior: smooth;
@@ -304,6 +315,32 @@
 
   .input:hover:not(:focus):not(:disabled) {
     @apply border-border/80;
+  }
+
+  .role-select {
+    @apply w-full rounded-xl border border-border/60 bg-muted/20 px-3 py-2 text-sm text-foreground
+           transition-colors duration-200
+           focus:outline-none focus:ring-2 focus:ring-primary/40
+           hover:border-border;
+  }
+
+  .role-select option {
+    @apply bg-card text-foreground;
+  }
+
+  .role-dropdown-trigger {
+    @apply relative w-full rounded-xl border border-border bg-card py-2.5 pl-3 pr-10 text-left text-sm text-foreground
+           transition-colors duration-200
+           focus:outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/30
+           hover:border-border/80;
+  }
+
+  .role-dropdown-list {
+    @apply absolute mt-1 max-h-60 w-full overflow-auto rounded-xl border border-border bg-card py-1 text-sm shadow-lg ring-1 ring-black/5 z-20;
+  }
+
+  .role-dropdown-option {
+    @apply relative cursor-pointer select-none py-2 pl-10 pr-4 transition-colors;
   }
 
   /* --- Badge system --- */

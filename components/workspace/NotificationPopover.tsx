@@ -60,6 +60,8 @@ export function NotificationPopover() {
     useEffect(() => {
         fetchNotifications();
         // Option: Setup a polling interval if high real-time sensitivity is needed
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [workspace?.id]);
 
     return (

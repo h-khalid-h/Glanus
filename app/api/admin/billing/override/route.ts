@@ -1,12 +1,10 @@
 import { NextRequest } from 'next/server';
-import { apiSuccess, apiError } from '@/lib/api/response';
+import { apiSuccess } from '@/lib/api/response';
 import { requireAdmin, runWithUserRLS, withErrorHandler } from '@/lib/api/withAuth';
 import { withRateLimit } from '@/lib/security/rateLimit';
 import { BillingService } from '@/lib/services/BillingService';
 import { z } from 'zod';
-import type { SubscriptionPlan } from '@prisma/client';
 
-const VALID_PLANS: SubscriptionPlan[] = ['FREE', 'PERSONAL', 'TEAM', 'ENTERPRISE'];
 
 const overrideSchema = z.object({
     workspaceId: z.string().min(1),

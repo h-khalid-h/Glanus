@@ -9,6 +9,8 @@ import { useWorkspaceId } from '@/lib/workspace/context';
 import Link from 'next/link';
 import { Server, Monitor } from 'lucide-react';
 import { PageSpinner } from '@/components/ui/Spinner';
+import { Pagination } from '@/components/ui/Pagination';
+import type { PaginationMeta } from '@/components/ui/Pagination';
 
 interface Agent {
     id: string;
@@ -47,22 +49,29 @@ export default function WorkspaceAgentsPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [connectingAgentId, setConnectingAgentId] = useState<string | null>(null);
+    const [pagination, setPagination] = useState<PaginationMeta>({ page: 1, limit: 20, total: 0, totalPages: 0 });
 
     useEffect(() => {
         if (workspaceId) {
             fetchAgents();
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [workspaceId]);
 
-    const fetchAgents = async () => {
+    const fetchAgents = async (page = 1) => {
         try {
-            const res = await csrfFetch(`/api/workspaces/${workspaceId}/agents`);
+            setLoading(true);
+            const res = await csrfFetch(`/api/workspaces/${workspaceId}/agents?page=${page}&limit=20`);
             const data = await res.json();
 
             if (res.ok) {
                 const responseData = data.data || {};
                 setAgents(responseData.agents || []);
                 setStats(responseData.stats || { total: 0, online: 0, offline: 0, error: 0 });
+                if (responseData.pagination) {
+                    setPagination(responseData.pagination);
+                }
             }
         } catch (err: unknown) {
             const msg = err instanceof Error ? err.message : 'An unexpected error occurred';
@@ -284,6 +293,13 @@ export default function WorkspaceAgentsPage() {
                     </div>
                 )}
             </div>
+
+            {/* Pagination */}
+            {agents.length > 0 && (
+                <div className="px-6 pb-4">
+                    <Pagination pagination={pagination} onPageChange={fetchAgents} noun="agents" />
+                </div>
+            )}
 
             {/* Info Box */}
             {agents.length > 0 && (

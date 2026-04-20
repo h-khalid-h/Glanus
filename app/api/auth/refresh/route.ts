@@ -26,6 +26,14 @@ export async function POST(request: NextRequest) {
     const rateLimitResponse = await withRateLimit(request, 'api');
     if (rateLimitResponse) return rateLimitResponse;
 
+    // During impersonation the session cookie belongs to the target user but the
+    // refresh cookie still belongs to the original admin.  Rotating the refresh
+    // token would re-issue an admin access token, overwriting the impersonation
+    // session.  Return 204 so the client leaves the session untouched.
+    if (request.cookies.get('glanus-impersonation')?.value) {
+        return new NextResponse(null, { status: 204 });
+    }
+
     const refreshToken = request.cookies.get(REFRESH_COOKIE_NAME)?.value;
 
     if (!refreshToken) {

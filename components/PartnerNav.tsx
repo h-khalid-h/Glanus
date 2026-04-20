@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { signOut, useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
 
 const NAV_ITEMS = [
     {
@@ -78,6 +79,7 @@ export function PartnerNav() {
             </div>
 
             <div className="flex items-center gap-3">
+                <ThemeToggle />
                 <Link
                     href="/dashboard"
                     className="rounded-xl border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground

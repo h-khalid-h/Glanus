@@ -8,6 +8,7 @@ import { useWorkspace } from '@/lib/workspace/context';
 import { NotificationPopover } from '@/components/workspace/NotificationPopover';
 import { CommandPalette } from '@/components/workspace/CommandPalette';
 import WorkspaceSwitcher from '@/components/WorkspaceSwitcher';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { Search, LogOut, Settings, Menu, X, ChevronRight, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { hexToTailwindHsl } from '@/lib/utils/colors';
 
@@ -484,6 +485,7 @@ export function WorkspaceLayout({ children }: { children: React.ReactNode }) {
                             <span>Search</span>
                             <kbd className="rounded-md border border-border bg-surface-1 px-1 py-0.5 font-mono text-[10px]">⌘K</kbd>
                         </button>
+                        <ThemeToggle />
                         <NotificationPopover />
                         
                         {/* User Menu Dropdown */}

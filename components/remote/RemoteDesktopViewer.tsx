@@ -157,6 +157,8 @@ export function RemoteDesktopViewer({
             clearInterval(pollInterval);
             webrtcClient.destroy();
         };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [sessionId, isHost]);
 
     // Input handlers for the CLIENT

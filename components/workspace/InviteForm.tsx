@@ -99,7 +99,7 @@ export default function InviteForm({ workspaceId }: { workspaceId: string }) {
                 <div className="w-full sm:w-48 relative" ref={roleRef}>
                     <button type="button"
                         onClick={() => setIsRoleOpen(!isRoleOpen)}
-                        className="relative w-full cursor-default rounded-xl bg-card backdrop-blur-sm py-2.5 pl-3 pr-10 text-left text-foreground border border-border focus:outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-white/75 sm:text-sm shadow-sm"
+                        className="role-dropdown-trigger"
                         aria-expanded={isRoleOpen}
                         aria-haspopup="listbox"
                     >
@@ -111,7 +111,7 @@ export default function InviteForm({ workspaceId }: { workspaceId: string }) {
 
                     {isRoleOpen && (
                         <ul
-                            className="absolute mt-1 max-h-60 w-full overflow-auto rounded-md bg-card backdrop-blur-sm py-1 text-base shadow-lg ring-1 ring-black/5 focus:outline-none sm:text-sm z-20 border border-border animate-in fade-in duration-100"
+                            className="role-dropdown-list animate-in fade-in duration-100"
                             role="listbox"
                         >
                             {ROLES.map((r) => (
@@ -119,7 +119,7 @@ export default function InviteForm({ workspaceId }: { workspaceId: string }) {
                                     key={r.id}
                                     onClick={() => { setRole(r); setIsRoleOpen(false); }}
                                     className={clsx(
-                                        'relative cursor-pointer select-none py-2 pl-10 pr-4 transition-colors',
+                                        'role-dropdown-option',
                                         'hover:bg-primary/10 hover:text-primary',
                                         role.id === r.id ? 'text-primary' : 'text-foreground'
                                     )}

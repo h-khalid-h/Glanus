@@ -1,7 +1,7 @@
 import { apiSuccess } from '@/lib/api/response';
 import { NextRequest } from 'next/server';
 import { requireAuth, requireWorkspaceAccess, withErrorHandler } from '@/lib/api/withAuth';
-import { withRateLimit } from '@/lib/security/rateLimit';
+
 import { MdmService } from '@/lib/services/MdmService';
 import { z } from 'zod';
 
@@ -20,8 +20,10 @@ export const GET = withErrorHandler(async (req: NextRequest, context: RouteConte
 
     const url = new URL(req.url);
     const profileId = url.searchParams.get('profileId');
-    const assignments = await MdmService.getAssignments(workspaceId, profileId);
-    return apiSuccess(assignments);
+    const page = Math.max(1, parseInt(url.searchParams.get('page') || '1', 10));
+    const limit = Math.min(100, Math.max(1, parseInt(url.searchParams.get('limit') || '20', 10)));
+    const result = await MdmService.getAssignments(workspaceId, profileId, page, limit);
+    return apiSuccess(result);
 });
 
 // POST /api/workspaces/[id]/mdm/assignments

@@ -17,7 +17,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     }
 
     try {
-        const { userId } = await verifyEmailToken(token);
+        await verifyEmailToken(token);
         // Redirect to app with success indicator
         const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
         return NextResponse.redirect(`${baseUrl}/login?verified=true`);

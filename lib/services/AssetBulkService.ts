@@ -280,7 +280,7 @@ export class AssetBulkService {
                         batchData.map(({ data }) => prisma.asset.create({ data }))
                     );
                     results.forEach((asset) => { imported.push({ name: asset.name, id: asset.id }); });
-                } catch (err) {
+                } catch (_err) {
                     // If the batch transaction fails, fall back to individual creates so partial success is captured
                     for (const { rowNum, data } of batchData) {
                         try {

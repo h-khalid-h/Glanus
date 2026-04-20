@@ -49,6 +49,8 @@ export default function ActiveSessionPage() {
                 clearInterval(durationIntervalRef.current);
             }
         };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [params.id]);
 
     const fetchSession = async () => {

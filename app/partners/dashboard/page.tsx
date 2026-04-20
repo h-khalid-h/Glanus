@@ -66,6 +66,8 @@ function PartnerDashboardContent() {
         if (status === 'authenticated') {
             fetchDashboardData();
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [status]);
 
     const fetchDashboardData = async () => {

@@ -1,16 +1,22 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/use-auth';
 
 export default function LoginPage() {
-    const { login } = useAuth();
+    const { login, isAuthenticated, user } = useAuth();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
+
+    useEffect(() => {
+        if (isAuthenticated && user) {
+            window.location.assign(user.isStaff ? '/super-admin' : '/dashboard');
+        }
+    }, [isAuthenticated, user]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -22,6 +28,9 @@ export default function LoginPage() {
 
             if (!result.ok) {
                 setError(result.error || 'Invalid credentials');
+            } else if (result.forcePasswordReset) {
+                // User must change their password before accessing the app
+                window.location.assign('/force-reset-password');
             } else {
                 // Hard navigation ensures the page fully reloads, letting the
                 // SessionProvider re-initialise from the new session cookie.

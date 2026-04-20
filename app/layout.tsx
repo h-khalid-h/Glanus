@@ -31,7 +31,15 @@ export default function RootLayout({
     children: React.ReactNode;
 }>) {
     return (
-        <html lang="en" className="h-full dark" suppressHydrationWarning>
+        <html lang="en" className="h-full" suppressHydrationWarning>
+            <head>
+                {/* Inline script to prevent theme flash on load */}
+                <script
+                    dangerouslySetInnerHTML={{
+                        __html: `(function(){try{var d=document.documentElement,s=JSON.parse(localStorage.getItem('glanus-theme')||'{}'),m=s&&s.state&&s.state.mode;if(m==='dark')d.classList.add('dark');else if(m==='light')d.classList.remove('dark');else if(window.matchMedia('(prefers-color-scheme:dark)').matches)d.classList.add('dark')}catch(e){}})()`,
+                    }}
+                />
+            </head>
             <body className={`${interClassName} h-full antialiased`} suppressHydrationWarning>
                 <Providers>{children}</Providers>
             </body>

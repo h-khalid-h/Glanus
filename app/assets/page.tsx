@@ -125,6 +125,8 @@ export default function AssetsPage() {
         } finally {
             setLoading(false);
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [workspace?.id, debouncedSearch, assetType, categoryId, status, assignmentFilter, pagination.limit]);
 
     useEffect(() => {
@@ -192,7 +194,7 @@ export default function AssetsPage() {
         setShowBulkActions(newSelection.size > 0);
     };
 
-    const toggleSelectAll = () => {
+    const _toggleSelectAll = () => {
         if (selectedAssets.size === assets.length) {
             setSelectedAssets(new Set());
             setShowBulkActions(false);

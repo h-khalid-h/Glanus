@@ -47,8 +47,9 @@ export const GET = withErrorHandler(async (request: NextRequest, { params }: Rou
         status: url.searchParams.get('status'),
         upcoming: url.searchParams.get('upcoming') === 'true',
         limit: Math.min(parseInt(url.searchParams.get('limit') || '50', 10) || 50, 200),
+        page: Math.max(1, parseInt(url.searchParams.get('page') || '1', 10)),
     });
-    return apiSuccess({ windows });
+    return apiSuccess(windows);
 });
 
 export const POST = withErrorHandler(async (request: NextRequest, { params }: RouteContext) => {

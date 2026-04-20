@@ -29,6 +29,9 @@ while [ $attempt -le $MAX_RETRIES ]; do
     fi
 done
 
+echo "[Entrypoint] Running database seed (platform roles + super-admin)..."
+npx tsx prisma/seed.ts || echo "[Entrypoint] WARNING: Seed script failed (non-fatal)."
+
 echo "[Entrypoint] Starting Glanus server on port ${PORT:-8055}..."
 
 # Use exec to forward signals (SIGTERM, SIGINT) to Node.js for graceful shutdown

@@ -56,7 +56,7 @@ export default function SuperAdminAnalyticsPage() {
                             className={[
                                 'rounded-xl px-3 py-1.5 text-xs font-medium transition-all',
                                 days === value
-                                    ? 'bg-indigo-500/20 text-indigo-300 shadow-inner'
+                                    ? 'bg-primary/20 text-primary shadow-inner'
                                     : 'text-muted-foreground hover:text-foreground',
                             ].join(' ')}
                         >
@@ -67,7 +67,7 @@ export default function SuperAdminAnalyticsPage() {
             </div>
 
             {error && (
-                <div className="rounded-xl border border-rose-500/20 bg-rose-500/5 px-4 py-3 text-sm text-rose-400">
+                <div className="rounded-xl border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive">
                     {error}
                 </div>
             )}
@@ -146,7 +146,7 @@ export default function SuperAdminAnalyticsPage() {
                                         <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{ws.assetCount.toLocaleString()}</td>
                                         <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{ws.userCount.toLocaleString()}</td>
                                         <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{ws.agentCount.toLocaleString()}</td>
-                                        <td className="px-4 py-3 font-mono text-xs text-indigo-400 font-semibold">{ws.auditEvents.toLocaleString()}</td>
+                                        <td className="px-4 py-3 font-mono text-xs text-primary font-semibold">{ws.auditEvents.toLocaleString()}</td>
                                         <td className="px-4 py-3 font-mono text-xs text-warning">{ws.openTickets.toLocaleString()}</td>
                                     </tr>
                                 ))

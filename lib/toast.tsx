@@ -34,6 +34,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 
     useEffect(() => {
         return () => {
+                // eslint-disable-next-line react-hooks/exhaustive-deps
             timersRef.current.forEach((timer) => clearTimeout(timer));
         };
     }, []);

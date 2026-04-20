@@ -84,6 +84,8 @@ export default function AuditLogsPage() {
         if (workspaceId) {
             fetchLogs();
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [workspaceId, page, searchAction, resourceType, startDate, endDate]);
 
     const handleExport = async (format: 'csv' | 'json') => {

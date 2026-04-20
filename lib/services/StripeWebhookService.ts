@@ -6,7 +6,7 @@ import { BillingService } from '@/lib/services/BillingService';
 import { sendEmail } from '@/lib/email/sendgrid';
 import { getPaymentSuccessEmailTemplate, getPaymentFailedEmailTemplate, getSubscriptionCanceledEmailTemplate, getPaymentActionRequiredEmailTemplate } from '@/lib/email/templates';
 import Stripe from 'stripe';
-import type { SubscriptionPlan, Prisma } from '@prisma/client';
+import type { SubscriptionPlan } from '@prisma/client';
 
 /**
  * Valid subscription status transitions.

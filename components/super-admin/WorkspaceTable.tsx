@@ -18,7 +18,7 @@ function planBadge(plan: string | null) {
     const map: Record<string, string> = {
         FREE: 'bg-muted text-muted-foreground',
         PERSONAL: 'bg-cortex/10 text-cortex',
-        TEAM: 'bg-violet-500/10 text-violet-400',
+        TEAM: 'bg-cortex/10 text-cortex',
         ENTERPRISE: 'bg-amber-500/10 text-warning',
     };
     const cls = map[plan ?? ''] ?? 'bg-muted text-muted-foreground';
@@ -28,10 +28,10 @@ function planBadge(plan: string | null) {
 function statusBadge(status: string | null) {
     const map: Record<string, string> = {
         ACTIVE: 'bg-emerald-500/10 text-emerald-400',
-        TRIALING: 'bg-cyan-500/10 text-cyan-400',
+        TRIALING: 'bg-cortex/10 text-cortex',
         PAST_DUE: 'bg-amber-500/10 text-warning',
         CANCELED: 'bg-muted text-muted-foreground',
-        UNPAID: 'bg-rose-500/10 text-rose-400',
+        UNPAID: 'bg-destructive/10 text-destructive',
     };
     const cls = map[status ?? ''] ?? 'bg-muted text-muted-foreground';
     return <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ${cls}`}>{status ?? '—'}</span>;

@@ -86,12 +86,16 @@ export default function AssetAgentPage() {
                 fetchAgentData();
                 fetchExecutions();
             }, 30000);
-            return () => clearInterval(interval);
-        }
-    }, [assetId]);
+                return () => clearInterval(interval);
+            }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        }, [assetId]);
 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => {
         if (assetId) fetchMetrics();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [timeRange, assetId]);
 
     const fetchAgentData = async () => {

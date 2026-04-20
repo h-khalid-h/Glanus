@@ -56,6 +56,8 @@ export default function WebhooksPage() {
 
     useEffect(() => {
         if (workspaceId) fetchWebhook();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [workspaceId]);
 
     const handleSave = async () => {

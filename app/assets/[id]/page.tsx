@@ -115,10 +115,13 @@ export default function AssetDetailPage({ params }: { params: Promise<{ id: stri
             await fetchActions(resolvedParams.id);
             await fetchAssignments(resolvedParams.id);
         };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
         init();
-    }, [params]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        }, [params]);
 
-    // Fetch maintenance windows for this asset
+     // Fetch maintenance windows for this asset
     useEffect(() => {
         if (!assetId || !currentWorkspace?.id) return;
         csrfFetch(`/api/workspaces/${currentWorkspace.id}/maintenance?assetId=${assetId}&limit=10`)

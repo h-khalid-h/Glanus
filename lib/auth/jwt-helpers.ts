@@ -29,6 +29,8 @@ export interface AccessTokenPayload {
     name?: string | null;
     role: string;
     isStaff: boolean;
+    /** When true, the user must change their password before accessing the app. */
+    mustChangePassword?: boolean;
     /** The AuthSession ID — allows middleware to verify session validity. */
     sid?: string;
     /**
@@ -59,6 +61,8 @@ export async function encodeAccessToken(payload: AccessTokenPayload): Promise<st
             role: payload.role,
             isStaff: payload.isStaff,
             sid: payload.sid,
+            // Forced password reset flag
+            ...(payload.mustChangePassword && { mustChangePassword: true }),
             // Workspace claims — absent on first login
             ...(payload.wid && { wid: payload.wid }),
             ...(payload.wRole && { wRole: payload.wRole }),
@@ -85,6 +89,7 @@ export async function decodeAccessToken(token: string): Promise<AccessTokenPaylo
             name: decoded.name as string | null,
             role: decoded.role as string,
             isStaff: decoded.isStaff as boolean,
+            mustChangePassword: decoded.mustChangePassword as boolean | undefined,
             sid: decoded.sid as string | undefined,
             wid: decoded.wid as string | undefined,
             wRole: decoded.wRole as string | undefined,

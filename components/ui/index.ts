@@ -7,3 +7,7 @@ export type { InputProps } from './Input';
 export { Badge } from './Badge';
 export type { BadgeProps } from './Badge';
 export { ConfirmDialog } from './ConfirmDialog';
+export { Pagination } from './Pagination';
+export type { PaginationMeta } from './Pagination';
+export { ThemeToggle, ThemeDropdown } from './ThemeToggle';
+export { BrandingPreview } from './BrandingPreview';

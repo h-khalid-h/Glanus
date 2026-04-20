@@ -32,6 +32,7 @@ export interface WorkspaceRow {
     name: string;
     slug: string;
     ownerId: string;
+    ownerName: string | null;
     ownerEmail: string | null;
     plan: string | null;
     status: string | null;
@@ -154,10 +155,14 @@ export class SuperAdminService {
         search = ''
     ): Promise<WorkspaceListResult> {
         const skip = (page - 1) * limit;
-        const whereClause = {
-            deletedAt: null,
-            ...(search ? { name: { contains: search, mode: 'insensitive' as const } } : {}),
-        };
+        const whereClause = search
+            ? {
+                OR: [
+                    { name: { contains: search, mode: 'insensitive' as const } },
+                    { slug: { contains: search, mode: 'insensitive' as const } },
+                ],
+            }
+            : {};
 
         const [rawWorkspaces, total] = await Promise.all([
             prisma.workspace.findMany({
@@ -171,7 +176,7 @@ export class SuperAdminService {
                     slug: true,
                     ownerId: true,
                     createdAt: true,
-                    owner: { select: { email: true } },
+                    owner: { select: { email: true, name: true } },
                     subscription: { select: { plan: true, status: true } },
                     _count: {
                         select: {
@@ -204,6 +209,7 @@ export class SuperAdminService {
             name: w.name,
             slug: w.slug,
             ownerId: w.ownerId,
+            ownerName: w.owner?.name ?? null,
             ownerEmail: w.owner?.email ?? null,
             plan: w.subscription?.plan ?? null,
             status: w.subscription?.status ?? null,
@@ -340,6 +346,43 @@ export class SuperAdminService {
 
         dashboardCache.set(cacheKey, result, 30_000);
         return result;
+    }
+
+    static async getAuditLogsPaginated(page = 1, limit = 20) {
+        const [logs, total] = await Promise.all([
+            prisma.auditLog.findMany({
+                skip: (page - 1) * limit,
+                take: limit,
+                orderBy: { createdAt: 'desc' },
+                select: {
+                    id: true,
+                    workspaceId: true,
+                    userId: true,
+                    action: true,
+                    resourceType: true,
+                    createdAt: true,
+                    workspace: { select: { name: true } },
+                    user: { select: { email: true } },
+                },
+            }),
+            prisma.auditLog.count(),
+        ]);
+
+        const events: RecentAuditEvent[] = logs.map((l) => ({
+            id: l.id,
+            workspaceId: l.workspaceId ?? null,
+            workspaceName: l.workspace?.name ?? null,
+            userId: l.userId ?? null,
+            userEmail: l.user?.email ?? null,
+            action: l.action,
+            resourceType: l.resourceType ?? null,
+            createdAt: l.createdAt,
+        }));
+
+        return {
+            events,
+            pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
+        };
     }
 
     // =========================================================================

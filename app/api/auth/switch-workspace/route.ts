@@ -29,7 +29,7 @@ import {
     getSessionCookieName,
     getAccessCookieOptions,
 } from '@/lib/auth/jwt-helpers';
-import { ApiError } from '@/lib/errors';
+
 import type { WorkspaceRole } from '@prisma/client';
 
 const bodySchema = z.object({
@@ -37,8 +37,9 @@ const bodySchema = z.object({
 });
 
 const ROLE_HIERARCHY: Record<WorkspaceRole, number> = {
-    OWNER: 4,
-    ADMIN: 3,
+    OWNER: 5,
+    ADMIN: 4,
+    STAFF: 3,
     MEMBER: 2,
     VIEWER: 1,
 };

@@ -37,7 +37,7 @@ export class WorkspaceAgentService {
         ]);
 
         const versionByPlatform = new Map(activeVersions.map((v) => [v.platform, v.version]));
-        const tenMinsAgo = new Date(Date.now() - 10 * 60 * 1000);
+        const _tenMinsAgo = new Date(Date.now() - 10 * 60 * 1000);
 
         const data = agents.map((agent) => ({
             id: agent.id,

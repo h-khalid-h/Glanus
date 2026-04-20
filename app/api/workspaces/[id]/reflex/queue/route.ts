@@ -16,6 +16,11 @@ export const GET = withErrorHandler(async (request: NextRequest, context: RouteC
     const user = await requireAuth();
     const { id: workspaceId } = await context.params;
     await requireWorkspaceRole(workspaceId, user.id, 'MEMBER', request);
-    const queue = await getActionQueue(workspaceId);
-    return apiSuccess(queue);
+
+    const { searchParams } = new URL(request.url);
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
+    const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '20', 10)));
+
+    const result = await getActionQueue(workspaceId, page, limit);
+    return apiSuccess(result);
 });

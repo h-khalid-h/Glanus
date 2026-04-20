@@ -7,10 +7,20 @@ import { z } from 'zod';
 
 const inviteSchema = z.object({
     email: z.string().email('Invalid email address'),
-    role: z.enum(['ADMIN', 'MEMBER', 'VIEWER']).default('MEMBER'),
+    role: z.enum(['ADMIN', 'STAFF', 'MEMBER', 'VIEWER']).default('MEMBER'),
 });
 
 type RouteContext = { params: Promise<{ id: string }> };
+
+function getRequestContext(request: NextRequest) {
+    return {
+        ipAddress:
+            request.headers.get('x-forwarded-for')?.split(',')[0].trim() ||
+            request.headers.get('x-real-ip') ||
+            undefined,
+        userAgent: request.headers.get('user-agent') || undefined,
+    };
+}
 
 // GET /api/workspaces/[id]/invitations - List pending invitations
 export const GET = withErrorHandler(async (request: NextRequest, { params }: RouteContext) => {
@@ -37,7 +47,7 @@ export const POST = withErrorHandler(async (request: NextRequest, { params }: Ro
     const validation = inviteSchema.parse(body);
 
     const result = await InvitationService.createInvitation(
-        workspaceId, user.id, workspace.name, validation,
+        workspaceId, user.id, workspace.name, validation, getRequestContext(request),
     );
     return apiSuccess(result, undefined, 201);
 });

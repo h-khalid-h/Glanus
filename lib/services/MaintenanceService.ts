@@ -41,6 +41,7 @@ export interface MaintenanceQueryInput {
     status?: string | null;
     upcoming?: boolean;
     limit?: number;
+    page?: number;
 }
 
 /**
@@ -55,17 +56,29 @@ export interface MaintenanceQueryInput {
 export class MaintenanceService {
     static async listMaintenanceWindows(workspaceId: string, filters: MaintenanceQueryInput) {
         const limit = Math.min(200, Math.max(1, filters.limit ?? 50));
-        return prisma.maintenanceWindow.findMany({
-            where: {
-                workspaceId,
-                ...(filters.assetId && { assetId: filters.assetId }),
-                ...(filters.status && { status: filters.status }),
-                ...(filters.upcoming && { scheduledStart: { gte: new Date() }, status: 'scheduled' }),
-            },
-            include: { asset: { select: { id: true, name: true, status: true } } },
-            orderBy: { scheduledStart: 'asc' },
-            take: limit,
-        });
+        const page = Math.max(1, filters.page ?? 1);
+        const where = {
+            workspaceId,
+            ...(filters.assetId && { assetId: filters.assetId }),
+            ...(filters.status && { status: filters.status }),
+            ...(filters.upcoming && { scheduledStart: { gte: new Date() }, status: 'scheduled' }),
+        };
+
+        const [windows, total] = await Promise.all([
+            prisma.maintenanceWindow.findMany({
+                where,
+                include: { asset: { select: { id: true, name: true, status: true } } },
+                orderBy: { scheduledStart: 'asc' },
+                skip: (page - 1) * limit,
+                take: limit,
+            }),
+            prisma.maintenanceWindow.count({ where }),
+        ]);
+
+        return {
+            windows,
+            pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
+        };
     }
 
     static async createMaintenanceWindow(workspaceId: string, userId: string, data: MaintenanceCreateInput) {

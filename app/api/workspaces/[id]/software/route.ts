@@ -5,10 +5,16 @@ import { NetworkService } from '@/lib/services/NetworkService';
 
 type RouteContext = { params: Promise<{ id: string }> };
 
-export const GET = withErrorHandler(async (_request: NextRequest, { params }: RouteContext) => {
+export const GET = withErrorHandler(async (request: NextRequest, { params }: RouteContext) => {
     const { id: workspaceId } = await params;
     const user = await requireAuth();
     await requireWorkspaceRole(workspaceId, user.id, 'VIEWER');
-    const software = await NetworkService.getSoftwareInventory(workspaceId);
-    return apiSuccess({ software });
+
+    const { searchParams } = new URL(request.url);
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
+    const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '20', 10)));
+    const search = searchParams.get('search') || undefined;
+
+    const result = await NetworkService.getSoftwareInventory(workspaceId, page, limit, search);
+    return apiSuccess(result);
 });

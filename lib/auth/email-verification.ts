@@ -10,7 +10,7 @@
 import crypto from 'crypto';
 import { authPrisma } from '@/lib/auth/db';
 import { hashToken } from '@/lib/auth/tokens';
-import { logInfo, logWarn } from '@/lib/logger';
+import { logInfo } from '@/lib/logger';
 import { sendEmail } from '@/lib/email/sendgrid';
 
 const VERIFICATION_EXPIRY_HOURS = 24;

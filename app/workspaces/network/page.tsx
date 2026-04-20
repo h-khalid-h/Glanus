@@ -6,8 +6,9 @@ import { useToast } from '@/lib/toast';
 import { PageSpinner } from '@/components/ui/Spinner';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { WorkspaceLayout } from '@/components/workspace/WorkspaceLayout';
+import { Pagination } from '@/components/ui/Pagination';
+import type { PaginationMeta } from '@/components/ui/Pagination';
 import { Network, Server, Printer, Settings, Signal, Computer, ScanSearch } from 'lucide-react';
-import { Badge } from '@/components/ui/Badge';
 
 interface NetworkDevice {
     id: string;
@@ -59,21 +60,25 @@ function NetworkDashboardContent() {
     const [scans, setScans] = useState<DiscoveryScan[]>([]);
     const [loading, setLoading] = useState(true);
     const [sweeping, setSweeping] = useState(false);
+    const [pagination, setPagination] = useState<PaginationMeta>({ page: 1, limit: 20, total: 0, totalPages: 0 });
 
     useEffect(() => {
         if (workspaceId) {
             fetchNetworkData();
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [workspaceId]);
 
-    const fetchNetworkData = async () => {
+    const fetchNetworkData = async (page = 1) => {
         setLoading(true);
         try {
-            const res = await csrfFetch(`/api/workspaces/${workspaceId}/network`);
+            const res = await csrfFetch(`/api/workspaces/${workspaceId}/network?page=${page}&limit=20`);
             if (!res.ok) throw new Error('Failed to fetch network topology');
             const data = await res.json();
             setDevices(data.data?.devices || []);
             setScans(data.data?.recentScans || []);
+            if (data.data?.pagination) setPagination(data.data.pagination);
         } catch (err: unknown) {
             showError('Data Error', err instanceof Error ? err.message : 'An unexpected error occurred');
         } finally {
@@ -111,7 +116,7 @@ function NetworkDashboardContent() {
                     <p className="text-sm text-muted-foreground mt-1">Automatically map unmanaged hardware natively across installed agent subnets.</p>
                 </div>
                 <div className="flex gap-2">
-                    <button className="btn-secondary h-9 text-sm px-4" onClick={fetchNetworkData}>
+                    <button className="btn-secondary h-9 text-sm px-4" onClick={() => { void fetchNetworkData(pagination.page); }}>
                         Refresh Map
                     </button>
                     <button className="btn-primary h-9 text-sm px-4 gap-2" onClick={handleSubnetSweep} disabled={sweeping}>
@@ -169,6 +174,9 @@ function NetworkDashboardContent() {
                                         </div>
                                     ))}
                                 </div>
+                            </div>
+                            <div className="px-5 pb-4">
+                                <Pagination pagination={pagination} onPageChange={fetchNetworkData} noun="devices" />
                             </div>
                         </div>
                     </div>

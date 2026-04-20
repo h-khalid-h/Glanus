@@ -253,14 +253,19 @@ export async function deleteRule(
 
 // ─── Action Queue ────────────────────────────────────────
 
-export async function getActionQueue(workspaceId: string): Promise<ActionQueueItem[]> {
-    const items = await prisma.actionQueueItem.findMany({
-        where: { workspaceId },
-        orderBy: { triggeredAt: 'desc' },
-        take: 50,
-    });
+export async function getActionQueue(workspaceId: string, page = 1, limit = 20) {
+    const where = { workspaceId };
+    const [items, total] = await Promise.all([
+        prisma.actionQueueItem.findMany({
+            where,
+            orderBy: { triggeredAt: 'desc' },
+            skip: (page - 1) * limit,
+            take: limit,
+        }),
+        prisma.actionQueueItem.count({ where }),
+    ]);
 
-    return items.map((item) => ({
+    const queue = items.map((item) => ({
         id: item.id,
         rule: item.ruleSnapshot as unknown as AutomationRule,
         consequence: item.consequence as unknown as ConsequenceAssessment,
@@ -269,6 +274,11 @@ export async function getActionQueue(workspaceId: string): Promise<ActionQueueIt
         executedAt: item.executedAt || undefined,
         result: item.result || undefined,
     }));
+
+    return {
+        queue,
+        pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
+    };
 }
 
 /**

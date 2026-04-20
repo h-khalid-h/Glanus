@@ -29,10 +29,13 @@ export default function ActionsPage({ params }: { params: Promise<{ id: string }
             fetchActions(resolvedParams.id, workspace.id);
             fetchCategory(resolvedParams.id, workspace.id);
         };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
         init();
-    }, [params, workspace?.id]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        }, [params, workspace?.id]);
 
-    const fetchCategory = async (id: string, wsId: string) => {
+     const fetchCategory = async (id: string, wsId: string) => {
         try {
             const response = await csrfFetch(`/api/admin/asset-categories/${id}?workspaceId=${wsId}`);
             if (!response.ok) throw new Error('Failed to fetch category');

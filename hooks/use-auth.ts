@@ -25,6 +25,7 @@ export interface LoginInput {
 export interface LoginResult {
     ok: boolean;
     error?: string;
+    forcePasswordReset?: boolean;
     user?: {
         id: string;
         email: string;
@@ -146,7 +147,7 @@ export function useAuth() {
 
             // Parse body defensively — an empty/non-JSON body (e.g., 500 with no content)
             // must not crash as a raw exception into the UI.
-            let data: { ok?: boolean; error?: string | { code?: number; message?: string; retryAfter?: number }; user?: LoginResult['user'] } = {};
+            let data: { ok?: boolean; error?: string | { code?: number; message?: string; retryAfter?: number }; forcePasswordReset?: boolean; user?: LoginResult['user'] } = {};
             try {
                 data = await res.json() as typeof data;
             } catch {
@@ -162,7 +163,7 @@ export function useAuth() {
                 return { ok: false, error: errMsg };
             }
 
-            return { ok: true, user: data.user };
+            return { ok: true, forcePasswordReset: data.forcePasswordReset ?? false, user: data.user };
         },
         []
     );

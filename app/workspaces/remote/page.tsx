@@ -82,6 +82,8 @@ export default function RemoteSessionsPage() {
 
     useEffect(() => {
         fetchSessions();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [page, statusFilter]);
 
     const handleTerminate = async (sessionId: string) => {

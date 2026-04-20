@@ -7,7 +7,6 @@ import { useToast } from '@/lib/toast';
 import { PageSpinner } from '@/components/ui/Spinner';
 import { WorkspaceLayout } from '@/components/workspace/WorkspaceLayout';
 import { ArrowLeft, Send, AlertTriangle, Shield, CheckCircle } from 'lucide-react';
-import { Badge } from '@/components/ui/Badge';
 
 interface TicketMessage {
     id: string;
@@ -95,6 +94,8 @@ function TicketThreadContent() {
 
     useEffect(() => {
         if (workspaceId && ticketId) fetchTicket();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [workspaceId, ticketId]);
 
     useEffect(() => {

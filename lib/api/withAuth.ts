@@ -91,7 +91,7 @@ export interface WorkspaceClaims {
 }
 
 /** Roles recognised as valid claim values. */
-const VALID_ROLES = new Set<WorkspaceRole>(['OWNER', 'ADMIN', 'MEMBER', 'VIEWER']);
+const VALID_ROLES = new Set<WorkspaceRole>(['OWNER', 'ADMIN', 'STAFF', 'MEMBER', 'VIEWER']);
 
 /**
  * Verify that a user has access to a workspace.
@@ -258,8 +258,9 @@ export async function requireWorkspaceRole(
  * Check if a role meets the minimum role requirement.
  */
 const ROLE_HIERARCHY: Record<WorkspaceRole, number> = {
-    OWNER: 4,
-    ADMIN: 3,
+    OWNER: 5,
+    ADMIN: 4,
+    STAFF: 3,
     MEMBER: 2,
     VIEWER: 1,
 };

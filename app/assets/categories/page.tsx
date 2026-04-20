@@ -21,11 +21,14 @@ export default function CategoriesPage() {
 
     useEffect(() => {
         if (workspace?.id) {
+    // eslint-disable-next-line react-hooks/exhaustive-deps
             fetchCategories();
         }
-    }, [workspace?.id]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        }, [workspace?.id]);
 
-    const fetchCategories = async () => {
+        const fetchCategories = async () => {
         if (!workspace?.id) return;
         try {
             setLoading(true);

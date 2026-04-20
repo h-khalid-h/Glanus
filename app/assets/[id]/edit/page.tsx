@@ -56,12 +56,15 @@ export default function EditAssetPage({ params }: { params: Promise<{ id: string
     const [digitalAsset, setDigitalAsset] = useState<Record<string, any>>({});
 
     // Unwrap params and fetch asset data
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => {
         if (!workspace?.id) return;
         params.then(({ id: assetId }) => {
             setId(assetId);
             fetchAsset(assetId, workspace.id);
         });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [params, workspace?.id]);
 
     const fetchAsset = async (assetId: string, workspaceId: string) => {

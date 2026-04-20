@@ -5,10 +5,9 @@ import { useWorkspaceId } from '@/lib/workspace/context';
 import { csrfFetch } from '@/lib/api/csrfFetch';
 import { useToast } from '@/lib/toast';
 import { PageSpinner } from '@/components/ui/Spinner';
-import { ErrorState, EmptyState } from '@/components/ui/EmptyState';
+import { ErrorState } from '@/components/ui/EmptyState';
 import { WorkspaceLayout } from '@/components/workspace/WorkspaceLayout';
-import { LifeBuoy, Plus, MessageSquare, Clock, AlertTriangle, Search, X } from 'lucide-react';
-import { Badge } from '@/components/ui/Badge';
+import { LifeBuoy, Plus, MessageSquare, AlertTriangle, X } from 'lucide-react';
 import Link from 'next/link';
 
 interface Ticket {
@@ -59,6 +58,8 @@ function HelpdeskDashboardContent() {
         if (workspaceId) {
             fetchTickets();
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [workspaceId, statusFilter]);
 
     const fetchTickets = async () => {

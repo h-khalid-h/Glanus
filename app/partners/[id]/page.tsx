@@ -51,6 +51,8 @@ export default function PublicPartnerProfilePage() {
         if (partnerId) {
             fetchPartner();
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [partnerId]);
 
     const fetchPartner = async () => {
@@ -83,11 +85,14 @@ export default function PublicPartnerProfilePage() {
                 <div className="max-w-7xl mx-auto">
                     <div className="flex items-start space-x-6">
                         {partner.logo && (
-                            <img
-                                src={partner.logo}
-                                alt={partner.companyName}
-                                className="w-24 h-24 rounded-xl bg-muted object-cover"
-                            />
+                            <>
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img
+                                    src={partner.logo}
+                                    alt={partner.companyName}
+                                    className="w-24 h-24 rounded-xl bg-muted object-cover"
+                                />
+                            </>
                         )}
                         <div className="flex-1">
                             <h1 className="text-4xl font-bold mb-2">{partner.companyName}</h1>

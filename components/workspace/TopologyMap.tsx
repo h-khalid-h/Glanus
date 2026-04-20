@@ -65,7 +65,8 @@ export function TopologyMap({
                 y: cy + Math.sin(angle) * radius * typeOffset,
             };
         });
-    }, [graph.nodes, dimensions]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [graph.nodes]);
 
     const nodes = layoutNodes();
     const nodeMap = new Map(nodes.map(n => [n.id, n]));
