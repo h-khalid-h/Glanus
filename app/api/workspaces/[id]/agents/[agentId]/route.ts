@@ -12,6 +12,7 @@ type RouteContext = { params: Promise<{ id: string; agentId: string }> };
  *   - Agent system info & current metrics
  *   - Last 24h of metric history from AgentMetric table
  *   - Recent script executions dispatched to this agent
+ *   - canCreateAsset flag — true when the agent is not linked to an asset yet
  */
 export const GET = withErrorHandler(async (request: NextRequest, { params }: RouteContext) => {
     const rateLimited = await withRateLimit(request, 'api');
@@ -21,5 +22,10 @@ export const GET = withErrorHandler(async (request: NextRequest, { params }: Rou
     const user = await requireAuth();
     await requireWorkspaceRole(workspaceId, user.id, 'MEMBER');
     const result = await WorkspaceAgentService.getWorkspaceAgent(workspaceId, agentId);
-    return apiSuccess(result);
+
+    // `canCreateAsset` is true when the agent exists but is not yet linked to
+    // an asset — the UI uses this to show the "Create Asset" banner.
+    const canCreateAsset = !result.agent.assetId;
+
+    return apiSuccess({ ...result, canCreateAsset });
 });

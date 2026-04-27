@@ -1,11 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { signOut, useSession } from 'next-auth/react';
+import { useSession } from 'next-auth/react';
 import { ChevronRight, Settings, LogOut } from 'lucide-react';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { useAuth } from '@/hooks/use-auth';
 
 const SECTION_LABELS: Record<string, string> = {
   'super-admin': 'Overview',
@@ -26,8 +27,44 @@ function getActiveLabel(pathname: string): string {
 export function SuperAdminTopbar() {
   const pathname = usePathname();
   const { data: session } = useSession();
+  const { logout } = useAuth();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
   const activeLabel = getActiveLabel(pathname);
+
+  // Close the dropdown on outside click / Escape. Avoids the old onBlur+setTimeout
+  // race that swallowed the "Sign out" click before it could fire.
+  useEffect(() => {
+    if (!userMenuOpen) return;
+    const onPointerDown = (e: MouseEvent | TouchEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setUserMenuOpen(false);
+      }
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setUserMenuOpen(false);
+    };
+    document.addEventListener('mousedown', onPointerDown);
+    document.addEventListener('touchstart', onPointerDown);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onPointerDown);
+      document.removeEventListener('touchstart', onPointerDown);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [userMenuOpen]);
+
+  const handleSignOut = async () => {
+    if (signingOut) return;
+    setSigningOut(true);
+    try {
+      await logout();
+    } catch (err) {
+      console.error('Sign out failed:', err);
+      setSigningOut(false);
+    }
+  };
 
   const userInitial = (
     session?.user?.name?.[0] ||
@@ -48,11 +85,10 @@ export function SuperAdminTopbar() {
       <div className="flex items-center gap-2">
         <ThemeToggle />
 
-        <div className="relative">
+        <div className="relative" ref={menuRef}>
           <button
             type="button"
-            onClick={() => setUserMenuOpen(!userMenuOpen)}
-            onBlur={() => setTimeout(() => setUserMenuOpen(false), 150)}
+            onClick={() => setUserMenuOpen((v) => !v)}
             className="ml-1 flex h-8 w-8 items-center justify-center rounded-full border border-primary/15 bg-primary/10 text-xs font-bold text-primary transition-all hover:bg-primary/20 hover:shadow-sm"
             aria-expanded={userMenuOpen}
             aria-label="User menu"
@@ -85,11 +121,12 @@ export function SuperAdminTopbar() {
               <div className="border-t border-border p-1.5">
                 <button
                   type="button"
-                  onClick={() => signOut({ callbackUrl: '/login' })}
-                  className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-sm text-destructive transition-colors hover:bg-destructive/8"
+                  onClick={handleSignOut}
+                  disabled={signingOut}
+                  className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-sm text-destructive transition-colors hover:bg-destructive/8 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   <LogOut className="h-4 w-4 text-destructive/70" />
-                  Sign out
+                  {signingOut ? 'Signing out…' : 'Sign out'}
                 </button>
               </div>
             </div>

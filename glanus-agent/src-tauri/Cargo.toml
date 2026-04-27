@@ -14,6 +14,13 @@ rust-version = "1.77.2"
 name = "app_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
+# Explicit binary target so `cargo build` produces `glanus-agent` (matches
+# the path baked into the DEB/RPM installers and systemd unit) instead of
+# defaulting to the package name `app`.
+[[bin]]
+name = "glanus-agent"
+path = "src/main.rs"
+
 [build-dependencies]
 tauri-build = { version = "2.5.4" }
 
@@ -52,11 +59,72 @@ local-ip-address = "0.6"
 # Async utilities
 futures = "0.3"
 
-# Crypto for checksums
+# Crypto for checksums and signature verification
 sha2 = "0.10"
+ed25519-dalek = "2.1"
+base64 = "0.22"
+hex = "0.4"
 
 # Time utilities
 chrono = "0.4"
 
-# Input simulation (WebRTC Remote Control)
+# Retry backoff jitter
+rand = "0.8"
+
+# Input simulation (WebRTC Remote Control — Windows/macOS only)
+[target.'cfg(not(target_os = "linux"))'.dependencies]
 enigo = "0.2"
+
+# Linux daemon logging (journald-friendly)
+[target.'cfg(target_os = "linux")'.dependencies]
+env_logger = "0.11"
+
+# ── Remote-desktop host (feature-gated) ────────────────────────────────────
+# Heavy native deps (libvpx, libxdo on Linux) are pulled in only when the
+# remote_desktop feature is active.  The feature is ON by default so that
+# standard `cargo build --release` and `tauri build` invocations produce a
+# fully capable binary without requiring an explicit `--features` flag.
+# `dep:libxdo?` is a "weak" optional-dep activation: Cargo enables it when
+# the dep is declared for the current target (Linux only) and silently
+# ignores it otherwise — keeping Windows / macOS builds clean.
+[features]
+default = ["remote_desktop"]
+remote_desktop = ["dep:webrtc", "dep:vpx-encode", "dep:xcap", "dep:bytes", "dep:libxdo", "dep:env-libvpx-sys"]
+
+[dependencies.webrtc]
+version = "0.10"
+optional = true
+
+[dependencies.vpx-encode]
+version = "0.6"
+optional = true
+
+# Force the transitive `env-libvpx-sys` dep to enable its `generate` feature
+# so bindgen produces fresh FFI bindings against whatever libvpx is actually
+# installed. Without this the crate falls back to a pre-baked binding table
+# that only goes up to libvpx 1.13.x — Ubuntu 24.04 ships 1.14.0 and the
+# build aborts with `Expected file "generated/vpx-ffi-1.14.0.rs" not found`.
+# Requires `libclang-dev` at build time.
+[dependencies.env-libvpx-sys]
+version = "5.1"
+features = ["generate"]
+optional = true
+
+[dependencies.xcap]
+version = "0.0.14"
+optional = true
+
+[dependencies.bytes]
+version = "1"
+optional = true
+
+# libxdo only on Linux — the X11 input driver depends on it.
+[target.'cfg(target_os = "linux")'.dependencies.libxdo]
+version = "0.6"
+optional = true
+
+# Silence the `unexpected_cfgs` warning for `cfg(mobile)` — Tauri's
+# scaffold uses this gate, but it's only set automatically when building
+# for iOS/Android. On desktop it's harmless and out of our control.
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(mobile)'] }

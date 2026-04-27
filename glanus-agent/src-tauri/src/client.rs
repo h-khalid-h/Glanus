@@ -1,6 +1,7 @@
 // HTTP Client for Glanus Backend Communication
 use anyhow::{Result, Context};
-use reqwest::Client;
+use base64::Engine;
+use reqwest::{Certificate, Client};
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
@@ -18,6 +19,10 @@ pub struct AuthRejectedError;
 /// `{ success: bool, data: T, meta: { timestamp: String } }`
 #[derive(Debug, Deserialize)]
 pub struct ApiResponse<T> {
+    /// Server's success flag. Carried for completeness even when callers
+    /// only consume `data` — surfacing the field still helps when
+    /// debug-printing responses or matching against future error wrappers.
+    #[allow(dead_code)]
     pub success: bool,
     pub data: T,
 }
@@ -28,8 +33,8 @@ pub struct ApiResponse<T> {
 
 #[derive(Debug, Serialize)]
 pub struct RegisterRequest {
-    #[serde(rename = "assetId")]
-    pub asset_id: String,
+    #[serde(rename = "assetId", skip_serializing_if = "Option::is_none")]
+    pub asset_id: Option<String>,
     #[serde(rename = "workspaceId")]
     pub workspace_id: String,
     pub hostname: String,
@@ -55,6 +60,8 @@ pub struct SystemInfo {
 pub struct RegisterResponseData {
     #[serde(rename = "agentId")]
     pub agent_id: String,
+    #[serde(rename = "assetId")]
+    pub asset_id: String,
     #[serde(rename = "authToken")]
     pub auth_token: String,
 }
@@ -68,6 +75,21 @@ pub struct HeartbeatRequest {
     #[serde(rename = "authToken")]
     pub auth_token: String,
     pub metrics: HeartbeatMetrics,
+    /// Agent-reported runtime capabilities. Backend uses this to decide
+    /// whether the UI should offer actions like remote desktop on this host.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub capabilities: Option<AgentCapabilities>,
+}
+
+/// Feature-flag driven capability report. Every field is a boolean so new
+/// capabilities can be added without breaking older backends (unknown fields
+/// are simply ignored by the server-side Zod schema).
+#[derive(Debug, Clone, Copy, Default, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AgentCapabilities {
+    /// True when the agent was built with `--features remote_desktop` and has
+    /// a working screen-capture + input-injection path on this OS.
+    pub remote_desktop: bool,
 }
 
 #[derive(Debug, Serialize)]
@@ -108,17 +130,23 @@ pub struct HeartbeatResponseData {
     pub commands: Vec<Command>,
 }
 
-/// Matches platform's command shape from `AgentService.processHeartbeat()`:
-/// `{ type, id, scriptName, script, language }`
+/// Matches platform's command shape from `AgentService.processHeartbeat()`.
 #[derive(Debug, Clone, Deserialize)]
 pub struct Command {
     pub id: String,
+    /// Future router key. Currently unused by the executor (which only
+    /// looks at `language`), but the platform sends it on every command
+    /// and we want to keep the field for diagnostics.
+    #[allow(dead_code)]
     #[serde(rename = "type")]
     pub command_type: String,
     #[serde(rename = "scriptName")]
     pub script_name: String,
     pub script: String,
     pub language: String,
+    pub signature: Option<String>,
+    #[serde(rename = "issuedAt")]
+    pub issued_at: Option<String>,
 }
 
 // ============================================
@@ -211,13 +239,62 @@ pub struct ApiClient {
     base_url: String,
 }
 
+pub fn build_http_client(base_url: &str) -> Client {
+    let is_release_runtime = !cfg!(debug_assertions);
+
+    // Allow plaintext HTTP for localhost/loopback addresses even in release builds,
+    // so developers and self-hosted setups can run without TLS termination.
+    let lower = base_url.to_lowercase();
+    let is_loopback = lower.starts_with("http://localhost")
+        || lower.starts_with("http://127.")
+        || lower.starts_with("http://[::1]")
+        || lower.starts_with("http://0.0.0.0");
+    let allow_plaintext = std::env::var("GLANUS_ALLOW_HTTP")
+        .map(|v| matches!(v.as_str(), "1" | "true" | "yes"))
+        .unwrap_or(false);
+
+    if is_release_runtime
+        && !lower.starts_with("https://")
+        && !is_loopback
+        && !allow_plaintext
+    {
+        panic!("Refusing non-HTTPS API URL in release: {}", base_url);
+    }
+
+    let enforce_https = is_release_runtime && !is_loopback && !allow_plaintext;
+
+    let mut builder = Client::builder()
+        .timeout(Duration::from_secs(30))
+        .connect_timeout(Duration::from_secs(10))
+        .tcp_keepalive(Duration::from_secs(30))
+        .https_only(enforce_https);
+
+    if let Ok(ca_pem_b64) = std::env::var("GLANUS_PINNED_CA_PEM_BASE64") {
+        match base64::engine::general_purpose::STANDARD.decode(ca_pem_b64.trim()) {
+            Ok(pem_bytes) => match Certificate::from_pem(&pem_bytes) {
+                Ok(ca_cert) => {
+                    builder = builder
+                        .tls_built_in_root_certs(false)
+                        .add_root_certificate(ca_cert);
+                }
+                Err(e) => {
+                    panic!("Invalid GLANUS_PINNED_CA_PEM_BASE64 certificate: {}", e);
+                }
+            },
+            Err(e) => {
+                panic!("Failed to decode GLANUS_PINNED_CA_PEM_BASE64: {}", e);
+            }
+        }
+    } else if is_release_runtime {
+        log::warn!("GLANUS_PINNED_CA_PEM_BASE64 is not configured; TLS pinning is disabled");
+    }
+
+    builder.build().expect("Failed to create HTTP client")
+}
+
 impl ApiClient {
     pub fn new(base_url: String) -> Self {
-        let client = Client::builder()
-            .timeout(Duration::from_secs(30))
-            .build()
-            .expect("Failed to create HTTP client");
-
+        let client = build_http_client(&base_url);
         Self { client, base_url }
     }
 

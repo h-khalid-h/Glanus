@@ -4,6 +4,7 @@ import { withErrorHandler, requireAgentContext, runWithWorkspaceRLS } from '@/li
 import { z } from 'zod';
 import { withRateLimit } from '@/lib/security/rateLimit';
 import { AgentService } from '@/lib/services/AgentService';
+import { hashAgentToken } from '@/lib/security/agent-auth';
 
 const discoverySchema = z.object({
     authToken: z.string(),
@@ -18,10 +19,10 @@ const discoverySchema = z.object({
 });
 
 export const POST = withErrorHandler(async (request: NextRequest) => {
-    const rateLimitResponse = await withRateLimit(request, 'agent');
+    const data = discoverySchema.parse(await request.json());
+    const rateLimitResponse = await withRateLimit(request, 'agent', `agent:${hashAgentToken(data.authToken)}`);
     if (rateLimitResponse) return rateLimitResponse;
 
-    const data = discoverySchema.parse(await request.json());
     const agent = await requireAgentContext(data.authToken);
     const result = await runWithWorkspaceRLS(
         agent.workspaceId,

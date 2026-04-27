@@ -36,10 +36,16 @@ Create config file:
 
 **macOS**: `~/Library/Application Support/Glanus/config.toml`
 
+**Windows**: `%APPDATA%\Glanus\config.toml`
+
+**Linux**: `~/.config/glanus/config.toml`
+
 ```toml
 [agent]
 version = "0.1.0"
+asset_id = null
 workspace_id = null
+pre_auth_token = null
 registered = false
 
 [server]
@@ -55,21 +61,29 @@ enabled = false  # Disable for development
 
 ## 5. Run
 
+Windows / macOS:
+
 ```bash
 cargo tauri dev
 ```
 
+Linux:
+
+```bash
+cargo run
+```
+
 The agent will:
 1. Start system monitoring
-2. Show system tray icon
-3. Wait for registration
+2. Show a system tray icon on Windows/macOS, or run as a daemon on Linux
+3. Wait for registration, or auto-register if `asset_id`, `workspace_id`, and `pre_auth_token` are preconfigured
 
 ## 6. Register Agent
 
 From your Glanus dashboard:
 1. Go to Assets → Add Asset
-2. Get the pre-auth token
-3. In agent UI, enter workspace ID and asset ID
+2. Get the workspace ID and pre-auth token
+3. In the agent UI, enter the workspace ID, pre-auth token, and asset ID
 4. Click "Register"
 
 The agent is now connected! 🎉

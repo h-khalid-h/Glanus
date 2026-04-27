@@ -5,6 +5,7 @@ import { NextRequest } from 'next/server';
 import { withCronHandler } from '@/lib/api/withAuth';
 import { apiSuccess } from '@/lib/api/response';
 import { SystemMaintenanceService } from '@/lib/services/SystemMaintenanceService';
+import { purgePreAuthTokens } from '@/lib/security/preauth-store';
 
 /**
  * POST /api/cron/cleanup
@@ -18,5 +19,9 @@ import { SystemMaintenanceService } from '@/lib/services/SystemMaintenanceServic
  */
 export const POST = withCronHandler(async (_request: NextRequest) => {
     const results = await SystemMaintenanceService.executeDataCleanup();
-    return apiSuccess(results);
+    const preAuthTokensDeleted = await purgePreAuthTokens();
+    return apiSuccess({
+        ...results,
+        preAuthTokensDeleted,
+    });
 });

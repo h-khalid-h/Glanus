@@ -9,17 +9,31 @@ import { NextRequest, NextResponse } from 'next/server';
 export async function GET(request: NextRequest) {
     const { searchParams } = request.nextUrl;
     const token = searchParams.get('token');
-    const apiUrl = searchParams.get('url');
     const workspaceId = searchParams.get('workspaceId');
 
-    if (!token || !apiUrl || !workspaceId) {
-        return new NextResponse('#!/bin/bash\necho "Error: Missing required parameters (token, url, workspaceId)"\nexit 1\n', {
+    if (!token || !workspaceId) {
+        return new NextResponse('#!/bin/bash\necho "Error: Missing required parameters (token, workspaceId)"\nexit 1\n', {
             status: 400,
             headers: { 'Content-Type': 'text/plain; charset=utf-8' },
         });
     }
 
-    const origin = apiUrl.replace(/\/api\/?$/, '');
+    // Derive the origin from the actual incoming request rather than a
+    // client-supplied ?url= param. The old behaviour blindly trusted the
+    // query string, which is both a footgun (operators routinely paste
+    // mismatched ports — port 3000 in `url=` while the script itself is
+    // served from 3001 — and the install hangs for 30s on a connection
+    // refused) and an SSRF surface (a malicious copy/paste could point
+    // the script at any host).
+    //
+    // X-Forwarded-* are honoured ONLY when set, because behind a reverse
+    // proxy the `Host` header is the proxy's internal hostname.
+    const xfHost = request.headers.get('x-forwarded-host');
+    const xfProto = request.headers.get('x-forwarded-proto');
+    const host = xfHost || request.headers.get('host') || request.nextUrl.host;
+    const proto = xfProto || request.nextUrl.protocol.replace(':', '') || 'http';
+    const origin = `${proto}://${host}`;
+    const apiUrl = origin;
     const debUrl = `${origin}/api/downloads/glanus-agent-${workspaceId}.deb`;
 
     const script = `#!/bin/bash
@@ -30,6 +44,9 @@ set -e
 AGENT_DEB="/tmp/glanus-agent-$$.deb"
 API_URL="${apiUrl}"
 TOKEN="${token}"
+WORKSPACE_ID="${workspaceId}"
+CONFIG_DIR="/var/lib/glanus-agent"
+CONFIG_FILE="\$CONFIG_DIR/config.toml"
 
 echo "============================================"
 echo "  Glanus Agent — Linux Installer"
@@ -54,9 +71,11 @@ fi
 
 echo "[1/4] Downloading Glanus Agent..."
 if command -v curl &>/dev/null; then
-    curl -fsSL "${debUrl}" -o "\$AGENT_DEB"
+    # -# shows a single-line progress bar (vs -s which silences everything,
+    # making the user think the install is hung during the ~6 MB transfer).
+    curl -fL# "${debUrl}" -o "\$AGENT_DEB"
 elif command -v wget &>/dev/null; then
-    wget -q "${debUrl}" -O "\$AGENT_DEB"
+    wget --show-progress -q "${debUrl}" -O "\$AGENT_DEB"
 else
     echo "[ERROR] curl or wget is required."
     exit 1
@@ -64,32 +83,78 @@ fi
 
 echo "[2/4] Installing package..."
 if [ "\$PKG_TYPE" = "deb" ]; then
-    dpkg -i "\$AGENT_DEB" || apt-get install -f -y
+    # apt is preferred so runtime deps (webkit2gtk, gtk3, etc.) resolve.
+    # --reinstall + --allow-downgrades so re-running the installer with the
+    # same version (common during development) actually replaces the binary
+    # instead of bailing with "already the newest version".
+    if command -v apt-get &>/dev/null; then
+        apt-get install -y --reinstall --allow-downgrades "\$AGENT_DEB" \
+            || { dpkg -i "\$AGENT_DEB"; apt-get install -f -y; }
+    else
+        dpkg -i "\$AGENT_DEB"
+    fi
 else
-    rpm -i "\$AGENT_DEB"
+    rpm -i --force "\$AGENT_DEB"
 fi
 
-echo "[3/4] Registering agent with server..."
-if command -v glanus-agent &>/dev/null; then
-    glanus-agent register --token "\$TOKEN" --url "\$API_URL"
-elif [ -x /usr/bin/glanus-agent ]; then
-    /usr/bin/glanus-agent register --token "\$TOKEN" --url "\$API_URL"
-else
-    echo "[WARN] glanus-agent binary not found in PATH, writing config manually..."
-    mkdir -p /var/lib/glanus-agent
-    cat > /var/lib/glanus-agent/config.json <<AGENTCFG
-{
-    "apiUrl": "\$API_URL",
-    "token": "\$TOKEN",
-    "workspaceId": "${workspaceId}"
-}
+echo "[3/4] Writing agent config to \$CONFIG_FILE..."
+# The DEB postinst enables+starts the service immediately. Stop it so we can
+# drop in the registration config atomically, then restart. Use a short
+# timeout — if the freshly-started agent is wedged on something else we'd
+# rather move on and let the restart at the end take it from there than
+# block the install indefinitely.
+timeout 10 systemctl stop glanus-agent 2>/dev/null || true
+
+mkdir -p "\$CONFIG_DIR"
+# Read the installed package version from dpkg metadata. We deliberately
+# do NOT call \`glanus-agent --version\` — the binary currently dispatches
+# straight into its daemon loop on any invocation (no --version flag),
+# so spawning it here would hang the install indefinitely.
+AGENT_VERSION="$(dpkg-query -W -f='\${Version}' glanus-agent 2>/dev/null || echo '0.1.0')"
+cat > "\$CONFIG_FILE" <<AGENTCFG
+# Glanus Agent configuration (auto-generated by install script)
+# Do not edit while the service is running.
+
+[agent]
+version = "\$AGENT_VERSION"
+workspace_id = "\$WORKSPACE_ID"
+pre_auth_token = "\$TOKEN"
+registered = false
+
+[server]
+api_url = "\$API_URL"
+heartbeat_interval = 60
+
+[monitoring]
+enabled = true
+interval = 10
+include_processes = true
+max_processes = 5
+
+[updates]
+enabled = true
+check_interval = 86400
+auto_install = false
+
+[inventory]
+enabled = true
+sync_interval = 21600
+
+[discovery]
+enabled = false
+scan_interval = 3600
+
+[remote]
+enabled = true
 AGENTCFG
-fi
+
+chmod 600 "\$CONFIG_FILE"
+chown root:root "\$CONFIG_FILE"
 
 echo "[4/4] Starting service..."
 systemctl daemon-reload 2>/dev/null || true
 systemctl enable glanus-agent 2>/dev/null || true
-systemctl start glanus-agent 2>/dev/null || true
+systemctl restart glanus-agent 2>/dev/null || systemctl start glanus-agent
 
 # Cleanup
 rm -f "\$AGENT_DEB"
@@ -97,8 +162,13 @@ rm -f "\$AGENT_DEB"
 echo ""
 echo "============================================"
 echo "  Glanus Agent installed successfully!"
+echo "  Config:  \$CONFIG_FILE"
 echo "  Service: systemctl status glanus-agent"
+echo "  Logs:    journalctl -u glanus-agent -f"
 echo "============================================"
+echo ""
+echo "The agent will auto-register with the server on the next"
+echo "heartbeat cycle using the embedded pre-auth token."
 `;
 
     return new NextResponse(script, {

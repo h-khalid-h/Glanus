@@ -1,16 +1,22 @@
 // Auto-updater module - checks for updates and installs them
 use anyhow::{Result, Context};
+use base64::Engine;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use reqwest::Client;
 use chrono::Timelike;
-use crate::client::ApiResponse;
+use ed25519_dalek::{Signature, Verifier, VerifyingKey};
+use crate::client::{ApiResponse, build_http_client};
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct UpdateInfo {
     pub version: String,
     pub download_url: String,
     pub checksum: String, // SHA-256 checksum
+    pub signature: Option<String>, // Ed25519 signature over `${version}|${checksum}`
+    /// Surfaced in update-prompts in the GUI; daemon path doesn't read it
+    /// but we keep the field so JSON deserialisation stays loss-less.
+    #[allow(dead_code)]
     pub release_notes: String,
     pub required: bool, // If true, update is mandatory
 }
@@ -29,9 +35,54 @@ pub struct AutoUpdater {
 impl AutoUpdater {
     pub fn new(api_url: String) -> Self {
         Self {
+            client: build_http_client(&api_url),
             api_url,
-            client: Client::new(),
         }
+    }
+
+    fn verify_update_signature(&self, update_info: &UpdateInfo) -> Result<()> {
+        let allow_unsigned = std::env::var("ALLOW_UNSIGNED_UPDATES")
+            .map(|v| v.eq_ignore_ascii_case("true"))
+            .unwrap_or(false);
+        if allow_unsigned {
+            return Ok(());
+        }
+
+        let signature = update_info
+            .signature
+            .as_ref()
+            .context("Update signature missing")?;
+
+        let public_key_b64 = std::env::var("UPDATE_SIGNING_PUBLIC_KEY_B64")
+            .context("UPDATE_SIGNING_PUBLIC_KEY_B64 is not configured")?;
+
+        let key_bytes = base64::engine::general_purpose::STANDARD
+            .decode(public_key_b64.trim())
+            .context("Invalid update signing public key (base64)")?;
+        if key_bytes.len() != 32 {
+            anyhow::bail!("Update signing public key must be 32 bytes");
+        }
+        let mut key_arr = [0u8; 32];
+        key_arr.copy_from_slice(&key_bytes);
+        let verifying_key = VerifyingKey::from_bytes(&key_arr)
+            .context("Invalid update signing public key")?;
+
+        let sig_bytes = base64::engine::general_purpose::STANDARD
+            .decode(signature.trim())
+            .context("Invalid update signature (base64)")?;
+        if sig_bytes.len() != 64 {
+            anyhow::bail!("Update signature must be 64 bytes");
+        }
+        let mut sig_arr = [0u8; 64];
+        sig_arr.copy_from_slice(&sig_bytes);
+        let signature = Signature::from_bytes(&sig_arr);
+
+        let payload = format!("{}|{}", update_info.version, update_info.checksum);
+        verifying_key
+            .verify(payload.as_bytes(), &signature)
+            .context("Update signature verification failed")?;
+
+        Ok(())
     }
 
     /// Check if an update is available
@@ -45,6 +96,10 @@ impl AutoUpdater {
 
         let url = format!("{}/api/agent/check-update", self.api_url);
         
+        if !self.api_url.to_lowercase().starts_with("https://") && !cfg!(debug_assertions) {
+            anyhow::bail!("Refusing update checks over non-HTTPS API URL in release mode");
+        }
+
         let response = self.client
             .post(&url)
             .json(&request)
@@ -66,6 +121,10 @@ impl AutoUpdater {
     /// Download installer to temp directory
     pub async fn download_installer(&self, update_info: &UpdateInfo) -> Result<PathBuf> {
         log::info!("Downloading installer from: {}", update_info.download_url);
+
+        if !update_info.download_url.to_lowercase().starts_with("https://") && !cfg!(debug_assertions) {
+            anyhow::bail!("Refusing update download over non-HTTPS URL in release mode");
+        }
 
         let response = self.client
             .get(&update_info.download_url)
@@ -91,6 +150,9 @@ impl AutoUpdater {
                 calculated_checksum
             );
         }
+
+        self.verify_update_signature(update_info)
+            .context("Update metadata signature validation failed")?;
 
         // Save to temp directory
         let temp_dir = std::env::temp_dir();
@@ -125,15 +187,16 @@ impl AutoUpdater {
 
         #[cfg(target_os = "macos")]
         {
-            // Run PKG installer with sudo
-            let status = tokio::process::Command::new("sudo")
-                .args(&["installer", "-pkg", installer_path.to_str().unwrap(), "-target", "/"])
+            // PKG installation requires user approval. Opening Installer.app is
+            // more reliable than trying to invoke sudo from a background agent.
+            let status = tokio::process::Command::new("/usr/bin/open")
+                .args(&["-W", installer_path.to_str().unwrap()])
                 .status()
                 .await
-                .context("Failed to run PKG installer")?;
+                .context("Failed to launch macOS Installer")?;
 
             if !status.success() {
-                anyhow::bail!("Installer failed with exit code: {:?}", status.code());
+                anyhow::bail!("Installer UI failed to launch with exit code: {:?}", status.code());
             }
         }
 
@@ -172,7 +235,7 @@ impl AutoUpdater {
         return format!("glanus-agent-{}.pkg", version);
 
         #[cfg(target_os = "linux")]
-        return format!("glanus-agent-{}.deb", version);
+        return format!("glanus-agent_{}_amd64.deb", version);
     }
 
     /// Check if update should be installed (based on schedule)

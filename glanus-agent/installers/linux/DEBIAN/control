@@ -3,8 +3,11 @@ Version: 0.1.0
 Section: utils
 Priority: optional
 Architecture: amd64
+Depends: libc6, libssl3 | libssl1.1, libdbus-1-3, libsecret-1-0, libxdo3, libvpx7 | libvpx9 | libvpx6
+Recommends: xdotool
 Maintainer: Glanus <support@glanus.com>
 Homepage: https://glanus.com
-Description: Glanus RMM Agent
+Description: Glanus RMM Agent (headless daemon)
  Cross-platform remote monitoring and management agent for Glanus RMM.
- Provides system monitoring, remote script execution, and automatic updates.
+ On Linux the agent runs headlessly as a systemd service for background
+ monitoring, remote script execution, and automatic updates.

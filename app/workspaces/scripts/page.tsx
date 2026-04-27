@@ -121,6 +121,29 @@ export default function ScriptsLibraryPage() {
         }
     };
 
+    const handleCancelExecution = (exec: Execution) => {
+        setConfirmState({
+            open: true,
+            title: 'Cancel Execution',
+            message: `Force-terminate the "${exec.scriptName}" execution on ${exec.agent?.hostname || 'this agent'}? Use this only when the agent is stuck or unreachable.`,
+            onConfirm: async () => {
+                setConfirmState(prev => ({ ...prev, open: false }));
+                try {
+                    const res = await csrfFetch(
+                        `/api/workspaces/${workspaceId}/scripts/executions/${exec.id}/cancel`,
+                        { method: 'POST' },
+                    );
+                    const data = await res.json();
+                    if (!res.ok) throw new Error(data.error?.message || 'Cancel failed.');
+                    success('Execution Cancelled', data.meta?.message || 'Execution marked as failed.');
+                    fetchExecutionHistory();
+                } catch (err: unknown) {
+                    showError('Cancel Error', err instanceof Error ? err.message : 'An error occurred.');
+                }
+            },
+        });
+    };
+
     const handleCreateScript = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsSubmitting(true);
@@ -329,6 +352,7 @@ export default function ScriptsLibraryPage() {
                                         <th className="px-6 py-3">Exit Code</th>
                                         <th className="px-6 py-3">Started</th>
                                         <th className="px-6 py-3">Completed</th>
+                                        <th className="px-6 py-3 text-right">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-border">
@@ -348,6 +372,20 @@ export default function ScriptsLibraryPage() {
                                             <td className="px-6 py-3 text-sm font-mono text-muted-foreground">{exec.exitCode !== null ? exec.exitCode : '—'}</td>
                                             <td className="px-6 py-3 text-xs text-muted-foreground">{new Date(exec.createdAt).toLocaleString()}</td>
                                             <td className="px-6 py-3 text-xs text-muted-foreground">{exec.completedAt ? new Date(exec.completedAt).toLocaleString() : '—'}</td>
+                                            <td className="px-6 py-3 text-right">
+                                                {(exec.status === 'RUNNING' || exec.status === 'PENDING') ? (
+                                                    <button
+                                                        onClick={() => handleCancelExecution(exec)}
+                                                        className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition"
+                                                        title="Force-terminate this execution"
+                                                    >
+                                                        <X size={12} />
+                                                        Cancel
+                                                    </button>
+                                                ) : (
+                                                    <span className="text-xs text-muted-foreground/40">—</span>
+                                                )}
+                                            </td>
                                         </tr>
                                     ))}
                                 </tbody>

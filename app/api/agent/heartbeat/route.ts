@@ -4,6 +4,7 @@ import { withErrorHandler } from '@/lib/api/withAuth';
 import { z } from 'zod';
 import { withRateLimit } from '@/lib/security/rateLimit';
 import { AgentService } from '@/lib/services/AgentService';
+import { hashAgentToken } from '@/lib/security/agent-auth';
 
 const heartbeatSchema = z.object({
     agentId: z.string().optional(),
@@ -26,15 +27,26 @@ const heartbeatSchema = z.object({
             pid: z.number().optional(),
         })).optional(),
     }),
+    // Optional agent-reported capabilities. New fields here must remain
+    // optional so older agents keep validating.
+    capabilities: z
+        .object({
+            remoteDesktop: z.boolean().optional(),
+        })
+        .optional(),
 });
 
 export const POST = withErrorHandler(async (request: NextRequest) => {
-    const rateLimitResponse = await withRateLimit(request, 'agent');
+    const data = heartbeatSchema.parse(await request.json());
+    const rateLimitResponse = await withRateLimit(request, 'agent', `agent:${hashAgentToken(data.authToken)}`);
     if (rateLimitResponse) return rateLimitResponse;
 
-    const data = heartbeatSchema.parse(await request.json());
     // processHeartbeat handles its own token→agent lookup; skip redundant requireAgentContext
-    const result = await AgentService.processHeartbeat(data.authToken, data.metrics);
+    const result = await AgentService.processHeartbeat(
+        data.authToken,
+        data.metrics,
+        data.capabilities,
+    );
     return apiSuccess({
         status: 'ok',
         agentId: result.agentId,

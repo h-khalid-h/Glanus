@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=Glanus Agent
+GenericName=Remote Monitoring Agent
+Comment=System monitoring and remote management agent
+Exec=/usr/bin/glanus-agent
+Icon=glanus-agent
+Terminal=false
+Categories=Utility;System;Monitor;
+StartupNotify=true
+StartupWMClass=Glanus Agent
+Keywords=monitoring;rmm;remote;agent;glanus;

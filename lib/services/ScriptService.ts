@@ -235,4 +235,103 @@ export class ScriptService {
             };
         });
     }
+
+    // ========================================
+    // STALE EXECUTION REAPER
+    // ========================================
+
+    /**
+     * Mark script executions stuck in PENDING/RUNNING for too long as TIMEOUT.
+     *
+     * Why this exists: the agent normally POSTs to /api/agent/command-result
+     * when a script finishes. If the agent is restarted mid-flight, loses the
+     * pending-results spool, or the command signature fails repeatedly, the
+     * ScriptExecution row stays in RUNNING forever. This reaper closes that
+     * window and keeps the UI honest.
+     *
+     * @param runningOlderThanMinutes - RUNNING rows older than this are TIMEOUT'd
+     * @param pendingOlderThanMinutes - PENDING rows older than this are TIMEOUT'd
+     *                                  (typically long because claim happens on heartbeat)
+     */
+    static async reapStaleExecutions(
+        runningOlderThanMinutes = 15,
+        pendingOlderThanMinutes = 30,
+    ): Promise<{ runningReaped: number; pendingReaped: number }> {
+        const now = Date.now();
+        const runningCutoff = new Date(now - runningOlderThanMinutes * 60 * 1000);
+        const pendingCutoff = new Date(now - pendingOlderThanMinutes * 60 * 1000);
+
+        const [runningReaped, pendingReaped] = await Promise.all([
+            prisma.scriptExecution.updateMany({
+                where: {
+                    status: 'RUNNING',
+                    OR: [
+                        { startedAt: { lt: runningCutoff } },
+                        { startedAt: null, createdAt: { lt: runningCutoff } },
+                    ],
+                },
+                data: {
+                    status: 'TIMEOUT',
+                    completedAt: new Date(),
+                    error: `Agent did not report a result within ${runningOlderThanMinutes} minutes. The execution may have been interrupted, or the agent was restarted before completion.`,
+                },
+            }),
+            prisma.scriptExecution.updateMany({
+                where: {
+                    status: 'PENDING',
+                    createdAt: { lt: pendingCutoff },
+                },
+                data: {
+                    status: 'TIMEOUT',
+                    completedAt: new Date(),
+                    error: `Command was never claimed by an agent within ${pendingOlderThanMinutes} minutes. The target agent may have been offline.`,
+                },
+            }),
+        ]);
+
+        return { runningReaped: runningReaped.count, pendingReaped: pendingReaped.count };
+    }
+
+    /**
+     * Admin-initiated cancel of a single execution. Only terminates rows still
+     * in PENDING or RUNNING. Returns null if the execution is already terminal
+     * or doesn't belong to the workspace.
+     */
+    static async cancelExecution(
+        workspaceId: string,
+        executionId: string,
+        userId: string,
+    ): Promise<{ id: string; status: string } | null> {
+        const execution = await prisma.scriptExecution.findFirst({
+            where: { id: executionId, workspaceId },
+            select: { id: true, status: true, scriptName: true },
+        });
+        if (!execution) return null;
+        if (execution.status !== 'PENDING' && execution.status !== 'RUNNING') {
+            return { id: execution.id, status: execution.status };
+        }
+
+        const updated = await prisma.scriptExecution.update({
+            where: { id: executionId },
+            data: {
+                status: 'FAILED',
+                completedAt: new Date(),
+                error: 'Execution cancelled by operator.',
+            },
+            select: { id: true, status: true },
+        });
+
+        await prisma.auditLog.create({
+            data: {
+                workspaceId,
+                userId,
+                action: 'script_execution.cancelled',
+                resourceType: 'script_execution',
+                resourceId: executionId,
+                details: { scriptName: execution.scriptName, previousStatus: execution.status },
+            },
+        });
+
+        return updated;
+    }
 }

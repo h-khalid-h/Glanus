@@ -3,6 +3,7 @@ use anyhow::{Result, Context};
 use std::sync::Arc;
 use tokio::sync::Mutex;
 use crate::client::{Command, ApiClient, CommandResultRequest};
+use crate::command_security::verify_signed_command;
 use crate::executor::{ScriptExecutor, ExecutionResult};
 use crate::storage::SecureStorage;
 
@@ -27,8 +28,47 @@ impl CommandQueue {
         log::info!("Added {} commands to queue, total: {}", count, queue.len());
     }
 
+    async fn flush_pending_results(&self) -> Result<()> {
+        let pending = SecureStorage::list_pending_results()
+            .context("Failed to load pending command results")?;
+
+        if pending.is_empty() {
+            return Ok(());
+        }
+
+        // Drop results that have been retrying for more than 24h. These are
+        // almost always for executions whose DB row has been deleted on the
+        // server (stale agent install, wiped env), and retrying forever
+        // floods logs + eats rate-limit budget for no benefit.
+        const MAX_AGE_SECS: i64 = 24 * 60 * 60;
+        let now = chrono::Utc::now().timestamp();
+
+        let mut retained = Vec::new();
+        for item in pending {
+            if now - item.created_at > MAX_AGE_SECS {
+                log::warn!(
+                    "Dropping pending result {} after >24h of retries",
+                    item.execution_id
+                );
+                continue;
+            }
+            if let Err(e) = self.report_result(item.execution_id.clone(), item.result.clone()).await {
+                log::warn!("Failed to flush pending result {}: {}", item.execution_id, e);
+                retained.push(item);
+            }
+        }
+
+        SecureStorage::replace_pending_results(retained)
+            .context("Failed to persist remaining pending command results")?;
+        Ok(())
+    }
+
     /// Process all pending commands
     pub async fn process_all(&self) -> Result<()> {
+        if let Err(e) = self.flush_pending_results().await {
+            log::warn!("Pending result flush failed: {}", e);
+        }
+
         let commands = {
             let mut queue = self.pending.lock().await;
             std::mem::take(&mut *queue) // Take all commands and clear queue
@@ -62,18 +102,43 @@ impl CommandQueue {
     async fn execute_and_report(&self, command: Command) -> Result<()> {
         log::info!("Executing command {}: {} script ({})", command.id, command.language, command.script_name);
 
-        // Execute script using the language field as script type
-        let result = ScriptExecutor::execute(
-            &command.language,
-            &command.script,
-            None, // Platform does not send timeout; use default
-        ).await
-        .context("Failed to execute script")?;
+        let execution_id = command.id.clone();
+        let start = std::time::Instant::now();
 
-        log::info!("Command {} finished with status: {}", command.id, result.status);
+        let verification_result = verify_signed_command(&command);
+        let result = if let Err(err) = verification_result {
+            ExecutionResult {
+                status: "ERROR".to_string(),
+                output: None,
+                error: Some(err.to_string()),
+                exit_code: None,
+                duration_ms: start.elapsed().as_millis() as u64,
+            }
+        } else {
+            match ScriptExecutor::execute(
+                &command.language,
+                &command.script,
+                None, // Platform does not send timeout; use default
+            ).await {
+                Ok(executed) => executed,
+                Err(e) => ExecutionResult {
+                    status: "ERROR".to_string(),
+                    output: None,
+                    error: Some(format!("Execution failed: {}", e)),
+                    exit_code: None,
+                    duration_ms: start.elapsed().as_millis() as u64,
+                },
+            }
+        };
 
-        // Report result to backend
-        self.report_result(command.id, result).await?;
+        log::info!("Command {} finished with status: {}", execution_id, result.status);
+
+        // Report result to backend. If offline/unreachable, persist locally for replay.
+        if let Err(e) = self.report_result(execution_id.clone(), result.clone()).await {
+            SecureStorage::enqueue_pending_result(execution_id.clone(), result)
+                .context("Failed to persist pending command result")?;
+            return Err(e).context(format!("Failed to report command result for {}", execution_id));
+        }
 
         Ok(())
     }
@@ -110,6 +175,7 @@ impl CommandQueue {
     }
 
     /// Get current queue size
+    #[allow(dead_code)]
     pub async fn size(&self) -> usize {
         self.pending.lock().await.len()
     }

@@ -34,6 +34,7 @@ Copy-Item "..\..\src-tauri\target\release\glanus-agent.exe" $buildDir
 @"
 [agent]
 version = "$Version"
+asset_id = null
 workspace_id = null
 pre_auth_token = null
 registered = false

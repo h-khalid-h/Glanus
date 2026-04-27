@@ -1,0 +1,136 @@
+#!/bin/bash
+# Glanus Agent — X11 environment discovery
+#
+# Runs as root before the agent service starts. Locates the active
+# graphical session (if any), extracts its DISPLAY + XAUTHORITY, and
+# writes them to /run/glanus-agent/x11.env so the agent can attach to
+# the user's X server for screen capture and input injection.
+#
+# If no graphical session is active (headless box, ssh-only host, etc.)
+# the env file is still created — empty — so EnvironmentFile=- in the
+# unit doesn't fail, and the agent starts in capture-disabled mode.
+
+set -eu
+
+ENV_DIR="/run/glanus-agent"
+ENV_FILE="$ENV_DIR/x11.env"
+
+mkdir -p "$ENV_DIR"
+chmod 755 "$ENV_DIR"
+
+DISPLAY_VAL=""
+XAUTH_VAL=""
+SESSION_USER=""
+
+# Strategy 1: loginctl — preferred on systemd-logind systems.
+if command -v loginctl >/dev/null 2>&1; then
+    # Find the first active graphical session ("seat0" + Type=x11/wayland).
+    SESSION_ID="$(
+        loginctl list-sessions --no-legend 2>/dev/null \
+            | awk '{print $1}' \
+            | while read -r sid; do
+                [ -z "$sid" ] && continue
+                if loginctl show-session "$sid" 2>/dev/null \
+                        | grep -qE '^(Active=yes|State=active)' \
+                    && loginctl show-session "$sid" 2>/dev/null \
+                        | grep -qE '^Type=(x11|wayland)'; then
+                    echo "$sid"
+                    break
+                fi
+            done
+    )"
+
+    if [ -n "${SESSION_ID:-}" ]; then
+        SESSION_USER="$(loginctl show-session "$SESSION_ID" -p Name --value 2>/dev/null || true)"
+        DISPLAY_VAL="$(loginctl show-session "$SESSION_ID" -p Display --value 2>/dev/null || true)"
+    fi
+fi
+
+# Strategy 1b: if loginctl reported the user but no DISPLAY (common on
+# GDM Wayland-greeter → X11-session setups, where logind sees a session
+# but the X server was started by gnome-session inside it), inspect the
+# user's actual graphical processes for the env they were launched with.
+# This is the only reliable source on Ubuntu 24.04 + Xorg-on-vt2 boxes
+# where Xorg ends up on display `:1`, not `:0`.
+if [ -n "${SESSION_USER:-}" ] && { [ -z "$DISPLAY_VAL" ] || [ -z "$XAUTH_VAL" ]; }; then
+    USER_UID="$(id -u "$SESSION_USER" 2>/dev/null || true)"
+    if [ -n "$USER_UID" ]; then
+        # Walk /proc looking for a process owned by the user with DISPLAY
+        # and XAUTHORITY in its environ. gnome-shell / gnome-session /
+        # Xorg clients all carry these. Prefer gnome-shell if present.
+        for candidate_pid in $(pgrep -u "$USER_UID" -f 'gnome-shell|gnome-session|mate-session|xfce4-session|cinnamon-session|plasmashell' 2>/dev/null); do
+            penv="/proc/$candidate_pid/environ"
+            [ -r "$penv" ] || continue
+            [ -z "$DISPLAY_VAL" ] && DISPLAY_VAL="$(tr '\0' '\n' < "$penv" 2>/dev/null | awk -F= '$1=="DISPLAY"{print $2; exit}')"
+            [ -z "$XAUTH_VAL"   ] && XAUTH_VAL="$(  tr '\0' '\n' < "$penv" 2>/dev/null | awk -F= '$1=="XAUTHORITY"{print $2; exit}')"
+            [ -n "$DISPLAY_VAL" ] && [ -n "$XAUTH_VAL" ] && break
+        done
+    fi
+fi
+
+# Strategy 1c: derive DISPLAY from the X11 socket as the last resort.
+# Xorg always creates `/tmp/.X11-unix/X<n>` for display `:<n>`. Picking
+# the lowest existing socket gives a usable answer when env-snooping
+# above also failed (e.g. a tty-only box that nonetheless has Xorg).
+if [ -z "$DISPLAY_VAL" ]; then
+    for sock in /tmp/.X11-unix/X[0-9]*; do
+        [ -S "$sock" ] || continue
+        DISPLAY_VAL=":${sock##*/X}"
+        break
+    done
+fi
+
+# Strategy 2: who -u — fallback when loginctl isn't available or finds nothing.
+if [ -z "$SESSION_USER" ] && command -v who >/dev/null 2>&1; then
+    while read -r line; do
+        # `who -u` lines: USER  TTY  DATE  TIME  PID  (HOST)
+        # Graphical sessions have TTY like ":0", "tty7", or display in HOST.
+        u="$(echo "$line" | awk '{print $1}')"
+        host="$(echo "$line" | awk -F '[()]' '{print $2}')"
+        case "$host" in
+            :*)
+                SESSION_USER="$u"
+                DISPLAY_VAL="$host"
+                break
+                ;;
+        esac
+    done < <(who -u 2>/dev/null || true)
+    # Don't hardcode :0 here — strategy 1c (X11-socket scan) is more reliable.
+fi
+
+# Locate the user's Xauthority — try the common locations in priority order.
+if [ -n "$SESSION_USER" ]; then
+    USER_HOME="$(getent passwd "$SESSION_USER" 2>/dev/null | cut -d: -f6 || true)"
+    USER_UID="$(id -u "$SESSION_USER" 2>/dev/null || true)"
+    for candidate in \
+        "/run/user/${USER_UID}/gdm/Xauthority" \
+        "/run/user/${USER_UID}/Xauthority" \
+        "${USER_HOME}/.Xauthority" \
+        "/var/run/lightdm/${SESSION_USER}/xauthority" \
+        "/var/lib/gdm3/.Xauthority"; do
+        if [ -n "$candidate" ] && [ -r "$candidate" ]; then
+            XAUTH_VAL="$candidate"
+            break
+        fi
+    done
+fi
+
+# Write the env file. Always create it (even empty) so systemd's
+# EnvironmentFile=- directive doesn't trip on a missing path.
+{
+    if [ -n "$DISPLAY_VAL" ]; then
+        echo "DISPLAY=$DISPLAY_VAL"
+    fi
+    if [ -n "$XAUTH_VAL" ]; then
+        echo "XAUTHORITY=$XAUTH_VAL"
+    fi
+} > "$ENV_FILE"
+chmod 644 "$ENV_FILE"
+
+if [ -n "$DISPLAY_VAL" ]; then
+    echo "[glanus-agent-detect-x11] active session: user=${SESSION_USER:-unknown} DISPLAY=$DISPLAY_VAL XAUTHORITY=${XAUTH_VAL:-<not found>}"
+else
+    echo "[glanus-agent-detect-x11] no active graphical session detected; capture/input will be disabled"
+fi
+
+exit 0

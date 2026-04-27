@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
+import { GlobalLoader } from '@/components/ui/GlobalLoader';
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
     const { session, status, isLoading, refresh } = useAuth();
@@ -20,18 +21,13 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     }, [status, router, refresh]);
 
     if (isLoading) {
-        return (
-            <div className="flex min-h-screen items-center justify-center bg-background">
-                <div className="text-center">
-                    <div className="mb-4 inline-block h-12 w-12 animate-spin rounded-full border-4 border-border border-t-nerve"></div>
-                    <p className="text-muted-foreground">Loading...</p>
-                </div>
-            </div>
-        );
+        return <GlobalLoader />;
     }
 
     if (!session) {
-        return null;
+        // Keep the unified loader visible while we redirect, instead of
+        // briefly flashing an empty page.
+        return <GlobalLoader />;
     }
 
     return <>{children}</>;

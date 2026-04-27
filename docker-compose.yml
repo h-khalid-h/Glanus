@@ -54,6 +54,29 @@ services:
       retries: 5
     command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
 
+  # ── Glanus Agent (Linux headless daemon) ─────────────────────────────────────
+  # Optional: run a containerised agent alongside the server.
+  # Mount your config file: docker-compose up agent
+  agent:
+    build:
+      context: ./glanus-agent
+      dockerfile: Dockerfile
+    environment:
+      - RUST_LOG=${AGENT_LOG_LEVEL:-info}
+      # Pre-populate these to auto-register on first start (all optional)
+      - GLANUS_AGENT_ASSET_ID=${AGENT_ASSET_ID:-}
+    volumes:
+      # Persist agent config and state between restarts
+      - agentconfig:/etc/glanus
+    depends_on:
+      app:
+        condition: service_healthy
+    restart: unless-stopped
+    profiles:
+      # Only start when explicitly requested: docker-compose --profile agent up
+      - agent
+
 volumes:
   pgdata:
   redisdata:
+  agentconfig:

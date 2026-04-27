@@ -1,10 +1,5 @@
-export default function RemoteLoading() {
-    return (
-        <div className="flex min-h-[60vh] items-center justify-center">
-            <div className="flex flex-col items-center gap-4">
-                <div className="h-10 w-10 animate-spin rounded-full border-4 border-border border-t-nerve" />
-                <p className="text-sm text-muted-foreground">Loading remote sessions...</p>
-            </div>
-        </div>
-    );
+import { GlobalLoader } from '@/components/ui/GlobalLoader';
+
+export default function RouteLoading() {
+    return <GlobalLoader />;
 }

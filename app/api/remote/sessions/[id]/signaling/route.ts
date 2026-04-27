@@ -42,7 +42,22 @@ export const PATCH = withErrorHandler(async (request: NextRequest, context: Rout
     const rateLimited = await withRateLimit(request, 'strict-api');
     if (rateLimited) return rateLimited;
     const { id } = await context.params;
-    const body = await request.json();
+    // simple-peer occasionally fires `signal` with payloads that the viewer
+    // collapses to {} (e.g. ICE candidates without a usable `candidate`
+    // string after a renegotiation, or trickle-end markers). The viewer
+    // already skips PATCH when the body is empty, but keepalives, retries
+    // and `restartIce()` can still produce a zero-byte body — parsing those
+    // unconditionally throws `Unexpected end of JSON input` and surfaces as
+    // a 500 in the dev console. Treat empty/invalid JSON as a no-op patch.
+    const raw = await request.text();
+    let body: unknown = {};
+    if (raw.trim().length > 0) {
+        try {
+            body = JSON.parse(raw);
+        } catch {
+            throw new ApiError(400, 'Invalid JSON body');
+        }
+    }
     const { userId, agentToken } = await resolveSignalingCaller(request);
 
     const { isAuthorized, isAgent } = await RemoteSignalingService.verifySignalingAccess(id, userId, agentToken);

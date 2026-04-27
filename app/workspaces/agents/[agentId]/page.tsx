@@ -7,8 +7,9 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useWorkspace } from '@/lib/workspace/context';
 import Link from 'next/link';
-import { ArrowLeft, Server, Cpu, HardDrive, MemoryStick, Clock, Terminal, CheckCircle, XCircle, Loader2, WifiOff, Box } from 'lucide-react';
+import { ArrowLeft, Server, Cpu, HardDrive, MemoryStick, Clock, Terminal, CheckCircle, XCircle, Loader2, WifiOff, Box, AlertTriangle, Plus } from 'lucide-react';
 import { PageSpinner } from '@/components/ui/Spinner';
+import CreateAssetFromAgentModal from '@/components/agent/CreateAssetFromAgentModal';
 
 interface AgentDetail {
     id: string;
@@ -99,6 +100,8 @@ export default function AgentDetailPage() {
     const [agent, setAgent] = useState<AgentDetail | null>(null);
     const [metricHistory, setMetricHistory] = useState<MetricPoint[]>([]);
     const [executions, setExecutions] = useState<Execution[]>([]);
+    const [canCreateAsset, setCanCreateAsset] = useState(false);
+    const [createAssetOpen, setCreateAssetOpen] = useState(false);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -117,6 +120,7 @@ export default function AgentDetailPage() {
             setAgent(data.data?.agent || null);
             setMetricHistory(data.data?.metricHistory || []);
             setExecutions(data.data?.recentExecutions || []);
+            setCanCreateAsset(Boolean(data.data?.canCreateAsset));
         } catch (err: unknown) {
             setError(err instanceof Error ? err.message : 'Failed to load agent');
             showError('Load Error', 'Could not load agent details.');
@@ -225,6 +229,28 @@ export default function AgentDetailPage() {
                     </div>
                 ))}
             </div>
+
+            {/* Unlinked Agent Warning Banner */}
+            {canCreateAsset && (
+                <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-5 flex items-start gap-4">
+                    <AlertTriangle className="text-warning flex-shrink-0 mt-0.5" size={22} />
+                    <div className="flex-1">
+                        <h4 className="font-medium text-warning">This agent is not linked to any asset</h4>
+                        <p className="text-sm text-muted-foreground mt-0.5">
+                            Historical metrics, script executions, and remote sessions require a linked asset.
+                            Create one now to unlock the full agent lifecycle.
+                        </p>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={() => setCreateAssetOpen(true)}
+                        className="inline-flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition flex-shrink-0"
+                    >
+                        <Plus size={14} />
+                        Create Asset
+                    </button>
+                </div>
+            )}
 
             {/* Asset Info */}
             {agent.asset && (
@@ -363,6 +389,24 @@ export default function AgentDetailPage() {
                     </div>
                 )}
             </div>
+
+            {/* Create Asset from Agent Modal */}
+            <CreateAssetFromAgentModal
+                open={createAssetOpen}
+                onClose={() => setCreateAssetOpen(false)}
+                workspaceId={workspaceId}
+                agent={{
+                    id: agent.id,
+                    hostname: agent.hostname,
+                    platform: agent.platform,
+                    ipAddress: agent.ipAddress,
+                    status: agent.status,
+                }}
+                onCreated={() => {
+                    setLoading(true);
+                    fetchAgentDetail();
+                }}
+            />
         </div>
     );
 }

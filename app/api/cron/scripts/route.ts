@@ -2,15 +2,20 @@ import { apiSuccess } from '@/lib/api/response';
 import { NextRequest } from 'next/server';
 import { withCronHandler } from '@/lib/api/withAuth';
 import { ScriptScheduleService } from '@/lib/services/ScriptScheduleService';
+import { ScriptService } from '@/lib/services/ScriptService';
 
 /**
  * POST /api/cron/scripts
- * Background job to process scheduled scripts.
+ * Background job to (1) process scheduled scripts and (2) reap stale executions
+ * that never reported back from their agent.
  * Protected by CRON_SECRET bearer token (timing-safe comparison).
  */
 export const POST = withCronHandler(async (_request: NextRequest) => {
-    const stats = await ScriptScheduleService.evaluateSchedules();
-    return apiSuccess({ success: true, stats, timestamp: new Date().toISOString() });
+    const [stats, reaped] = await Promise.all([
+        ScriptScheduleService.evaluateSchedules(),
+        ScriptService.reapStaleExecutions(),
+    ]);
+    return apiSuccess({ success: true, stats, reaped, timestamp: new Date().toISOString() });
 });
 
 /**

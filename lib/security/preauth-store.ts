@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import { prisma } from '@/lib/db';
 
 /**
  * Pre-Auth Token Store — Manages short-lived tokens for agent registration.
@@ -16,14 +17,9 @@ import crypto from 'crypto';
 const TOKEN_SECRET = process.env.PREAUTH_TOKEN_SECRET || process.env.CSRF_SECRET || 'dev-only-preauth-secret';
 const DEFAULT_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 
-interface StoredToken {
-    hash: string;
-    workspaceId: string;
-    expiresAt: number;
+if (process.env.NODE_ENV === 'production' && TOKEN_SECRET === 'dev-only-preauth-secret') {
+    throw new Error('PREAUTH_TOKEN_SECRET or CSRF_SECRET must be configured in production');
 }
-
-// In-memory store with periodic cleanup
-const tokenStore = new Map<string, StoredToken>();
 
 function hashToken(token: string): string {
     return crypto.createHmac('sha256', TOKEN_SECRET).update(token).digest('hex');
@@ -32,40 +28,58 @@ function hashToken(token: string): string {
 /**
  * Store a pre-auth token for later validation during agent registration.
  */
-export function storePreAuthToken(token: string, workspaceId: string, ttlMs: number = DEFAULT_TTL_MS): void {
-    const hash = hashToken(token);
-    tokenStore.set(hash, {
-        hash,
-        workspaceId,
-        expiresAt: Date.now() + ttlMs,
+export async function storePreAuthToken(
+    token: string,
+    workspaceId: string,
+    issuedById: string,
+    ttlMs: number = DEFAULT_TTL_MS
+): Promise<void> {
+    const tokenHash = hashToken(token);
+    await prisma.agentPreAuthToken.create({
+        data: {
+            tokenHash,
+            workspaceId,
+            issuedById,
+            expiresAt: new Date(Date.now() + ttlMs),
+        },
     });
-
-    // Lazy cleanup: remove expired tokens when store grows
-    if (tokenStore.size > 100) {
-        const now = Date.now();
-        for (const [key, entry] of tokenStore) {
-            if (entry.expiresAt < now) tokenStore.delete(key);
-        }
-    }
 }
 
 /**
  * Validate and consume a pre-auth token.
- * Returns the workspaceId if valid, null otherwise.
+ * Returns true only when a non-expired token is atomically consumed.
  * Token is consumed (deleted) on successful validation.
  */
-export function consumePreAuthToken(token: string, workspaceId: string): boolean {
-    const hash = hashToken(token);
-    const entry = tokenStore.get(hash);
+export async function consumePreAuthToken(token: string, workspaceId: string): Promise<boolean> {
+    const tokenHash = hashToken(token);
+    const now = new Date();
 
-    if (!entry) return false;
-    if (entry.expiresAt < Date.now()) {
-        tokenStore.delete(hash);
-        return false;
-    }
-    if (entry.workspaceId !== workspaceId) return false;
+    const result = await prisma.agentPreAuthToken.updateMany({
+        where: {
+            tokenHash,
+            workspaceId,
+            consumedAt: null,
+            expiresAt: { gt: now },
+        },
+        data: {
+            consumedAt: now,
+        },
+    });
 
-    // Single-use: consume the token
-    tokenStore.delete(hash);
-    return true;
+    return result.count === 1;
+}
+
+/**
+ * Best-effort cleanup for consumed/expired pre-auth tokens.
+ */
+export async function purgePreAuthTokens(): Promise<number> {
+    const result = await prisma.agentPreAuthToken.deleteMany({
+        where: {
+            OR: [
+                { consumedAt: { not: null } },
+                { expiresAt: { lt: new Date() } },
+            ],
+        },
+    });
+    return result.count;
 }

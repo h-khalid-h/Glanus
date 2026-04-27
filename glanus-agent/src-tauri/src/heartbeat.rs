@@ -1,9 +1,10 @@
 // Heartbeat loop - sends metrics and polls for commands every 60 seconds
 use anyhow::{Result, Context};
+use rand::Rng;
 use std::time::Duration;
 use std::sync::Arc;
 use tokio::time;
-use crate::client::{ApiClient, HeartbeatRequest, HeartbeatMetrics, ProcessInfo, Command};
+use crate::client::{ApiClient, HeartbeatRequest, HeartbeatMetrics, ProcessInfo, Command, AgentCapabilities};
 use crate::monitor::SystemMonitor;
 use crate::storage::SecureStorage;
 use crate::config::AgentConfig;
@@ -28,20 +29,36 @@ impl HeartbeatManager {
 
     /// Start heartbeat loop (runs indefinitely)
     pub async fn start_loop(&mut self, config: &AgentConfig) -> Result<()> {
-        let interval = Duration::from_secs(config.server.heartbeat_interval);
-        let mut interval_timer = time::interval(interval);
+        let base_interval = Duration::from_secs(config.server.heartbeat_interval.max(5));
+        let mut consecutive_failures: u32 = 0;
 
-        log::info!("Starting heartbeat loop with {}s interval", config.server.heartbeat_interval);
+        log::info!("Starting heartbeat loop with {}s base interval", config.server.heartbeat_interval);
 
         loop {
-            interval_timer.tick().await;
+            // Jitter avoids synchronized spikes when large fleets reconnect together.
+            let jitter_factor = rand::thread_rng().gen_range(0.8_f64..=1.2_f64);
+            let jittered = Duration::from_secs_f64(base_interval.as_secs_f64() * jitter_factor);
 
-            if let Err(e) = self.send_heartbeat().await {
-                log::error!("Heartbeat failed: {}", e);
-                // Continue loop even if heartbeat fails (offline mode)
+            // Exponential backoff on failures, capped to 5 minutes.
+            let backoff_seconds = if consecutive_failures == 0 {
+                0
+            } else {
+                (2_u64.pow(consecutive_failures.min(8))).min(300)
+            };
+            let sleep_for = jittered + Duration::from_secs(backoff_seconds);
+            time::sleep(sleep_for).await;
+
+            match self.send_heartbeat().await {
+                Ok(_) => {
+                    consecutive_failures = 0;
+                }
+                Err(e) => {
+                    consecutive_failures = consecutive_failures.saturating_add(1);
+                    log::error!("Heartbeat failed (attempt {}): {}", consecutive_failures, e);
+                }
             }
 
-            // Process any pending commands
+            // Process any pending commands/results even while heartbeat is failing.
             if let Err(e) = self.command_queue.process_all().await {
                 log::error!("Command processing failed: {}", e);
             }
@@ -83,6 +100,11 @@ impl HeartbeatManager {
         let request = HeartbeatRequest {
             auth_token,
             metrics: heartbeat_metrics,
+            capabilities: Some(AgentCapabilities {
+                // Driven purely by the compile-time feature flag so the flag
+                // is the single source of truth for "this binary can host RD".
+                remote_desktop: cfg!(feature = "remote_desktop"),
+            }),
         };
 
         let response = self.api_client.heartbeat(request)
@@ -100,6 +122,7 @@ impl HeartbeatManager {
     }
 
     /// Send heartbeat once and return commands (for testing)
+    #[allow(dead_code)]
     pub async fn send_once(&mut self) -> Result<Vec<Command>> {
         self.send_heartbeat().await
     }

@@ -5,10 +5,22 @@ set -e
 # Reload systemd
 systemctl daemon-reload
 
-# Enable and start service
+# Enable and start service (runs in --daemon headless mode)
 systemctl enable glanus-agent.service
 systemctl start glanus-agent.service
 
+# Refresh desktop database and icon cache so the GUI launcher shows up
+if command -v update-desktop-database >/dev/null 2>&1; then
+    update-desktop-database -q /usr/share/applications || true
+fi
+
+if command -v gtk-update-icon-cache >/dev/null 2>&1; then
+    gtk-update-icon-cache -q -f /usr/share/icons/hicolor 2>/dev/null || true
+fi
+
 echo "Glanus Agent installed and started successfully"
+echo "  - Daemon:  systemctl status glanus-agent"
+echo "  - GUI:     launch 'Glanus Agent' from your application menu,"
+echo "             or run: glanus-agent"
 
 exit 0

@@ -16,6 +16,13 @@ interface RemoteSession {
         id: string;
         name: string;
         category: string;
+        agentConnection?: {
+            id: string;
+            platform: 'WINDOWS' | 'MACOS' | 'LINUX' | string;
+            status: string;
+            canRemoteAccess: boolean;
+            hostname: string;
+        } | null;
     };
     user: {
         id: string;
@@ -23,6 +30,10 @@ interface RemoteSession {
         email: string;
     };
 }
+
+// Agent capability gate: the Rust agent reports `canRemoteAccess` in its
+// heartbeat when built with the `remote_desktop` feature. That flag is the
+// single source of truth — no per-platform allowlist on the frontend.
 
 export default function ActiveSessionPage() {
     const { error: showError } = useToast();
@@ -62,7 +73,12 @@ export default function ActiveSessionPage() {
                 }
                 throw new Error('Failed to fetch session');
             }
-            const data = await response.json();
+            const body = await response.json();
+            // API returns { success, data } via apiSuccess — unwrap it.
+            const data = body?.data ?? body;
+            if (!data || !data.asset || !data.user) {
+                throw new Error('Malformed session payload');
+            }
             setSession(data);
         } catch (error: unknown) {
             showError('Error fetching session:', error instanceof Error ? error.message : 'An unexpected error occurred');
@@ -257,11 +273,86 @@ export default function ActiveSessionPage() {
                 className={`${isFullscreen ? 'h-screen' : 'h-[calc(100vh-200px)]'} bg-background relative`}
             >
                 <div className="max-w-7xl mx-auto h-full p-4">
-                    <RemoteDesktopViewer
-                        sessionId={session.id}
-                        isHost={false} // For now, assume viewer role
-                        onError={(error) => console.error('[Page] Error:', error)}
-                    />
+                    {(() => {
+                        const agent = session.asset.agentConnection;
+                        const platform = agent?.platform;
+                        const agentOffline = agent && agent.status !== 'ONLINE';
+                        const unsupported = !agent || !agent.canRemoteAccess;
+                        // Sessions transition to FAILED / ENDED when the previous peer
+                        // tore down (timeout, network drop, page close). Re-rendering the
+                        // viewer against a non-ACTIVE row creates an offer the agent will
+                        // never see — its `getActiveRemoteSession` filters on `ACTIVE` —
+                        // so the browser sits in `iceConnectionState = checking` until
+                        // simple-peer surfaces the generic "Connection failed" we keep
+                        // hitting. Surface a clear path back to /remote instead.
+                        const sessionDead = session.status !== 'ACTIVE';
+
+                        if (sessionDead) {
+                            return (
+                                <div className="h-full flex items-center justify-center">
+                                    <div className="max-w-md text-center space-y-3 rounded-xl border border-health-warning/30 bg-surface-1 p-8">
+                                        <h2 className="text-lg font-semibold text-foreground">
+                                            This session is no longer active
+                                        </h2>
+                                        <p className="text-sm text-muted-foreground">
+                                            Status: <span className="text-foreground">{session.status}</span>. Start a new session
+                                            from the dashboard to reconnect to <span className="text-foreground">{session.asset.name}</span>.
+                                        </p>
+                                        <button type="button" onClick={() => router.push('/remote')} className="btn-primary mt-2">
+                                            Back to Sessions
+                                        </button>
+                                    </div>
+                                </div>
+                            );
+                        }
+
+                        if (unsupported) {
+                            return (
+                                <div className="h-full flex items-center justify-center">
+                                    <div className="max-w-md text-center space-y-3 rounded-xl border border-nerve/30 bg-surface-1 p-8">
+                                        <h2 className="text-lg font-semibold text-foreground">
+                                            Remote desktop is not supported on this agent yet
+                                        </h2>
+                                        <p className="text-sm text-muted-foreground">
+                                            {platform
+                                                ? `The installed agent is running ${platform}, which does not implement the WebRTC host path.`
+                                                : 'This asset has no agent installed or the agent reports no remote-access capability.'}
+                                        </p>
+                                        <p className="text-xs text-muted-foreground">
+                                            Heartbeat, inventory, and remote script execution still work normally.
+                                        </p>
+                                        <button type="button" onClick={() => router.push('/remote')} className="btn-primary mt-2">
+                                            Back to Sessions
+                                        </button>
+                                    </div>
+                                </div>
+                            );
+                        }
+
+                        if (agentOffline) {
+                            return (
+                                <div className="h-full flex items-center justify-center">
+                                    <div className="max-w-md text-center space-y-3 rounded-xl border border-health-critical/30 bg-surface-1 p-8">
+                                        <h2 className="text-lg font-semibold text-foreground">Agent is offline</h2>
+                                        <p className="text-sm text-muted-foreground">
+                                            The agent on <span className="text-foreground">{agent?.hostname}</span> is not currently connected. Wait for it to come back online and try again.
+                                        </p>
+                                        <button type="button" onClick={() => router.push('/remote')} className="btn-primary mt-2">
+                                            Back to Sessions
+                                        </button>
+                                    </div>
+                                </div>
+                            );
+                        }
+
+                        return (
+                            <RemoteDesktopViewer
+                                sessionId={session.id}
+                                isHost={false} // For now, assume viewer role
+                                onError={(error) => console.error('[Page] Error:', error)}
+                            />
+                        );
+                    })()}
                 </div>
 
                 {/* Floating Controls (bottom) */}

@@ -18,7 +18,10 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate:dev": "prisma migrate dev",
     "prisma:migrate:reset": "prisma migrate reset",
-    "db:seed": "tsx prisma/seed.ts"
+    "db:seed": "tsx prisma/seed.ts",
+    "release:agent": "bash scripts/release-agent.sh",
+    "release:web": "bash scripts/release-web.sh",
+    "release:all": "bash scripts/release-all.sh"
   },
   "overrides": {
     "import-in-the-middle": "3.0.0"

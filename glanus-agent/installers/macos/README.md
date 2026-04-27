@@ -28,7 +28,7 @@ This will:
 Set environment variables for automatic signing:
 
 ```bash
-export APPLE_DEVELOPER_ID="Developer ID Installer: Your Name"
+export APPLE_DEVELOPER_ID="Developer ID Installer: Your Name (TEAM_ID)"
 export APPLE_ID="your@email.com"
 export APPLE_ID_PASSWORD="app-specific-password"
 export APPLE_TEAM_ID="TEAM_ID"
@@ -54,15 +54,22 @@ sudo installer -pkg glanus-agent-0.1.0.pkg -target /
 - Stores config in `~/Library/Application Support/Glanus/`
 - Universal binary (Intel + Apple Silicon)
 
+## Verify Installation
+
+```bash
+launchctl print gui/$(id -u)/com.glanus.agent
+cat /Library/LaunchAgents/com.glanus.agent.plist
+```
+
 ## Uninstall
 
 No built-in uninstaller. Manual removal:
 
 ```bash
-sudo launchctl unload /Library/LaunchAgents/com.glanus.agent.plist
+sudo launchctl bootout gui/$(id -u) /Library/LaunchAgents/com.glanus.agent.plist || true
 sudo rm /Library/LaunchAgents/com.glanus.agent.plist
 sudo rm -rf "/Applications/Glanus Agent.app"
-rm -rf "~/Library/Application Support/Glanus"
+rm -rf ~/Library/Application\ Support/Glanus
 ```
 
 ## Notarization
@@ -70,3 +77,5 @@ rm -rf "~/Library/Application Support/Glanus"
 For distribution outside the App Store, packages must be notarized by Apple. The build script handles this automatically if credentials are configured.
 
 After notarization, users won't see Gatekeeper warnings.
+
+The build script staples the notarization ticket to the final PKG when notarization succeeds.

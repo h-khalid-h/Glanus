@@ -37,8 +37,13 @@ docs
 *.md
 !README.md
 
-# Agent binary
+# Agent source tree is excluded from the image (Tauri/Rust, multi-GB),
+# but the *built installers* under glanus-agent/builds/ MUST ship — the
+# /api/downloads/[filename] route streams them from disk at runtime, so
+# without them the download-agent flow returns 404 in production.
 glanus-agent
+!glanus-agent/builds
+!glanus-agent/builds/**
 
 # Development files
 .eslintrc.json

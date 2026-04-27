@@ -22,6 +22,7 @@ pub struct AgentConfig {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AgentSettings {
     pub version: String,
+    pub asset_id: Option<String>,
     pub workspace_id: Option<String>,
     pub pre_auth_token: Option<String>,
     pub registered: bool,
@@ -119,6 +120,7 @@ impl Default for AgentConfig {
         Self {
             agent: AgentSettings {
                 version: env!("CARGO_PKG_VERSION").to_string(),
+                asset_id: None,
                 workspace_id: None,
                 pre_auth_token: None,
                 registered: false,
@@ -137,25 +139,85 @@ impl Default for AgentConfig {
 }
 
 impl AgentConfig {
-    /// Get the config file path based on OS
-    pub fn config_path() -> Result<PathBuf> {
-        let config_dir = if cfg!(target_os = "macos") {
-            dirs::home_dir()
-                .ok_or_else(|| anyhow::anyhow!("Could not find home directory"))?
-                .join("Library/Application Support/Glanus")
-        } else if cfg!(target_os = "windows") {
-            dirs::config_dir()
-                .ok_or_else(|| anyhow::anyhow!("Could not find config directory"))?
-                .join("Glanus")
-        } else {
-            // Linux
-            dirs::config_dir()
-                .ok_or_else(|| anyhow::anyhow!("Could not find config directory"))?
-                .join("glanus")
-        };
+    fn bundled_config_candidates() -> Vec<PathBuf> {
+        let mut candidates = Vec::new();
 
-        std::fs::create_dir_all(&config_dir)?;
-        Ok(config_dir.join("config.toml"))
+        if let Ok(current_exe) = std::env::current_exe() {
+            if let Some(exe_dir) = current_exe.parent() {
+                candidates.push(exe_dir.join("config").join("config.toml"));
+                candidates.push(exe_dir.join("config.toml"));
+
+                #[cfg(target_os = "macos")]
+                {
+                    if let Some(contents_dir) = exe_dir.parent() {
+                        candidates.push(contents_dir.join("Resources").join("config.toml"));
+                    }
+                }
+            }
+        }
+
+        candidates
+    }
+
+    /// Get the config file path based on OS.
+    ///
+    /// On Linux the system-wide path `/var/lib/glanus-agent/config.toml` is
+    /// preferred so the systemd daemon (running as root) and the install
+    /// script agree on a single location. If that directory is not writable
+    /// (e.g. an unprivileged user launching the GUI), we fall back to the
+    /// per-user XDG config dir (`~/.config/glanus/config.toml`).
+    pub fn config_path() -> Result<PathBuf> {
+        #[cfg(target_os = "linux")]
+        {
+            const SYSTEM_DIR: &str = "/var/lib/glanus-agent";
+            let system_path = PathBuf::from(SYSTEM_DIR).join("config.toml");
+
+            // Prefer the system path if the directory already exists AND is
+            // writable by the current user, OR we're running as root and can
+            // create it.
+            let system_usable = match std::fs::metadata(SYSTEM_DIR) {
+                Ok(meta) if meta.is_dir() => {
+                    // Try a write probe via open+append on a temp file
+                    let probe = PathBuf::from(SYSTEM_DIR).join(".glanus-write-probe");
+                    match std::fs::OpenOptions::new().create(true).write(true).truncate(true).open(&probe) {
+                        Ok(_) => { let _ = std::fs::remove_file(&probe); true }
+                        Err(_) => false,
+                    }
+                }
+                _ => {
+                    // Directory doesn't exist: try to create it (works only as root)
+                    std::fs::create_dir_all(SYSTEM_DIR).is_ok()
+                }
+            };
+
+            if system_usable {
+                return Ok(system_path);
+            }
+
+            // Fallback: per-user config dir for unprivileged GUI sessions
+            let user_dir = dirs::config_dir()
+                .ok_or_else(|| anyhow::anyhow!("Could not find config directory"))?
+                .join("glanus");
+            std::fs::create_dir_all(&user_dir)?;
+            return Ok(user_dir.join("config.toml"));
+        }
+
+        #[cfg(not(target_os = "linux"))]
+        {
+            let config_dir = if cfg!(target_os = "macos") {
+                dirs::home_dir()
+                    .ok_or_else(|| anyhow::anyhow!("Could not find home directory"))?
+                    .join("Library/Application Support/Glanus")
+            } else {
+                // Windows
+                dirs::config_dir()
+                    .ok_or_else(|| anyhow::anyhow!("Could not find config directory"))?
+                    .join("Glanus")
+            };
+
+            std::fs::create_dir_all(&config_dir)?;
+            Ok(config_dir.join("config.toml"))
+        }
     }
 
     /// Load config from file or create default
@@ -167,6 +229,15 @@ impl AgentConfig {
             let config: Self = toml::from_str(&content)?;
             Ok(config)
         } else {
+            for candidate in Self::bundled_config_candidates() {
+                if candidate.exists() {
+                    std::fs::copy(&candidate, &path)?;
+                    let content = std::fs::read_to_string(&path)?;
+                    let config: Self = toml::from_str(&content)?;
+                    return Ok(config);
+                }
+            }
+
             // Create default config
             let config = Self::default();
             config.save()?;

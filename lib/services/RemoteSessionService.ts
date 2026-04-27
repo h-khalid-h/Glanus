@@ -119,12 +119,58 @@ export class RemoteSessionService {
             throw new ApiError(404, 'Asset not found or access denied');
         }
 
-        // Conflict detection — prevent duplicate active sessions
+        // Conflict detection — a workspace only allows one ACTIVE session per
+        // asset at a time. If the caller already owns that session, return it
+        // (idempotent create — lets the UI reconnect without forcing the user
+        // to first clean up a dangling session). Cross-user conflicts still
+        // 409 with the holder's name so the caller can coordinate.
+        //
+        // BEFORE we treat any ACTIVE row as a real conflict, we inline-reap
+        // sessions that look orphaned: a session whose `updatedAt` has not
+        // moved in STALE_ACTIVE_WINDOW_MS is almost certainly dead (the
+        // browser tab closed without DELETE, the agent crashed, the network
+        // dropped permanently). The cleanup cron eventually catches these
+        // but it runs on a slow cadence; doing the same check here gives
+        // immediate recovery for the user retrying right after a failure.
+        const STALE_ACTIVE_WINDOW_MS = 5 * 60 * 1000;
         const activeSession = await prisma.remoteSession.findFirst({
             where: { assetId: input.assetId, status: 'ACTIVE' },
+            include: {
+                asset: { select: { id: true, name: true, category: true, status: true } },
+                user: { select: { id: true, name: true, email: true, role: true } },
+            },
         });
         if (activeSession) {
-            throw new ApiError(409, 'An active session already exists for this asset');
+            const ageMs = Date.now() - new Date(activeSession.updatedAt).getTime();
+            if (ageMs > STALE_ACTIVE_WINDOW_MS) {
+                // Orphaned. Reap it and fall through to create a fresh one.
+                await prisma.remoteSession.update({
+                    where: { id: activeSession.id },
+                    data: { status: 'FAILED', endedAt: new Date() },
+                });
+                await prisma.auditLog.create({
+                    data: {
+                        action: 'REMOTE_SESSION_REAPED',
+                        resourceType: 'RemoteSession',
+                        resourceId: activeSession.id,
+                        userId: activeSession.userId,
+                        assetId: input.assetId,
+                        metadata: {
+                            reason: 'stale-active',
+                            staleAgeMs: ageMs,
+                            reapedBy: input.userId,
+                        },
+                    },
+                });
+            } else if (activeSession.userId === input.userId) {
+                return activeSession;
+            } else {
+                const holder = activeSession.user?.name || activeSession.user?.email || 'another user';
+                throw new ApiError(
+                    409,
+                    `An active remote session for this asset is already held by ${holder}.`,
+                );
+            }
         }
 
         const session = await prisma.remoteSession.create({
@@ -166,7 +212,22 @@ export class RemoteSessionService {
                 asset: { workspace: { members: { some: { userId } } } },
             },
             include: {
-                asset: { select: { id: true, name: true, category: true, status: true, location: true } },
+                asset: {
+                    select: {
+                        id: true, name: true, category: true, status: true, location: true,
+                        // Bring the linked agent so the viewer knows whether the
+                        // device actually supports remote desktop (platform, capability).
+                        agentConnection: {
+                            select: {
+                                id: true,
+                                platform: true,
+                                status: true,
+                                canRemoteAccess: true,
+                                hostname: true,
+                            },
+                        },
+                    },
+                },
                 user: { select: { id: true, name: true, email: true, role: true } },
             },
         });
@@ -222,6 +283,15 @@ export class RemoteSessionService {
                 updateData.duration = Math.floor((Date.now() - new Date(current.startedAt).getTime()) / 1000);
                 updateData.endedAt = new Date();
             }
+        }
+
+        // TEMP diagnostic: capture who is flipping a session to FAILED so we
+        // can trace mid-session status corruption. Remove once root cause is fixed.
+        if (status === 'FAILED') {
+            console.warn(
+                `[RemoteSessionService.updateSession] FAILED write for session=${sessionId} by user=${userId}`,
+                new Error('updateSession stack').stack,
+            );
         }
 
         const updated = await prisma.remoteSession.update({

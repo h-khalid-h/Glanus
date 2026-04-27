@@ -9,17 +9,23 @@ import { NextRequest, NextResponse } from 'next/server';
 export async function GET(request: NextRequest) {
     const { searchParams } = request.nextUrl;
     const token = searchParams.get('token');
-    const apiUrl = searchParams.get('url');
     const workspaceId = searchParams.get('workspaceId');
 
-    if (!token || !apiUrl || !workspaceId) {
-        return new NextResponse('Write-Error "Missing required parameters (token, url, workspaceId)"; exit 1', {
+    if (!token || !workspaceId) {
+        return new NextResponse('Write-Error "Missing required parameters (token, workspaceId)"; exit 1', {
             status: 400,
             headers: { 'Content-Type': 'text/plain; charset=utf-8' },
         });
     }
 
-    const origin = apiUrl.replace(/\/api\/?$/, '');
+    // Derive origin from the actual incoming request — see install-linux
+    // route for the rationale (avoids port mismatches and SSRF surface).
+    const xfHost = request.headers.get('x-forwarded-host');
+    const xfProto = request.headers.get('x-forwarded-proto');
+    const host = xfHost || request.headers.get('host') || request.nextUrl.host;
+    const proto = xfProto || request.nextUrl.protocol.replace(':', '') || 'http';
+    const origin = `${proto}://${host}`;
+    const apiUrl = origin;
     const msiUrl = `${origin}/api/downloads/glanus-agent-${workspaceId}.msi`;
 
     const script = `# Glanus Agent - Automated Windows Installer

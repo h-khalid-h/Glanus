@@ -52,6 +52,25 @@ COPY --from=builder /app/node_modules/bcryptjs ./node_modules/bcryptjs
 COPY docker-entrypoint.sh ./docker-entrypoint.sh
 RUN chmod +x ./docker-entrypoint.sh
 
+# Ship the prebuilt agent installers. /api/downloads/[filename] serves
+# .deb / .msi / .pkg files directly from this directory, so the host
+# machine that builds the image MUST have run the per-platform installer
+# build scripts (see glanus-agent/installers/{linux,macos,windows}/)
+# beforehand. Without this COPY, the download-agent endpoint 404s in
+# production.
+COPY --from=builder /app/glanus-agent/builds ./glanus-agent/builds
+
+# Fail the image build if the Linux installer is missing — better to
+# surface a forgotten `cp glanus-agent_X.Y.Z_amd64.deb glanus-agent.deb`
+# now than to discover it when the first customer hits the install URL
+# and gets a 404. macOS/Windows installers are optional (built on their
+# native hosts), so we only enforce the Linux one.
+RUN test -s ./glanus-agent/builds/glanus-agent.deb \
+    || (echo "ERROR: glanus-agent/builds/glanus-agent.deb missing or empty." \
+            "Run: cd glanus-agent/installers/linux && ./build.sh <version>" \
+            "and copy the resulting .deb to glanus-agent/builds/glanus-agent.deb"; \
+        exit 1)
+
 # Create directory for logs with proper permissions
 RUN mkdir -p /app/logs && chown -R nextjs:nodejs /app/logs
 

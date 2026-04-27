@@ -6,9 +6,10 @@ import { withRateLimit } from '@/lib/security/rateLimit';
 import { consumePreAuthToken } from '@/lib/security/preauth-store';
 import { AgentService } from '@/lib/services/AgentService';
 import { AgentPlatform } from '@prisma/client';
+import crypto from 'crypto';
 
 const registerSchema = z.object({
-    assetId: z.string(),
+    assetId: z.string().optional(),
     workspaceId: z.string(),
     hostname: z.string(),
     platform: z.enum(['WINDOWS', 'MACOS', 'LINUX']),
@@ -36,9 +37,6 @@ const registerSchema = z.object({
  * validates that the workspace and asset exist and are linked.
  */
 export const POST = withErrorHandler(async (request: NextRequest) => {
-    const rateLimitResponse = await withRateLimit(request, 'agent');
-    if (rateLimitResponse) return rateLimitResponse;
-
     // Require a Bearer token (pre-auth token from download-agent flow)
     const authHeader = request.headers.get('Authorization');
     if (!authHeader?.startsWith('Bearer ')) {
@@ -46,10 +44,14 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     }
     const preAuthToken = authHeader.substring(7);
 
+    const preAuthRateKey = crypto.createHash('sha256').update(preAuthToken).digest('hex');
+    const rateLimitResponse = await withRateLimit(request, 'agent', `agent-register:${preAuthRateKey}`);
+    if (rateLimitResponse) return rateLimitResponse;
+
     const data = registerSchema.parse(await request.json());
 
     // Validate the pre-auth token was issued for this workspace
-    if (!consumePreAuthToken(preAuthToken, data.workspaceId)) {
+    if (!(await consumePreAuthToken(preAuthToken, data.workspaceId))) {
         return apiError(401, 'Invalid or expired pre-auth token');
     }
 

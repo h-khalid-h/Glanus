@@ -1,0 +1,14 @@
+# Glanus Agent builder context (build context = ./glanus-agent)
+# Keep this tight so the Docker build is fast and deterministic.
+
+node_modules
+src-tauri/target
+dist
+builds
+installers/linux/rpmbuild
+installers/linux/build
+*.deb
+*.rpm
+.git
+.vscode
+.idea

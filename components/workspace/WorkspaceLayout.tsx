@@ -9,6 +9,7 @@ import { NotificationPopover } from '@/components/workspace/NotificationPopover'
 import { CommandPalette } from '@/components/workspace/CommandPalette';
 import WorkspaceSwitcher from '@/components/WorkspaceSwitcher';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { GlobalLoader } from '@/components/ui/GlobalLoader';
 import { Search, LogOut, Settings, Menu, X, ChevronRight, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { hexToTailwindHsl } from '@/lib/utils/colors';
 
@@ -25,7 +26,7 @@ interface NavItem {
  */
 export function WorkspaceLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
-    const { workspace } = useWorkspace();
+    const { workspace, isLoading: workspaceLoading } = useWorkspace();
     const { data: session } = useSession();
     const [mobileOpen, setMobileOpen] = useState(false);
     const [collapsed, setCollapsed] = useState(false);
@@ -50,7 +51,14 @@ export function WorkspaceLayout({ children }: { children: React.ReactNode }) {
         setMobileOpen(false);
     }, [pathname]);
 
-    if (!workspace) return <>{children}</>;
+    if (!workspace) {
+        // While the workspace context is still resolving, keep showing the
+        // unified loader instead of flashing the page content without a
+        // sidebar. Once a user truly has no workspace, fall back to
+        // rendering children (e.g. onboarding flows handle that case).
+        if (workspaceLoading) return <GlobalLoader />;
+        return <>{children}</>;
+    }
 
     const basePath = `/workspaces`;
 

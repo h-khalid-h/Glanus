@@ -27,24 +27,59 @@ export function RemoteDesktopViewer({
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        // Initialize WebRTC client
-        const webrtcClient = new WebRTCClient({
-            sessionId,
-            // The Admin Viewer is ALWAYS the initiator generating the offer
-            isInitiator: true,
-        });
+        // The peer is constructed AFTER we resolve ICE servers from the
+        // backend (STUN + TURN). Hardcoding STUN-only made any peer behind
+        // symmetric NAT (most corporate / mobile networks) fail forever.
+        // simple-peer generates the SDP offer in the next microtask after
+        // construction, so we MUST fetch the server list first — applying
+        // it after the offer is on the wire has no effect.
+        let webrtcClient: WebRTCClient | null = null;
+        let pollInterval: ReturnType<typeof setInterval> | null = null;
+        let connectTimeout: ReturnType<typeof setTimeout> | null = null;
+        let cancelled = false;
 
-        // Polling state using refs to persist across the closure if it were to re-run, but primarily for semantics
         const lastSeenIceCandidates = { current: 0 };
         const hasProcessedAnswer = { current: false };
+        // ── ICE-failure recovery state ─────────────────────────────────
+        // Most "session works on LAN, dies on real internet" reports trace
+        // back to ICE failing to keep a path open through hostile NAT/
+        // firewall. The browser's `iceconnectionstatechange` is the only
+        // signal we get for that — simple-peer's `error`/`close` events
+        // fire only after the peer connection has already been torn down.
+        // We attach a state watchdog below: on the first `failed` we do
+        // an in-place ICE restart; if the connection has not recovered
+        // within RECOVERY_TIMEOUT_MS we surface an actionable error.
+        const ICE_RESTART_BUDGET = 1; // single in-place restart, then give up
+        const RECOVERY_TIMEOUT_MS = 10_000;
+        const DISCONNECTED_GRACE_MS = 15_000;
+        const iceRestartAttempts = { current: 0 };
+        const iceRecoveryTimer = { current: null as ReturnType<typeof setTimeout> | null };
+        const disconnectedGraceTimer = { current: null as ReturnType<typeof setTimeout> | null };
 
-        webrtcClient.onSignal = async (signal) => {
+        const wireClient = (peer: WebRTCClient) => {
+            webrtcClient = peer;
+
+        peer.onSignal = async (signal) => {
             console.debug('[Viewer] Sending signal to backend:', signal.type || 'candidate');
             try {
                 const payload: Record<string, unknown> = {};
                 if (signal.type === 'offer') payload.offer = signal;
                 else if (signal.type === 'answer') payload.answer = signal;
-                else if ('candidate' in signal) payload.iceCandidate = signal;
+                else if ('candidate' in signal) {
+                    // simple-peer emits ICE as `{type:'candidate', candidate: RTCIceCandidateInit}`.
+                    // The backend's signaling validator expects a FLAT
+                    // `{candidate: string, sdpMid?, sdpMLineIndex?}` shape and
+                    // rejects nested objects with HTTP 400 — which is why ICE
+                    // exchange silently failed in the previous build. Unwrap.
+                    const init = (signal as { candidate: RTCIceCandidateInit | null }).candidate;
+                    if (init && typeof init.candidate === 'string') {
+                        payload.iceCandidate = {
+                            candidate: init.candidate,
+                            ...(typeof init.sdpMid === 'string' ? { sdpMid: init.sdpMid } : {}),
+                            ...(typeof init.sdpMLineIndex === 'number' ? { sdpMLineIndex: init.sdpMLineIndex } : {}),
+                        };
+                    }
+                }
 
                 if (Object.keys(payload).length > 0) {
                     await csrfFetch(`/api/remote/sessions/${sessionId}/signaling`, {
@@ -58,17 +93,24 @@ export function RemoteDesktopViewer({
             }
         };
 
-        webrtcClient.onConnect = () => {
+        peer.onConnect = () => {
             setConnected(true);
+            // A successful connect clears any prior ICE-failure recovery
+            // state — if the connection later drops we get a fresh budget.
+            iceRestartAttempts.current = 0;
+            if (iceRecoveryTimer.current) {
+                clearTimeout(iceRecoveryTimer.current);
+                iceRecoveryTimer.current = null;
+            }
             onConnect?.();
         };
 
-        webrtcClient.onDisconnect = () => {
+        peer.onDisconnect = () => {
             setConnected(false);
             onDisconnect?.();
         };
 
-        webrtcClient.onStream = (stream) => {
+        peer.onStream = (stream) => {
             if (videoRef.current) {
                 videoRef.current.srcObject = stream;
             }
@@ -76,7 +118,7 @@ export function RemoteDesktopViewer({
 
         if (isHost) {
             import('@tauri-apps/api/core').then(({ invoke }) => {
-                webrtcClient.onData = (data: any) => {
+                peer.onData = (data: any) => {
                     if (data && data.type) {
                         try {
                             invoke('simulate_input', {
@@ -94,13 +136,13 @@ export function RemoteDesktopViewer({
             }).catch(e => console.error('[Host] Failed to import Tauri core', e));
         }
 
-        webrtcClient.onError = (err) => {
+        peer.onError = (err) => {
             console.error('[Viewer] Error:', err);
             setError(err.message);
             onError?.(err);
         };
 
-        webrtcClient.onMetrics = (m) => {
+        peer.onMetrics = (m) => {
             setMetrics(m);
         };
 
@@ -114,11 +156,115 @@ export function RemoteDesktopViewer({
                 });
         }
 
-        setClient(webrtcClient);
+        setClient(peer);
+
+        // ── ICE state watchdog ─────────────────────────────────────────
+        // simple-peer creates the underlying RTCPeerConnection synchronously
+        // in its constructor, so `getPeerConnection()` is safe to call here.
+        // We attach `oniceconnectionstatechange` directly because simple-peer
+        // does not bubble that event up. Behaviour:
+        //   - `disconnected`: transient, often recovers on its own → start a
+        //     grace timer; if still not back to `connected`/`completed` by
+        //     DISCONNECTED_GRACE_MS, escalate to `failed` handling.
+        //   - `failed`: try one in-place ICE restart (fresh ufrag/pwd → new
+        //     candidate-pair search). If the connection has not returned to
+        //     a healthy state within RECOVERY_TIMEOUT_MS, abort with an
+        //     actionable error so the operator can retry the session.
+        const pc = peer.getPeerConnection();
+        if (pc) {
+            pc.oniceconnectionstatechange = () => {
+                const state = pc.iceConnectionState;
+                console.debug('[Viewer] iceConnectionState ->', state);
+
+                if (state === 'connected' || state === 'completed') {
+                    // Recovered. Cancel any pending grace/recovery timers.
+                    if (disconnectedGraceTimer.current) {
+                        clearTimeout(disconnectedGraceTimer.current);
+                        disconnectedGraceTimer.current = null;
+                    }
+                    if (iceRecoveryTimer.current) {
+                        clearTimeout(iceRecoveryTimer.current);
+                        iceRecoveryTimer.current = null;
+                    }
+                    return;
+                }
+
+                if (state === 'disconnected') {
+                    if (disconnectedGraceTimer.current) return;
+                    disconnectedGraceTimer.current = setTimeout(() => {
+                        disconnectedGraceTimer.current = null;
+                        // If still disconnected after the grace window,
+                        // treat as failed and trigger recovery.
+                        if (pc.iceConnectionState === 'disconnected') {
+                            console.warn('[Viewer] disconnected past grace, escalating to failed');
+                            triggerIceRecovery();
+                        }
+                    }, DISCONNECTED_GRACE_MS);
+                    return;
+                }
+
+                if (state === 'failed') {
+                    triggerIceRecovery();
+                }
+            };
+
+            const triggerIceRecovery = () => {
+                if (iceRecoveryTimer.current) return; // already recovering
+
+                if (iceRestartAttempts.current >= ICE_RESTART_BUDGET) {
+                    setError(
+                        'The connection to the remote agent failed and could not recover. ' +
+                        'This usually means a firewall or NAT is blocking the WebRTC media path. ' +
+                        'Verify the TURN server is reachable from both ends and retry.',
+                    );
+                    onDisconnect?.();
+                    return;
+                }
+
+                iceRestartAttempts.current += 1;
+                console.warn(
+                    `[Viewer] ICE failed — attempting in-place restart (${iceRestartAttempts.current}/${ICE_RESTART_BUDGET})`,
+                );
+                const ok = peer.restartIce();
+                if (!ok) {
+                    setError('ICE restart unavailable in this browser. Please retry the session.');
+                    onDisconnect?.();
+                    return;
+                }
+                // Reset answer-processed flag so the polling loop re-applies
+                // the new answer the agent will send back for the renegotiated
+                // offer. (The agent must clear its old answer when it sees a
+                // new offer; that's enforced server-side via signaling PATCH.)
+                hasProcessedAnswer.current = false;
+
+                iceRecoveryTimer.current = setTimeout(() => {
+                    iceRecoveryTimer.current = null;
+                    const s = pc.iceConnectionState;
+                    if (s !== 'connected' && s !== 'completed') {
+                        setError(
+                            'The connection could not be re-established after an ICE restart. ' +
+                            'Please end this session and start a new one.',
+                        );
+                        onDisconnect?.();
+                    }
+                }, RECOVERY_TIMEOUT_MS);
+            };
+        }
+
+        // ── Connect-timeout watchdog ──────────────────────────────
+        // Fail fast if the agent never produces an answer — gives the
+        // user clear feedback rather than an indefinite spinner.
+        const CONNECT_TIMEOUT_MS = 30_000;
+        connectTimeout = setTimeout(() => {
+            if (!peer.isConnected() && !hasProcessedAnswer.current) {
+                console.warn('[Viewer] Connect timeout — no answer from agent');
+                setError('Agent did not respond within 30 seconds. Ensure remote desktop is enabled on this device and the agent is online.');
+            }
+        }, CONNECT_TIMEOUT_MS);
 
         // SDP Database Polling Loop
-        const pollInterval = setInterval(async () => {
-            if (webrtcClient.isConnected()) return; // Stop polling once connected
+        pollInterval = setInterval(async () => {
+            if (peer.isConnected()) return; // Stop polling once connected
 
             try {
                 const res = await csrfFetch(`/api/remote/sessions/${sessionId}/signaling`);
@@ -129,20 +275,25 @@ export function RemoteDesktopViewer({
                 // Admin receives answer from Agent
                 if (sessionData.answer && !hasProcessedAnswer.current) {
                     console.debug('[Viewer] Received answer from agent');
-                    webrtcClient.signal(sessionData.answer);
+                    peer.signal(sessionData.answer);
                     hasProcessedAnswer.current = true;
                 }
 
-                // Process new ICE candidates
+                // Process new ICE candidates from the agent
                 const remoteCandidates = sessionData.iceCandidates || [];
                 if (remoteCandidates.length > lastSeenIceCandidates.current) {
                     const newCandidates = remoteCandidates.slice(lastSeenIceCandidates.current);
                     newCandidates.forEach((candidate: any) => {
-                        // Admin only applies agent candidates
-                        if (candidate.source === 'agent') {
-                            console.debug('[Viewer] Applying remote ICE candidate');
-                            webrtcClient.signal(candidate);
-                        }
+                        if (candidate.source !== 'agent') return;
+                        // Strip backend annotation; build a clean ICE init.
+                        const init: RTCIceCandidateInit = { candidate: candidate.candidate };
+                        if (typeof candidate.sdpMid === 'string') init.sdpMid = candidate.sdpMid;
+                        if (typeof candidate.sdpMLineIndex === 'number') init.sdpMLineIndex = candidate.sdpMLineIndex;
+                        console.debug('[Viewer] Applying remote ICE candidate');
+                        // simple-peer's signal() expects ICE wrapped: `{ candidate: init }`.
+                        // simple-peer's TS types declare `candidate` as RTCIceCandidate but
+                        // its runtime accepts an init object — cast through unknown.
+                        peer.signal({ candidate: init } as unknown as Parameters<typeof peer.signal>[0]);
                     });
                     lastSeenIceCandidates.current = remoteCandidates.length;
                 }
@@ -151,11 +302,37 @@ export function RemoteDesktopViewer({
                 console.error('[Viewer] Polling error:', error);
             }
         }, 2000);
+        }; // end wireClient
 
-        // Cleanup on unmount
+        // Bootstrap — fetch ICE servers, then construct + wire the peer.
+        (async () => {
+            let iceServers: RTCIceServer[] | undefined;
+            try {
+                const res = await csrfFetch('/api/remote/ice-servers');
+                if (res.ok) {
+                    const body = await res.json();
+                    iceServers = (body?.data ?? body)?.iceServers;
+                }
+            } catch (err) {
+                console.warn('[Viewer] Failed to fetch ICE servers, using default STUN', err);
+            }
+            if (cancelled) return;
+            const peer = new WebRTCClient({
+                sessionId,
+                isInitiator: true,
+                iceServers,
+            });
+            wireClient(peer);
+        })();
+
+        // Cleanup on unmount — handles both pre- and post-bootstrap states.
         return () => {
-            clearInterval(pollInterval);
-            webrtcClient.destroy();
+            cancelled = true;
+            if (pollInterval) clearInterval(pollInterval);
+            if (connectTimeout) clearTimeout(connectTimeout);
+            if (iceRecoveryTimer.current) clearTimeout(iceRecoveryTimer.current);
+            if (disconnectedGraceTimer.current) clearTimeout(disconnectedGraceTimer.current);
+            webrtcClient?.destroy();
         };
     // eslint-disable-next-line react-hooks/exhaustive-deps
     // eslint-disable-next-line react-hooks/exhaustive-deps

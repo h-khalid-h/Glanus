@@ -1,9 +1,12 @@
-import { apiSuccess, apiError } from '@/lib/api/response';
+import { apiSuccess } from '@/lib/api/response';
 import { NextRequest } from 'next/server';
 import { requireAuth, withErrorHandler, runWithUserRLS } from '@/lib/api/withAuth';
 import { withRateLimit } from '@/lib/security/rateLimit';
+import { requirePermission } from '@/lib/rbac/middleware';
 import { createRemoteSessionSchema } from '@/lib/schemas/remote-session.schemas';
 import { RemoteSessionService } from '@/lib/services/RemoteSessionService';
+import { ApiError } from '@/lib/errors';
+import { prisma } from '@/lib/db';
 
 // GET /api/remote/sessions
 export const GET = withErrorHandler(async (request: NextRequest) => {
@@ -34,11 +37,24 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
 
     const user = await requireAuth();
 
-    if (user.role !== 'ADMIN' && user.role !== 'IT_STAFF') {
-        return apiError(403, 'Forbidden - Insufficient permissions');
+    const parsed = createRemoteSessionSchema.parse(await request.json());
+
+    // Resolve the asset's workspace so we can enforce the workspace-scoped
+    // `remote.connect` permission via the RBAC graph (no legacy role checks).
+    const asset = await prisma.asset.findFirst({
+        where: {
+            id: parsed.assetId,
+            deletedAt: null,
+            workspace: { members: { some: { userId: user.id } } },
+        },
+        select: { workspaceId: true },
+    });
+    if (!asset) {
+        throw new ApiError(404, 'Asset not found or access denied');
     }
 
-    const parsed = createRemoteSessionSchema.parse(await request.json());
+    await requirePermission(user.id, 'remote', 'connect', asset.workspaceId);
+
     return runWithUserRLS(user, async () => {
         const session = await RemoteSessionService.createSession({
             userId: user.id,

@@ -259,6 +259,9 @@ model Workspace {
   // Dynamic RBAC: workspace-scoped custom roles
   customRoles WorkspaceCustomRole[]
 
+  // Agent enrollment pre-auth tokens
+  agentPreAuthTokens AgentPreAuthToken[]
+
   // Super-admin impersonation logs
   impersonationLogs ImpersonationLog[]
 
@@ -270,6 +273,21 @@ model Workspace {
   @@index([slug])
   @@index([ownerId])
   @@index([deletedAt])
+}
+
+model AgentPreAuthToken {
+  id          String   @id @default(cuid())
+  tokenHash   String   @unique
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  issuedById  String
+  expiresAt   DateTime
+  consumedAt  DateTime?
+  createdAt   DateTime @default(now())
+
+  @@index([workspaceId])
+  @@index([expiresAt])
+  @@index([consumedAt])
 }
 
 model WorkspaceMember {
@@ -1299,9 +1317,10 @@ model PartnerPayout {
 model AgentConnection {
   id String @id @default(cuid())
 
-  // Linked Asset (one agent per asset)
-  assetId String @unique
-  asset   Asset  @relation("AssetAgent", fields: [assetId], references: [id], onDelete: Cascade)
+  // Linked Asset (one agent per asset, optional — agents may exist unlinked
+  // until an operator creates an Asset from the Agent).
+  assetId String? @unique
+  asset   Asset?  @relation("AssetAgent", fields: [assetId], references: [id], onDelete: SetNull)
 
   // Workspace
   workspaceId String

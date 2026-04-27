@@ -20,7 +20,8 @@
     <!-- Feature tree -->
     <Feature Id="ProductFeature" Title="Glanus Agent" Level="1">
       <ComponentGroupRef Id="ProductComponents" />
-      <ComponentRef Id="GlanusAgentService" />
+      <ComponentRef Id="AutoStartShortcut" />
+      <ComponentRef Id="ApplicationShortcuts" />
     </Feature>
 
     <!-- Directory structure -->
@@ -53,42 +54,44 @@
       </Component>
     </ComponentGroup>
 
-    <!-- Windows Service -->
-    <Component Id="GlanusAgentService" Directory="INSTALLFOLDER" Guid="*">
-      <ServiceInstall Id="InstallGlanusAgentService"
-                      Name="GlanusAgent"
-                      DisplayName="Glanus Agent"
-                      Description="Glanus RMM monitoring and management agent"
-                      Type="ownProcess"
-                      Start="auto"
-                      Account="LocalSystem"
-                      ErrorControl="normal"
-                      Interactive="no">
-        <ServiceDependency Id="Tcpip"/>
-      </ServiceInstall>
-      
-      <ServiceControl Id="StartGlanusAgentService"
-                      Name="GlanusAgent"
-                      Start="install"
-                      Stop="both"
-                      Remove="uninstall"
-                      Wait="yes" />
-    </Component>
+    <!-- Auto-start at user login via common Startup folder.
+         The agent is a tray app, not a Session 0 Windows service. -->
+    <DirectoryRef Id="CommonStartupFolder">
+      <Component Id="AutoStartShortcut" Guid="*">
+        <Shortcut Id="AutoStartGlanusAgent"
+                  Name="Glanus Agent"
+                  Description="Starts Glanus Agent when a user signs in"
+                  Target="[INSTALLFOLDER]glanus-agent.exe"
+                  WorkingDirectory="INSTALLFOLDER" />
+        <RegistryValue Root="HKLM"
+                       Key="Software\Glanus\Agent"
+                       Name="autostart"
+                       Type="integer"
+                       Value="1"
+                       KeyPath="yes" />
+      </Component>
+    </DirectoryRef>
 
     <!-- Start Menu shortcuts -->
     <DirectoryRef Id="ApplicationProgramsFolder">
-      <Component Id="ApplicationShortcut" Guid="*">
+      <Component Id="ApplicationShortcuts" Guid="*">
+        <Shortcut Id="LaunchProduct"
+                  Name="Glanus Agent"
+                  Description="Launches Glanus Agent"
+                  Target="[INSTALLFOLDER]glanus-agent.exe"
+                  WorkingDirectory="INSTALLFOLDER" />
         <Shortcut Id="UninstallProduct"
                   Name="Uninstall Glanus Agent"
                   Description="Uninstalls Glanus Agent"
                   Target="[System64Folder]msiexec.exe"
                   Arguments="/x [ProductCode]"/>
         <RemoveFolder Id="ApplicationProgramsFolder" On="uninstall"/>
-        <RegistryValue Root="HKCU" 
+        <RegistryValue Root="HKLM" 
                        Key="Software\Glanus\Agent" 
-                       Name="installed" 
+                 Name="startmenu" 
                        Type="integer" 
-                       Value="1"KeyPath="yes"/>
+                       Value="1"
+                       KeyPath="yes"/>
       </Component>
     </DirectoryRef>
 

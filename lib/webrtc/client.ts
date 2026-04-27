@@ -40,10 +40,33 @@ export class WebRTCClient {
     }
 
     private initializePeer(iceServers?: RTCIceServer[]) {
+        // When the browser is the viewer (no local stream) we must still
+        // advertise that we want to RECEIVE video, otherwise simple-peer
+        // emits an offer with no video m-line and the agent's outbound
+        // video track has nothing to attach to — the peer connects (the
+        // data channel works) but the `<video>` element stays black and
+        // `inbound-rtp` FPS reports 0.
+        const wantsRecvOnlyVideo = this.isInitiator && !this.stream;
+
         const config: SimplePeer.Options = {
             initiator: this.isInitiator,
             trickle: true,
             stream: this.stream || undefined,
+            // Pin the data-channel label so the Rust agent's
+            // `on_data_channel` handler matches it. The agent filters by
+            // `dc.label() == "input"` and silently ignores anything else;
+            // simple-peer's default is a random hex string, which the agent
+            // would discard, leaving the viewer stuck in "Connecting…" even
+            // after ICE+DTLS came up.
+            channelName: 'input',
+            ...(wantsRecvOnlyVideo
+                ? {
+                    offerOptions: {
+                        offerToReceiveVideo: true,
+                        offerToReceiveAudio: false,
+                    },
+                }
+                : {}),
             config: {
                 iceServers: iceServers || [
                     { urls: 'stun:stun.l.google.com:19302' },
@@ -67,8 +90,18 @@ export class WebRTCClient {
         });
 
         this.peer.on('stream', (stream) => {
-            console.debug('[WebRTC] Remote stream received');
+            console.debug('[WebRTC] Remote stream received (stream event)', stream.id, 'tracks:', stream.getTracks().length);
             this.onStream?.(stream);
+        });
+
+        // Fallback — some negotiations (Rust webrtc-rs is one) yield a
+        // `track` event without an accompanying `stream` event. Wrap the
+        // lone track in a fresh MediaStream so the <video> element still
+        // gets something to render.
+        this.peer.on('track', (track: MediaStreamTrack, stream: MediaStream) => {
+            console.debug('[WebRTC] Remote track received', track.kind, track.id, 'via stream:', stream?.id ?? '(none)');
+            const wrapped = stream && stream.getTracks().length > 0 ? stream : new MediaStream([track]);
+            this.onStream?.(wrapped);
         });
 
         this.peer.on('data', (data) => {
@@ -207,5 +240,43 @@ export class WebRTCClient {
 
     public isConnected(): boolean {
         return this.peer ? this.peer.connected : false;
+    }
+
+    /**
+     * Returns the underlying RTCPeerConnection, or null if the peer is
+     * destroyed. simple-peer keeps it on the private `_pc` field; we surface
+     * it so callers can attach `oniceconnectionstatechange` and trigger
+     * `restartIce()` without poking at internals from outside the class.
+     */
+    public getPeerConnection(): RTCPeerConnection | null {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        return this.peer ? ((this.peer as any)._pc as RTCPeerConnection | undefined) ?? null : null;
+    }
+
+    /**
+     * Trigger an ICE restart on the underlying RTCPeerConnection. This is
+     * the standard recovery path when `iceConnectionState` transitions to
+     * `failed`: the browser allocates fresh ICE credentials, simple-peer
+     * emits a new offer via the `signal` event, and the existing signaling
+     * pipeline forwards it to the agent. Returns true if a restart was
+     * actually issued.
+     *
+     * Only safe to call on the initiator side — the answerer cannot
+     * spontaneously generate a new offer.
+     */
+    public restartIce(): boolean {
+        const pc = this.getPeerConnection();
+        if (!pc || !this.isInitiator) return false;
+        try {
+            // restartIce() is widely supported (Chrome 77+, FF 70+, Safari 14.1+).
+            // It sets the next createOffer() to use fresh ufrag/pwd. simple-peer
+            // listens for `negotiationneeded` and re-runs createOffer/setLocal,
+            // emitting the new offer through the existing `signal` callback.
+            pc.restartIce();
+            return true;
+        } catch (err) {
+            console.warn('[WebRTC] restartIce failed', err);
+            return false;
+        }
     }
 }

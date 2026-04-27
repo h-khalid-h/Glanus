@@ -1,5 +1,6 @@
 // Script executor module - runs PowerShell, Bash, and Python scripts
 use anyhow::{Result, Context};
+use serde::{Deserialize, Serialize};
 use std::process::Stdio;
 use std::time::Duration;
 use tokio::process::Command as TokioCommand;
@@ -7,7 +8,7 @@ use tokio::time::timeout;
 
 pub struct ScriptExecutor;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ExecutionResult {
     pub status: String, // "SUCCESS", "ERROR", "TIMEOUT"
     pub output: Option<String>,

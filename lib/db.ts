@@ -19,7 +19,13 @@ function createPrismaClient() {
 
     return new PrismaClient({
         datasourceUrl,
-        log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
+        // Opt-in query logging: set PRISMA_LOG_QUERIES=1 to see every SQL query.
+        // Default dev logs stay terse (error + warn) so the terminal is usable.
+        log: process.env.PRISMA_LOG_QUERIES === '1'
+            ? ['query', 'error', 'warn']
+            : process.env.NODE_ENV === 'development'
+                ? ['error', 'warn']
+                : ['error'],
     }).$extends(softDeleteExtension).$extends(rlsExtension);
 }
 

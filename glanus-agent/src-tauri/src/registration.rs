@@ -18,11 +18,38 @@ impl RegistrationManager {
 
     /// Check if agent is already registered
     pub fn is_registered(config: &AgentConfig) -> bool {
-        config.agent.registered && SecureStorage::get_token().ok().flatten().is_some()
+        if SecureStorage::get_token().ok().flatten().is_some() {
+            return true;
+        }
+
+        config.agent.registered
+    }
+
+    pub fn configured_asset_id(config: &AgentConfig) -> Option<String> {
+        config.agent.asset_id.clone()
+            .or_else(|| std::env::var("GLANUS_AGENT_ASSET_ID").ok())
+            .or_else(|| std::env::var("AGENT_ASSET_ID").ok())
+            .map(|value| value.trim().to_string())
+            .filter(|value| !value.is_empty())
+    }
+
+    pub async fn auto_register_if_possible(config: &AgentConfig) -> Result<bool> {
+        if Self::is_registered(config) {
+            return Ok(true);
+        }
+
+        if config.agent.workspace_id.is_none() || config.agent.pre_auth_token.is_none() {
+            return Ok(false);
+        }
+
+        let asset_id = Self::configured_asset_id(config);
+        let manager = Self::new(config.server.api_url.clone());
+        manager.register(config, asset_id).await?;
+        Ok(true)
     }
 
     /// Register agent with backend
-    pub async fn register(&self, config: &AgentConfig, asset_id: String) -> Result<()> {
+    pub async fn register(&self, config: &AgentConfig, asset_id: Option<String>) -> Result<()> {
         // Validate config
         let workspace_id = config.agent.workspace_id.clone()
             .context("Workspace ID not configured")?;
@@ -61,11 +88,12 @@ impl RegistrationManager {
         // Update config
         let mut updated_config = config.clone();
         updated_config.agent.registered = true;
+        updated_config.agent.asset_id = Some(response.asset_id.clone());
         updated_config.agent.pre_auth_token = None; // Clear pre-auth token for security
         updated_config.save()
             .context("Failed to save updated config")?;
 
-        log::info!("Agent registered successfully: {}", response.agent_id);
+        log::info!("Agent registered successfully: agent_id={} asset_id={}", response.agent_id, response.asset_id);
         Ok(())
     }
 

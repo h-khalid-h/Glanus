@@ -62,8 +62,10 @@ export default function RemoteSessionsPage() {
             const response = await csrfFetch(`/api/remote/sessions?${params.toString()}`);
             if (!response.ok) throw new Error('Failed to fetch sessions');
 
-            const data = await response.json();
-            setSessions(data.sessions || []);
+            const body = await response.json();
+            // API returns { success, data: { sessions, pagination } } — unwrap both envelopes.
+            const payload = body?.data ?? body;
+            setSessions(payload?.sessions || []);
         } catch (error: unknown) {
             const msg = error instanceof Error ? error.message : 'An unexpected error occurred';
             showError('Error fetching sessions:', msg);

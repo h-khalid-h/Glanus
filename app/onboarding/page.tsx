@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { CheckCircle2, Sparkles, Users, BarChart3, ArrowRight } from 'lucide-react';
 import WorkspaceWizard from '@/components/WorkspaceWizard';
+import { useWorkspace } from '@/lib/workspace/context';
 
 type OnboardingStep = 'welcome' | 'create-workspace' | 'complete';
 
@@ -14,6 +15,7 @@ export default function OnboardingPage() {
     const { error: showError } = useToast();
     const router = useRouter();
     useSession();
+    const { refetchWorkspaces } = useWorkspace();
     const [currentStep, setCurrentStep] = useState<OnboardingStep>('welcome');
     const [_isLoading, setIsLoading] = useState(false);
 
@@ -23,6 +25,15 @@ export default function OnboardingPage() {
             await csrfFetch('/api/onboarding/complete', { method: 'POST' });
             if (workspaceId) {
                 localStorage.setItem('currentWorkspaceId', workspaceId);
+            }
+            // Refresh the workspace context so the dashboard sees the newly
+            // created workspace immediately (otherwise the provider holds an
+            // empty list and the dashboard renders "No workspace selected"
+            // until the user reloads the page).
+            try {
+                await refetchWorkspaces();
+            } catch {
+                // Non-fatal — the provider will retry on next mount/reload.
             }
             router.push('/dashboard');
         } catch (error: unknown) {

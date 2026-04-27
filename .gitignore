@@ -23,3 +23,23 @@ logs/
 test-results/
 playwright-report/
 blob-report/
+
+# Docker build caches
+glanus-agent/.cache/
+
+# Agent build artifacts
+# We commit ONLY the canonical filenames the API serves
+# (glanus-agent.deb / .msi / .pkg) and ignore versioned/intermediate
+# builds so we don't bloat the repo with every dev iteration's binary.
+glanus-agent/builds/*
+!glanus-agent/builds/.gitkeep
+!glanus-agent/builds/glanus-agent.deb
+!glanus-agent/builds/glanus-agent.msi
+!glanus-agent/builds/glanus-agent.pkg
+!glanus-agent/builds/glanus-agent.deb.sha256
+!glanus-agent/builds/glanus-agent.msi.sha256
+!glanus-agent/builds/glanus-agent.pkg.sha256
+glanus-agent/installers/linux/*.deb
+glanus-agent/installers/linux/*.rpm
+glanus-agent/installers/macos/*.pkg
+glanus-agent/installers/windows/*.msi

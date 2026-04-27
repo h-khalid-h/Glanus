@@ -5,6 +5,7 @@ import { Settings as SettingsIcon, Save, RotateCcw } from 'lucide-react';
 interface AgentConfig {
   agent: {
     version: string;
+    asset_id?: string | null;
     workspace_id: string | null;
     pre_auth_token: string | null;
     registered: boolean;
@@ -163,6 +164,39 @@ export default function Settings() {
             </button>
           </div>
         </div>
+
+        <Section title="Enrollment">
+          <label className="flex flex-col gap-1">
+            <span className="text-sm text-slate-300">Asset ID</span>
+            <input
+              type="text"
+              value={config.agent.asset_id || ''}
+              onChange={(e) => update('agent', 'asset_id', e.target.value || null)}
+              placeholder="ast_..."
+              className="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-3 py-1.5 text-white text-sm focus:outline-none focus:border-nerve focus:ring-1 focus:ring-nerve"
+            />
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-sm text-slate-300">Workspace ID</span>
+            <input
+              type="text"
+              value={config.agent.workspace_id || ''}
+              onChange={(e) => update('agent', 'workspace_id', e.target.value || null)}
+              placeholder="ws_..."
+              className="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-3 py-1.5 text-white text-sm focus:outline-none focus:border-nerve focus:ring-1 focus:ring-nerve"
+            />
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-sm text-slate-300">Pre-Auth Token</span>
+            <input
+              type="password"
+              value={config.agent.pre_auth_token || ''}
+              onChange={(e) => update('agent', 'pre_auth_token', e.target.value || null)}
+              placeholder="Paste the token from Glanus"
+              className="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-3 py-1.5 text-white text-sm focus:outline-none focus:border-nerve focus:ring-1 focus:ring-nerve"
+            />
+          </label>
+        </Section>
 
         <Section title="Server">
           <label className="flex flex-col gap-1">

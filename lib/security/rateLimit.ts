@@ -73,11 +73,14 @@ const memoryStrictApiLimiter = new RateLimiterMemory({
     duration: 15 * 60,
 });
 
-// Agent endpoints: tighter limit keyed by agent ID to prevent brute-force
+// Agent endpoints: keyed by agent ID. Must accommodate active remote-desktop
+// sessions that poll /api/agent/remote/active at ~1 Hz for offer discovery
+// and trickle-ICE, plus heartbeats and command polling. 2400/15min ≈ 2.67 rps
+// sustained — comfortably above the 1 Hz poll with headroom for bursts.
+// No blockDuration so a transient burst doesn't poison the agent for 15 min.
 const memoryAgentLimiter = new RateLimiterMemory({
-    points: 300,
+    points: 2400,
     duration: 15 * 60,
-    blockDuration: 15 * 60,
 });
 
 // Redis-backed limiters (created lazily when Redis is available)
@@ -116,9 +119,8 @@ async function initRedisLimiters(): Promise<boolean> {
         redisAgentLimiter = new RateLimiterRedis({
             storeClient: client,
             keyPrefix: 'rl:agent',
-            points: 300,
+            points: 2400,
             duration: 15 * 60,
-            blockDuration: 15 * 60,
         });
 
         return true;
@@ -239,10 +241,9 @@ export function getClientIdentifier(request: Request): string {
         return (request as Record<string, unknown>).ip as string;
     }
 
-    // Fallback: use a per-request random key so we don't block all users
-    // This means rate limiting won't work for unidentifiable clients,
-    // but it's better than blocking everyone
-    return `anon-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    // Stable fallback key is safer than a per-request random key, which
+    // effectively disables rate limiting.
+    return 'unknown-client';
 }
 
 /**
@@ -272,7 +273,7 @@ export async function withRateLimit(
                 headers: {
                     'Content-Type': 'application/json',
                     'Retry-After': result.retryAfter?.toString() || '900',
-                    'X-RateLimit-Limit': type === 'login' ? '5' : type === 'agent' ? '300' : type === 'strict-api' ? '500' : '1000',
+                    'X-RateLimit-Limit': type === 'login' ? '5' : type === 'agent' ? '2400' : type === 'strict-api' ? '500' : '1000',
                     'X-RateLimit-Remaining': '0',
                     'X-RateLimit-Reset': result.resetAt.toISOString(),
                 },
@@ -294,7 +295,7 @@ export function getRateLimitHeaders(
     const limitMap: Record<RateLimitType, string> = {
         'login': '5',
         'strict-api': '100',
-        'agent': '300',
+        'agent': '2400',
         'api': '1000',
     };
     const limit = limitMap[type] || '1000';

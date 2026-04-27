@@ -24,7 +24,7 @@ export const POST = withErrorHandler(async (
     const preAuthToken = crypto.randomBytes(32).toString('hex');
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 7);
-    storePreAuthToken(preAuthToken, workspaceId);
+    await storePreAuthToken(preAuthToken, workspaceId, user.id);
 
     const apiEndpoint = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import path from 'path';
 import fs from 'fs/promises';
+import { createReadStream } from 'fs';
+import { Readable } from 'stream';
 
 const MIME_MAP: Record<string, string> = {
     '.msi': 'application/x-msi',
@@ -67,9 +69,18 @@ export async function GET(
 
     try {
         const stat = await fs.stat(resolvedPath);
-        const buffer = await fs.readFile(resolvedPath);
 
-        return new NextResponse(buffer, {
+        // Stream the binary instead of buffering the whole 6+ MB DEB into
+        // memory. `fs.readFile` blocks the response until the entire file
+        // is loaded — on the install path this manifests as a multi-second
+        // pause between curl printing "[1/4] Downloading..." and bytes
+        // actually flowing. Streaming keeps TTFB ~constant regardless of
+        // file size and lets curl's progress meter advance smoothly.
+        const nodeStream = createReadStream(resolvedPath);
+        // Web ReadableStream is what NextResponse expects.
+        const webStream = Readable.toWeb(nodeStream) as unknown as ReadableStream<Uint8Array>;
+
+        return new NextResponse(webStream, {
             status: 200,
             headers: {
                 'Content-Type': MIME_MAP[ext] || 'application/octet-stream',

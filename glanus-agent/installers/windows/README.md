@@ -49,9 +49,16 @@ msiexec /i glanus-agent-0.1.0.msi /quiet /qn
 ## Features
 
 - Installs to `C:\Program Files\Glanus Agent\`
-- Creates Windows Service (auto-start)
+- Adds a Startup shortcut so the tray app launches when a user signs in
 - Adds Start Menu shortcuts
 - Stores config in `%APPDATA%\Glanus\`
+
+## Verify Installation
+
+```powershell
+Get-Process glanus-agent -ErrorAction SilentlyContinue
+Test-Path "$env:ProgramData\Microsoft\Windows\Start Menu\Programs\StartUp\Glanus Agent.lnk"
+```
 
 ## Uninstall
 

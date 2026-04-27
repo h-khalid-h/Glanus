@@ -28,7 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Maintenance window scheduling (2-4 AM)
 - Secure token storage in OS keychain
 - Cross-platform support (Windows, macOS, Linux)
-- Windows MSI installer with Windows Service
+- Windows MSI installer with user-login auto-start for the tray app
 - macOS PKG installer with LaunchAgent
 - Linux DEB package with systemd service
 - CI/CD pipeline with GitHub Actions

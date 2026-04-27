@@ -10,14 +10,16 @@ import { ApiError } from '@/lib/errors';
  */
 import { prisma } from '@/lib/db';
 import { generateAgentToken, hashAgentToken } from '@/lib/security/agent-auth';
-import { AgentPlatform } from '@prisma/client';
+import { signCommandPayload, signUpdatePayload } from '@/lib/security/agent-signing';
+import { AgentPlatform, AssetType } from '@prisma/client';
+import { auditLog } from '@/lib/workspace/auditLog';
 
 // ============================================
 // INPUT TYPES
 // ============================================
 
 export interface RegisterAgentInput {
-    assetId: string;
+    assetId?: string;
     workspaceId: string;
     hostname: string;
     platform: AgentPlatform;
@@ -50,10 +52,10 @@ export interface CommandResultInput {
     authToken: string;
     executionId: string;
     status: 'completed' | 'failed' | 'timeout';
-    exitCode?: number;
-    output?: string;
-    error?: string;
-    duration?: number;
+    exitCode?: number | null;
+    output?: string | null;
+    error?: string | null;
+    duration?: number | null;
 }
 
 export interface SoftwareItem {
@@ -70,6 +72,20 @@ export interface DiscoveryDevice {
     hostname?: string;
     deviceType: string;
     snmpData?: Record<string, unknown>;
+}
+
+export interface CreateAssetFromAgentInput {
+    agentId: string;
+    workspaceId: string;
+    userId: string;
+    overrides?: {
+        name?: string;
+        assetType?: AssetType;
+        location?: string;
+        description?: string;
+    };
+    ipAddress?: string;
+    userAgent?: string;
 }
 
 // ============================================
@@ -90,6 +106,45 @@ export interface DiscoveryDevice {
  */
 export class AgentService {
 
+    private static async claimPendingScriptCommands(agentId: string): Promise<Array<{ id: string; scriptName: string; scriptBody: string; language: string }>> {
+        const pending = await prisma.scriptExecution.findMany({
+            where: { agentId, status: 'PENDING' },
+            orderBy: { createdAt: 'asc' },
+            take: 10,
+            select: { id: true },
+        });
+
+        if (pending.length === 0) return [];
+
+        const pendingIds = pending.map((p) => p.id);
+        const dispatchTime = new Date();
+
+        await prisma.scriptExecution.updateMany({
+            where: {
+                id: { in: pendingIds },
+                status: 'PENDING',
+            },
+            data: {
+                status: 'RUNNING',
+                startedAt: dispatchTime,
+            },
+        });
+
+        return prisma.scriptExecution.findMany({
+            where: {
+                id: { in: pendingIds },
+                status: 'RUNNING',
+                startedAt: dispatchTime,
+            },
+            select: {
+                id: true,
+                scriptName: true,
+                scriptBody: true,
+                language: true,
+            },
+        });
+    }
+
     // ========================================
     // AGENT REGISTRATION
     // ========================================
@@ -100,6 +155,7 @@ export class AgentService {
      */
     static async registerAgent(data: RegisterAgentInput): Promise<{
         agentId: string;
+        assetId: string;
         authToken: string;
         config: { metricsInterval: number; heartbeatInterval: number };
     }> {
@@ -112,12 +168,40 @@ export class AgentService {
             throw new ApiError(404, 'Workspace not found');
         }
 
-        // Verify asset belongs to workspace and is not soft-deleted
-        const asset = await prisma.asset.findFirst({
-            where: { id: data.assetId, workspaceId: data.workspaceId, deletedAt: null },
-        });
-        if (!asset) {
-            throw new ApiError(404, 'Asset not found or does not belong to workspace');
+        // Resolve the target asset: look up by explicit id, by hostname match,
+        // or create a new one for self-enrolling agents.
+        let assetId = data.assetId;
+        if (assetId) {
+            const asset = await prisma.asset.findFirst({
+                where: { id: assetId, workspaceId: data.workspaceId, deletedAt: null },
+            });
+            if (!asset) {
+                throw new ApiError(404, 'Asset not found or does not belong to workspace');
+            }
+        } else {
+            // Try to match an existing asset by hostname (via its linked agent connection)
+            // so a reinstall doesn't create duplicates.
+            const existingByHostname = await prisma.agentConnection.findFirst({
+                where: { workspaceId: data.workspaceId, hostname: data.hostname },
+                select: { assetId: true },
+            });
+            if (existingByHostname) {
+                assetId = existingByHostname.assetId;
+            } else {
+                const created = await prisma.asset.create({
+                    data: {
+                        name: data.hostname,
+                        workspaceId: data.workspaceId,
+                        assetType: 'PHYSICAL',
+                        status: 'ASSIGNED',
+                        description: data.systemInfo
+                            ? `Auto-enrolled by Glanus Agent\nOS: ${data.systemInfo.os}\nCPU: ${data.systemInfo.cpu}\nRAM: ${data.systemInfo.ram}GB\nDisk: ${data.systemInfo.disk}GB`
+                            : 'Auto-enrolled by Glanus Agent',
+                    },
+                    select: { id: true },
+                });
+                assetId = created.id;
+            }
         }
 
         const config = { metricsInterval: 300, heartbeatInterval: 60 };
@@ -125,7 +209,7 @@ export class AgentService {
         // Check for existing agent (re-registration)
         const existingAgent = await prisma.agentConnection.findFirst({
             where: {
-                assetId: data.assetId,
+                assetId,
                 workspaceId: data.workspaceId,
                 hostname: data.hostname,
                 ...(data.macAddress ? { macAddress: data.macAddress } : {}),
@@ -147,14 +231,14 @@ export class AgentService {
                     authToken: hash,
                 },
             });
-            return { agentId: updatedAgent.id, authToken: plaintext, config };
+            return { agentId: updatedAgent.id, assetId, authToken: plaintext, config };
         }
 
         // New registration
         const { plaintext, hash } = generateAgentToken();
         const agent = await prisma.agentConnection.create({
             data: {
-                assetId: data.assetId,
+                assetId,
                 workspaceId: data.workspaceId,
                 agentVersion: data.agentVersion,
                 platform: data.platform,
@@ -169,7 +253,7 @@ export class AgentService {
         // Optionally update asset system info
         if (data.systemInfo) {
             await prisma.asset.update({
-                where: { id: data.assetId },
+                where: { id: assetId },
                 data: {
                     manufacturer: data.systemInfo.cpu.split(' ')[0],
                     description: `OS: ${data.systemInfo.os}\nCPU: ${data.systemInfo.cpu}\nRAM: ${data.systemInfo.ram}GB\nDisk: ${data.systemInfo.disk}GB`,
@@ -177,7 +261,120 @@ export class AgentService {
             });
         }
 
-        return { agentId: agent.id, authToken: plaintext, config };
+        return { agentId: agent.id, assetId, authToken: plaintext, config };
+    }
+
+    // ========================================
+    // CREATE ASSET FROM AGENT
+    // ========================================
+
+    /**
+     * Create a new Asset from an existing unlinked AgentConnection and link them.
+     *
+     * Enforces:
+     *   - Agent exists within the requested workspace (tenant isolation)
+     *   - Agent is not already linked to an asset (conflict → 409)
+     *
+     * Mapping defaults:
+     *   - name          → agent.hostname
+     *   - assetType     → PHYSICAL (override allowed)
+     *   - status        → ASSIGNED (agent is actively reporting)
+     *   - description   → derived from agent platform/host (override allowed)
+     *
+     * @throws ApiError(404) if agent not found in workspace
+     * @throws ApiError(409) if agent is already linked to an asset
+     */
+    static async createAssetFromAgent(input: CreateAssetFromAgentInput): Promise<{
+        agent: { id: string; assetId: string };
+        asset: {
+            id: string;
+            name: string;
+            assetType: AssetType;
+            status: string;
+            workspaceId: string;
+            description: string | null;
+            location: string | null;
+        };
+    }> {
+        const { agentId, workspaceId, userId, overrides, ipAddress, userAgent } = input;
+
+        const agent = await prisma.agentConnection.findFirst({
+            where: { id: agentId, workspaceId },
+            select: {
+                id: true,
+                assetId: true,
+                hostname: true,
+                platform: true,
+                ipAddress: true,
+                macAddress: true,
+                agentVersion: true,
+            },
+        });
+        if (!agent) {
+            throw new ApiError(404, 'Agent not found');
+        }
+        if (agent.assetId) {
+            throw new ApiError(409, 'Agent is already linked to an asset');
+        }
+
+        const name = overrides?.name?.trim() || agent.hostname;
+        const assetType: AssetType = overrides?.assetType ?? AssetType.PHYSICAL;
+        const description = overrides?.description
+            ?? `Created from Agent\nHostname: ${agent.hostname}\nPlatform: ${agent.platform}` +
+               (agent.ipAddress ? `\nIP: ${agent.ipAddress}` : '') +
+               (agent.macAddress ? `\nMAC: ${agent.macAddress}` : '') +
+               `\nAgent Version: ${agent.agentVersion}`;
+
+        // Atomic: create the asset and link it to the agent in one transaction.
+        const result = await prisma.$transaction(async (tx) => {
+            const asset = await tx.asset.create({
+                data: {
+                    name,
+                    workspaceId,
+                    assetType,
+                    status: 'ASSIGNED',
+                    location: overrides?.location ?? null,
+                    description,
+                },
+                select: {
+                    id: true,
+                    name: true,
+                    assetType: true,
+                    status: true,
+                    workspaceId: true,
+                    description: true,
+                    location: true,
+                },
+            });
+
+            await tx.agentConnection.update({
+                where: { id: agent.id },
+                data: { assetId: asset.id },
+            });
+
+            return asset;
+        });
+
+        await auditLog({
+            workspaceId,
+            userId,
+            action: 'asset.created',
+            resourceType: 'asset',
+            resourceId: result.id,
+            details: {
+                source: 'agent',
+                agentId: agent.id,
+                hostname: agent.hostname,
+                platform: agent.platform,
+            },
+            ipAddress,
+            userAgent,
+        });
+
+        return {
+            agent: { id: agent.id, assetId: result.id },
+            asset: result,
+        };
     }
 
     // ========================================
@@ -192,9 +389,18 @@ export class AgentService {
     static async processHeartbeat(
         authToken: string,
         metrics: HeartbeatMetrics,
+        capabilities?: { remoteDesktop?: boolean },
     ): Promise<{
         agentId: string;
-        commands: Array<{ type: string; id: string; scriptName: string; script: string; language: string }>;
+        commands: Array<{
+            type: string;
+            id: string;
+            scriptName: string;
+            script: string;
+            language: string;
+            signature?: string;
+            issuedAt?: string;
+        }>;
     }> {
         const MAX_VARIANCE = 5;
         const SNAPSHOT_INTERVAL_MS = 5 * 60 * 1000;
@@ -202,11 +408,13 @@ export class AgentService {
         const hashedToken = hashAgentToken(authToken);
         const agent = await prisma.agentConnection.findUnique({
             where: { authToken: hashedToken },
-            include: {
-                scripts: {
-                    where: { status: 'PENDING' },
-                    take: 10,
-                },
+            select: {
+                id: true,
+                assetId: true,
+                cpuUsage: true,
+                ramUsage: true,
+                diskUsage: true,
+                lastMetricSavedAt: true,
             },
         });
 
@@ -237,24 +445,35 @@ export class AgentService {
             networkDown: metrics.networkDown,
         };
 
+        // Capability tracking — agents can toggle `canRemoteAccess` by
+        // reporting it in their heartbeat. Keeps UI-facing flags in sync
+        // with what the binary actually supports.
+        if (capabilities && typeof capabilities.remoteDesktop === 'boolean') {
+            updateData.canRemoteAccess = capabilities.remoteDesktop;
+        }
+
         if (requiresSnapshot) {
             updateData.lastMetricSavedAt = new Date();
-            updateData.metrics = {
-                create: {
-                    assetId: agent.assetId,
-                    cpuUsage: metrics.cpu,
-                    cpuTemp: metrics.cpuTemp,
-                    ramUsage: metrics.ram,
-                    ramUsed: metrics.ramUsed,
-                    ramTotal: metrics.ramTotal,
-                    diskUsage: metrics.disk,
-                    diskUsed: metrics.diskUsed,
-                    diskTotal: metrics.diskTotal,
-                    networkUp: metrics.networkUp,
-                    networkDown: metrics.networkDown,
-                    topProcesses: metrics.topProcesses || [],
-                },
-            };
+            // AgentMetric requires a linked asset; skip historical snapshot
+            // when agent is unlinked. Volatile fields still update above.
+            if (agent.assetId) {
+                updateData.metrics = {
+                    create: {
+                        assetId: agent.assetId,
+                        cpuUsage: metrics.cpu,
+                        cpuTemp: metrics.cpuTemp,
+                        ramUsage: metrics.ram,
+                        ramUsed: metrics.ramUsed,
+                        ramTotal: metrics.ramTotal,
+                        diskUsage: metrics.disk,
+                        diskUsed: metrics.diskUsed,
+                        diskTotal: metrics.diskTotal,
+                        networkUp: metrics.networkUp,
+                        networkDown: metrics.networkDown,
+                        topProcesses: metrics.topProcesses || [],
+                    },
+                };
+            }
         }
 
         // Atomic nested write
@@ -263,24 +482,44 @@ export class AgentService {
             data: updateData as Parameters<typeof prisma.agentConnection.update>[0]['data'],
         });
 
-        // Format pending scripts for command dispatch
-        const commands = agent.scripts.map((script) => ({
-            type: 'execute_script',
-            id: script.id,
-            scriptName: script.scriptName,
-            script: script.scriptBody,
-            language: script.language,
-        }));
+        const claimedScripts = await this.claimPendingScriptCommands(agent.id);
 
-        // Mark dispatched scripts as running
-        if (commands.length > 0) {
-            await prisma.scriptExecution.updateMany({
-                where: { id: { in: commands.map((c) => c.id) } },
-                data: { status: 'RUNNING', startedAt: new Date() },
+        // Format claimed scripts for command dispatch.
+        // If signing is configured, include signature metadata for agent-side verification.
+        const commands = claimedScripts.map((script) => {
+            const signed = signCommandPayload({
+                id: script.id,
+                language: script.language,
+                script: script.scriptBody,
             });
-        }
+
+            return {
+                type: 'execute_script',
+                id: script.id,
+                scriptName: script.scriptName,
+                script: script.scriptBody,
+                language: script.language,
+                ...(signed ? { signature: signed.signature, issuedAt: signed.issuedAt } : {}),
+            };
+        });
 
         return { agentId: agent.id, commands };
+    }
+
+    /**
+     * Mark stale agents offline when they have not heartbeated recently.
+     */
+    static async markStaleAgentsOffline(staleAfterMinutes = 5): Promise<{ updated: number }> {
+        const cutoff = new Date(Date.now() - staleAfterMinutes * 60 * 1000);
+        const result = await prisma.agentConnection.updateMany({
+            where: {
+                status: { in: ['ONLINE', 'INSTALLING', 'UPDATING'] },
+                lastSeen: { lt: cutoff },
+            },
+            data: { status: 'OFFLINE' },
+        });
+
+        return { updated: result.count };
     }
 
     // ========================================
@@ -341,6 +580,7 @@ export class AgentService {
         version: string;
         download_url: string;
         checksum: string;
+        signature?: string;
         release_notes: string;
         required: boolean;
     } | null> {
@@ -366,10 +606,13 @@ export class AgentService {
 
         if (!isNewer) return null;
 
+        const updateSignature = signUpdatePayload(latestVersion.version, latestVersion.checksum);
+
         return {
             version: latestVersion.version,
             download_url: latestVersion.downloadUrl,
             checksum: latestVersion.checksum,
+            ...(updateSignature ? { signature: updateSignature } : {}),
             release_notes: latestVersion.releaseNotes || '',
             required: latestVersion.required || false,
         };
@@ -505,6 +748,7 @@ export class AgentService {
         status: string;
         offer: unknown;
         answer: unknown;
+        iceCandidates: unknown;
     } | null> {
         const hashedToken = hashAgentToken(authToken);
         const agent = await prisma.agentConnection.findUnique({
@@ -515,10 +759,13 @@ export class AgentService {
             throw new ApiError(401, 'Invalid agent token');
         }
 
+        // No active session is possible without a linked asset.
+        if (!agent.assetId) return null;
+
         const activeSession = await prisma.remoteSession.findFirst({
             where: { assetId: agent.assetId, status: 'ACTIVE' },
             orderBy: { createdAt: 'desc' },
-            select: { id: true, status: true, offer: true, answer: true },
+            select: { id: true, status: true, offer: true, answer: true, iceCandidates: true },
         });
 
         return activeSession;

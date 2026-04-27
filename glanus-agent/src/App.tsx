@@ -17,7 +17,9 @@ interface SystemMetrics {
 interface AgentConfig {
   agent: {
     version: string;
-    workspace_id: string;
+    asset_id?: string | null;
+    workspace_id: string | null;
+    pre_auth_token?: string | null;
     registered: boolean;
   };
   server: {
@@ -47,6 +49,8 @@ function MainView() {
   const [loading, setLoading] = useState(true);
   const [config, setConfig] = useState<AgentConfig | null>(null);
   const [assetId, setAssetId] = useState('');
+  const [workspaceId, setWorkspaceId] = useState('');
+  const [preAuthToken, setPreAuthToken] = useState('');
   const [error, setError] = useState('');
   const [metrics, setMetrics] = useState<SystemMetrics | null>(null);
 
@@ -70,6 +74,9 @@ function MainView() {
       // Override the registered flag with the live check
       conf.agent.registered = isReg;
       setConfig(conf);
+      setAssetId(conf.agent.asset_id || '');
+      setWorkspaceId(conf.agent.workspace_id || '');
+      setPreAuthToken(conf.agent.pre_auth_token || '');
     } catch (err) {
       console.error('Failed to get config:', err);
     } finally {
@@ -95,8 +102,34 @@ function MainView() {
       return;
     }
 
+    if (!workspaceId.trim()) {
+      setError('Workspace ID is required');
+      return;
+    }
+
+    if (!preAuthToken.trim()) {
+      setError('Pre-auth token is required');
+      return;
+    }
+
     setLoading(true);
     try {
+      if (!config) {
+        throw new Error('Configuration is not loaded');
+      }
+
+      const newConfig: AgentConfig = {
+        ...config,
+        agent: {
+          ...config.agent,
+          asset_id: assetId.trim(),
+          workspace_id: workspaceId.trim(),
+          pre_auth_token: preAuthToken.trim(),
+        },
+      };
+
+      await invoke('update_config', { newConfig });
+      setConfig(newConfig);
       await invoke('register_agent', { assetId: assetId.trim() });
       await fetchConfig(); // Refresh state post-registration
     } catch (err) {
@@ -130,6 +163,32 @@ function MainView() {
           </div>
 
           <form onSubmit={handleRegister} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-1">
+                Workspace ID
+              </label>
+              <input
+                type="text"
+                value={workspaceId}
+                onChange={(e) => setWorkspaceId(e.target.value)}
+                placeholder="ws_..."
+                className="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-nerve focus:ring-1 focus:ring-nerve"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-1">
+                Pre-Auth Token
+              </label>
+              <input
+                type="password"
+                value={preAuthToken}
+                onChange={(e) => setPreAuthToken(e.target.value)}
+                placeholder="Paste the token from Glanus"
+                className="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-nerve focus:ring-1 focus:ring-nerve"
+              />
+            </div>
+
             <div>
               <label className="block text-sm font-medium text-slate-300 mb-1">
                 Asset ID

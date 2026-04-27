@@ -7,7 +7,15 @@ Wants=network-online.target
 [Service]
 Type=simple
 User=root
-ExecStart=/usr/bin/glanus-agent
+Environment=GLANUS_DAEMON=1
+# Best-effort X11 environment discovery for screen capture / input.
+# Runs *before* the agent and writes DISPLAY / XAUTHORITY into a runtime
+# env file. If no graphical session is active (e.g. server with no X),
+# the file is written empty and the agent runs without capture (the
+# runtime logs an error in that case so it's diagnosable).
+EnvironmentFile=-/run/glanus-agent/x11.env
+ExecStartPre=+/usr/bin/glanus-agent-detect-x11
+ExecStart=/usr/bin/glanus-agent --daemon
 Restart=always
 RestartSec=10
 StandardOutput=journal
@@ -18,7 +26,7 @@ PrivateTmp=true
 NoNewPrivileges=true
 ProtectSystem=strict
 ProtectHome=read-only
-ReadWritePaths=/var/lib/glanus-agent
+ReadWritePaths=/var/lib/glanus-agent /run/glanus-agent
 
 [Install]
 WantedBy=multi-user.target

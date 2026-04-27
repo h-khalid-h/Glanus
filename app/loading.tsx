@@ -1,16 +1,13 @@
-import { SkeletonDashboard } from '@/components/ui/Skeleton';
+import { GlobalLoader } from '@/components/ui/GlobalLoader';
 
 /**
  * Global Loading Page
  *
- * Displayed during page transitions as a loading state.
- * Uses the existing SkeletonDashboard component for consistency.
+ * Single unified loader for site bootstrap and page transitions.
+ * Matches `AuthGuard` and `WorkspaceLayout` loading states so the
+ * user sees one consistent loader on reload instead of a cascade of
+ * skeletons / spinners.
  */
-
 export default function Loading() {
-    return (
-        <div className="min-h-screen bg-background p-6 lg:p-8 animate-fade-in">
-            <SkeletonDashboard />
-        </div>
-    );
+    return <GlobalLoader />;
 }

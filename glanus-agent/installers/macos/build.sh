@@ -30,6 +30,10 @@ mkdir -p "$BUILD_DIR/Applications"
 cp -R "../../src-tauri/target/universal-apple-darwin/release/bundle/macos/Glanus Agent.app" \
      "$BUILD_DIR/Applications/"
 
+# Bundle installer resources that postinstall expects to find inside the app.
+cp "./com.glanus.agent.plist" \
+    "$BUILD_DIR/Applications/Glanus Agent.app/Contents/Resources/com.glanus.agent.plist"
+
 # Step 3: Build component package
 echo -e "\n[3/5] Building component package..."
 pkgbuild --root "$BUILD_DIR" \
@@ -41,7 +45,8 @@ pkgbuild --root "$BUILD_DIR" \
 
 # Step 4: Build product package
 echo -e "\n[4/5] Building product package..."
-productbuild --distribution ./distribution.xml \
+sed "s/version=\"0.0.0\"/version=\"$VERSION\"/" ./distribution.xml > "$BUILD_DIR/distribution.xml"
+productbuild --distribution "$BUILD_DIR/distribution.xml" \
              --package-path . \
              "glanus-agent-$VERSION-unsigned.pkg"
 
@@ -49,7 +54,7 @@ productbuild --distribution ./distribution.xml \
 echo -e "\n[5/5] Signing package..."
 
 if [ -n "$APPLE_DEVELOPER_ID" ]; then
-    productsign --sign "Developer ID Installer: $APPLE_DEVELOPER_ID" \
+    productsign --sign "$APPLE_DEVELOPER_ID" \
                  "glanus-agent-$VERSION-unsigned.pkg" \
                  "glanus-agent-$VERSION.pkg"
     
@@ -63,6 +68,8 @@ if [ -n "$APPLE_DEVELOPER_ID" ]; then
             --password "$APPLE_ID_PASSWORD" \
             --team-id "$APPLE_TEAM_ID" \
             --wait
+
+        xcrun stapler staple "glanus-agent-$VERSION.pkg"
         
         echo "✓ Notarization complete"
     else

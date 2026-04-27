@@ -4,22 +4,26 @@ import { withErrorHandler, requireAgentContext, runWithWorkspaceRLS } from '@/li
 import { z } from 'zod';
 import { AgentService } from '@/lib/services/AgentService';
 import { withRateLimit } from '@/lib/security/rateLimit';
+import { hashAgentToken } from '@/lib/security/agent-auth';
 
+// NOTE: Use `.nullish()` (accepts null | undefined) — the Rust agent serializes
+// Option<T> fields as explicit `null` (no skip_serializing_if), which plain
+// `.optional()` would reject with a 400.
 const commandResultSchema = z.object({
     authToken: z.string(),
     executionId: z.string(),
     status: z.enum(['completed', 'failed', 'timeout']),
-    exitCode: z.number().optional(),
-    output: z.string().optional(),
-    error: z.string().optional(),
-    duration: z.number().optional(),
+    exitCode: z.number().int().nullish(),
+    output: z.string().max(1_000_000).nullish(),
+    error: z.string().max(100_000).nullish(),
+    duration: z.number().nullish(),
 });
 
 export const POST = withErrorHandler(async (request: NextRequest) => {
-    const rateLimitResponse = await withRateLimit(request, 'agent');
+    const data = commandResultSchema.parse(await request.json());
+    const rateLimitResponse = await withRateLimit(request, 'agent', `agent:${hashAgentToken(data.authToken)}`);
     if (rateLimitResponse) return rateLimitResponse;
 
-    const data = commandResultSchema.parse(await request.json());
     const agent = await requireAgentContext(data.authToken);
     await runWithWorkspaceRLS(
         agent.workspaceId,

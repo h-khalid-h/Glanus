@@ -5,11 +5,6 @@
     <domains enable_localSystem="true"/>
     <options customize="never" require-scripts="true" rootVolumeOnly="true" />
     
-    <!-- Define documents displayed at various steps -->
-    <welcome    file="welcome.html"    mime-type="text/html" />
-    <license    file="license.html"   mime-type="text/html" />
-    <conclusion file="conclusion.html" mime-type="text/html" />
-    
     <!-- List all component packages -->
     <pkg-ref id="com.glanus.agent"
              version="0.0.0"

@@ -176,6 +176,27 @@ export async function middleware(request: NextRequest) {
 
     // 1. Authentication Check (Defense-in-Depth)
     if (!isPublicPath(pathname)) {
+        // Agent bearer-token bypass for dual-auth signaling routes.
+        // `/api/remote/sessions/:id/signaling` accepts either a user session
+        // cookie or an agent bearer token (see `resolveSignalingCaller`).
+        // `/api/remote/ice-servers` is fetched by both the browser viewer
+        // (cookie-authed) and the Rust agent (Bearer) so it must accept the
+        // same dual auth — without this bypass the agent gets 401 from the
+        // middleware before its handler can validate the token, and the
+        // peer connection ends up with zero ICE servers (host candidates
+        // only) which fails on any non-LAN network.
+        // Middleware only sees NextAuth JWTs, so a pure-agent request would
+        // be 401'd here before the route's dual-auth can run. Let Bearer-only
+        // requests through; the route handler re-validates via the RBAC /
+        // agent-token check and enforces scoping to the agent's asset.
+        const isSignalingRoute = /^\/api\/remote\/sessions\/[^/]+\/signaling$/.test(pathname);
+        const isIceServersRoute = pathname === '/api/remote/ice-servers';
+        const authHeader = request.headers.get('Authorization');
+        const hasBearer = !!authHeader && authHeader.startsWith('Bearer ');
+        if ((isSignalingRoute || isIceServersRoute) && hasBearer) {
+            return NextResponse.next();
+        }
+
         const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
 
         if (!token) {
