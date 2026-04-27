@@ -151,7 +151,6 @@ async fn handle_session(
     let ice_handle = peer.ice_handle();
 
     // Apply any ICE candidates the viewer already produced before our answer.
-    let mut applied = 0usize;
     for c in &ice_candidates {
         if c.get("source").and_then(Value::as_str) == Some("agent") {
             continue;
@@ -160,7 +159,7 @@ async fn handle_session(
             log::debug!("remote_desktop: skip remote ICE: {e:#}");
         }
     }
-    applied = ice_candidates.len();
+    let applied = ice_candidates.len();
 
     // ── Trickle-ICE poller ─────────────────────────────────────────────
     // The viewer continues to push ICE candidates after the offer. Poll
@@ -207,7 +206,9 @@ async fn handle_session(
     // ── Capture + encode task ────────────────────────────────────────
     // We own the capture driver in a blocking thread (X11 sync API) and
     // hand frames to the encoder sink through a bounded channel.
-    let (frame_tx, mut frame_rx) = tokio::sync::mpsc::channel::<capture::Frame>(2);
+    // `frame_rx` is moved (consumed) by encoder::spawn below — no `mut`
+    // needed at this binding because ownership transfer is the mutation.
+    let (frame_tx, frame_rx) = tokio::sync::mpsc::channel::<capture::Frame>(2);
 
     // Capture task — blocking, runs on a dedicated thread.
     let capture_handle = tokio::task::spawn_blocking(move || -> Result<()> {

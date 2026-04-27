@@ -13,7 +13,6 @@
 use std::sync::Arc;
 use std::time::Duration;
 
-use anyhow::Result;
 use bytes::Bytes;
 use tokio::sync::mpsc;
 use vpx_encode::{Config, Encoder, VideoCodecId};

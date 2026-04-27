@@ -12,6 +12,13 @@ use serde::Deserialize;
 
 /// Wire format for viewer → agent input events. Field names match the
 /// frontend (`RemoteDesktopViewer`).
+///
+/// The `x`/`y` fields on MouseDown/MouseUp/Click are accepted from the
+/// wire for forward compatibility but currently unused — the cursor is
+/// positioned via MouseMove immediately before the click, so libxdo only
+/// needs the button. Kept on the type so the deserialiser doesn't reject
+/// the viewer's payload shape.
+#[allow(dead_code)]
 #[derive(Debug, Deserialize)]
 #[serde(tag = "type", rename_all = "lowercase")]
 pub enum InputEvent {

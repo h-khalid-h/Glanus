@@ -305,6 +305,11 @@ impl PeerSession {
     }
 
     /// Feed a remote ICE candidate (from the viewer) into the connection.
+    ///
+    /// Currently the runtime calls `IceHandle::add_remote_ice` instead
+    /// (a clone-friendly handle), so this method is only used by tests
+    /// and external embedders. Kept public for that reason.
+    #[allow(dead_code)]
     pub async fn add_remote_ice(&self, candidate: Value) -> Result<()> {
         // The browser may send candidates as `{candidate, sdpMid, sdpMLineIndex}`
         // or as full RTCIceCandidate. `RTCIceCandidateInit` deserialises both.
