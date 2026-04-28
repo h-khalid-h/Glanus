@@ -204,19 +204,58 @@ impl AgentConfig {
 
         #[cfg(not(target_os = "linux"))]
         {
-            let config_dir = if cfg!(target_os = "macos") {
-                dirs::home_dir()
+            if cfg!(target_os = "macos") {
+                const SYSTEM_DIR: &str = "/Library/Application Support/Glanus";
+                let system_path = PathBuf::from(SYSTEM_DIR).join("config.toml");
+                let system_usable = match std::fs::metadata(SYSTEM_DIR) {
+                    Ok(meta) if meta.is_dir() => {
+                        let probe = PathBuf::from(SYSTEM_DIR).join(".glanus-write-probe");
+                        match std::fs::OpenOptions::new().create(true).write(true).truncate(true).open(&probe) {
+                            Ok(_) => { let _ = std::fs::remove_file(&probe); true }
+                            Err(_) => false,
+                        }
+                    }
+                    _ => std::fs::create_dir_all(SYSTEM_DIR).is_ok()
+                };
+
+                if system_usable {
+                    return Ok(system_path);
+                }
+
+                let user_dir = dirs::home_dir()
                     .ok_or_else(|| anyhow::anyhow!("Could not find home directory"))?
-                    .join("Library/Application Support/Glanus")
+                    .join("Library/Application Support/Glanus");
+                std::fs::create_dir_all(&user_dir)?;
+                return Ok(user_dir.join("config.toml"));
             } else {
                 // Windows
-                dirs::config_dir()
-                    .ok_or_else(|| anyhow::anyhow!("Could not find config directory"))?
-                    .join("Glanus")
-            };
+                // Use ProgramData for system-wide configuration
+                let program_data = std::env::var("ProgramData")
+                    .unwrap_or_else(|_| "C:\\ProgramData".to_string());
+                let system_dir = PathBuf::from(program_data).join("Glanus");
+                let system_path = system_dir.join("config.toml");
+                
+                let system_usable = match std::fs::metadata(&system_dir) {
+                    Ok(meta) if meta.is_dir() => {
+                        let probe = system_dir.join(".glanus-write-probe");
+                        match std::fs::OpenOptions::new().create(true).write(true).truncate(true).open(&probe) {
+                            Ok(_) => { let _ = std::fs::remove_file(&probe); true }
+                            Err(_) => false,
+                        }
+                    }
+                    _ => std::fs::create_dir_all(&system_dir).is_ok()
+                };
 
-            std::fs::create_dir_all(&config_dir)?;
-            Ok(config_dir.join("config.toml"))
+                if system_usable {
+                    return Ok(system_path);
+                }
+
+                let user_dir = dirs::config_dir()
+                    .ok_or_else(|| anyhow::anyhow!("Could not find config directory"))?
+                    .join("Glanus");
+                std::fs::create_dir_all(&user_dir)?;
+                return Ok(user_dir.join("config.toml"));
+            }
         }
     }
 
