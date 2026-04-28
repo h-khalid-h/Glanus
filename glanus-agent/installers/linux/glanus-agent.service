@@ -26,7 +26,19 @@ PrivateTmp=true
 NoNewPrivileges=true
 ProtectSystem=strict
 ProtectHome=read-only
-ReadWritePaths=/var/lib/glanus-agent /run/glanus-agent
+# RuntimeDirectory + StateDirectory tell systemd to (re)create these
+# paths on every start and chown them to the unit's User=. Using
+# ReadWritePaths= here previously caused a 226/NAMESPACE failure on
+# fresh installs and reboots because /run is tmpfs and /run/glanus-agent
+# did not yet exist when systemd was setting up the mount namespace.
+# RuntimeDirectoryPreserve=yes keeps /run/glanus-agent across restarts
+# of the unit (but not across reboots — tmpfs semantics) so the
+# ExecStartPre-written x11.env survives a Restart=always cycle.
+RuntimeDirectory=glanus-agent
+RuntimeDirectoryMode=0755
+RuntimeDirectoryPreserve=yes
+StateDirectory=glanus-agent
+StateDirectoryMode=0750
 
 [Install]
 WantedBy=multi-user.target

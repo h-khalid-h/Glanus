@@ -95,13 +95,22 @@ export class WebRTCClient {
         });
 
         // Fallback — some negotiations (Rust webrtc-rs is one) yield a
-        // `track` event without an accompanying `stream` event. Wrap the
-        // lone track in a fresh MediaStream so the <video> element still
-        // gets something to render.
+        // `track` event without an accompanying `stream` event. Accumulate
+        // tracks into a single stream so we don't accidentally replace the
+        // video track with an audio track if they arrive separately.
+        let fallbackStream: MediaStream | null = null;
         this.peer.on('track', (track: MediaStreamTrack, stream: MediaStream) => {
             console.debug('[WebRTC] Remote track received', track.kind, track.id, 'via stream:', stream?.id ?? '(none)');
-            const wrapped = stream && stream.getTracks().length > 0 ? stream : new MediaStream([track]);
-            this.onStream?.(wrapped);
+            if (stream && stream.getTracks().length > 0) {
+                this.onStream?.(stream);
+            } else {
+                if (!fallbackStream) fallbackStream = new MediaStream();
+                // Ensure we don't add the same track twice
+                if (!fallbackStream.getTracks().find(t => t.id === track.id)) {
+                    fallbackStream.addTrack(track);
+                }
+                this.onStream?.(fallbackStream);
+            }
         });
 
         this.peer.on('data', (data) => {

@@ -12,11 +12,12 @@ import { hashAgentToken } from '@/lib/security/agent-auth';
 const commandResultSchema = z.object({
     authToken: z.string(),
     executionId: z.string(),
-    status: z.enum(['completed', 'failed', 'timeout']),
+    success: z.boolean(),
     exitCode: z.number().int().nullish(),
-    output: z.string().max(1_000_000).nullish(),
-    error: z.string().max(100_000).nullish(),
-    duration: z.number().nullish(),
+    stdout: z.string().max(1_000_000).nullish(),
+    stderr: z.string().max(100_000).nullish(),
+    startedAt: z.number(),
+    finishedAt: z.number(),
 });
 
 export const POST = withErrorHandler(async (request: NextRequest) => {

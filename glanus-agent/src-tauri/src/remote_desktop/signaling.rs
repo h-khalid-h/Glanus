@@ -32,6 +32,14 @@ pub struct ActiveSession {
         deserialize_with = "deserialize_null_as_empty_vec"
     )]
     pub ice_candidates: Vec<Value>,
+    /// Backend-authoritative read-only flag. When true, the runtime swaps
+    /// the platform input driver for the no-op driver so input events
+    /// arriving on the data channel are silently discarded — even a
+    /// compromised viewer cannot inject input. Defaults to false for
+    /// backwards compatibility with older backends that do not send this
+    /// field.
+    #[serde(rename = "viewOnly", default)]
+    pub view_only: bool,
 }
 
 fn deserialize_null_as_empty_vec<'de, D>(deserializer: D) -> Result<Vec<Value>, D::Error>

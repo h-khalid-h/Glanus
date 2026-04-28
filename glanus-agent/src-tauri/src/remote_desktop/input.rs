@@ -28,10 +28,27 @@ pub enum InputEvent {
     #[serde(rename = "mouseup")]
     MouseUp { x: i32, y: i32, button: MouseButton },
     Click { x: i32, y: i32, button: MouseButton },
+    /// Wheel / trackpad scroll. `delta_x`/`delta_y` are pixel-normalised
+    /// (the viewer collapses DOM_DELTA_LINE / DOM_DELTA_PAGE). Positive
+    /// `delta_y` matches `WheelEvent.deltaY` — content scrolls down. The
+    /// platform driver converts to the local step convention.
+    #[serde(alias = "wheel")]
+    Scroll {
+        #[serde(default)]
+        x: i32,
+        #[serde(default)]
+        y: i32,
+        #[serde(rename = "deltaX", default)]
+        delta_x: i32,
+        #[serde(rename = "deltaY", default)]
+        delta_y: i32,
+    },
     #[serde(rename = "keydown")]
     KeyDown { key: String },
     #[serde(rename = "keyup")]
     KeyUp { key: String },
+    #[serde(rename = "request_keyframe")]
+    RequestKeyframe,
 }
 
 #[derive(Debug, Deserialize)]
@@ -120,6 +137,12 @@ pub mod x11 {
 
     impl XdoInput {
         pub fn new() -> Result<Self> {
+            if let Ok(session_type) = std::env::var("XDG_SESSION_TYPE") {
+                if session_type.to_lowercase() == "wayland" {
+                    log::warn!("libxdo: Running on Wayland. X11 input injection may fail. Full Wayland support is planned.");
+                }
+            }
+
             let xdo = XDo::new(None).context("libxdo: failed to initialise")?;
             Ok(Self { xdo })
         }
@@ -152,22 +175,56 @@ pub mod x11 {
                         .click(button.to_x11())
                         .context("libxdo: click failed")?;
                 }
+                InputEvent::Scroll { delta_x, delta_y, .. } => {
+                    // X11 encodes wheel events as synthetic button clicks:
+                    //   4 = wheel up      (negative deltaY)
+                    //   5 = wheel down    (positive deltaY)
+                    //   6 = wheel left    (negative deltaX)
+                    //   7 = wheel right   (positive deltaX)
+                    // One step = ~120 px in browser deltaY units (the
+                    // de-facto WheelEvent line-height). Clamp to a sane
+                    // upper bound so a runaway trackpad gesture cannot
+                    // pin the input thread emitting thousands of clicks.
+                    const STEP: i32 = 120;
+                    const MAX_STEPS: i32 = 20;
+                    if delta_y != 0 {
+                        let button = if delta_y < 0 { 4 } else { 5 };
+                        let steps = ((delta_y.abs() + STEP / 2) / STEP).clamp(1, MAX_STEPS);
+                        for _ in 0..steps {
+                            self.xdo
+                                .click(button)
+                                .context("libxdo: scroll click failed")?;
+                        }
+                    }
+                    if delta_x != 0 {
+                        let button = if delta_x < 0 { 6 } else { 7 };
+                        let steps = ((delta_x.abs() + STEP / 2) / STEP).clamp(1, MAX_STEPS);
+                        for _ in 0..steps {
+                            self.xdo
+                                .click(button)
+                                .context("libxdo: scroll click failed")?;
+                        }
+                    }
+                }
                 InputEvent::KeyDown { key } => {
                     // `libxdo` accepts X keysyms and arbitrary strings. We
                     // pass through verbatim — basic sanitization only. For
                     // modifier combos like "ctrl+c" the viewer should emit a
                     // sequence of KeyDown/KeyUp events instead of one combo.
-                    let sanitized = sanitize_key(&key);
+                    let translated = dom_key_to_x11_keysym(&key);
+                    let sanitized = sanitize_key(&translated);
                     self.xdo
                         .send_keysequence_down(&sanitized, 0)
                         .context("libxdo: send_keysequence_down failed")?;
                 }
                 InputEvent::KeyUp { key } => {
-                    let sanitized = sanitize_key(&key);
+                    let translated = dom_key_to_x11_keysym(&key);
+                    let sanitized = sanitize_key(&translated);
                     self.xdo
                         .send_keysequence_up(&sanitized, 0)
                         .context("libxdo: send_keysequence_up failed")?;
                 }
+                InputEvent::RequestKeyframe => {}
             }
             Ok(())
         }
@@ -177,26 +234,62 @@ pub mod x11 {
     /// libxdo interprets `+` as a modifier separator, so single printable
     /// characters get translated to their libxdo-friendly form.
     fn sanitize_key(key: &str) -> String {
-        // Keep a permissive allowlist: letters, digits, and well-known key names.
-        // xdotool accepts names like "Return", "Escape", "Left", "a", "A", "1".
-        if key.len() == 1 {
+        // Single printable character is fine as-is.
+        if key.chars().count() == 1 {
             return key.to_string();
         }
-        // Whitelist of commonly-named non-printables. Anything else falls back
-        // to the literal string and libxdo will reject unknown tokens safely.
+        // Allowlist of X11 keysyms we know libxdo accepts. Anything outside
+        // this list falls back to a stripped literal — libxdo will reject
+        // unknown tokens cleanly without injecting unintended chord input.
         const KNOWN: &[&str] = &[
             "Return", "Enter", "Escape", "Tab", "BackSpace", "Delete",
-            "Home", "End", "Page_Up", "Page_Down",
+            "Home", "End", "Page_Up", "Page_Down", "Insert",
             "Left", "Right", "Up", "Down",
-            "space", "Shift_L", "Shift_R", "Control_L", "Control_R",
-            "Alt_L", "Alt_R", "Super_L", "Super_R",
+            "space", "Caps_Lock",
+            "Shift_L", "Shift_R", "Control_L", "Control_R",
+            "Alt_L", "Alt_R", "Super_L", "Super_R", "Meta_L", "Meta_R",
             "F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12",
+            "F13", "F14", "F15", "F16", "F17", "F18", "F19", "F20",
         ];
         if KNOWN.iter().any(|k| k.eq_ignore_ascii_case(key)) {
             return key.to_string();
         }
-        // Strip dangerous separators; libxdo will reject unknown tokens.
         key.replace('+', "").replace(' ', "")
+    }
+
+    /// Translate a DOM `KeyboardEvent.key` value (what the browser viewer
+    /// sends) into the closest X11 keysym name libxdo understands.
+    /// Returns the input unchanged for anything we don't recognise — the
+    /// `sanitize_key` step then either accepts it (single char) or
+    /// scrubs it. Single-character keys pass through untouched so case
+    /// and unicode characters reach `send_keysequence_*` verbatim.
+    fn dom_key_to_x11_keysym(key: &str) -> String {
+        if key.chars().count() == 1 {
+            return key.to_string();
+        }
+        match key {
+            "Enter" => "Return",
+            "Backspace" => "BackSpace",
+            "Esc" => "Escape",
+            "PageUp" => "Page_Up",
+            "PageDown" => "Page_Down",
+            "ArrowUp" => "Up",
+            "ArrowDown" => "Down",
+            "ArrowLeft" => "Left",
+            "ArrowRight" => "Right",
+            " " => "space",
+            "Spacebar" => "space",
+            "CapsLock" => "Caps_Lock",
+            // Modifiers — DOM doesn't distinguish left/right unless
+            // `KeyboardEvent.location` is consulted. Default to the left
+            // variant, which is what xdotool also defaults to.
+            "Shift" => "Shift_L",
+            "Control" | "Ctrl" => "Control_L",
+            "Alt" => "Alt_L",
+            "Meta" | "OS" | "Super" | "Command" | "Windows" => "Super_L",
+            other => other,
+        }
+        .to_string()
     }
 }
 
@@ -213,7 +306,9 @@ pub mod enigo_driver {
 
     use super::{InputControl, InputEvent, MouseButton};
     use anyhow::{Context, Result};
-    use enigo::{Button as EButton, Coordinate, Direction, Enigo, Key, Keyboard, Mouse, Settings};
+    use enigo::{
+        Axis, Button as EButton, Coordinate, Direction, Enigo, Key, Keyboard, Mouse, Settings,
+    };
 
     pub struct EnigoInput {
         enigo: Enigo,
@@ -232,6 +327,66 @@ pub mod enigo_driver {
                 MouseButton::Middle => EButton::Middle,
                 MouseButton::Right => EButton::Right,
             }
+        }
+
+        /// Translate a DOM `KeyboardEvent.key` value into an enigo `Key`.
+        ///
+        /// DOM `.key` is already user-locale aware: for printable input it
+        /// is the produced character (e.g. "A", "ç", "1"), and for non-
+        /// printables it is a well-defined name (e.g. "Enter", "Escape",
+        /// "ArrowUp", "F5"). We map the named values to enigo's `Key`
+        /// variants and route single characters through `Key::Unicode`.
+        ///
+        /// Returns `None` for keys we deliberately don't forward (dead
+        /// keys, IME composition events). The caller drops them silently.
+        fn parse_key(key: &str) -> Option<Key> {
+            // Single character → Unicode (covers letters, digits, punct,
+            // emoji). NB: enigo on Windows synthesises VK + scan codes for
+            // ASCII and uses WM_CHAR for the rest; either way the modifier
+            // state from a preceding KeyDown(Shift) is honoured.
+            let mut chars = key.chars();
+            if let (Some(c), None) = (chars.next(), chars.next()) {
+                return Some(Key::Unicode(c));
+            }
+            // Named keys. Match case-insensitively because some viewers
+            // normalise to uppercase. Coverage spans the W3C
+            // UIEvents-KeyboardEvent named-key list that real users hit
+            // — we don't bother with media/IME keys.
+            let k = match key {
+                // Editing / navigation
+                "Enter" | "Return" => Key::Return,
+                "Tab" => Key::Tab,
+                "Backspace" => Key::Backspace,
+                "Delete" => Key::Delete,
+                "Escape" | "Esc" => Key::Escape,
+                "Insert" => Key::Insert,
+                "Home" => Key::Home,
+                "End" => Key::End,
+                "PageUp" => Key::PageUp,
+                "PageDown" => Key::PageDown,
+                // Arrows
+                "ArrowUp" | "Up" => Key::UpArrow,
+                "ArrowDown" | "Down" => Key::DownArrow,
+                "ArrowLeft" | "Left" => Key::LeftArrow,
+                "ArrowRight" | "Right" => Key::RightArrow,
+                // Modifiers — "Meta" is the cross-platform name for
+                // Windows-key / Command. enigo maps it correctly per OS.
+                "Shift" => Key::Shift,
+                "Control" | "Ctrl" => Key::Control,
+                "Alt" => Key::Alt,
+                "Meta" | "OS" | "Super" | "Command" | "Windows" => Key::Meta,
+                "CapsLock" => Key::CapsLock,
+                // Function row
+                "F1" => Key::F1,   "F2" => Key::F2,   "F3" => Key::F3,
+                "F4" => Key::F4,   "F5" => Key::F5,   "F6" => Key::F6,
+                "F7" => Key::F7,   "F8" => Key::F8,   "F9" => Key::F9,
+                "F10" => Key::F10, "F11" => Key::F11, "F12" => Key::F12,
+                "F13" => Key::F13, "F14" => Key::F14, "F15" => Key::F15,
+                "F16" => Key::F16, "F17" => Key::F17, "F18" => Key::F18,
+                "F19" => Key::F19, "F20" => Key::F20,
+                _ => return None,
+            };
+            Some(k)
         }
     }
 
@@ -260,20 +415,58 @@ pub mod enigo_driver {
                         .button(Self::map_button(&button), Direction::Click)
                         .context("enigo: click failed")?;
                 }
-                InputEvent::KeyDown { key } => {
-                    if let Some(c) = key.chars().next().filter(|_| key.chars().count() == 1) {
+                InputEvent::Scroll { delta_x, delta_y, .. } => {
+                    // enigo's scroll API takes integer "steps". Browser
+                    // `WheelEvent.deltaY` is in pixels; one notch on a
+                    // typical wheel is 100–120 px. Convert with a small
+                    // floor so trackpad micro-deltas don't disappear.
+                    // Sign convention: positive `deltaY` = scroll down,
+                    // and enigo `Axis::Vertical` with positive length
+                    // also scrolls down on every supported platform.
+                    const STEP: i32 = 120;
+                    const MAX_STEPS: i32 = 20;
+                    let dy_steps = if delta_y == 0 {
+                        0
+                    } else {
+                        let mag = ((delta_y.abs() + STEP / 2) / STEP).clamp(1, MAX_STEPS);
+                        mag * delta_y.signum()
+                    };
+                    let dx_steps = if delta_x == 0 {
+                        0
+                    } else {
+                        let mag = ((delta_x.abs() + STEP / 2) / STEP).clamp(1, MAX_STEPS);
+                        mag * delta_x.signum()
+                    };
+                    if dy_steps != 0 {
                         self.enigo
-                            .key(Key::Unicode(c), Direction::Press)
+                            .scroll(dy_steps, Axis::Vertical)
+                            .context("enigo: scroll vertical failed")?;
+                    }
+                    if dx_steps != 0 {
+                        self.enigo
+                            .scroll(dx_steps, Axis::Horizontal)
+                            .context("enigo: scroll horizontal failed")?;
+                    }
+                }
+                InputEvent::KeyDown { key } => {
+                    if let Some(k) = Self::parse_key(&key) {
+                        self.enigo
+                            .key(k, Direction::Press)
                             .context("enigo: key_down failed")?;
+                    } else {
+                        log::debug!("enigo: dropping unmapped key_down '{key}'");
                     }
                 }
                 InputEvent::KeyUp { key } => {
-                    if let Some(c) = key.chars().next().filter(|_| key.chars().count() == 1) {
+                    if let Some(k) = Self::parse_key(&key) {
                         self.enigo
-                            .key(Key::Unicode(c), Direction::Release)
+                            .key(k, Direction::Release)
                             .context("enigo: key_up failed")?;
+                    } else {
+                        log::debug!("enigo: dropping unmapped key_up '{key}'");
                     }
                 }
+                InputEvent::RequestKeyframe => {}
             }
             Ok(())
         }

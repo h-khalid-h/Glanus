@@ -107,12 +107,15 @@ impl CommandQueue {
 
         let verification_result = verify_signed_command(&command);
         let result = if let Err(err) = verification_result {
+            let finished_at = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis() as u64;
+            let started_at = finished_at - start.elapsed().as_millis() as u64;
             ExecutionResult {
-                status: "ERROR".to_string(),
-                output: None,
-                error: Some(err.to_string()),
+                success: false,
+                stdout: "".to_string(),
+                stderr: err.to_string(),
                 exit_code: None,
-                duration_ms: start.elapsed().as_millis() as u64,
+                started_at,
+                finished_at,
             }
         } else {
             match ScriptExecutor::execute(
@@ -121,17 +124,22 @@ impl CommandQueue {
                 None, // Platform does not send timeout; use default
             ).await {
                 Ok(executed) => executed,
-                Err(e) => ExecutionResult {
-                    status: "ERROR".to_string(),
-                    output: None,
-                    error: Some(format!("Execution failed: {}", e)),
-                    exit_code: None,
-                    duration_ms: start.elapsed().as_millis() as u64,
+                Err(e) => {
+                    let finished_at = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis() as u64;
+                    let started_at = finished_at - start.elapsed().as_millis() as u64;
+                    ExecutionResult {
+                        success: false,
+                        stdout: "".to_string(),
+                        stderr: format!("Execution failed: {}", e),
+                        exit_code: None,
+                        started_at,
+                        finished_at,
+                    }
                 },
             }
         };
 
-        log::info!("Command {} finished with status: {}", execution_id, result.status);
+        log::info!("Command {} finished with success: {}", execution_id, result.success);
 
         // Report result to backend. If offline/unreachable, persist locally for replay.
         if let Err(e) = self.report_result(execution_id.clone(), result.clone()).await {
@@ -149,22 +157,16 @@ impl CommandQueue {
             .context("Failed to get auth token")?
             .context("Auth token not found")?;
 
-        // Map agent status values to platform-expected lowercase values
-        let platform_status = match result.status.as_str() {
-            "SUCCESS" => "completed",
-            "ERROR" => "failed",
-            "TIMEOUT" => "timeout",
-            other => other,
-        };
 
         let request = CommandResultRequest {
             auth_token,
             execution_id,
-            status: platform_status.to_string(),
-            output: result.output,
-            error: result.error,
+            success: result.success,
+            stdout: if result.stdout.is_empty() { None } else { Some(result.stdout) },
+            stderr: if result.stderr.is_empty() { None } else { Some(result.stderr) },
             exit_code: result.exit_code,
-            duration: Some(result.duration_ms),
+            started_at: result.started_at,
+            finished_at: result.finished_at,
         };
 
         self.api_client.report_command_result(request)

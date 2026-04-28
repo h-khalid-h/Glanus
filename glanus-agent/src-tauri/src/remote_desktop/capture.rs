@@ -59,6 +59,12 @@ pub mod xcap_driver {
 
     impl XcapCapture {
         pub fn new() -> Result<Self> {
+            if let Ok(session_type) = std::env::var("XDG_SESSION_TYPE") {
+                if session_type.to_lowercase() == "wayland" {
+                    log::warn!("xcap: Running on Wayland. X11 screen capture may fail or return black screens. Full Wayland support is planned.");
+                }
+            }
+
             let monitor = Monitor::all()
                 .context("xcap: failed to enumerate monitors")?
                 .into_iter()

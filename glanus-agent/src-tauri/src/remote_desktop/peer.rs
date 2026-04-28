@@ -48,6 +48,8 @@ pub struct PeerSession {
     connected_once: Arc<std::sync::atomic::AtomicBool>,
     /// Track handle kept alive for the duration of the session.
     _video_track: Arc<TrackLocalStaticSample>,
+    /// Set to true when a RequestKeyframe input event is received.
+    pub force_keyframe: Arc<std::sync::atomic::AtomicBool>,
 }
 
 impl PeerSession {
@@ -213,8 +215,15 @@ impl PeerSession {
         // webrtc callback, we spawn a dedicated task that owns the driver and
         // consumes events from a channel.
         let (input_tx, mut input_rx) = mpsc::unbounded_channel::<InputEvent>();
+        let force_keyframe = Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let force_keyframe_clone = force_keyframe.clone();
+
         tokio::spawn(async move {
             while let Some(ev) = input_rx.recv().await {
+                if matches!(ev, InputEvent::RequestKeyframe) {
+                    force_keyframe_clone.store(true, std::sync::atomic::Ordering::Relaxed);
+                    continue;
+                }
                 if let Err(e) = input_driver.handle(ev) {
                     log::warn!("remote_desktop: input handler error: {e:#}");
                 }
@@ -301,6 +310,7 @@ impl PeerSession {
             events: rx,
             connected_once,
             _video_track: video_track,
+            force_keyframe,
         })
     }
 

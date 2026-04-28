@@ -51,11 +51,12 @@ export interface HeartbeatMetrics {
 export interface CommandResultInput {
     authToken: string;
     executionId: string;
-    status: 'completed' | 'failed' | 'timeout';
+    success: boolean;
     exitCode?: number | null;
-    output?: string | null;
-    error?: string | null;
-    duration?: number | null;
+    stdout?: string | null;
+    stderr?: string | null;
+    startedAt: number;
+    finishedAt: number;
 }
 
 export interface SoftwareItem {
@@ -531,11 +532,12 @@ export class AgentService {
      * Verifies the execution belongs to the authenticated agent.
      */
     static async recordCommandResult(input: CommandResultInput): Promise<void> {
-        const statusMap: Record<string, 'COMPLETED' | 'FAILED' | 'TIMEOUT'> = {
-            completed: 'COMPLETED',
-            failed: 'FAILED',
-            timeout: 'TIMEOUT',
-        };
+        let dbStatus: 'COMPLETED' | 'FAILED' | 'TIMEOUT' = 'FAILED';
+        if (input.success) {
+            dbStatus = 'COMPLETED';
+        } else if (input.stderr && input.stderr.toLowerCase().includes('timed out')) {
+            dbStatus = 'TIMEOUT';
+        }
 
         const hashedToken = hashAgentToken(input.authToken);
         const agent = await prisma.agentConnection.findUnique({
@@ -558,11 +560,12 @@ export class AgentService {
         await prisma.scriptExecution.update({
             where: { id: input.executionId },
             data: {
-                status: statusMap[input.status],
+                status: dbStatus,
                 exitCode: input.exitCode,
-                output: input.output,
-                error: input.error,
-                completedAt: new Date(),
+                output: input.stdout,
+                error: input.stderr,
+                startedAt: new Date(input.startedAt),
+                completedAt: new Date(input.finishedAt),
             },
         });
     }
@@ -749,6 +752,7 @@ export class AgentService {
         offer: unknown;
         answer: unknown;
         iceCandidates: unknown;
+        viewOnly: boolean;
     } | null> {
         const hashedToken = hashAgentToken(authToken);
         const agent = await prisma.agentConnection.findUnique({
@@ -765,9 +769,31 @@ export class AgentService {
         const activeSession = await prisma.remoteSession.findFirst({
             where: { assetId: agent.assetId, status: 'ACTIVE' },
             orderBy: { createdAt: 'desc' },
-            select: { id: true, status: true, offer: true, answer: true, iceCandidates: true },
+            select: {
+                id: true,
+                status: true,
+                offer: true,
+                answer: true,
+                iceCandidates: true,
+                metadata: true,
+            },
         });
+        if (!activeSession) return null;
 
-        return activeSession;
+        // The agent treats `metadata.viewOnly === true` as authoritative —
+        // when true it swaps to a no-op input driver so even a malicious
+        // viewer crafting input frames cannot inject events. Default to
+        // false (full control) if the metadata is missing or malformed.
+        const meta = activeSession.metadata as { viewOnly?: unknown } | null;
+        const viewOnly = meta && meta.viewOnly === true;
+
+        return {
+            id: activeSession.id,
+            status: activeSession.status,
+            offer: activeSession.offer,
+            answer: activeSession.answer,
+            iceCandidates: activeSession.iceCandidates,
+            viewOnly,
+        };
     }
 }

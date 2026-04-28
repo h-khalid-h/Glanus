@@ -157,17 +157,17 @@ pub struct Command {
 pub struct CommandResultRequest {
     #[serde(rename = "authToken")]
     pub auth_token: String,
-    /// Maps to platform's `executionId` (this is the ScriptExecution ID)
     #[serde(rename = "executionId")]
     pub execution_id: String,
-    /// Platform expects lowercase: "completed", "failed", "timeout"
-    pub status: String,
-    pub output: Option<String>,
-    pub error: Option<String>,
+    pub success: bool,
     #[serde(rename = "exitCode")]
     pub exit_code: Option<i32>,
-    /// Execution duration in milliseconds
-    pub duration: Option<u64>,
+    pub stdout: Option<String>,
+    pub stderr: Option<String>,
+    #[serde(rename = "startedAt")]
+    pub started_at: u64,
+    #[serde(rename = "finishedAt")]
+    pub finished_at: u64,
 }
 
 // ============================================

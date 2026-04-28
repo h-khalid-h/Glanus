@@ -41,6 +41,7 @@ const FRAME_DURATION: Duration = Duration::from_millis(33);
 pub fn spawn(
     mut frame_rx: mpsc::Receiver<Frame>,
     track: Arc<TrackLocalStaticSample>,
+    force_keyframe: Arc<std::sync::atomic::AtomicBool>,
 ) -> tokio::task::JoinHandle<()> {
     tokio::task::spawn_blocking(move || {
         let rt = tokio::runtime::Handle::current();
@@ -68,7 +69,9 @@ pub fn spawn(
                 continue;
             }
 
-            if dims != (w, h) {
+            let force = force_keyframe.swap(false, std::sync::atomic::Ordering::Relaxed);
+
+            if dims != (w, h) || force {
                 log::info!(
                     "remote_desktop: (re)initialising VP8 encoder at {}x{} @ {}kbps",
                     w, h, TARGET_BITRATE_KBPS

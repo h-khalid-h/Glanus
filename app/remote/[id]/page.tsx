@@ -12,6 +12,12 @@ interface RemoteSession {
     status: string;
     startedAt: string;
     quality?: string;
+    /**
+     * Backend-authoritative session metadata. `metadata.viewOnly === true`
+     * disables input transmission in the viewer (and the agent enforces
+     * the same flag independently — defense in depth).
+     */
+    metadata?: { viewOnly?: boolean } | null;
     asset: {
         id: string;
         name: string;
@@ -349,6 +355,7 @@ export default function ActiveSessionPage() {
                             <RemoteDesktopViewer
                                 sessionId={session.id}
                                 isHost={false} // For now, assume viewer role
+                                viewOnly={session.metadata?.viewOnly === true}
                                 onError={(error) => console.error('[Page] Error:', error)}
                             />
                         );

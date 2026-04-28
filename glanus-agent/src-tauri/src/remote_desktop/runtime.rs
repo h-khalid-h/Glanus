@@ -121,16 +121,27 @@ async fn handle_session(
         id,
         offer,
         ice_candidates,
+        view_only,
     } = session;
 
     let offer = offer.ok_or_else(|| anyhow::anyhow!("session has no offer"))?;
     let offer: RTCSessionDescription =
         serde_json::from_value(offer).context("malformed remote offer")?;
 
-    log::info!("remote_desktop: accepting offer for session {id}");
+    log::info!(
+        "remote_desktop: accepting offer for session {id} (view_only={view_only})"
+    );
 
-    let input_driver = input::default_driver()
-        .context("remote_desktop: failed to initialise input driver")?;
+    // The agent is the authoritative enforcer of view-only — the viewer's
+    // UI gating is convenience-only, a determined client could still craft
+    // input frames. When `view_only` is set we swap to the no-op driver so
+    // every InputEvent that lands on the data channel is silently dropped.
+    let input_driver: Box<dyn input::InputControl> = if view_only {
+        Box::new(input::NoopInput::new())
+    } else {
+        input::default_driver()
+            .context("remote_desktop: failed to initialise input driver")?
+    };
     log::info!("remote_desktop: input driver = {}", input_driver.name());
 
     // Fetch ICE servers (STUN + TURN) from the backend before negotiating.
@@ -277,7 +288,7 @@ async fn handle_session(
 
     // Encoder sink task — VP8 via libvpx, pushes samples directly onto
     // the outbound video track so webrtc-rs handles RTP packetisation.
-    let encoder_handle = encoder::spawn(frame_rx, peer.video_track());
+    let encoder_handle = encoder::spawn(frame_rx, peer.video_track(), peer.force_keyframe.clone());
 
     // ── Main event loop: pump PeerEvents into the signaling client ──
     let mut final_status: Option<&'static str> = None;

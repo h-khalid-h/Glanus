@@ -7,6 +7,13 @@ import { csrfFetch } from '@/lib/api/csrfFetch';
 interface RemoteDesktopViewerProps {
     sessionId: string;
     isHost: boolean; // Host shares screen, client views
+    /**
+     * Read-only viewing — input events are not captured or transmitted.
+     * Set from the session payload (server side authoritative). Defaults
+     * to false for backwards compatibility with sessions created before
+     * the flag existed.
+     */
+    viewOnly?: boolean;
     onConnect?: () => void;
     onDisconnect?: () => void;
     onError?: (error: Error) => void;
@@ -15,6 +22,7 @@ interface RemoteDesktopViewerProps {
 export function RemoteDesktopViewer({
     sessionId,
     isHost,
+    viewOnly = false,
     onConnect,
     onDisconnect,
     onError,
@@ -25,6 +33,16 @@ export function RemoteDesktopViewer({
     const [connected, setConnected] = useState(false);
     const [metrics, setMetrics] = useState<ConnectionMetrics | null>(null);
     const [error, setError] = useState<string | null>(null);
+    // User-facing kill-switch. When false, no input is transmitted even if
+    // we're connected and the session is not view-only. Re-arms with the
+    // toolbar toggle / Ctrl+Alt+Pause. View-only sessions force this off.
+    const [controlEnabled, setControlEnabled] = useState<boolean>(!viewOnly);
+    // Latest pending mousemove, flushed once per animation frame. The raw
+    // `mousemove` DOM event fires per pixel of motion (often >500 Hz on
+    // high-DPI mice), which floods the SCTP data channel and starves the
+    // RTP video pipe — coalescing to ~60 Hz keeps latency low.
+    const pendingMouseMove = useRef<{ x: number; y: number } | null>(null);
+    const mouseMoveRaf = useRef<number | null>(null);
 
     useEffect(() => {
         // The peer is constructed AFTER we resolve ICE servers from the
@@ -113,6 +131,7 @@ export function RemoteDesktopViewer({
         peer.onStream = (stream) => {
             if (videoRef.current) {
                 videoRef.current.srcObject = stream;
+                videoRef.current.play().catch(e => console.warn('[Viewer] Autoplay blocked:', e));
             }
         };
 
@@ -172,7 +191,7 @@ export function RemoteDesktopViewer({
         //     actionable error so the operator can retry the session.
         const pc = peer.getPeerConnection();
         if (pc) {
-            pc.oniceconnectionstatechange = () => {
+            pc.addEventListener('iceconnectionstatechange', () => {
                 const state = pc.iceConnectionState;
                 console.debug('[Viewer] iceConnectionState ->', state);
 
@@ -206,7 +225,7 @@ export function RemoteDesktopViewer({
                 if (state === 'failed') {
                     triggerIceRecovery();
                 }
-            };
+            });
 
             const triggerIceRecovery = () => {
                 if (iceRecoveryTimer.current) return; // already recovering
@@ -338,37 +357,151 @@ export function RemoteDesktopViewer({
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [sessionId, isHost]);
 
-    // Input handlers for the CLIENT
-    const handleMouseEvent = (e: React.MouseEvent, type: string) => {
-        if (!client || !connected || isHost || !videoRef.current) return;
+    // Force-disable control if the session becomes view-only after mount
+    // (e.g. server flips the flag mid-session). Cannot re-enable from the
+    // client; the prop is authoritative.
+    useEffect(() => {
+        if (viewOnly && controlEnabled) setControlEnabled(false);
+    }, [viewOnly, controlEnabled]);
 
+    // Input handlers for the CLIENT
+    const inputAllowed = client !== null && connected && !isHost && !viewOnly && controlEnabled;
+
+    // Monitor for decoding stalls (0 FPS) and request a keyframe from the agent
+    useEffect(() => {
+        if (!connected || isHost || !client || !metrics) return;
+        if (metrics.fps === 0) {
+            console.log('[Viewer] 0 FPS detected, requesting keyframe from agent...');
+            client.sendData({ type: 'request_keyframe' });
+        }
+    }, [connected, isHost, client, metrics]);
+
+    const getTargetCoordinates = (clientX: number, clientY: number) => {
+        if (!videoRef.current || !videoRef.current.videoWidth) return null;
         const rect = videoRef.current.getBoundingClientRect();
-        // Calculate relative coordinate based on native video resolution vs CSS bounded box
-        const scaleX = videoRef.current.videoWidth / rect.width;
-        const scaleY = videoRef.current.videoHeight / rect.height;
+        const videoRatio = videoRef.current.videoWidth / videoRef.current.videoHeight;
+        const elementRatio = rect.width / rect.height;
+
+        let renderedWidth = rect.width;
+        let renderedHeight = rect.height;
+
+        if (elementRatio > videoRatio) {
+            renderedWidth = rect.height * videoRatio;
+        } else {
+            renderedHeight = rect.width / videoRatio;
+        }
+
+        const offsetX = (rect.width - renderedWidth) / 2;
+        const offsetY = (rect.height - renderedHeight) / 2;
+
+        const scaleX = videoRef.current.videoWidth / renderedWidth;
+        const scaleY = videoRef.current.videoHeight / renderedHeight;
+
+        const x = Math.round((clientX - rect.left - offsetX) * scaleX);
+        const y = Math.round((clientY - rect.top - offsetY) * scaleY);
+
+        if (x < 0 || x > videoRef.current.videoWidth || y < 0 || y > videoRef.current.videoHeight) {
+            return null;
+        }
+        return { x, y };
+    };
+
+    const sendMouseAt = (clientX: number, clientY: number, type: string, button: string) => {
+        if (!client) return;
+        const coords = getTargetCoordinates(clientX, clientY);
+        if (!coords) return;
+        client.sendData({ type, x: coords.x, y: coords.y, button });
+    };
+
+    const handleMouseEvent = (e: React.MouseEvent, type: string) => {
+        if (!inputAllowed || !videoRef.current) return;
 
         let button = 'left';
         if (e.button === 1) button = 'middle';
         if (e.button === 2) button = 'right';
 
-        const payload = {
-            type,
-            x: Math.round((e.clientX - rect.left) * scaleX),
-            y: Math.round((e.clientY - rect.top) * scaleY),
-            button
-        };
-        client.sendData(payload);
+        if (type === 'mousemove') {
+            // Coalesce per animation frame. The latest position wins;
+            // intermediate motion is dropped on purpose — the agent
+            // tracks the cursor at ~60 Hz, no human notices missing
+            // sub-frame samples.
+            pendingMouseMove.current = { x: e.clientX, y: e.clientY };
+            if (mouseMoveRaf.current !== null) return;
+            mouseMoveRaf.current = requestAnimationFrame(() => {
+                mouseMoveRaf.current = null;
+                const p = pendingMouseMove.current;
+                pendingMouseMove.current = null;
+                if (!p || !inputAllowed) return;
+                sendMouseAt(p.x, p.y, 'mousemove', 'left');
+            });
+            return;
+        }
+
+        sendMouseAt(e.clientX, e.clientY, type, button);
     };
 
     const handleKeyEvent = (e: React.KeyboardEvent, type: string) => {
-        if (!client || !connected || isHost) return;
+        if (!inputAllowed) return;
+
+        // Ctrl+Alt+Pause = local kill-switch (does not reach the remote).
+        // Picked because no real keyboard sends Pause naturally and it
+        // can't trigger inside a typing flow accidentally.
+        if (type === 'keydown' && e.ctrlKey && e.altKey && e.key === 'Pause') {
+            e.preventDefault();
+            setControlEnabled(false);
+            console.warn('[Viewer] Local kill-switch engaged (Ctrl+Alt+Pause)');
+            return;
+        }
 
         e.preventDefault(); // Stop scrolling when hitting spacebar, etc
-        client.sendData({
-            type,
-            key: e.key
-        });
+        if (client) {
+            client.sendData({ type, key: e.key });
+        }
     };
+
+    // `wheel` events have to be captured with a non-passive native listener
+    // — React's synthetic onWheel registers as passive in modern React, so
+    // `preventDefault()` inside the synthetic handler is a no-op and the
+    // browser still scrolls the surrounding page. Attach directly.
+    useEffect(() => {
+        const video = videoRef.current;
+        if (!video) return;
+        const handler = (e: WheelEvent) => {
+            if (!inputAllowed) return;
+            e.preventDefault();
+            if (!client || !videoRef.current) return;
+            const rect = videoRef.current.getBoundingClientRect();
+            const coords = getTargetCoordinates(e.clientX, e.clientY);
+            if (!coords) return;
+            
+            // Normalise deltaMode → pixels. DOM_DELTA_LINE/PAGE happen on
+            // some Linux/Wayland drivers; treat one line as 16px (browser
+            // default) and one page as the video's height.
+            let dx = e.deltaX;
+            let dy = e.deltaY;
+            if (e.deltaMode === 1) { dx *= 16; dy *= 16; }
+            else if (e.deltaMode === 2) { dx *= rect.width; dy *= rect.height; }
+            client.sendData({
+                type: 'scroll',
+                x: coords.x,
+                y: coords.y,
+                deltaX: Math.round(dx),
+                deltaY: Math.round(dy),
+            });
+        };
+        video.addEventListener('wheel', handler, { passive: false });
+        return () => video.removeEventListener('wheel', handler);
+    }, [client, inputAllowed]);
+
+    // Cancel pending coalesced mousemove on unmount/disable.
+    useEffect(() => {
+        if (inputAllowed) return;
+        if (mouseMoveRaf.current !== null) {
+            cancelAnimationFrame(mouseMoveRaf.current);
+            mouseMoveRaf.current = null;
+        }
+        pendingMouseMove.current = null;
+    }, [inputAllowed]);
 
     return (
         <div
@@ -382,11 +515,11 @@ export function RemoteDesktopViewer({
                 ref={videoRef}
                 autoPlay
                 playsInline
+                muted
                 className={`w-full h-full object-contain ${connected && !isHost ? 'block' : 'hidden'}`}
                 onMouseMove={(e) => handleMouseEvent(e, 'mousemove')}
                 onMouseDown={(e) => handleMouseEvent(e, 'mousedown')}
                 onMouseUp={(e) => handleMouseEvent(e, 'mouseup')}
-                onClick={(e) => handleMouseEvent(e, 'click')}
                 onContextMenu={(e) => {
                     e.preventDefault();
                     handleMouseEvent(e, 'mousedown');
@@ -432,6 +565,30 @@ export function RemoteDesktopViewer({
                             </>
                         )}
                     </div>
+                </div>
+            )}
+
+            {/* View-only / kill-switch banner */}
+            {connected && !isHost && (viewOnly || !controlEnabled) && (
+                <div
+                    className="absolute top-4 left-1/2 -translate-x-1/2 bg-amber-500/95 text-amber-950 px-3 py-1.5 rounded-md text-sm font-medium shadow-lg flex items-center gap-2"
+                    role="status"
+                >
+                    <span aria-hidden>👁</span>
+                    <span>
+                        {viewOnly
+                            ? 'View-only — input is disabled for this session'
+                            : 'Control released (Ctrl+Alt+Pause)'}
+                    </span>
+                    {!viewOnly && (
+                        <button
+                            type="button"
+                            className="ml-2 px-2 py-0.5 rounded bg-amber-950 text-amber-50 text-xs hover:bg-amber-900"
+                            onClick={() => setControlEnabled(true)}
+                        >
+                            Take control
+                        </button>
+                    )}
                 </div>
             )}
 

@@ -14,6 +14,13 @@ export const createRemoteSessionSchema = z.object({
     quality: z.enum(['LOW', 'MEDIUM', 'HIGH', 'ULTRA']).default('MEDIUM'),
     notes: z.string().max(1000).optional(),
     offer: z.record(z.unknown()).optional(),
+    /**
+     * Read-only session — the agent will refuse to apply any input events
+     * received over the data channel. Intended for shoulder-surf / audit
+     * scenarios. Defaults to false (full control), preserving existing
+     * session-creation behaviour.
+     */
+    viewOnly: z.boolean().default(false),
 });
 
 /**

@@ -101,6 +101,10 @@ async function initRedisLimiters(): Promise<boolean> {
             duration: 15 * 60,
             blockDuration: 30 * 60,
         });
+        // @ts-ignore: Force node-redis v4+ compatibility
+        redisLoginLimiter.useRedis3AndLowerPackage = false;
+        // @ts-ignore
+        redisLoginLimiter.useRedisPackage = true;
 
         redisApiLimiter = new RateLimiterRedis({
             storeClient: client,
@@ -108,6 +112,10 @@ async function initRedisLimiters(): Promise<boolean> {
             points: 1000,
             duration: 15 * 60,
         });
+        // @ts-ignore
+        redisApiLimiter.useRedis3AndLowerPackage = false;
+        // @ts-ignore
+        redisApiLimiter.useRedisPackage = true;
 
         redisStrictApiLimiter = new RateLimiterRedis({
             storeClient: client,
@@ -115,6 +123,10 @@ async function initRedisLimiters(): Promise<boolean> {
             points: 500,
             duration: 15 * 60,
         });
+        // @ts-ignore
+        redisStrictApiLimiter.useRedis3AndLowerPackage = false;
+        // @ts-ignore
+        redisStrictApiLimiter.useRedisPackage = true;
 
         redisAgentLimiter = new RateLimiterRedis({
             storeClient: client,
@@ -122,6 +134,10 @@ async function initRedisLimiters(): Promise<boolean> {
             points: 2400,
             duration: 15 * 60,
         });
+        // @ts-ignore
+        redisAgentLimiter.useRedis3AndLowerPackage = false;
+        // @ts-ignore
+        redisAgentLimiter.useRedisPackage = true;
 
         return true;
     } catch {

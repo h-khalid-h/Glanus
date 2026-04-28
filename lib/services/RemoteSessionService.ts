@@ -23,6 +23,12 @@ export interface CreateSessionInput {
     assetId: string;
     notes?: string;
     offer?: Record<string, unknown>;
+    /**
+     * Read-only session. Persisted into `metadata.viewOnly` so the agent
+     * can read it from the active-session poll without a schema
+     * migration, and so existing audit/log paths see it.
+     */
+    viewOnly?: boolean;
 }
 
 export interface UpdateSessionInput {
@@ -180,6 +186,11 @@ export class RemoteSessionService {
                 status: 'ACTIVE',
                 notes: input.notes,
                 offer: input.offer ? (input.offer as object) : undefined,
+                // Stash control-policy flags in `metadata`. Keep the shape
+                // narrow & explicit — the agent reads `metadata.viewOnly`
+                // verbatim and any client (web viewer or partner portal)
+                // gates input on the same field.
+                metadata: { viewOnly: input.viewOnly === true },
             },
             include: {
                 asset: { select: { id: true, name: true, category: true, status: true } },

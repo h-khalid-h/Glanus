@@ -9,12 +9,14 @@ use tokio::time::timeout;
 pub struct ScriptExecutor;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ExecutionResult {
-    pub status: String, // "SUCCESS", "ERROR", "TIMEOUT"
-    pub output: Option<String>,
-    pub error: Option<String>,
+    pub success: bool,
     pub exit_code: Option<i32>,
-    pub duration_ms: u64,
+    pub stdout: String,
+    pub stderr: String,
+    pub started_at: u64,
+    pub finished_at: u64,
 }
 
 impl ScriptExecutor {
@@ -29,27 +31,33 @@ impl ScriptExecutor {
 
         let result = match timeout(
             timeout_duration,
-            Self::execute_script(script_type, script)
+            Self::execute_script(script_type, script, start_time)
         ).await {
             Ok(Ok(result)) => result,
             Ok(Err(e)) => {
                 // Execution error
+                let finished_at = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis() as u64;
+                let started_at = finished_at - start_time.elapsed().as_millis() as u64;
                 ExecutionResult {
-                    status: "ERROR".to_string(),
-                    output: None,
-                    error: Some(format!("Execution failed: {}", e)),
+                    success: false,
                     exit_code: None,
-                    duration_ms: start_time.elapsed().as_millis() as u64,
+                    stdout: "".to_string(),
+                    stderr: format!("Execution failed: {}", e),
+                    started_at,
+                    finished_at,
                 }
             }
             Err(_) => {
                 // Timeout
+                let finished_at = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis() as u64;
+                let started_at = finished_at - start_time.elapsed().as_millis() as u64;
                 ExecutionResult {
-                    status: "TIMEOUT".to_string(),
-                    output: None,
-                    error: Some(format!("Script execution timed out after {}s", timeout_duration.as_secs())),
+                    success: false,
                     exit_code: None,
-                    duration_ms: start_time.elapsed().as_millis() as u64,
+                    stdout: "".to_string(),
+                    stderr: format!("Script execution timed out after {}s", timeout_duration.as_secs()),
+                    started_at,
+                    finished_at,
                 }
             }
         };
@@ -58,25 +66,20 @@ impl ScriptExecutor {
     }
 
     /// Execute script based on type
-    async fn execute_script(script_type: &str, script: &str) -> Result<ExecutionResult> {
-        let start_time = std::time::Instant::now();
+    async fn execute_script(script_type: &str, script: &str, _start_instant: std::time::Instant) -> Result<ExecutionResult> {
+        let started_at = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis() as u64;
 
         let (command, args) = match script_type.to_uppercase().as_str() {
             "POWERSHELL" => {
                 if cfg!(target_os = "windows") {
-                    ("powershell.exe", vec!["-Command", script])
+                    ("powershell.exe", vec!["-ExecutionPolicy", "Bypass", "-NonInteractive", "-NoProfile", "-Command", script])
                 } else {
                     // PowerShell Core on macOS/Linux
-                    ("pwsh", vec!["-Command", script])
+                    ("pwsh", vec!["-NonInteractive", "-NoProfile", "-Command", script])
                 }
             }
             "BASH" => {
-                if cfg!(target_os = "windows") {
-                    // Git Bash or WSL
-                    ("bash", vec!["-c", script])
-                } else {
-                    ("bash", vec!["-c", script])
-                }
+                ("bash", vec!["-c", script])
             }
             "PYTHON" => {
                 ("python3", vec!["-c", script])
@@ -95,35 +98,19 @@ impl ScriptExecutor {
             .await
             .context(format!("Failed to execute {} command", script_type))?;
 
-        let duration_ms = start_time.elapsed().as_millis() as u64;
+        let finished_at = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis() as u64;
         let exit_code = output.status.code();
         let stdout = String::from_utf8_lossy(&output.stdout).to_string();
         let stderr = String::from_utf8_lossy(&output.stderr).to_string();
-
-        let (status, output_text, error_text) = if output.status.success() {
-            (
-                "SUCCESS".to_string(),
-                if stdout.is_empty() { None } else { Some(stdout) },
-                if stderr.is_empty() { None } else { Some(stderr) },
-            )
-        } else {
-            (
-                "ERROR".to_string(),
-                if stdout.is_empty() { None } else { Some(stdout) },
-                Some(if stderr.is_empty() {
-                    format!("Command failed with exit code: {}", exit_code.unwrap_or(-1))
-                } else {
-                    stderr
-                }),
-            )
-        };
+        let success = output.status.success();
 
         Ok(ExecutionResult {
-            status,
-            output: output_text,
-            error: error_text,
+            success,
             exit_code,
-            duration_ms,
+            stdout,
+            stderr,
+            started_at,
+            finished_at,
         })
     }
 }
@@ -138,8 +125,8 @@ mod tests {
             .await
             .unwrap();
         
-        assert_eq!(result.status, "SUCCESS");
-        assert!(result.output.unwrap().contains("Hello, World!"));
+        assert_eq!(result.success, true);
+        assert!(result.stdout.contains("Hello, World!"));
         assert_eq!(result.exit_code, Some(0));
     }
 
@@ -149,8 +136,8 @@ mod tests {
             .await
             .unwrap();
         
-        assert_eq!(result.status, "SUCCESS");
-        assert!(result.output.unwrap().contains("Hello from Python"));
+        assert_eq!(result.success, true);
+        assert!(result.stdout.contains("Hello from Python"));
         assert_eq!(result.exit_code, Some(0));
     }
 
@@ -160,7 +147,8 @@ mod tests {
             .await
             .unwrap();
         
-        assert_eq!(result.status, "TIMEOUT");
+        assert_eq!(result.success, false);
+        assert!(result.stderr.contains("timed out"));
     }
 
     #[tokio::test]
@@ -169,7 +157,7 @@ mod tests {
             .await
             .unwrap();
         
-        assert_eq!(result.status, "ERROR");
+        assert_eq!(result.success, false);
         assert_eq!(result.exit_code, Some(1));
     }
 }

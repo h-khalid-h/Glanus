@@ -61,6 +61,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
             assetId: parsed.assetId,
             notes: parsed.notes,
             offer: parsed.offer as Record<string, unknown> | undefined,
+            viewOnly: parsed.viewOnly,
         });
         return apiSuccess(session, undefined, 201);
     });
