@@ -392,6 +392,7 @@ export async function executeAction(
                 where: {
                     workspaceId,
                     status: 'ONLINE',
+                    assetId: { not: null },
                     ...(item.rule.action.targetAssetId ? { assetId: item.rule.action.targetAssetId } : {})
                 }
             });
@@ -400,7 +401,7 @@ export async function executeAction(
                 await prisma.scriptExecution.create({
                     data: {
                         agentId: agent.id,
-                        assetId: agent.assetId,
+                        assetId: agent.assetId as string,
                         workspaceId,
                         scriptName: item.rule.action.scriptName || item.rule.name,
                         scriptBody,
@@ -448,6 +449,7 @@ export async function executeAction(
                 where: {
                     workspaceId,
                     status: 'ONLINE',
+                    assetId: { not: null },
                     ...(item.rule.action.targetAssetId ? { assetId: item.rule.action.targetAssetId } : {}),
                 },
             });
@@ -459,7 +461,7 @@ export async function executeAction(
                 await prisma.scriptExecution.create({
                     data: {
                         agentId: agent.id,
-                        assetId: agent.assetId,
+                        assetId: agent.assetId as string,
                         workspaceId,
                         scriptName: `Restart Agent (${item.rule.name})`,
                         scriptBody: isWindows

@@ -197,7 +197,7 @@ export class ScriptService {
             if (!script) throw new ApiError(404, 'Script template not found.');
 
             const targetAgents = await tx.agentConnection.findMany({
-                where: { id: { in: targetAgentIds }, workspaceId, status: 'ONLINE' },
+                where: { id: { in: targetAgentIds }, workspaceId, status: 'ONLINE', assetId: { not: null } },
                 select: { id: true, assetId: true, hostname: true },
             });
 
@@ -206,7 +206,7 @@ export class ScriptService {
             }
 
             const executionsData = targetAgents.map((agent) => ({
-                workspaceId, agentId: agent.id, assetId: agent.assetId,
+                workspaceId, agentId: agent.id, assetId: agent.assetId as string,
                 scriptId: script.id, scriptName: script.name,
                 scriptBody: script.content, language: script.language,
                 status: 'PENDING' as const, createdBy: userId,

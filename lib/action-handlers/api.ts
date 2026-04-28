@@ -17,7 +17,7 @@ export async function handleApiAction(
     }
 
     // SSRF protection: block requests to private/internal networks
-    if (isPrivateUrl(url)) {
+    if (await isPrivateUrl(url)) {
         return { status: 'FAILED', error: 'API handler URL must not target private or internal networks' };
     }
 

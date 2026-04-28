@@ -156,7 +156,7 @@ export class AgentService {
      */
     static async registerAgent(data: RegisterAgentInput): Promise<{
         agentId: string;
-        assetId: string;
+        assetId?: string;
         authToken: string;
         config: { metricsInterval: number; heartbeatInterval: number };
     }> {
@@ -187,7 +187,7 @@ export class AgentService {
                 select: { assetId: true },
             });
             if (existingByHostname) {
-                assetId = existingByHostname.assetId;
+                assetId = existingByHostname.assetId ?? undefined;
             } else {
                 const created = await prisma.asset.create({
                     data: {
@@ -785,7 +785,7 @@ export class AgentService {
         // viewer crafting input frames cannot inject events. Default to
         // false (full control) if the metadata is missing or malformed.
         const meta = activeSession.metadata as { viewOnly?: unknown } | null;
-        const viewOnly = meta && meta.viewOnly === true;
+        const viewOnly = meta ? meta.viewOnly === true : false;
 
         return {
             id: activeSession.id,

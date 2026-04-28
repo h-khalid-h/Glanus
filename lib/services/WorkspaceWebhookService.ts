@@ -51,7 +51,7 @@ export class WorkspaceWebhookService {
 
     static async upsertWebhook(workspaceId: string, data: WebhookInput) {
         // SSRF protection: reject private/internal network URLs at storage time
-        if (isPrivateUrl(data.url)) {
+        if (await isPrivateUrl(data.url)) {
             throw new ApiError(400, 'Webhook URL must not target private or internal networks');
         }
 

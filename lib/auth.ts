@@ -236,6 +236,21 @@ export const authOptions: NextAuthOptions = {
                 token.role = user.role;
                 token.isStaff = user.isStaff;
             }
+
+            // Security: Verify the session has not been explicitly revoked
+            if (!user && token.sid) {
+                const { authPrisma } = await import('@/lib/auth/db');
+                const sessionRecord = await authPrisma.authSession.findUnique({
+                    where: { id: token.sid as string },
+                    select: { revokedAt: true }
+                });
+
+                if (!sessionRecord || sessionRecord.revokedAt) {
+                    // This immediately invalidates the JWT and forces a re-login
+                    throw new Error('Session has been revoked');
+                }
+            }
+
             return token;
         },
         async session({ session, token }) {

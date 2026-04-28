@@ -63,6 +63,10 @@ export const PATCH = withErrorHandler(async (request: NextRequest, context: Rout
     const { isAuthorized, isAgent } = await RemoteSignalingService.verifySignalingAccess(id, userId, agentToken);
     if (!isAuthorized) throw new ApiError(401, 'Unauthorized');
 
-    const updated = await RemoteSignalingService.patchSignalingState(id, body, isAgent);
+    const updated = await RemoteSignalingService.patchSignalingState(
+        id,
+        body as { offer?: unknown; answer?: unknown; status?: string; iceCandidate?: unknown },
+        isAgent
+    );
     return apiSuccess(updated);
 });

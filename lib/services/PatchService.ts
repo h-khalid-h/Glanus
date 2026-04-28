@@ -101,6 +101,7 @@ export class PatchService {
         const vulnerableAgents = await prisma.agentConnection.findMany({
             where: {
                 workspaceId,
+                assetId: { not: null },
                 installedSoftware: {
                     some: {
                         name: { contains: policy.targetSoftware, mode: 'insensitive' }
@@ -121,7 +122,7 @@ export class PatchService {
             scriptBody: policy.actionScript.content,
             workspaceId,
             agentId: agent.id,
-            assetId: agent.assetId,
+            assetId: agent.assetId as string,
             createdBy: userId,
             status: ScriptStatus.PENDING
         }));

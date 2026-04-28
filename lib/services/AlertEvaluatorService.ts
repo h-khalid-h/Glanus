@@ -65,12 +65,12 @@ export class AlertEvaluator {
         if (rules.length === 0) return triggers;
 
         // Get all agents in workspace with latest metrics
-        const agents = await prisma.agentConnection.findMany({
-            where: { workspaceId },
+        const agents = (await prisma.agentConnection.findMany({
+            where: { workspaceId, assetId: { not: null } },
             include: {
                 asset: { select: { id: true, name: true } },
             },
-        });
+        })) as unknown as AgentWithAsset[];
 
         if (agents.length === 0) return triggers;
 

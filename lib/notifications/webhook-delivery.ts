@@ -72,7 +72,7 @@ export async function deliverWebhook(
     }
 
     // SSRF protection: block requests to private/internal networks
-    if (isPrivateUrl(webhook.url)) {
+    if (await isPrivateUrl(webhook.url)) {
         logError(`[Webhook] Blocked delivery to private URL for workspace ${workspaceId}`);
         return { success: false, statusCode: null, duration: 0, error: 'Webhook URL must not target private or internal networks', retries: 0 };
     }

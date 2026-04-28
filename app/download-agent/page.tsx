@@ -242,9 +242,9 @@ export default function DownloadAgentPage() {
                                         </span>
                                         <span>{step.text}</span>
                                     </div>
-                                    {step.cmd && (
+                                    {'cmd' in step && step.cmd && (
                                         <div className="ml-9">
-                                            <CopyableCommand cmd={step.cmd} />
+                                            <CopyableCommand cmd={step.cmd as string} />
                                         </div>
                                     )}
                                 </li>

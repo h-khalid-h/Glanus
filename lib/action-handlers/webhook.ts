@@ -17,7 +17,7 @@ export async function handleWebhookAction(
     }
 
     // SSRF protection: block requests to private/internal networks
-    if (isPrivateUrl(webhookUrl)) {
+    if (await isPrivateUrl(webhookUrl)) {
         return { status: 'FAILED', error: 'Webhook URL must not target private or internal networks' };
     }
 

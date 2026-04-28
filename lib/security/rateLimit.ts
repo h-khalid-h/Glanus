@@ -101,9 +101,9 @@ async function initRedisLimiters(): Promise<boolean> {
             duration: 15 * 60,
             blockDuration: 30 * 60,
         });
-        // @ts-ignore: Force node-redis v4+ compatibility
+        // @ts-expect-error: redis package internal typings bypass
         redisLoginLimiter.useRedis3AndLowerPackage = false;
-        // @ts-ignore
+        // @ts-expect-error: redis package internal typings bypass
         redisLoginLimiter.useRedisPackage = true;
 
         redisApiLimiter = new RateLimiterRedis({
@@ -112,9 +112,9 @@ async function initRedisLimiters(): Promise<boolean> {
             points: 1000,
             duration: 15 * 60,
         });
-        // @ts-ignore
+        // @ts-expect-error: redis package internal typings bypass
         redisApiLimiter.useRedis3AndLowerPackage = false;
-        // @ts-ignore
+        // @ts-expect-error: redis package internal typings bypass
         redisApiLimiter.useRedisPackage = true;
 
         redisStrictApiLimiter = new RateLimiterRedis({
@@ -123,9 +123,9 @@ async function initRedisLimiters(): Promise<boolean> {
             points: 500,
             duration: 15 * 60,
         });
-        // @ts-ignore
+        // @ts-expect-error: redis package internal typings bypass
         redisStrictApiLimiter.useRedis3AndLowerPackage = false;
-        // @ts-ignore
+        // @ts-expect-error: redis package internal typings bypass
         redisStrictApiLimiter.useRedisPackage = true;
 
         redisAgentLimiter = new RateLimiterRedis({
@@ -134,9 +134,9 @@ async function initRedisLimiters(): Promise<boolean> {
             points: 2400,
             duration: 15 * 60,
         });
-        // @ts-ignore
+        // @ts-expect-error: redis package internal typings bypass
         redisAgentLimiter.useRedis3AndLowerPackage = false;
-        // @ts-ignore
+        // @ts-expect-error: redis package internal typings bypass
         redisAgentLimiter.useRedisPackage = true;
 
         return true;

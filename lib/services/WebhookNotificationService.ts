@@ -63,7 +63,7 @@ export class WebhookService {
         payload: WebhookPayload,
         secret?: string
     ): Promise<void> {
-        if (isPrivateUrl(url)) {
+        if (await isPrivateUrl(url)) {
             throw new Error('Webhook URL must not target private or internal networks');
         }
 

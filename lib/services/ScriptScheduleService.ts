@@ -121,7 +121,7 @@ export class ScriptScheduleService {
         // ── Batch agent lookup: 1 SELECT instead of N SELECTs ─────────────────
         const allTargetIds = [...new Set(dueSchedules.flatMap((s) => (s.targetIds as string[])))];
         const allAgents = await prisma.agentConnection.findMany({
-            where: { id: { in: allTargetIds } },
+            where: { id: { in: allTargetIds }, assetId: { not: null } },
             select: { id: true, assetId: true },
         });
         const agentMap = new Map(allAgents.map((a) => [a.id, a]));
@@ -146,7 +146,7 @@ export class ScriptScheduleService {
                                 scriptBody: schedule.script.content,
                                 language: schedule.script.language,
                                 agentId: agent.id,
-                                assetId: agent.assetId,
+                                assetId: agent.assetId as string,
                                 workspaceId: schedule.workspaceId,
                                 status: 'PENDING' as const,
                                 createdBy: 'system_cron',
