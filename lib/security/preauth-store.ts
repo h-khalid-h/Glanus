@@ -14,15 +14,19 @@ import { prisma } from '@/lib/db';
  *  - Scoped to a specific workspaceId
  */
 
-const TOKEN_SECRET = process.env.PREAUTH_TOKEN_SECRET || process.env.CSRF_SECRET || 'dev-only-preauth-secret';
 const DEFAULT_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 
-if (process.env.NODE_ENV === 'production' && TOKEN_SECRET === 'dev-only-preauth-secret') {
-    throw new Error('PREAUTH_TOKEN_SECRET or CSRF_SECRET must be configured in production');
+function getSecret(): string {
+    const secret = process.env.PREAUTH_TOKEN_SECRET || process.env.CSRF_SECRET || 'dev-only-preauth-secret';
+    // Throw only at runtime, allowing Next.js static build to succeed
+    if (process.env.NODE_ENV === 'production' && secret === 'dev-only-preauth-secret') {
+        throw new Error('PREAUTH_TOKEN_SECRET or CSRF_SECRET must be configured in production');
+    }
+    return secret;
 }
 
 function hashToken(token: string): string {
-    return crypto.createHmac('sha256', TOKEN_SECRET).update(token).digest('hex');
+    return crypto.createHmac('sha256', getSecret()).update(token).digest('hex');
 }
 
 /**
