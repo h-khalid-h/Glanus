@@ -61,7 +61,7 @@ pub struct RegisterResponseData {
     #[serde(rename = "agentId")]
     pub agent_id: String,
     #[serde(rename = "assetId")]
-    pub asset_id: String,
+    pub asset_id: Option<String>,
     #[serde(rename = "authToken")]
     pub auth_token: String,
 }

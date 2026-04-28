@@ -88,12 +88,14 @@ impl RegistrationManager {
         // Update config
         let mut updated_config = config.clone();
         updated_config.agent.registered = true;
-        updated_config.agent.asset_id = Some(response.asset_id.clone());
+        updated_config.agent.asset_id = response.asset_id.clone();
         updated_config.agent.pre_auth_token = None; // Clear pre-auth token for security
-        updated_config.save()
-            .context("Failed to save updated config")?;
+        updated_config.save().context("Failed to save updated config")?;
 
-        log::info!("Agent registered successfully: agent_id={} asset_id={}", response.agent_id, response.asset_id);
+        crate::storage::SecureStorage::store_token(&response.auth_token)
+            .context("Failed to securely store auth token")?;
+
+        log::info!("Agent registered successfully: agent_id={} asset_id={:?}", response.agent_id, response.asset_id);
         Ok(())
     }
 

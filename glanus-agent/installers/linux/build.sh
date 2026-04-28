@@ -119,7 +119,7 @@ if command -v rpmbuild &> /dev/null; then
     (
         set -e
         RPM_ROOT="$SCRIPT_DIR/rpmbuild"
-        RPM_BR="$RPM_ROOT/BUILDROOT/glanus-agent-${VERSION}-1.x86_64"
+        RPM_BR="$RPM_ROOT/SOURCE_FILES"
         mkdir -p "$RPM_ROOT"/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
         mkdir -p "$RPM_BR/usr/bin"
         mkdir -p "$RPM_BR/usr/lib/systemd/system"
@@ -155,7 +155,8 @@ Glanus Agent — Tauri-based GUI for interactive monitoring and a systemd
 daemon mode for background remote management.
 
 %install
-cp -r %{_builddir}/../BUILDROOT/%{name}-%{version}-%{release}.%{_arch}/* %{buildroot}/
+mkdir -p %{buildroot}
+cp -r %{_topdir}/SOURCE_FILES/* %{buildroot}/
 
 %files
 /usr/bin/glanus-agent
