@@ -47,7 +47,7 @@ impl SystemMonitor {
         self.sys.refresh_all();
 
         // CPU usage (global)
-        let cpu_usage = self.sys.global_cpu_usage();
+        let cpu_usage = self.sys.global_cpu_usage().min(100.0);
 
         // CPU temperature (if available)
         let cpu_temp = self.get_cpu_temperature();
@@ -56,7 +56,7 @@ impl SystemMonitor {
         let ram_total_gb = self.sys.total_memory() as f32 / 1_073_741_824.0; // bytes to GB
         let ram_used_gb = self.sys.used_memory() as f32 / 1_073_741_824.0;
         let ram_usage = if ram_total_gb > 0.0 {
-            (ram_used_gb / ram_total_gb) * 100.0
+            ((ram_used_gb / ram_total_gb) * 100.0).min(100.0)
         } else {
             0.0
         };
@@ -64,7 +64,7 @@ impl SystemMonitor {
         // Disk metrics (aggregate all disks)
         let (disk_total_gb, disk_used_gb) = self.get_disk_metrics();
         let disk_usage = if disk_total_gb > 0.0 {
-            (disk_used_gb / disk_total_gb) * 100.0
+            ((disk_used_gb / disk_total_gb) * 100.0).min(100.0)
         } else {
             0.0
         };
