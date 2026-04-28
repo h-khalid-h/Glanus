@@ -409,16 +409,6 @@ export function WorkspaceLayout({ children }: { children: React.ReactNode }) {
     return (
         <div style={dynamicStyles} className="flex min-h-screen bg-background text-foreground">
 
-            {/* Mobile hamburger */}
-            <button
-                type="button"
-                onClick={() => setMobileOpen(true)}
-                className="fixed left-3 top-3 z-40 flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground shadow-md transition-all hover:bg-accent hover:text-foreground hover:shadow-lg lg:hidden"
-                aria-label="Open navigation"
-            >
-                <Menu className="h-4.5 w-4.5" />
-            </button>
-
             {/* Mobile sidebar overlay */}
             {mobileOpen && (
                 <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="Navigation">
@@ -457,9 +447,20 @@ export function WorkspaceLayout({ children }: { children: React.ReactNode }) {
             ].join(' ')}>
 
                 {/* Top header */}
-                <header className="sticky top-0 z-40 flex h-14 shrink-0 items-center justify-between border-b border-border/60 bg-background/80 px-6 backdrop-blur-xl">
-                    {/* Breadcrumb */}
-                    <nav className="flex items-center gap-1.5 min-w-0 text-sm" aria-label="Breadcrumb">
+                <header className="sticky top-0 z-40 flex h-14 shrink-0 items-center justify-between border-b border-border/60 bg-background/80 px-4 lg:px-6 backdrop-blur-xl gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                        {/* Mobile hamburger */}
+                        <button
+                            type="button"
+                            onClick={() => setMobileOpen(true)}
+                            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground shadow-sm transition-all hover:bg-accent hover:text-foreground lg:hidden"
+                            aria-label="Open navigation"
+                        >
+                            <Menu className="h-5 w-5" />
+                        </button>
+
+                        {/* Breadcrumb */}
+                        <nav className="flex items-center gap-1.5 min-w-0 text-sm" aria-label="Breadcrumb">
                         <span className="text-muted-foreground/50 font-medium hidden sm:block shrink-0 text-xs">
                             {workspace?.name}
                         </span>
@@ -480,6 +481,7 @@ export function WorkspaceLayout({ children }: { children: React.ReactNode }) {
                             </>
                         )}
                     </nav>
+                    </div>
 
                     {/* Right controls */}
                     <div className="flex items-center gap-2">

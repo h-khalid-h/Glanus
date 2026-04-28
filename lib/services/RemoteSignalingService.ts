@@ -94,14 +94,6 @@ export class RemoteSignalingService {
             if (body.status === 'ENDED' || body.status === 'FAILED') {
                 updateData.endedAt = new Date();
             }
-            // TEMP diagnostic: log every FAILED write with origin (user vs agent)
-            // so we can find the phantom writer. Remove after root cause fix.
-            if (body.status === 'FAILED') {
-                console.warn(
-                    `[RemoteSignalingService.patchSignalingState] FAILED write for session=${sessionId} isAgent=${isAgent}`,
-                    new Error('patchSignalingState stack').stack,
-                );
-            }
         }
 
         if (body.iceCandidate) {
