@@ -273,6 +273,9 @@ impl PeerSession {
         let mut bound = false;
         for tr in pc.get_transceivers().await {
             if tr.kind() == RTPCodecType::Video {
+                use webrtc::rtp_transceiver::rtp_transceiver_direction::RTCRtpTransceiverDirection;
+                tr.set_direction(RTCRtpTransceiverDirection::Sendonly).await;
+                
                 if let Err(e) = tr
                     .sender()
                     .await
