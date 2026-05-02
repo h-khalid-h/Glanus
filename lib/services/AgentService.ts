@@ -51,12 +51,11 @@ export interface HeartbeatMetrics {
 export interface CommandResultInput {
     authToken: string;
     executionId: string;
-    success: boolean;
+    status: 'completed' | 'failed' | 'timeout';
     exitCode?: number | null;
-    stdout?: string | null;
-    stderr?: string | null;
-    startedAt: number;
-    finishedAt: number;
+    output?: string | null;
+    error?: string | null;
+    duration?: number | null;
 }
 
 export interface SoftwareItem {
@@ -156,7 +155,7 @@ export class AgentService {
      */
     static async registerAgent(data: RegisterAgentInput): Promise<{
         agentId: string;
-        assetId?: string;
+        assetId: string;
         authToken: string;
         config: { metricsInterval: number; heartbeatInterval: number };
     }> {
@@ -187,7 +186,7 @@ export class AgentService {
                 select: { assetId: true },
             });
             if (existingByHostname) {
-                assetId = existingByHostname.assetId ?? undefined;
+                assetId = existingByHostname.assetId;
             } else {
                 const created = await prisma.asset.create({
                     data: {
@@ -532,12 +531,11 @@ export class AgentService {
      * Verifies the execution belongs to the authenticated agent.
      */
     static async recordCommandResult(input: CommandResultInput): Promise<void> {
-        let dbStatus: 'COMPLETED' | 'FAILED' | 'TIMEOUT' = 'FAILED';
-        if (input.success) {
-            dbStatus = 'COMPLETED';
-        } else if (input.stderr && input.stderr.toLowerCase().includes('timed out')) {
-            dbStatus = 'TIMEOUT';
-        }
+        const statusMap: Record<string, 'COMPLETED' | 'FAILED' | 'TIMEOUT'> = {
+            completed: 'COMPLETED',
+            failed: 'FAILED',
+            timeout: 'TIMEOUT',
+        };
 
         const hashedToken = hashAgentToken(input.authToken);
         const agent = await prisma.agentConnection.findUnique({
@@ -560,12 +558,11 @@ export class AgentService {
         await prisma.scriptExecution.update({
             where: { id: input.executionId },
             data: {
-                status: dbStatus,
+                status: statusMap[input.status],
                 exitCode: input.exitCode,
-                output: input.stdout,
-                error: input.stderr,
-                startedAt: new Date(input.startedAt),
-                completedAt: new Date(input.finishedAt),
+                output: input.output,
+                error: input.error,
+                completedAt: new Date(),
             },
         });
     }
@@ -785,7 +782,7 @@ export class AgentService {
         // viewer crafting input frames cannot inject events. Default to
         // false (full control) if the metadata is missing or malformed.
         const meta = activeSession.metadata as { viewOnly?: unknown } | null;
-        const viewOnly = meta ? meta.viewOnly === true : false;
+        const viewOnly = meta && meta.viewOnly === true;
 
         return {
             id: activeSession.id,

@@ -131,7 +131,6 @@ export function RemoteDesktopViewer({
         peer.onStream = (stream) => {
             if (videoRef.current) {
                 videoRef.current.srcObject = stream;
-                videoRef.current.play().catch(e => console.warn('[Viewer] Autoplay blocked:', e));
             }
         };
 
@@ -191,7 +190,7 @@ export function RemoteDesktopViewer({
         //     actionable error so the operator can retry the session.
         const pc = peer.getPeerConnection();
         if (pc) {
-            pc.addEventListener('iceconnectionstatechange', () => {
+            pc.oniceconnectionstatechange = () => {
                 const state = pc.iceConnectionState;
                 console.debug('[Viewer] iceConnectionState ->', state);
 
@@ -225,7 +224,7 @@ export function RemoteDesktopViewer({
                 if (state === 'failed') {
                     triggerIceRecovery();
                 }
-            });
+            };
 
             const triggerIceRecovery = () => {
                 if (iceRecoveryTimer.current) return; // already recovering
@@ -367,50 +366,21 @@ export function RemoteDesktopViewer({
     // Input handlers for the CLIENT
     const inputAllowed = client !== null && connected && !isHost && !viewOnly && controlEnabled;
 
-    // Monitor for decoding stalls (0 FPS) and request a keyframe from the agent
-    useEffect(() => {
-        if (!connected || isHost || !client || !metrics) return;
-        if (metrics.fps === 0) {
-            console.log('[Viewer] 0 FPS detected, requesting keyframe from agent...');
-            client.sendData({ type: 'request_keyframe' });
-        }
-    }, [connected, isHost, client, metrics]);
-
-    const getTargetCoordinates = (clientX: number, clientY: number) => {
-        if (!videoRef.current || !videoRef.current.videoWidth) return null;
-        const rect = videoRef.current.getBoundingClientRect();
-        const videoRatio = videoRef.current.videoWidth / videoRef.current.videoHeight;
-        const elementRatio = rect.width / rect.height;
-
-        let renderedWidth = rect.width;
-        let renderedHeight = rect.height;
-
-        if (elementRatio > videoRatio) {
-            renderedWidth = rect.height * videoRatio;
-        } else {
-            renderedHeight = rect.width / videoRatio;
-        }
-
-        const offsetX = (rect.width - renderedWidth) / 2;
-        const offsetY = (rect.height - renderedHeight) / 2;
-
-        const scaleX = videoRef.current.videoWidth / renderedWidth;
-        const scaleY = videoRef.current.videoHeight / renderedHeight;
-
-        const x = Math.round((clientX - rect.left - offsetX) * scaleX);
-        const y = Math.round((clientY - rect.top - offsetY) * scaleY);
-
-        if (x < 0 || x > videoRef.current.videoWidth || y < 0 || y > videoRef.current.videoHeight) {
-            return null;
-        }
-        return { x, y };
-    };
-
     const sendMouseAt = (clientX: number, clientY: number, type: string, button: string) => {
-        if (!client) return;
-        const coords = getTargetCoordinates(clientX, clientY);
-        if (!coords) return;
-        client.sendData({ type, x: coords.x, y: coords.y, button });
+        if (!videoRef.current || !client) return;
+        const rect = videoRef.current.getBoundingClientRect();
+        // The video's intrinsic size matches the agent's capture resolution
+        // (set by the encoder). Scaling clientX/Y by videoWidth/rect.width
+        // produces absolute pixel coordinates in the remote display's frame
+        // — which is exactly what libxdo / enigo `move_mouse(x, y, Abs)`
+        // expect. No additional DPR / monitor-offset math is needed for
+        // the single-monitor case.
+        const scaleX = videoRef.current.videoWidth / rect.width;
+        const scaleY = videoRef.current.videoHeight / rect.height;
+        const x = Math.round((clientX - rect.left) * scaleX);
+        const y = Math.round((clientY - rect.top) * scaleY);
+        if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+        client.sendData({ type, x, y, button });
     };
 
     const handleMouseEvent = (e: React.MouseEvent, type: string) => {
@@ -471,9 +441,8 @@ export function RemoteDesktopViewer({
             e.preventDefault();
             if (!client || !videoRef.current) return;
             const rect = videoRef.current.getBoundingClientRect();
-            const coords = getTargetCoordinates(e.clientX, e.clientY);
-            if (!coords) return;
-            
+            const scaleX = videoRef.current.videoWidth / rect.width;
+            const scaleY = videoRef.current.videoHeight / rect.height;
             // Normalise deltaMode → pixels. DOM_DELTA_LINE/PAGE happen on
             // some Linux/Wayland drivers; treat one line as 16px (browser
             // default) and one page as the video's height.
@@ -483,8 +452,8 @@ export function RemoteDesktopViewer({
             else if (e.deltaMode === 2) { dx *= rect.width; dy *= rect.height; }
             client.sendData({
                 type: 'scroll',
-                x: coords.x,
-                y: coords.y,
+                x: Math.round((e.clientX - rect.left) * scaleX),
+                y: Math.round((e.clientY - rect.top) * scaleY),
                 deltaX: Math.round(dx),
                 deltaY: Math.round(dy),
             });
@@ -515,11 +484,11 @@ export function RemoteDesktopViewer({
                 ref={videoRef}
                 autoPlay
                 playsInline
-                muted
                 className={`w-full h-full object-contain ${connected && !isHost ? 'block' : 'hidden'}`}
                 onMouseMove={(e) => handleMouseEvent(e, 'mousemove')}
                 onMouseDown={(e) => handleMouseEvent(e, 'mousedown')}
                 onMouseUp={(e) => handleMouseEvent(e, 'mouseup')}
+                onClick={(e) => handleMouseEvent(e, 'click')}
                 onContextMenu={(e) => {
                     e.preventDefault();
                     handleMouseEvent(e, 'mousedown');

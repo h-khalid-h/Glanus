@@ -47,8 +47,6 @@ pub enum InputEvent {
     KeyDown { key: String },
     #[serde(rename = "keyup")]
     KeyUp { key: String },
-    #[serde(rename = "request_keyframe")]
-    RequestKeyframe,
 }
 
 #[derive(Debug, Deserialize)]
@@ -137,12 +135,6 @@ pub mod x11 {
 
     impl XdoInput {
         pub fn new() -> Result<Self> {
-            if let Ok(session_type) = std::env::var("XDG_SESSION_TYPE") {
-                if session_type.to_lowercase() == "wayland" {
-                    log::warn!("libxdo: Running on Wayland. X11 input injection may fail. Full Wayland support is planned.");
-                }
-            }
-
             let xdo = XDo::new(None).context("libxdo: failed to initialise")?;
             Ok(Self { xdo })
         }
@@ -224,7 +216,6 @@ pub mod x11 {
                         .send_keysequence_up(&sanitized, 0)
                         .context("libxdo: send_keysequence_up failed")?;
                 }
-                InputEvent::RequestKeyframe => {}
             }
             Ok(())
         }
@@ -466,7 +457,6 @@ pub mod enigo_driver {
                         log::debug!("enigo: dropping unmapped key_up '{key}'");
                     }
                 }
-                InputEvent::RequestKeyframe => {}
             }
             Ok(())
         }

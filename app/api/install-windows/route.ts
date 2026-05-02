@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import fs from 'fs/promises';
+import path from 'path';
 
 /**
  * GET /api/install-windows?token=...&url=...&workspaceId=...
@@ -26,7 +28,21 @@ export async function GET(request: NextRequest) {
     const proto = xfProto || request.nextUrl.protocol.replace(':', '') || 'http';
     const origin = `${proto}://${host}`;
     const apiUrl = origin;
-    const msiUrl = `${origin}/api/downloads/glanus-agent-${workspaceId}.msi`;
+
+    const canonicalMsiPath = path.join(process.cwd(), 'glanus-agent', 'builds', 'glanus-agent.msi');
+    try {
+        await fs.stat(canonicalMsiPath);
+    } catch {
+        return new NextResponse(
+            'Write-Error "Windows installer is not available on this server. Expected glanus-agent/builds/glanus-agent.msi. Linux agent artifacts are unchanged."; exit 1',
+            {
+                status: 200,
+                headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+            }
+        );
+    }
+
+    const msiUrl = `${origin}/api/downloads/glanus-agent.msi`;
 
     const script = `# Glanus Agent - Automated Windows Installer
 # Generated dynamically by the Glanus server
