@@ -185,7 +185,7 @@ export class AgentService {
                 where: { workspaceId: data.workspaceId, hostname: data.hostname },
                 select: { assetId: true },
             });
-            if (existingByHostname) {
+            if (existingByHostname && existingByHostname.assetId) {
                 assetId = existingByHostname.assetId;
             } else {
                 const created = await prisma.asset.create({
@@ -782,7 +782,7 @@ export class AgentService {
         // viewer crafting input frames cannot inject events. Default to
         // false (full control) if the metadata is missing or malformed.
         const meta = activeSession.metadata as { viewOnly?: unknown } | null;
-        const viewOnly = meta && meta.viewOnly === true;
+        const viewOnly = meta?.viewOnly === true;
 
         return {
             id: activeSession.id,
