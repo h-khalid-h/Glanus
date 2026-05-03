@@ -29,7 +29,15 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     await runWithWorkspaceRLS(
         agent.workspaceId,
         { id: agent.id, role: 'USER' },
-        () => AgentService.recordCommandResult(data)
+        () => AgentService.recordCommandResult({
+            authToken: data.authToken,
+            executionId: data.executionId,
+            status: data.success ? 'completed' : 'failed',
+            exitCode: data.exitCode,
+            output: data.stdout,
+            error: data.stderr,
+            duration: data.finishedAt - data.startedAt,
+        })
     );
     return apiSuccess({ status: 'ok', message: 'Result recorded successfully' });
 });
