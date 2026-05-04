@@ -36,8 +36,13 @@ export async function GET(
         return NextResponse.json({ error: 'Unsupported file type' }, { status: 400 });
     }
 
-    // Look for the file in the agent builds directory
-    const buildsDir = path.join(process.cwd(), 'glanus-agent', 'builds');
+    // Map extension to OS subdirectory
+    let osDir = 'linux';
+    if (['.msi', '.exe'].includes(ext)) osDir = 'windows';
+    else if (['.pkg', '.dmg'].includes(ext)) osDir = 'macos';
+
+    // Look for the file in the OS-specific builds directory
+    const buildsDir = path.join(process.cwd(), 'glanus-agent', 'builds', osDir);
 
     // Try exact filename first, then fall back to generic binary (glanus-agent.ext)
     // Workspace-specific filenames like glanus-agent-<workspaceId>.deb map to the

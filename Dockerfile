@@ -65,10 +65,10 @@ COPY --from=builder /app/glanus-agent/builds ./glanus-agent/builds
 # now than to discover it when the first customer hits the install URL
 # and gets a 404. macOS/Windows installers are optional (built on their
 # native hosts), so we only enforce the Linux one.
-RUN test -s ./glanus-agent/builds/glanus-agent.deb \
-    || (echo "ERROR: glanus-agent/builds/glanus-agent.deb missing or empty." \
-            "Run: cd glanus-agent/installers/linux && ./build.sh <version>" \
-            "and copy the resulting .deb to glanus-agent/builds/glanus-agent.deb"; \
+RUN test -s ./glanus-agent/builds/linux/glanus-agent.deb \
+    || (echo "ERROR: glanus-agent/builds/linux/glanus-agent.deb missing or empty." \
+            "Run: npm run release:agent:linux" \
+            "and ensure the resulting .deb is in glanus-agent/builds/linux/glanus-agent.deb"; \
         exit 1)
 
 # Create directory for logs with proper permissions

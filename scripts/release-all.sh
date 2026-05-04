@@ -41,23 +41,32 @@ echo "═══ Combined release ═══"
 git status --short
 [ "$DRY" -eq 1 ] && { echo "(dry run — exiting)"; exit 0; }
 
-# 1. Rebuild + stage the agent (creates a commit on its own).
-AGENT_ARGS=("--commit")
-[ -n "$VERSION" ] && AGENT_ARGS=("$VERSION" "${AGENT_ARGS[@]}")
-[ -n "$MSG" ]     && AGENT_ARGS+=("-m" "$MSG")
-"$REPO_ROOT/scripts/release-agent.sh" "${AGENT_ARGS[@]}"
+# 1. Rebuild all agents (Linux, macOS, Windows) without staging immediately
+echo "═══ [1/4] Building Linux Agent ═══"
+"$REPO_ROOT/scripts/release-agent-linux.sh" "$VERSION" --no-stage || echo "⚠ Linux agent build failed or skipped. Continuing..."
 
-# 2. If anything web-side is still pending, fold it into the agent commit
-# via --amend so EasyPanel rebuilds once, not twice. Skip cleanly if not.
-if ! git diff --quiet || ! git diff --cached --quiet \
-   || [ -n "$(git ls-files --others --exclude-standard)" ]; then
-    echo
-    echo "═══ Folding web-side changes into the same commit ═══"
-    git add -A
-    git commit --amend --no-edit
+echo "═══ [2/4] Building macOS Agent ═══"
+"$REPO_ROOT/scripts/release-agent-macos.sh" "$VERSION" --no-stage || echo "⚠ macOS agent build failed or skipped. Continuing..."
+
+echo "═══ [3/4] Building Windows Agent ═══"
+if command -v pwsh &>/dev/null; then
+    pwsh "$REPO_ROOT/scripts/release-agent-windows.ps1" -Version "$VERSION" -NoStage || echo "⚠ Windows agent build failed or skipped. Continuing..."
+else
+    echo "⚠ pwsh (PowerShell) not found. Skipping Windows build."
 fi
 
-# 3. Single push.
+# 2. Stage all agent binaries and any web-side changes
+echo
+echo "═══ [4/4] Folding all changes into a single commit ═══"
+git add -A
+
+# Create the single combined commit
+if [ -z "$MSG" ]; then
+    MSG="release: v$VERSION (all platforms + web)"
+fi
+
+git commit -m "$MSG"
+
 echo
 echo "═══ Pushing — EasyPanel will rebuild + deploy ═══"
 git push

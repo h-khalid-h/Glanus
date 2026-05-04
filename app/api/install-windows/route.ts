@@ -29,12 +29,12 @@ export async function GET(request: NextRequest) {
     const origin = `${proto}://${host}`;
     const apiUrl = origin;
 
-    const canonicalMsiPath = path.join(process.cwd(), 'glanus-agent', 'builds', 'glanus-agent.msi');
+    const canonicalMsiPath = path.join(process.cwd(), 'glanus-agent', 'builds', 'windows', 'glanus-agent.msi');
     try {
         await fs.stat(canonicalMsiPath);
     } catch {
         return new NextResponse(
-            'Write-Error "Windows installer is not available on this server. Expected glanus-agent/builds/glanus-agent.msi. Linux agent artifacts are unchanged."; exit 1',
+            'Write-Error "Windows installer is not available on this server. Expected glanus-agent/builds/windows/glanus-agent.msi. Linux agent artifacts are unchanged."; exit 1',
             {
                 status: 200,
                 headers: { 'Content-Type': 'text/plain; charset=utf-8' },

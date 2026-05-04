@@ -19,7 +19,10 @@
     "prisma:migrate:dev": "prisma migrate dev",
     "prisma:migrate:reset": "prisma migrate reset",
     "db:seed": "tsx prisma/seed.ts",
-    "release:agent": "bash scripts/release-agent.sh",
+    "release:agent": "npm run release:agent:linux",
+    "release:agent:linux": "bash scripts/release-agent-linux.sh",
+    "release:agent:windows": "pwsh scripts/release-agent-windows.ps1",
+    "release:agent:macos": "bash scripts/release-agent-macos.sh",
     "release:web": "bash scripts/release-web.sh",
     "release:all": "bash scripts/release-all.sh"
   },
