@@ -31,14 +31,15 @@ glanus-agent/.cache/
 # We commit ONLY the canonical filenames the API serves
 # (glanus-agent.deb / .msi / .pkg) and ignore versioned/intermediate
 # builds so we don't bloat the repo with every dev iteration's binary.
-glanus-agent/builds/*
-!glanus-agent/builds/.gitkeep
-!glanus-agent/builds/glanus-agent.deb
-!glanus-agent/builds/glanus-agent.msi
-!glanus-agent/builds/glanus-agent.pkg
-!glanus-agent/builds/glanus-agent.deb.sha256
-!glanus-agent/builds/glanus-agent.msi.sha256
-!glanus-agent/builds/glanus-agent.pkg.sha256
+glanus-agent/builds/linux/*
+glanus-agent/builds/windows/*
+glanus-agent/builds/macos/*
+!glanus-agent/builds/linux/glanus-agent.deb
+!glanus-agent/builds/linux/glanus-agent.deb.sha256
+!glanus-agent/builds/windows/glanus-agent.msi
+!glanus-agent/builds/windows/glanus-agent.msi.sha256
+!glanus-agent/builds/macos/glanus-agent.pkg
+!glanus-agent/builds/macos/glanus-agent.pkg.sha256
 glanus-agent/installers/linux/*.deb
 glanus-agent/installers/linux/*.rpm
 glanus-agent/installers/macos/*.pkg
