@@ -1,0 +1,71 @@
+name: Build Windows Agent
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Agent Version (e.g., 0.1.1). Leave empty to use the current version.'
+        required: false
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-msvc
+
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Build Web UI
+        run: npm run build
+        
+      - name: Update Version (Optional)
+        if: ${{ github.event.inputs.version != '' }}
+        run: |
+          $version = "${{ github.event.inputs.version }}"
+          $manifest = Get-Content "glanus-agent/src-tauri/tauri.conf.json" | ConvertFrom-Json
+          $manifest.version = $version
+          $manifest | ConvertTo-Json -Depth 10 | Set-Content "glanus-agent/src-tauri/tauri.conf.json"
+
+      - name: Build Windows Agent (MSI)
+        run: npm run tauri build
+        working-directory: glanus-agent
+
+      - name: Upload MSI Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: glanus-agent-windows
+          path: glanus-agent/src-tauri/target/release/bundle/msi/*.msi
+
+      - name: Stage and Commit MSI to Repository
+        run: |
+          $msiPath = Get-ChildItem -Path glanus-agent/src-tauri/target/release/bundle/msi/ -Filter *.msi | Select-Object -First 1
+          if ($msiPath) {
+            New-Item -ItemType Directory -Force -Path glanus-agent/builds/windows/
+            Copy-Item $msiPath.FullName -Destination glanus-agent/builds/windows/glanus-agent.msi -Force
+            
+            $sha = (Get-FileHash -Path glanus-agent/builds/windows/glanus-agent.msi -Algorithm SHA256).Hash.ToLower()
+            "$sha  glanus-agent.msi" | Out-File -FilePath glanus-agent/builds/windows/glanus-agent.msi.sha256 -Encoding ASCII
+
+            git config --global user.name "github-actions[bot]"
+            git config --global user.email "github-actions[bot]@users.noreply.github.com"
+            git add glanus-agent/builds/windows/glanus-agent.msi
+            git add glanus-agent/builds/windows/glanus-agent.msi.sha256
+            git commit -m "chore(agent): add compiled Windows MSI artifact [skip ci]"
+            git push
+          } else {
+            Write-Error "MSI file not found after build!"
+          }
