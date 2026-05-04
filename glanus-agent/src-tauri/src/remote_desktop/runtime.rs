@@ -288,7 +288,7 @@ async fn handle_session(
 
     // Encoder sink task — VP8 via libvpx, pushes samples directly onto
     // the outbound video track so webrtc-rs handles RTP packetisation.
-    let encoder_handle = encoder::spawn(frame_rx, peer.video_track());
+    let encoder_handle = encoder::spawn(frame_rx, peer.video_track(), peer.force_keyframe.clone());
 
     // ── Main event loop: pump PeerEvents into the signaling client ──
     let mut final_status: Option<&'static str> = None;

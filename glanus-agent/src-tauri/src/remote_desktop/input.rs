@@ -47,6 +47,8 @@ pub enum InputEvent {
     KeyDown { key: String },
     #[serde(rename = "keyup")]
     KeyUp { key: String },
+    #[serde(rename = "requestkeyframe")]
+    RequestKeyframe,
 }
 
 #[derive(Debug, Deserialize)]
@@ -216,6 +218,7 @@ pub mod x11 {
                         .send_keysequence_up(&sanitized, 0)
                         .context("libxdo: send_keysequence_up failed")?;
                 }
+                InputEvent::RequestKeyframe => {}
             }
             Ok(())
         }
@@ -457,6 +460,7 @@ pub mod enigo_driver {
                         log::debug!("enigo: dropping unmapped key_up '{key}'");
                     }
                 }
+                InputEvent::RequestKeyframe => {}
             }
             Ok(())
         }

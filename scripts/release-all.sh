@@ -41,18 +41,24 @@ echo "═══ Combined release ═══"
 git status --short
 [ "$DRY" -eq 1 ] && { echo "(dry run — exiting)"; exit 0; }
 
-# 1. Rebuild all agents (Linux, macOS, Windows) without staging immediately
-echo "═══ [1/4] Building Linux Agent ═══"
-"$REPO_ROOT/scripts/release-agent-linux.sh" "$VERSION" --no-stage || echo "⚠ Linux agent build failed or skipped. Continuing..."
+# 1. Rebuild the agent for the current OS without staging immediately
+OSTYPE_LOWER=$(uname -s | tr '[:upper:]' '[:lower:]')
 
-echo "═══ [2/4] Building macOS Agent ═══"
-"$REPO_ROOT/scripts/release-agent-macos.sh" "$VERSION" --no-stage || echo "⚠ macOS agent build failed or skipped. Continuing..."
-
-echo "═══ [3/4] Building Windows Agent ═══"
-if command -v pwsh &>/dev/null; then
-    pwsh "$REPO_ROOT/scripts/release-agent-windows.ps1" -Version "$VERSION" -NoStage || echo "⚠ Windows agent build failed or skipped. Continuing..."
+echo "═══ [1/4] Building Agent for $OSTYPE_LOWER ═══"
+if [[ "$OSTYPE_LOWER" == *"linux"* ]]; then
+    "$REPO_ROOT/scripts/release-agent-linux.sh" "$VERSION" --no-stage
+elif [[ "$OSTYPE_LOWER" == *"darwin"* ]]; then
+    "$REPO_ROOT/scripts/release-agent-macos.sh" "$VERSION" --no-stage
+elif [[ "$OSTYPE_LOWER" == *"mingw"* ]] || [[ "$OSTYPE_LOWER" == *"msys"* ]] || [[ "$OSTYPE_LOWER" == *"cygwin"* ]]; then
+    if command -v pwsh &>/dev/null; then
+        pwsh "$REPO_ROOT/scripts/release-agent-windows.ps1" -Version "$VERSION" -NoStage
+    else
+        echo "ERROR: pwsh (PowerShell) not found. Cannot build Windows agent. Exiting." >&2
+        exit 1
+    fi
 else
-    echo "⚠ pwsh (PowerShell) not found. Skipping Windows build."
+    echo "ERROR: Unsupported OS for building agent: $OSTYPE_LOWER" >&2
+    exit 1
 fi
 
 # 2. Stage all agent binaries and any web-side changes
